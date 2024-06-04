@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Construction company</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round">
+</head>
+
+<body>
+    <aside id="sidebar">
+        <img id="company-logo" src="./assets/company-logo.svg" alt="Construction company" title="company-logo">
+        <ul id="nav-buttons">
+            <li><span class="material-icons-round" style="padding: 0px 10px;">location_city</span>Projects</li>
+            <li>Projects</li>
+            <li>Projects</li>
+        </ul>
+    </aside>
+    
+    
+    <main id="content">
+        <section class="page" id="project-page" style="display: none;">
+            <dialog id="new-project-modal" open>
+                <form action="" name="formulario" method="post" action="/send/">
+                    <h2>New Project</h2>
+                    <div class="input-list">
+                        <div class="form-field-user_container">
+                            <label><span class="material-icons-round">apartment
+                            </span>Name</label>
+                            <input style="width: 90%;" type="text" size="30"  placeholder = "What´s the name of your project">
+                            <details>
+                                <summary>Tip</summary>
+                                <p>Give it a short name</p>
+                            </details>
+                        </div>
+                        <div class="form-field-user_container">
+                            <label><span class="material-icons-round">
+                                article
+                            </span>Decription</label>
+                            <textarea name="" id="" cols="50" rows="5" placeholder="Give your project a nice description!So people is jealous about it"></textarea>
+                        </div>
+                        <div class="form-field-user_container">
+                            <label><span class="material-icons-round">
+                                account_circle
+                            </span>Rol</label>
+                            <select>
+                                <option>Architect</option>
+                                <option>Engineer</option>
+                                <option>Developer</option>
+                                <option>Information Manager</option>
+                                <option>Document Controller</option>
+                            </select>
+                        </div>
+                        <div class="form-field-user_container">
+                            <label><span class="material-icons-round">
+                                not_listed_location
+                            </span>Status</label>
+                            <select>
+                                <option>Pending</option>
+                                <option>Active</option>
+                                <option>Finished</option>
+                            </select>
+                        </div>
+                        <div class="form-field-user_container">
+                            <label><span class="material-icons-round">
+                                calendar_month
+                            </span>Finish Date</label>
+                            <input type="date">
+                        </div>
+                    </div>
+                    <div id="buttonEndRight">
+                        <button class="buttonB">Cancel</button>
+                        <button class="buttonB">Accept</button>
+                    </div>
+                </form>
+            </dialog>
+            
+            <header>
+                <h2>Projects<span class="material-icons-round" style="padding: 10px;">construction</span></h2>
+                <div id="add-new-project"> 
+                    <div><span class="material-icons-round" style="padding-right: 10px;">file_upload</span></div>
+                    <button><span class="material-icons-round">add</span>New Project</button>
+                </div>
+            </header>
+
+            <div id="project-list">
+                <div class="project-card">
+                    <div class="card-header">
+                        <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
+                        <div>   
+                            <h5>Project Title</h5>
+                            <p>Project Description goes here</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-property">
+                            <p style="color: #969696;">Status</p>               
+                            <p>Active</p>
+                        </div>
+                        <div class="card-property">
+                            <p style="color: #969696;">Status</p>
+                            <p>Active</p>
+                        </div>
+                        <div class="card-property">
+                            <p style="color: #969696;">Status</p>
+                            <p>Active</p>
+                        </div>
+                        <div class="card-property">
+                            <p style="color: #969696;">Status</p>
+                            <p>Active</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="card-header">
+                        <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
+                        <div>
+                            <h5>Project Title</h5>
+                            <p>Project Description goes here</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-property">
+                            <p style="color: #969696;">Status</p>
+                            <p>Active</p>
+                        </div>
+                        <div class="card-property">
+                            <p style="color: #969696;">Status</p>
+                            <p>Active</p>
+                        </div>
+                        <div class="card-property">
+                            <p style="color: #969696;">Status</p>
+                            <p>Active</p>
+                        </div>
+                        <div class="card-property">
+                            <p style="color: #969696;">Status</p>
+                            <p>Active</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="page" id="project-details" style="display: none;";>
+            <header>
+                <div>
+                    <h2>Hospital Center</h2>
+                    <p style="color: #969696">Community hospital location_city</p>
+                </div>
+            </header>
+            <div class="main-page-content">
+                <div style="display: flex; flex-direction: column;row-gap: 15px;">
+                    <div class="dashboard-card" style="padding: 10px 0; row-gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; ">
+                            <p style="font-size: 20px; background-color: #ca8134; padding: 15px; border-radius: 100%; aspect-ratio: 1; ">HC</p>
+                            <button class="btn-secondary">Edit</button>
+                        </div>
+                        <div style="padding: 0 30px;">
+                            <h5>Hospital central</h5>
+                            <p>Community hospital located at downtown</p>
+                        </div>
+                        <div style="display: flex; column-gap: 30px; padding: 15px; justify-content: space-around;">
+                            <div>
+                                <p style="color: #969696; font-size: var(--font-base);">Status</p>
+                                <p>Active</p>
+                            </div>
+                            <div>
+                                <p style="color: #969696; font-size: var(--font-base);">Cost</p>
+                                <p>€ 2.542.000</p>
+                            </div>
+                            <div>
+                                <p style="color: #969696; font-size: var(--font-base);">Role</p>
+                                <p>Engineer</p>
+                            </div>
+                            <div>
+                                <p style="color: #969696; font-size: var(--font-base);">Finish Date</p>
+                                <p>2023-05-01</p>
+                            </div>
+                        </div>
+                        <div>Progress Bar</div>
+
+                    </div>
+                    <div class="dashboard-card">
+                        <div style="padding: 20px 30px; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+                            <h5>To-Do</h5>
+                            <div style="display: flex; align-items: center;">
+                                <div style="display: flex; align-items: center;">
+                                    <span class="material-icons-round">search</span>
+                                    <input type="search" placeholder="Search To-Do by name">
+                                </div>
+                                <span class="material-icons-round">add</span>
+                            </div>
+                        </div>
+                        <div style="padding: 20px 30px; display: flex; flex-direction: column; row-gap: 20px; align-content: center;">
+                            <div class="todo-item">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div style="display: flex; column-gap: 15px;">
+                                        <span class="material-icons-round" style="font-size: 20px; background-color: #969696; padding: 10px; border-radius: 25%; aspect-ratio: 1;">construction</span>
+                                        <div>Make anything here as you want, even something longer.</div>
+                                    </div>
+                                    <p style="text-wrap: nowrap; margin-left: 10px"; >Fri ,20 sep</p>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div style="display: flex; column-gap: 15px;">
+                                        <span class="material-icons-round"
+                                            style="font-size: 20px; background-color: #969696; padding: 10px; border-radius: 25%; aspect-ratio: 1;">construction</span>
+                                        <div>Make anything here as you want, even something longer.</div>
+                                    </div>
+                                    <p style="text-wrap: nowrap; margin-left: 10px" ;>Fri ,20 sep</p>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div style="display: flex; column-gap: 15px;">
+                                        <span class="material-icons-round"
+                                            style="font-size: 20px; background-color: #969696; padding: 10px; border-radius: 25%; aspect-ratio: 1;">construction</span>
+                                        <div>Make anything here as you want, even something longer.</div>
+                                    </div>
+                                    <p style="text-wrap: nowrap; margin-left: 10px" ;>Fri ,20 sep</p>
+                                </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div id="viewer-user_container" class="dashboard-card"></div>
+            </div>
+            </div>
+        </section>
+
+        <section class="page" class="users-page" style="display: ;">
+
+            <dialog id="new-user-modal" open>
+                <form action="" name="formulario" method="post" action="/send/" class="user-form" enctype="multipart/form-data">
+                    <h2>New User Account</h2>
+                    <div class="user-input-list">
+                        <fieldset class="data-mandatory">
+                            <legend>Please complete all required fields:</legend>
+                            <div class="form-field-container">
+                                <label><span class="material-icons-round">account_circle</span>Nick Name</label>                            
+                                <input type="text" size="30" placeholder="Please enter the name you want we use in the app.">
+                                <details>
+                                    <summary>Tip</summary>
+                                    <p>Use a short and characteristic name </p>
+                                </details>
+                            </div>
+                            <div class="form-field-container">
+                                <label><span class="material-icons-round">badge</span>Full Name</label>
+                                <input type="text" size="30" placeholder="Your Identity. Because your name Matters.">
+                            </div>
+                            <div class="form-field-container">
+                                <label><span class="material-icons-round">alternate_email</span>Work Email</label>
+                                <input type="email" size="30" placeholder="Your Email is Your Key. Saty Connected.">
+                            </div>
+                            <div class="form-field-container">
+                                <label><span class="material-icons-round">business</span>Organization</label>
+                                <input type="email" size="30" placeholder="Your Email is Your Key. Saty Connected.">
+                            </div>
+                            <div class="form-field-user-container">
+                                <label><span class="material-icons-round">
+                                        engineering
+                                    </span>Rol</label>
+                                <select>
+                                    <option>Architect</option>
+                                    <option>Engineer</option>
+                                    <option>Developer</option>
+                                    <option>Information Manager</option>
+                                    <option>Document Controller</option>
+                                    <option>Site Manager</option>
+                                    <option>MEP Engineer</option>
+                                    <option>Structural Engineer</option>
+                                    <option selected>...Add New User Rol</option>
+                                </select>
+                            </div>
+                            <div class="form-field-user-container">
+                                <label><span class="material-icons-round">not_listed_location</span>Status</label>
+                                <select>
+                                    <option>Pending</option>
+                                    <option selected>Active</option>
+                                    <option>Disabled</option>
+                                </select>
+                            </div>
+                        </fieldset>
+                        <fieldset style="border: none;" class="data-optional">
+                            <legend>Optional Data:</legend>
+                            <div style="display: flex; flex-direction: column; row-gap: 20px;">
+                                <div class="form-field-container">
+                                    <label><span class="material-icons-round">contact_mail</span><Address></Address>Address</label>
+                                    <input type="email" size="30" placeholder="Please provide your mailing/business address">
+                                </div>
+                                <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; column-gap: 25px;
+                                ">
+                                    <div  class="fake-upload-button" >
+                                        <label for="">Upload a user icon file</label>
+                                        <input type="file" accept=".jpg, .png, .jpeg">
+                                    </div>
+                                    <div class="users-photo" style="border: none;">
+                                        <img src="./assets/photo-users/Architect.jpg" alt="app photo user">
+
+                                    </div>
+                                </div>                            
+                                <div class="form-field-container">
+                                    <label><span class="material-icons-round">
+                                            diversity_3
+                                        </span>Project Team</label>
+
+                                    <div id="form-project-teams-included">
+                                        <p>Reserved space for icons of Project Teams</p>
+                                    </div>
+                                    <select>
+                                        <option value="" disabled selected hidden>Select a project</option>
+                                        <option>ProjectA</option>
+                                        <option>ProjectB</option>
+                                        <option>ProjectC</option>
+                                        <option>ProjectD</option>
+                                        <option>...Create a new project from here</option>
+                                    </select>
+                                </div>
+                            
+                                <div class="form-field-container">
+                                    <label><span class="material-icons-round">article</span>Notes</label>
+                                    <textarea style="margin-bottom: 30px;" name="" id="" cols="45" rows="7" placeholder="Any "></textarea>
+                                </div>
+                                <div id="buttonEndRight" class="data-optional" style="align-items: flex-end;">
+                                    <button class="buttonB">Cancel</button>
+                                    <button class="buttonB">Accept</button>
+                                </div>
+
+
+                            </div>
+
+                        </fieldset>
+
+                    </div>
+
+                </form>
+            </dialog>
+
+            <header class="header-users">
+                <div style="margin-bottom: -90px; display: flex; flex-direction: row; align-content: flex-end; column-gap: 25px" >
+                    <button class="tab-button">
+                        <span class="material-icons-round">people_alt</span>
+                        Users
+                    </button>
+                    <button class="tab-button" style="width: 200px;">
+                        <span class="material-icons-round">diversity_3</span>
+                        Projects Teams
+                    </button>
+                </div>
+                <div style="display: flex; flex-direction: row-reverse; column-gap: 20px; align-items: center;">    
+                    <div
+                        style="display: flex; flex-direction: row; align-content: space-between;">
+                            <div style="display: flex; align-items: center; column-gap: 10px;">
+                                <input type="search" id="search-user" placeholder="Search by name, email or phone number" style="width: 350px;">
+                                <span class="material-icons-round">search</span>
+                            </div>
+                    </div>
+                    <div style="display: flex; flex-direction: end; column-gap: 10px;"">
+                                                  
+                       
+                        <button class="btn-secondary" style="border-radius: 10px; width: auto; border: 0px">
+                            <span class="material-icons-round">filter_alt</span>
+                            
+                        </button>
+                        
+                        
+                    </div>
+                <div>
+            </header>
+            <div class="users-page-content" id="users-page" style="display: none;">
+
+                <div class="header-user-page-content">
+           
+                    <div style="display: flex; flex-direction: row; column-gap: 10px;">
+                        <button style="border-radius: 10px; width: auto;" class="btn-secondary">
+                            <span class="material-icons-round">swap_vert</span>
+                            <p>Sort By</p>
+                            <span class="material-icons-round">expand_more</span>
+                        </button>
+                        <button style="border-radius: 10px;">
+                            <span class="material-icons-round">add</span>
+                            <p>Add New User</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="user-container-header" style="border: none; background-color: transparent;">
+                    <div >
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: left; column-gap: 10px;">
+                        <!-- <label for=""></label> -->
+                        <input name="bulk-checkbox" type="checkbox" value="all-selected" class="checkbox" style="width: 17px; height: 17px;">
+                        <div>
+                            <button style="border-radius: 10px; width: auto;" class="btn-secondary">Bulk Actions
+                                <label>
+                                    <span class="material-icons-round">expand_more</span>
+                                    <!-- <select name="" id="" style="appearance: none;">
+                                        <option value="Asign proyect">Asign proyect</option>
+                                        <option value="Remove all projects">Remove all projects</option>
+                                        <option value="Remove all roles">Remove all roles</option>
+                                        <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                        <option value="Disable account">Disable account</option>
+                                        <option value="Delete users">Delete users</option>
+                                    </select> -->
+                                </label>
+                            </button>
+                        </div>
+                    
+                    </div>
+                    </div>
+                    <h5></h5>
+                    <h5>EMAIL</h5>
+                    <h5>PHONE</h5>
+                    <h5>ORGANIZATION / ROL</h5>
+                    <h5>STATUS</h5>
+                    <H5 class="users-edit">ACTIONS</H5>
+                </div>
+
+                <div class="users-list">
+                    <div>
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/OFFICE1.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>Chris</div>
+                            </div>
+                            <p>christina@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>BDP</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Project Manager</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button class="btn-secondary" >
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p >FULL NAME:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p >ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p >ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p >CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p >LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column" >
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p style="font-size: var(--font-xl); background-color: #ca8134; padding: 10px; border-radius: var(--br-circle); aspect-ratio: 1; color: var(--background);">HC</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/constructor.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>D Harrison</div>
+                            </div>
+                            <p>david@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>Dragados</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">BIM Manager</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>David Harrison </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p
+                                            style="font-size: var(--font-xl); background-color: #ca8134; padding: 10px; border-radius: var(--br-circle); aspect-ratio: 1; color: var(--background);">
+                                            HC</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>    
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/EDIF1.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>Anne</div>
+                            </div>
+                            <p>anne@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>FCC</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Site Manager</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>Anne Richard</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p
+                                            style="font-size: var(--font-xl); background-color: #ca8134; padding: 10px; border-radius: var(--br-circle); aspect-ratio: 1; color: var(--background);">
+                                            HC</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>    
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/OFFICE6.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>Mrs Samia</div>
+                            </div>
+                            <p>samia@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>Acciona</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Document Controller</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>Samia Kartoon</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p></p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>    
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/OBRAS2.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>Mr Clerk</div>
+                            </div>
+                            <p>andy@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>Ferrovial</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">MEP Engineer</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>Andy Clerk</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p></p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>    
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/Architect.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>Sir Halligan</div>
+                            </div>
+                            <p>brian@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>Sacyr</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Architect</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button  class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>Brian Halligan</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p></p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>    
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/OFFICE4.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>Bart</div>
+                            </div>
+                            <p>barto@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>OHLA</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Building Surveyor</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button  class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>Bartolome Simpson</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p></p>
+                                    </div>
+                                </div>
+  
+                            </div>
+                        </div>    
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/INGENIERA2.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>Cami</div>
+                            </div>
+                            <p>cwelt@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>ARUP</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Structural Engineer</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button  class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>Camila Welters</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p></p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>    
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/OBRA5.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>Oliver</div>
+                            </div>
+                            <p>oliver@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>AECOM</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">BIM Coordinator</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Activer</p>
+                            </div>
+                            <div class="users-edit">
+                                <button class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>Oliver Schevich</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p></p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>    
+                        <div class="user-container">
+                            <div class="users-checkbox">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name">
+                                <div class="users-photo"  >
+                                    <img src="./assets/photo-users/SELECTED/COMPANY2.jpg" alt="PROJECT MANAGER" >
+                                </div>
+                                <div>JW</div>
+                            </div>
+                            <p>myhairisred@site.com</p>
+                            <div>
+                                <p>666 666 66 66</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Spain +34</p>
+                            </div>
+                            <div>
+                                <p>dBASE</p>
+                                <p style="font-size: var(--font-base); color: var(--color-grey);">Full Stack Soft. developer</p>
+                            </div>
+                            <div class="users-status">
+                                <p>Active</p>
+                            </div>
+                            <div class="users-edit">
+                                <button  class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all project roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> -->
+                                    </label>
+                                </button>
+                            </div>
+                            <div class="user-details1" class="user-details-column">
+                                <div class="user-data">
+                                    <p>FULL NAME:</p>
+                                    <P>Jessica Williams</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ADDRESS:</p>
+                                    <P>Trump tower. New York </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ACCOUNT CREATED ON:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>CREATED BY:</p>
+                                    <P>Christina Bersh </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>LAST LOGIN:</p>
+                                    <P>30/05/2024 </P>
+                                </div>
+                            </div>
+                            <div class="user-details2" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                    <div>
+                                        <p>PROYECTS TEAMS:</p>
+                                    </div>
+                                    <div>
+                                        <p></p>
+                                           
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>    
+                    </div>
+                </div>
+            </div>
+
+            <div class="users-page-content" id="teams-page" style="display: none;">
+            
+                <div class="header-user-page-content">
+            
+                    <div style="display: flex; flex-direction: row; column-gap: 10px;">
+                        <button style="border-radius: 10px; width: auto;" class="btn-secondary">
+                            <span class="material-icons-round">swap_vert</span>
+                            <p>Sort By</p>
+                            <span class="material-icons-round">expand_more</span>
+                        </button>
+                        <button style="border-radius: 10px;">
+                            <span class="material-icons-round">add</span>
+                            <p>Add New User To Team</p>
+                        </button>
+                    </div>
+                </div>
+            
+                <div class="user-container-header" style="border: none; background-color: transparent;">
+                    <div>
+                        <div
+                            style="display: flex; flex-direction: row; align-items: center; justify-content: left; column-gap: 10px;">
+                            <!-- <label for=""></label> -->
+                            <input name="bulk-checkbox" type="checkbox" value="all-selected" class="checkbox"
+                                style="width: 17px; height: 17px;">
+                            <div>
+                                <button style="border-radius: 10px; width: auto;" class="btn-secondary">Bulk Actions
+                                    <label>
+                                        <span class="material-icons-round">expand_more</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                                    <option value="Remove from the Team">Remove from</option>
+                                                    <option value="Email Validation Team Project">Email Validation Team</option>
+                                                    <option value="Disable for de team">Disable team</option>
+                                                    <option value="Delete users">Delete users</option>
+                                                    
+                                                </select> -->
+                                    </label>
+                                </button>
+                            </div>
+            
+                        </div>
+                    </div>
+                    <h5></h5>
+                    <h5>DATA</h5>
+                    <h5></h5>
+                    <h5>PERMISSIONS</h5>
+                    <h5></h5>
+                    <H5 class="users-edit">ACTIONS</H5>
+                </div>
+            
+                <div class="users-list">
+                    <div>
+                        <div class="user-team-container">
+                            <div class="users-checkbox" style="margin-top: -75px;">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name" style="margin-top: -75px;">
+                                <div class="users-photo">
+                                    <img src="./assets/photo-users/SELECTED/OFFICE1.jpg" alt="PROJECT MANAGER">
+                                </div>
+                                <div>Chris</div>
+                            </div>
+
+                            <div class="users-edit">
+                                <button class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                                        <option value="Remove from the Team">Remove from</option>
+                                                        <option value="Email Validation Team Project">Email Validation Team</option>
+                                                        <option value="Disable for de team">Disable team</option>
+                                                        <option value="Delete users">Delete users</option>
+                                                    </select> -->
+                                    </label>
+                                </button>
+                                
+                            </div>
+            
+                            <div class="team-data" class="user-details-column">
+                                <div class="user-data">
+                                    <p>EMAIL:</p>
+                                    <P>christina@site.com </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>PHONE:</p>
+                                    <P>666 666 66 66</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ORGANIZATION:</p>
+                                    <P>BDP</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ROLE:</p>
+                                    <P>Project Manager </P>
+                                </div>
+
+                            </div>
+                            <div class="team-permissions" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                   
+                                </div>
+                                <div class="user-data" style="justify-content: flex-start; align-items: center;">
+                                    <div style="width: 75px;">
+                                        <p>TO-DO LIST:</p>
+                                    </div>
+                                    <div style="display: flex; column-gap: var(--gap-base);">
+                                        <span style="font-size: 2em;" class="material-icons-round">add</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">visibility</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">drive_file_rename_outline</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">delete_outline</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="user-team-container">
+                            <div class="users-checkbox" style="margin-top: -75px;">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name" style="margin-top: -75px;">
+                                <div class="users-photo">
+                                    <img src="./assets/photo-users/SELECTED/constructor.jpg" alt="PROJECT MANAGER">
+                                </div>
+                                <div>D Harrison</div>
+                            </div>
+
+                            <div class="users-edit">
+                                <button class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                                        <option value="Remove from the Team">Remove from</option>
+                                                        <option value="Email Validation Team Project">Email Validation Team</option>
+                                                        <option value="Disable for de team">Disable team</option>
+                                                        <option value="Delete users">Delete users</option>
+                                                    </select> -->
+                                    </label>
+                                </button>
+                                
+                            </div>
+            
+                            <div class="team-data" class="user-details-column">
+                                <div class="user-data">
+                                    <p>EMAIL:</p>
+                                    <P>david@site.com </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>PHONE:</p>
+                                    <P>666 666 66 66</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ORGANIZATION:</p>
+                                    <P>Dragados</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ROLE:</p>
+                                    <P>BIM ManagerProject Manager </P>
+                                </div>
+
+                            </div>
+                            <div class="team-permissions" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                   
+                                </div>
+                                <div class="user-data" style="justify-content: flex-start; align-items: center;">
+                                    <div style="width: 75px;">
+                                        <p>TO-DO LIST:</p>
+                                    </div>
+                                    <div style="display: flex; column-gap: var(--gap-base);">
+                                        <span style="font-size: 2em;" class="material-icons-round">add</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">visibility</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">drive_file_rename_outline</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">delete_outline</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user-team-container">
+                            <div class="users-checkbox" style="margin-top: -75px;">
+                                <!-- <label for=""></label> -->
+                                <input name="bulk-checkbox" type="checkbox" class="checkbox" value="all-selected">
+                            </div>
+                            <div class="users-name" style="margin-top: -75px;">
+                                <div class="users-photo">
+                                    <img src="./assets/photo-users/SELECTED/EDIF1.jpg" alt="PROJECT MANAGER">
+                                </div>
+                                <div>Anne</div>
+                            </div>
+
+                            <div class="users-edit">
+                                <button class="btn-secondary">
+                                    <label>
+                                        <span class="material-icons-round">more_horiz</span>
+                                        <!-- <select name="" id="" style="appearance: none;">
+                                                        <option value="Remove from the Team">Remove from</option>
+                                                        <option value="Email Validation Team Project">Email Validation Team</option>
+                                                        <option value="Disable for de team">Disable team</option>
+                                                        <option value="Delete users">Delete users</option>
+                                                    </select> -->
+                                    </label>
+                                </button>
+                                
+                            </div>
+            
+                            <div class="team-data" class="user-details-column">
+                                <div class="user-data">
+                                    <p>EMAIL:</p>
+                                    <P>christina@site.com </P>
+                                </div>
+                                <div class="user-data">
+                                    <p>PHONE:</p>
+                                    <P>666 666 66 66</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ORGANIZATION:</p>
+                                    <P>FCC</P>
+                                </div>
+                                <div class="user-data">
+                                    <p>ROLE:</p>
+                                    <P>Site Manager </P>
+                                </div>
+
+                            </div>
+                            <div class="team-permissions" class="user-details-column">
+                                <div class="user-data" style="justify-content: flex-start;">
+                                   
+                                </div>
+                                <div class="user-data" style="justify-content: flex-start; align-items: center;">
+                                    <div style="width: 75px;">
+                                        <p>TO-DO LIST:</p>
+                                    </div>
+                                    <div style="display: flex; column-gap: var(--gap-base);">
+                                        <span style="font-size: 2em;" class="material-icons-round">add</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">visibility</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">drive_file_rename_outline</span>
+                                        <span style="font-size: 2em;" class="material-icons-round">delete_outline</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+          </div>
+                </div>
+            </div>
+
+
+
+
+        </section>
+    </main>
+</body>
+</html>
