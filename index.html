@@ -21,8 +21,8 @@
     
     
     <main id="content">
-        <section class="page" id="project-page" style="display: none;">
-            <dialog id="new-project-modal" open>
+        <section class="page" id="project-page" style="display: ;">
+            <dialog id="new-project-modal" >
                 <form action="" name="formulario" method="post" action="/send/">
                     <h2>New Project</h2>
                     <div class="input-list">
@@ -81,7 +81,7 @@
                 <h2>Projects<span class="material-icons-round" style="padding: 10px;">construction</span></h2>
                 <div id="add-new-project"> 
                     <div><span class="material-icons-round" style="padding-right: 10px;">file_upload</span></div>
-                    <button><span class="material-icons-round">add</span>New Project</button>
+                    <button id="new-project-btn"><span class="material-icons-round">add</span>New Project</button>
                 </div>
             </header>
 
@@ -232,7 +232,7 @@
 
         <section class="page" class="users-page" style="display: ;">
 
-            <dialog id="new-user-modal" open>
+            <dialog id="new-user-modal" >
                 <form action="" name="formulario" method="post" action="/send/" class="user-form" enctype="multipart/form-data">
                     <h2>New User Account</h2>
                     <div class="user-input-list">
@@ -1401,5 +1401,6 @@
 
         </section>
     </main>
+    <script src="./index.js"></script>
 </body>
 </html>
