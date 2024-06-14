@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Gantari:ital,wght@0,100..900;1,100..900&family=Roboto+Flex:opsz,wght@8..144,100..1000&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
-@import url('https: //fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 
 :root {
     /* fonts */
@@ -98,7 +98,7 @@
 body {
     display: grid;
     grid-template-columns: 300px 1fr;
-    grid-template-areas: 'sidebar content';
+    grid-template-areas: "sidebar content";
     height: 100vh;
     background-color: var(--background);
     color: #fff;
@@ -393,8 +393,8 @@ form .input-list {
 .fake-upload-button:hover {
     background-color: var(--secundary-200);
     color: var(--background);
-    }
 }
+
 form .form-field-container {
     display: flex;
     flex-direction: column;
@@ -667,7 +667,7 @@ fieldset {
     box-sizing: border-box;
     display: grid;
     grid-template-columns: 50px repeat(4, minmax(175px, 500px))100px 100px;
-    grid-template-areas: "checkbox name data . permissions . edit"; 
+    grid-template-areas: "checkbox name data . permissions . edit "; 
     column-gap: 20xp;
     align-items: center;
     height: auto;

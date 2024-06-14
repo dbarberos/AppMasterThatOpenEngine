@@ -21,15 +21,15 @@
     
     
     <main id="content">
-        <section class="page" id="project-page" style="display: ;">
+        <section class="page" id="project-page" style="display: ">
             <dialog id="new-project-modal" >
-                <form action="" name="formulario" method="post" action="/send/">
+                <form id="new-project-form" action="" name="new-project-form" method="post" action="/send/">
                     <h2>New Project</h2>
                     <div class="input-list">
                         <div class="form-field-user_container">
                             <label><span class="material-icons-round">apartment
                             </span>Name</label>
-                            <input style="width: 90%;" type="text" size="30"  placeholder = "What´s the name of your project">
+                            <input name="name" style="width: 90%;" type="text" size="30"  placeholder = "What´s the name of your project">
                             <details>
                                 <summary>Tip</summary>
                                 <p>Give it a short name</p>
@@ -39,25 +39,36 @@
                             <label><span class="material-icons-round">
                                 article
                             </span>Decription</label>
-                            <textarea name="" id="" cols="50" rows="5" placeholder="Give your project a nice description!So people is jealous about it"></textarea>
+                            <textarea name="description" id="" cols="50" rows="5" placeholder="Give your project a nice description!So people is jealous about it"></textarea>
                         </div>
-                        <div class="form-field-user_container">
+                        <div class="form-field-user_container" >
                             <label><span class="material-icons-round">
                                 account_circle
                             </span>Rol</label>
-                            <select>
+                            <!-- <select>
                                 <option>Architect</option>
                                 <option>Engineer</option>
                                 <option>Developer</option>
                                 <option>Information Manager</option>
                                 <option>Document Controller</option>
-                            </select>
+                            </select> -->
+                            <input name="userRole" type="text" list="rol">
+                            <datalist id="rol">
+                                <option value="Architect">Architect</option>
+                                <option value="Engineer">Engineer</option>
+                                <option value="Developer">Developer</option>
+                                <option value="Information Manager">Information Manager</option>
+                                <option value="Document Controller">Document Controller</option>
+                                <option value="Site Manager">Site Manager</option>
+                                <option value="MEP Engineer">MEP Engineer</option>
+                                <option value="Structural Engineer">Structural Engineer</option>
+                            </datalist>
                         </div>
                         <div class="form-field-user_container">
                             <label><span class="material-icons-round">
                                 not_listed_location
                             </span>Status</label>
-                            <select>
+                            <select name="status">
                                 <option>Pending</option>
                                 <option>Active</option>
                                 <option>Finished</option>
@@ -67,7 +78,7 @@
                             <label><span class="material-icons-round">
                                 calendar_month
                             </span>Finish Date</label>
-                            <input type="date">
+                            <input name="finishDate" type="date">
                         </div>
                     </div>
                     <div id="buttonEndRight">
@@ -142,11 +153,11 @@
                 </div>
             </div>
         </section>
-        <section class="page" id="project-details" style="display: none;";>
+        <section class="page" id="project-details" style="display: none;">
             <header>
                 <div>
                     <h2>Hospital Center</h2>
-                    <p style="color: #969696">Community hospital location_city</p>
+                    <p style="color: var(--color-grey)"> Community hospital location city</p>
                 </div>
             </header>
             <div class="main-page-content">
@@ -199,7 +210,7 @@
                                         <span class="material-icons-round" style="font-size: 20px; background-color: #969696; padding: 10px; border-radius: 25%; aspect-ratio: 1;">construction</span>
                                         <div>Make anything here as you want, even something longer.</div>
                                     </div>
-                                    <p style="text-wrap: nowrap; margin-left: 10px"; >Fri ,20 sep</p>
+                                    <p style="text-wrap: nowrap; margin-left: 10px" >Fri ,20 sep</p>
                                 </div>
                             </div>
                             <div class="todo-item">
@@ -230,7 +241,7 @@
             </div>
         </section>
 
-        <section class="page" class="users-page" style="display: ;">
+        <section class="page" class="users-page" style="display: none;">
 
             <dialog id="new-user-modal" >
                 <form action="" name="formulario" method="post" action="/send/" class="user-form" enctype="multipart/form-data">
@@ -262,7 +273,18 @@
                                 <label><span class="material-icons-round">
                                         engineering
                                     </span>Rol</label>
-                                <select>
+                                <input type="text" list="rol">
+                                <datalist id="rol">
+                                    <option value="Architect">Architect</option>
+                                    <option value="Engineer">Engineer</option>
+                                    <option value="Developer">Developer</option>
+                                    <option value="Information Manager">Information Manager</option>
+                                    <option value="Document Controller">Document Controller</option>
+                                    <option value="Site Manager">Site Manager</option>
+                                    <option value="MEP Engineer">MEP Engineer</option>
+                                    <option value="Structural Engineer">Structural Engineer</option>
+                                </datalist>
+                                <!-- <select>
                                     <option>Architect</option>
                                     <option>Engineer</option>
                                     <option>Developer</option>
@@ -272,7 +294,7 @@
                                     <option>MEP Engineer</option>
                                     <option>Structural Engineer</option>
                                     <option selected>...Add New User Rol</option>
-                                </select>
+                                </select> -->
                             </div>
                             <div class="form-field-user-container">
                                 <label><span class="material-icons-round">not_listed_location</span>Status</label>
@@ -357,7 +379,7 @@
                                 <span class="material-icons-round">search</span>
                             </div>
                     </div>
-                    <div style="display: flex; flex-direction: end; column-gap: 10px;"">
+                    <div style="display: flex; flex-direction: end; column-gap: 10px;">
                                                   
                        
                         <button class="btn-secondary" style="border-radius: 10px; width: auto; border: 0px">
@@ -1401,6 +1423,6 @@
 
         </section>
     </main>
-    <script src="./index.js"></script>
+    <script type="module" src="./src/index.ts"></script>
 </body>
 </html>
