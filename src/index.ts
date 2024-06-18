@@ -1,5 +1,5 @@
 
-import { Project } from "./classes/Project"
+import { Project, IProject, ProjectStatus, UserRole } from "./classes/Project"
 
 function showModal(id: string) {
     const modal = document.getElementById(id)
@@ -26,12 +26,12 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
     projectForm.addEventListener("submit", (event) => {
         event.preventDefault()
         const formData = new FormData(projectForm)
-        let projectDetails = {
-            name: formData.get("name"),
-            description: formData.get("description"),
-            status: formData.get("userRole"),
-            userRole: formData.get("status"),
-            finishDate: formData.get("finishDate")
+        const projectDetails: IProject = {
+            name: formData.get("name") as string,
+            description: formData.get("description") as string,
+            status: formData.get("status") as ProjectStatus,
+            userRole: formData.get("userRole") as UserRole,
+            finishDate: new Date(formData.get("finishDate") as string)
         };
         const project = new Project(projectDetails);
         console.log(project)
