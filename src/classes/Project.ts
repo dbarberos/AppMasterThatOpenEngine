@@ -26,10 +26,10 @@ export class Project implements IProject {
     progress: number = 0
 
     constructor(data: IProject) {
-        this.name = data.name,
-        this.description = data.description,
-        this.userRole = data.userRole,
-        this.status = data.status,
+        this.name = data.name
+        this.description = data.description
+        this.userRole = data.userRole
+        this.status = data.status
         this.finishDate = data.finishDate
         this.setUi ()
     }
@@ -65,9 +65,6 @@ export class Project implements IProject {
                 </div>
             </div>
                     `
-
-
-}
-
+    }
 
 }

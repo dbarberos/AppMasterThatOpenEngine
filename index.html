@@ -45,7 +45,7 @@
                             <label><span class="material-icons-round">
                                 account_circle
                             </span>Rol</label>
-                            <select>
+                            <select name="userRole">
                                 <option>Architect</option>
                                 <option>Engineer</option>
                                 <option>Developer</option>
@@ -80,8 +80,8 @@
                         </div>
                     </div>
                     <div id="buttonEndRight">
-                        <button class="buttonB">Cancel</button>
-                        <button class="buttonB">Accept</button>
+                        <button id="cancel-project-btn" type="button" class="buttonB">Cancel</button>
+                        <button type="submit" class="buttonB">Accept</button>
                     </div>
                     <!-- <div class="form-field-usser_container">
                         <label for="">budget</label>
@@ -103,7 +103,7 @@
             </header>
 
             <div id="project-list">
-                <div class="project-card">
+                <div class="project-card" style="display: none">
                     <div class="card-header">
                         <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
                         <div>   
@@ -130,33 +130,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="project-card">
-                    <div class="card-header">
-                        <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
-                        <div>
-                            <h5>Project Title</h5>
-                            <p>Project Description goes here</p>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <div class="card-property">
-                            <p style="color: #969696;">Status</p>
-                            <p>Active</p>
-                        </div>
-                        <div class="card-property">
-                            <p style="color: #969696;">Status</p>
-                            <p>Active</p>
-                        </div>
-                        <div class="card-property">
-                            <p style="color: #969696;">Status</p>
-                            <p>Active</p>
-                        </div>
-                        <div class="card-property">
-                            <p style="color: #969696;">Status</p>
-                            <p>Active</p>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </section>
         <section class="page" id="project-details" style="display: none;">
