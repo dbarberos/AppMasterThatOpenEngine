@@ -22,8 +22,8 @@ export class ProjectsManager {
     createDefaultProject() {
         if (this.defaultProjectCreated) { return }
         const defaultData = {
-                name: "John Do Building",
-                description: "A Big Building",
+                name: "Example Project",
+                description: "This is a A Big Building",
                 status: "Active" as ProjectStatus,
                 userRole: "Developer" as UserRole,
                 finishDate: new Date("2022-02-03"),
@@ -48,7 +48,46 @@ export class ProjectsManager {
             this.defaultProjectCreated = false;
         }
     }
-}
+
+    getProject(id: string) {
+        const project = this.list.find((project) => {
+            return project.id === id
+        })
+        return project
+    }
+
+    getProjectByName(name: string) {
+        const project = this.list.find((project) => {
+            return project.name === name
+        })
+        return project
+    }
+
+    totalProjectsCost() {
+        const TotalBudget = this.list.reduce((acumulative, Project) => acumulative + Project.cost, 0)
+        return TotalBudget
+    }
+
+    deleteProject(id: string) {
+        const project = this.getProject(id)
+        if (!project) { return }
+        project.ui.remove()
+        const remain = this.list.filter((project) => {
+            return project.id !== id
+        })
+        this.list = remain
+        }
+    }
+
+    // exportToJSON() {
+        
+    // }
+
+    // importFromJSON() {
+        
+    // }
+
+
 
 
 
