@@ -1,9 +1,9 @@
 import { IProject, ProjectStatus, UserRole } from "./classes/Project"
 import { ProjectsManager} from "./classes/ProjectsManager"
+import { MessagePopUP} from "./classes/MessagePopUp"
 
 
-
-function showModal(id: string) {
+export function showModal(id: string) {
     const modal = document.getElementById(id)
     if (modal && modal instanceof HTMLDialogElement) {
         modal.showModal()
@@ -11,7 +11,7 @@ function showModal(id: string) {
         console.warn("No modal found related with the provided ID", id) 
     }
 }
-function closeModal(id: string) {
+export function closeModal(id: string) {
     const modal = document.getElementById(id)
     if (modal && modal instanceof HTMLDialogElement) {
         modal.close()
@@ -21,7 +21,7 @@ function closeModal(id: string) {
 }
  
 
-function toggleModal(id: string,) {
+export function toggleModal(id: string,) {
     const modal = document.getElementById(id)
     if (modal && modal instanceof HTMLDialogElement) {
         modal.open ? modal.close() : modal.showModal() 
@@ -48,6 +48,7 @@ if (newProjectBtn) {
 //Obtaining data from the form via giving an id to the form and using FormData
 const projectForm = document.getElementById("new-project-form")
 const cancelForm: Element | null = document.getElementById("cancel-project-btn");
+let closePopUpHandler: () => void
 if (projectForm && projectForm instanceof HTMLFormElement) {
     projectForm.addEventListener("submit", (event) => {
         event.preventDefault()
@@ -59,9 +60,42 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
             userRole: formData.get("userRole") as UserRole,
             finishDate: new Date(formData.get("finishDate") as string)
         };
-        const project = projectManager.newProject(projectDetails);
-        projectForm.reset()
-        closeModal("new-project-modal")
+        try {
+            const project = projectManager.newProject(projectDetails);
+            projectForm.reset()
+            closeModal("new-project-modal")
+        } catch (err) {
+            const errorPopUp = document.querySelector(".message-popup")
+            const contentError = {
+                contentDescription : err.message,
+                contentTitle : "Error",
+                contentClass : "popup-error",
+                contentIcon : "report"
+            }
+            if (err) {
+                const text = document.querySelector("#message-popup-text p")
+                text.textContent = contentError.contentDescription
+                const title = document.querySelector("#message-popup-text h5")
+                title.textContent = contentError.contentTitle
+                const icon = document.querySelector("#message-popup-icon span")
+                icon.textContent = contentError.contentIcon
+                errorPopUp?.classList.add(contentError.contentClass)
+                toggleModal("message-popup")
+            }
+            const closePopUp: Element | null = document.querySelector(".btn-popup") 
+            if (closePopUp) {
+                const closePopUpHandler = () => {
+                    toggleModal("message-popup");
+                    closePopUp.removeEventListener("click", closePopUpHandler);
+                }
+                closePopUp.addEventListener("click", closePopUpHandler);
+            }
+        }
+        /* catch (err) {
+             const errorDisp = new MessagePopUp(ProjectForm, error, error)
+             errorDisp.showError()
+         }
+        */
     })
     
     if (cancelForm) {

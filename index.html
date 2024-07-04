@@ -88,12 +88,28 @@
                         <input type="number" inputmode="numeric" inputmode="decimal">
                         
                     </div> -->
-
-
-
                 </form>
             </dialog>
             
+            <dialog id="message-popup">
+                <div class="message-popup">
+                    <div style="display: flex; column-gap: var(--gap-lg); align-items: center;">
+                        <div id="message-popup-icon">
+                            <span class="material-icons-round" style="font-size: var(--font-icon-lg);">
+                            check_circle
+                            </span>
+                        </div>
+                        <div id="message-popup-text"  style="display: flex; flex-direction: column; justify-content: start;row-gap: var(--gap-5xs);">
+                            <h5 style="font-weight: bold;">contentTitle</h5>
+                            <p>textContent</p>
+                        </div>
+                    </div>
+                    <button class="btn-popup">
+                        <div class="popup-text">Got it</div>
+                    </button>
+                </div>
+            </dialog>
+
             <header>
                 <h2>Projects<span class="material-icons-round" style="padding: 10px;">construction</span></h2>
                 <div id="add-new-project"> 

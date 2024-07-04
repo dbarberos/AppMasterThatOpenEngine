@@ -13,6 +13,12 @@ export class ProjectsManager {
     }
 
     newProject(data: IProject) {
+        const projectNames = this.list.map((project) => {
+            return project.name
+        })
+        if (projectNames.includes(data.name)) {
+            throw new Error(`A project with the name [ ${data.name} ] already exists`)
+                }
         const project = new Project(data)
         this.ui.append(project.ui)
         this.list.push(project)
