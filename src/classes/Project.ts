@@ -13,7 +13,6 @@ export interface IProject {
 }
 
 
-
 export class Project implements IProject {
     // To satisfy IProject
     name: string
@@ -39,10 +38,10 @@ export class Project implements IProject {
     }
 
     setUi() {
-       if (this.ui) {return}
-       this.ui = document.createElement("div")
-       this.ui.className = "project-card"
-       this.ui.innerHTML = `
+        if (this.ui) {return}
+        this.ui = document.createElement("div")
+        this.ui.className = "project-card"
+        this.ui.innerHTML = `
             <div class="card-header">
                 <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
                 <div>

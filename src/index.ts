@@ -1,38 +1,13 @@
 import { IProject, ProjectStatus, UserRole } from "./classes/Project"
 import { ProjectsManager} from "./classes/ProjectsManager"
-import { MessagePopUP} from "./classes/MessagePopUp"
-
-
-export function showModal(id: string) {
-    const modal = document.getElementById(id)
-    if (modal && modal instanceof HTMLDialogElement) {
-        modal.showModal()
-    } else {
-        console.warn("No modal found related with the provided ID", id) 
-    }
-}
-export function closeModal(id: string) {
-    const modal = document.getElementById(id)
-    if (modal && modal instanceof HTMLDialogElement) {
-        modal.close()
-    } else {
-        console.warn("No modal found related with the provided ID", id)
-    }
-}
- 
-
-export function toggleModal(id: string,) {
-    const modal = document.getElementById(id)
-    if (modal && modal instanceof HTMLDialogElement) {
-        modal.open ? modal.close() : modal.showModal() 
-        } else {
-        console.warn("No modal found related with the provided ID", id)
-    }
-}
+import { showModal, closeModal, toggleModal } from "./classes/ModalManager"
 
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 const projectManager = new ProjectsManager(projectListUI)
+
+
+
 
 
 // This document object is provided by the browser, and its main purpose is to help us interact with the DOM
@@ -110,3 +85,26 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
     } else {
     console.log("The project form was not found. Check the ID!")
 }
+
+// Export projects to a JSON
+document.addEventListener("DOMContentLoaded", () => {
+    const exportProjectsBtn = document.getElementById("export-projects-JSON-btn")
+    if (exportProjectsBtn) {
+        exportProjectsBtn.addEventListener("click", () => {
+            projectManager.exprtToJSON()
+        })
+    } else {
+        console.log("The export button was not found. Check the ID!")
+    }
+})
+
+// Import projects from a JSON
+const importProjectsBtn = document.getElementById("import-projects-JSON-btn")
+if (importProjectsBtn) {
+    importProjectsBtn.addEventListener("click", () => {
+        projectManager.imprtFromJSON()
+    })
+} else {
+    console.log("The import button was not found. Check the ID!")
+}
+    

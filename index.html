@@ -110,10 +110,41 @@
                 </div>
             </dialog>
 
+            <dialog id="modal-list-of-projects-json" >
+                <div class="list-of-projects-json">
+                    <header id="modal-header-title"  style="width: 100%; display=flex; flex-direction: row; justify-content: space-between; align-items: start; padding: 0; align-items: center;">
+                        <h4 style="margin-left: 25px;">Select Items to Import/Export</h4>
+                        <div style="display: flex; flex-direction: column; row-gap: 10px ;">
+                            <button id="selectAllBtn" class="buttonB"></button>
+                            <button id="deselectAllBtn" class="buttonB"></button>
+                        </div>
+                    </header>
+                    <div style="width:90%; margin-left: 50px;">
+                        <ul id="json-projects-list" style="row-gap: 15px;" ></ul>
+                    </div>
+                    <div id="buttonEndRight" style="display: flex; flex-direction: row; justify-content: flex-end; width: 100%;">
+                        <button id="cancel-json-list-btn" type="button" class="buttonB">Cancel</button>
+                        <button id="confirm-json-list" type="submit" class="buttonB">Accept</button>
+                    </div>
+                    
+                </div>
+            </dialog>
+
+
             <header>
-                <h2>Projects<span class="material-icons-round" style="padding: 10px;">construction</span></h2>
-                <div id="add-new-project"> 
-                    <div><span class="material-icons-round" style="padding-right: 10px;">file_upload</span></div>
+                <h2>Projects<span class="material-icons-round" style="padding: 10px;">location_city</span></h2>
+                <div style="display:flex; align-items: center; column-gap: 5px; " > 
+                    <div>
+                        <button id="export-projects-JSON-btn" style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
+                            <span class="material-icons-round">file_upload</span>
+                        </button>
+                    </div>
+                    <div>
+                        <button id="import-projects-JSON-btn" style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
+                            <span class="material-icons-round">file_download</span>
+                        </button>
+                    </div>
+
                     <button id="new-project-btn"><span class="material-icons-round">add</span>New Project</button>
                 </div>
             </header>

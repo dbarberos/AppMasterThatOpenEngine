@@ -15,7 +15,7 @@
     --font-xl: 18px;
     --font-2xl: 20px;
     --font-3xl: 22px;
-    --font-icon-lg: 34px;
+    --font-icon-lg: 50px;
     /* Colors */
     --primary: #029AE0;
     --primary-l00: #073044;
@@ -246,13 +246,6 @@ background-color: var(--primary);
     background-color: var(--primary-400);
 }
 /*  Header style */
-
-#add-new-project {
-    display: flex;
-    align-items: center;
-
-}
-
 
 /* Content styles */
 header {
@@ -840,7 +833,7 @@ fieldset {
     color: var(--color-grey-light);
     text-decoration: none;
     font-size: var(--font-lg);
-    transition: 0.4s;
+    transition: 0.3s;
     background-color: inherit;
 }
 
@@ -853,7 +846,7 @@ fieldset {
     width: calc(100% + 2px);
     height: calc(100% + 4px);
     background-color: inherit;
-    transition: 0.4s ease-out;
+    transition: 0.3s ease-out;
     transform: translateX(0);
     transform: scaleX(1);
     z-index: 2;
@@ -869,7 +862,7 @@ fieldset {
     width: 2px;
     height: calc(100% + 4px);
     background-color: inherit;
-    transition: 0.4s ease-out;
+    transition: 0.2s ease-out;
     transform: scaleY(1);
     z-index: 2;
     ;
@@ -877,7 +870,7 @@ fieldset {
     
 
 .btn-popup:hover::before {
-    animation: moveClipPath 0.4s ease-out forwards;
+    animation: moveClipPath 0.3s ease-out forwards;
 }
 
 @keyframes moveClipPath {
@@ -892,7 +885,7 @@ fieldset {
 .btn-popup:hover::after {
     width: 100%;
     transform: scaleY(0);
-    transition-delay: 0.37s;
+    transition-delay: 0.30s;
 }
 
 .btn-popup:hover {
@@ -909,4 +902,39 @@ button {
     text-decoration: none;
     border: none;
     background-color: transparent;
+}
+
+/* Style for JSON PopUp List */
+
+.list-of-projects-json {
+
+    margin: auto;
+    color: var(--color-grey-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: var(--gap-lg);
+    padding: 10px 20px;
+    width: fit-content;
+    min-width: 500px;
+    background-color: var(--background-200);
+    border-radius: 10px;
+}
+
+.checkbox-json {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    column-gap: var(--gap-xs);
+    color: red;
+    margin-left: 35;
+    justify-content: space-between;
+    white-space: nowrap;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 20px;
+    row-gap: 10px;
+    
+    column-gap: var(--padding-4xs)
 }
