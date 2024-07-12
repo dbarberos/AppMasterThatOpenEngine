@@ -345,30 +345,29 @@ export class ProjectsManager {
             })
             
             // Check whether any project is selecter before confirm
-            // No project selected, close the modal the same way cancel button                
-            if (selectedProjects.length === 0) {
-                this.clearProjectCheckList("#json-projects-list")
-                closeModalProject("modal-list-of-projects-json") 
+            // if none project is selected, close the modal the same way cancel button                
+            if (selectedProjects.length > 0) {
+                
+                // Export the selected projects
+                const json = JSON.stringify(selectedProjects, null, 2)
+                const blob = new Blob([json], { type: "application/json" })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = `${fileName}_${new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                })}.json`
+                a.click()
+                URL.revokeObjectURL(url)
             }
-            
-            // Export the selected projects
-            const json = JSON.stringify(selectedProjects, null, 2)
-            const blob = new Blob([json], { type: "application/json" })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement("a")
-            a.href = url
-            a.download = `${fileName}_${new Date().toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            })}.json`
-            a.click()
-            URL.revokeObjectURL(url) 
             this.clearProjectCheckList("#json-projects-list")
-            closeModalProject("modal-list-of-projects-json")        
+            closeModalProject("modal-list-of-projects-json")
+            
         }
         confirmBtn.removeEventListener("click", confirmBtnClickListener)
         
