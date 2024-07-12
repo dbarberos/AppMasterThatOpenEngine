@@ -921,20 +921,24 @@ button {
     border-radius: 10px;
 }
 
+#json-projects-list {
+    width: 400px;
+
+}
+
 .checkbox-json {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    column-gap: var(--gap-xs);
-    color: red;
-    margin-left: 35;
-    justify-content: space-between;
-    white-space: nowrap;
+    align-items: start;
+    color: var(--color-grey-light);
+    margin-bottom: 10px;
+    justify-content: start;
+    /* white-space: nowrap; */
     max-width: 300px;
     overflow: hidden;
     text-overflow: ellipsis;
-    height: 20px;
-    row-gap: 10px;
+    height: auto;
+    row-gap: 30px;
+    column-gap: var(--padding-4xs);
     
-    column-gap: var(--padding-4xs)
 }

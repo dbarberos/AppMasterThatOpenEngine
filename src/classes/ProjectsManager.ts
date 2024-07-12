@@ -1,6 +1,8 @@
 import { Project, IProject, ProjectStatus, UserRole } from "./Project"
-import { showModal, closeModal, toggleModal } from "./ModalManager"
+import { showModal, closeModal, toggleModal, closeModalProject } from "./ModalManager"
 
+let confirmBtnClickListener: EventListener | null = null   //GESTION DE LOS EVENTLISTENER
+let cancelExporProjectBtnClickListener: EventListener | null = null  //GESTION DE LOS EVENTLISTENER
 export class ProjectsManager {
     list: Project[] = []
     ui: HTMLElement
@@ -231,7 +233,11 @@ export class ProjectsManager {
         }
     }
     
+    // let confirmBtnClickListener: EventListener | null = null   //GESTION DE LOS EVENTLISTENER
+    // let cancelExporProjectBtnClickListener: EventListener | null = null  //GESTION DE LOS EVENTLISTENER
+    
     showExportJSONModal(projects: IProject[], fileName: string) {
+        
         
         // Show the modal dialog element
         const modalListOfProjectsJson = document.getElementById("modal-list-of-projects-json")
@@ -261,7 +267,7 @@ export class ProjectsManager {
         //     listItems.appendChild(checkbox)
         //     projectListJson?.appendChild(listItems)
         // })
-
+        
         console.log("After display the list of projects")
         // Change the Modal Title
         const title = document.querySelector("#modal-header-title h4")
@@ -309,76 +315,86 @@ export class ProjectsManager {
             }
         })
         // Confirmation-Cancellation button for taking the selection
-        const confirmBtn = document.querySelector("#confirm-json-list")
-        const cancelExportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
+        const confirmBtn = document.getElementById("confirm-json-list")        
+        if (!confirmBtn) {
+            throw new Error("Confirm button not found")
+        } 
+        
+        const checkmarkSymbol = String.fromCharCode(0x2713)
+        confirmBtn.textContent = checkmarkSymbol
+        
+        confirmBtnClickListener = (e: Event) => { //ESTO ES NUEVO PARA MANEJAR LA GESTION DE EVENTOS
+            e.preventDefault() // MOVIDO DOS LINEAS ARRIBA PARA GESTIONAS LOS EVENTOS
+            // confirmBtn?.addEventListener("click", (e) => {   ESTO SE ELEIMNO PARA GESTIONAR LOS EVENTLISTENER
 
-        if (confirmBtn) {
-            confirmBtn.textContent = "Confirm"
-            confirmBtn?.addEventListener("click", (e) => {
-                e.preventDefault()
-                // Get the selected projects from the checkboxes
-                const selectedProjects: IProject[] = []
-                projectListJson?.querySelectorAll("li input[type='checkbox']:checked").forEach((checkbox) => {
-                    const parentNode = checkbox.parentNode
-                    if (parentNode) {
-                        const projectName = checkbox.parentNode.textContent
-                        const project = projects.find((project) => project.name === projectName)
-                        if (project) {
-                            selectedProjects.push(project)
-                        } else {
-                            console.log("Project not found: " + projectName)
-                        }
+            // Get the selected projects from the checkboxes
+            const selectedProjects: IProject[] = []
+            projectListJson?.querySelectorAll("li input[type='checkbox']:checked").forEach((checkbox) => {
+                const parentNode = checkbox.parentNode
+                if (parentNode) {
+                    const projectName = checkbox.parentNode.textContent
+                    const project = projects.find((project) => project.name === projectName)
+                    if (project) {
+                        selectedProjects.push(project)
                     } else {
-                        console.log("Parent node not found for the checkbox")
+                        console.log("Project not found: " + projectName)
                     }
-                })
-                
-                // Check whether any project is selecter before confirm
-                // No project selected, close the modal the same way cancel button                
-                if (selectedProjects.length === 0) {
-                    this.clearProjectCheckList()
-                    toggleModal("modal-list-of-projects-json")                    
-                    return
-                }
-                
-                // Export the selectaed projects
-                const json = JSON.stringify(selectedProjects, null, 2)
-                const blob = new Blob([json], { type: "application/json" })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement("a")
-                a.href = url
-                a.download = `${fileName}_${new Date().toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                })}.json`
-                a.click()
-                URL.revokeObjectURL(url)
-                // Clear the project check list
-                const cleanCheckList = document.querySelector("#json-projects-list");
-                if (cleanCheckList) {
-                    cleanCheckList.innerHTML = "";
                 } else {
-                    console.log("Error: cleanCheckList is null")
+                    console.log("Parent node not found for the checkbox")
                 }
-                toggleModal("modal-list-of-projects-json")
-                // Hide or close the modal
-                // modal.style.display = 'none';
             })
             
-            if (cancelExportProjectBtn) {
-                cancelExportProjectBtn.addEventListener("click", (e) => {
-                    e.preventDefault()
-                    this.clearProjectCheckList()                    
-                    toggleModal("modal-list-of-projects-json")
-                })
+            // Check whether any project is selecter before confirm
+            // No project selected, close the modal the same way cancel button                
+            if (selectedProjects.length === 0) {
+                this.clearProjectCheckList("#json-projects-list")
+                closeModalProject("modal-list-of-projects-json") 
             }
-        } else {
-            console.log("Error: confirmBtn is null")
+            
+            // Export the selected projects
+            const json = JSON.stringify(selectedProjects, null, 2)
+            const blob = new Blob([json], { type: "application/json" })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `${fileName}_${new Date().toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            })}.json`
+            a.click()
+            URL.revokeObjectURL(url) 
+            this.clearProjectCheckList("#json-projects-list")
+            closeModalProject("modal-list-of-projects-json")        
         }
+        confirmBtn.removeEventListener("click", confirmBtnClickListener)
+        
+
+        const cancelExportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
+        if (!cancelExportProjectBtn) {
+            throw new Error("Cancel button not found")
+        }
+        const cancelSymbol = String.fromCharCode(0x274C)    
+        cancelExportProjectBtn.textContent = cancelSymbol
+        cancelExporProjectBtnClickListener = (e: Event) => {            
+            // cancelExportProjectBtn.addEventListener("click", (e) => {   LINEA ANTIGUA DE GESTION DE EVENTOS
+            e.preventDefault()
+            this.clearProjectCheckList("#json-projects-list")
+            closeModalProject("modal-list-of-projects-json")  
+    }
+    cancelExportProjectBtn.removeEventListener("click", cancelExporProjectBtnClickListener)
+    
+    //Remove existing event listeners
+    confirmBtn.removeEventListener("click", confirmBtnClickListener)
+    cancelExportProjectBtn?.removeEventListener("click", cancelExporProjectBtnClickListener)
+
+    //Add new event listeners
+    confirmBtn.addEventListener("click", confirmBtnClickListener)
+    cancelExportProjectBtn?.addEventListener("click", cancelExporProjectBtnClickListener)
+    
     }
 
     generateProjectList(projects: IProject[], projectListJson: Element | null) {
@@ -390,17 +406,20 @@ export class ProjectsManager {
         console.log("Before display the list of projects")
         projects.forEach((project) => {
             const listItems = document.createElement("li")
-            listItems.textContent = project.name
+            
             const checkbox = document.createElement("input")
             checkbox.type = "checkbox"
-            listItems.classList.add("checkbox-json")
             listItems.appendChild(checkbox)
+            const projectNametext = document.createTextNode(project.name)
+            listItems.appendChild(projectNametext)
+            listItems.classList.add("checkbox-json")
             projectListJson?.appendChild(listItems)
+            
         })
     }
     
-    clearProjectCheckList() {
-        const cleanCheckList = document.querySelector("#json-projects-list");
+    clearProjectCheckList(list: string) {
+        const cleanCheckList = document.querySelector(list);
         if (cleanCheckList) {
             cleanCheckList.innerHTML = "";
         } else {
