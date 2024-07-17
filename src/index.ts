@@ -67,8 +67,8 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
             }
         }
         /* catch (err) {
-             const errorDisp = new MessagePopUp(ProjectForm, error, error)
-             errorDisp.showError()
+            const errorDisp = new MessagePopUp(ProjectForm, error, error)
+            errorDisp.showError()
          }
         */
     })

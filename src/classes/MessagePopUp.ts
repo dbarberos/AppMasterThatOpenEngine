@@ -1,7 +1,7 @@
-import { showModal, closeModal, toggleModal } from "../index"
+import { showModal, closeModal, toggleModal } from "./ModalManager"
+
 
 export class MessagePopUp {
-    name: string
     title: "error" | "warning" | "info" | "success" | "update"
     message: string
     icon: string
@@ -33,42 +33,55 @@ export class MessagePopUp {
     }
 
     setNameClass(): string {
-        switch (this.nameClass) {
-            case "error":
+        const icon = this.setIcon()
+        switch (icon) {
+            case "report":
                 return "popup-error"
                 break;
             case "warning":
                 return "popup-warning"
                 break;
-            case "info":
+            case "notifications_active":
                 return "popup-info"
                 break;
-            case "success":
+            case "check_circle":
                 return "popup-success"
                 break;
-            case "update":
-                return "info"
+            case "info":
+                return "popup-update"
                 break;
             default:
-                return ""
+                return "popup-default"
                 break;
         }
     }
 
-    constructor(container: HTMLElement, error: Error, title: "error" | "warning" | "info" | "success" | "update") {
-        this.name = error.name
+    constructor(
+        container: HTMLElement,
+        title: "error" | "warning" | "info" | "success" | "update",
+        messageText: string
+    ) {
         this.title = title
-        this.message = error.message
+        this.message = messageText
         this.icon = this.setIcon()
         this.nameClass = this.setNameClass()
         this.parent = container
     }
 
 
-    showError() {
+    showMessageError() {
+        //Check is a dialog already exist
+        const existingDialog = this.parent.querySelector(".nameClass")
+        if (existingDialog && this.parent.contains(existingDialog)) {
+            //Remove the existing dialog only if it´s a child of this.parent
+            this.parent.removeChild(existingDialog)
+            }            
+        
+        //Create a new dialog element
         this.ui = document.createElement("dialog");
         this.ui.classList.add(this.nameClass);
-        this.ui.id = "message-popup";
+        this.ui.id = "message-error-popup";
+        //Set the dialog content
         this.ui.innerHTML = `
             <div class="message-popup">
                 <div style="display: flex; column-gap: var(--gap-lg); align-items: center;">
@@ -78,26 +91,29 @@ export class MessagePopUp {
                         </span>
                     </div>
                     <div id="message-popup-text"  style="display: flex; flex-direction: column; justify-content: start;row-gap: var(--gap-5xs);">
-                        <h5 style="font-weight: bold;">${this.title}</h5>
+                        <h5 style="font-weight: bold; text-transform: uppercase;">${this.title}</h5>
                         <p>${this.message}</p>
                     </div>
                 </div>
                 <button class="btn-popup">
-                    <div class="popup-text">Got it</div>
+                    <div id="btn-popup-text">Got it</div>
                 </button>
             </div>
             `;
-        this.parent.appendChild(this.ui)
-            (this.ui as HTMLDialogElement).showModal()
-        const closeBtn = this.ui.querySelector(".btn-popup")
+        this.parent.appendChild(this.ui);
+        (this.ui as HTMLDialogElement).showModal();
+        const closeBtn = this.ui.querySelector(".btn-popup");
+
         if (closeBtn) {
             closeBtn.addEventListener("click", () => {
                 (this.ui as HTMLDialogElement).close()
                 this.ui.remove()
             })
-        }
-    }    
-}
+        };
+  
+    }
+}    
+
 
 
 

@@ -800,26 +800,36 @@ fieldset {
     padding-right: 5px;
     color: var(--color-grey-light);
     row-gap: var(--gap-s);
-    width: 450px;
+    width: 500px;
     min-width: 200px;
-    background-color: var(--background-200);
-    border-radius: 10px;
+    /* background-color: var(--background-200); */
+    /* border-radius: 10px; */
     }
 
 .popup-success {
     background-color: var(--popup-success);
+    border-radius: 15px;
 }
 .popup-warning {
     background-color: var(--popup-warning) ;
+    border-radius: 15px;
 }
 .popup-error {
     background-color: var(--popup-error) ;
+    border-radius: 15px;
 }
 .popup-update {
     background-color: var(--popup-update) ;
+    border-radius: 15px;
 }
 .popup-info {
     background-color: var(--popup-info) ;
+    border-radius: 15px;
+    color: black;
+}
+.popup-default {
+    background-color: var(--background-200);
+    border-radius: 15px;
 }
 
 .btn-popup {
@@ -836,6 +846,24 @@ fieldset {
     transition: 0.3s;
     background-color: inherit;
 }
+
+/* .message-popup-mask-over-btn {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0px;
+    right: 0px;
+    width: calc(100% + 2px);
+    height: calc(100% + 4px);
+    background-color: inherit;
+    transition: 0.3s ease-out;
+    transform: translateX(0);
+    transform: scaleX(1);
+    z-index: 2;
+    clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0);
+    transform: scaleY(0);
+    transition-delay:0.3s;
+} */
 
 .btn-popup::before {
     content: '';
@@ -898,7 +926,7 @@ fieldset {
     z-index: 3;
 }
 
-button {
+button  .btn-popup{
     text-decoration: none;
     border: none;
     background-color: transparent;
@@ -941,4 +969,11 @@ button {
     row-gap: 30px;
     column-gap: var(--padding-4xs);
     
+}
+
+.disabled-checkbox {
+    /* background-color: var(--color-grey-light); */
+    color: var(--popup-error);
+    opacity: 0.7;
+    /* text-decoration: line-through; */
 }
