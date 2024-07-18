@@ -11,6 +11,17 @@ export interface IProject {
     userRole: UserRole
     finishDate: Date
 }
+// const dummyProject: IProject = {
+//     name: "",
+//     description: "",
+//     status: "Active",
+//     userRole: "Developer",
+//     finishDate: new Date()
+// }
+// You can simplify the code by using the IProject interface to get the property keys.
+// const projectKeys = Object.keys({} as IProject)
+// instead of
+// const projectKeys = Object.keys(dummyProject)
 
 
 export class Project implements IProject {
@@ -20,25 +31,27 @@ export class Project implements IProject {
     status: "Pending" | "Active" | "Finished"
     userRole: "Architect" | "Engineer" | "Developer"
     finishDate: Date
- 
+    
     // Class internals
     id: string
     ui: HTMLDivElement
     cost: number = 0
     progress: number = 0
-
+    
     constructor(data: IProject) {
-        this.name = data.name
-        this.description = data.description
-        this.userRole = data.userRole
-        this.status = data.status
-        this.finishDate = data.finishDate
-        this.setUi()
-        this.id = uuidv4()
+        // const projectKeys = Object.keys(dummyProject)
+        for (const key in data) {
+            this[key] = data[key]
+        }
+        
+        this.setUi();
+        if (!this.id) { this.id = uuidv4() } //In order to not change the ID when we import projects from JSON file
+        console.log(data);
+        
     }
-
+    
     setUi() {
-        if (this.ui) {return}
+        if (this.ui && this.ui instanceof HTMLElement) {return}
         this.ui = document.createElement("div")
         this.ui.className = "project-card"
         this.ui.innerHTML = `

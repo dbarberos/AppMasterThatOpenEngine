@@ -2,8 +2,9 @@ import { Project, IProject, ProjectStatus, UserRole } from "./Project"
 import { showModal, closeModal, toggleModal, closeModalProject } from "./ModalManager"
 import { MessagePopUp } from "./MessagePopUp"
 
-let confirmBtnClickListener: EventListener | null = null   //GESTION DE LOS EVENTLISTENER
-let cancelExportProjectBtnClickListener: EventListener | null = null  //GESTION DE LOS EVENTLISTENER
+let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
+let cancelExportProjectBtnClickListener: EventListener | null = null  //GMAnaging the EVENTLISTENER
+
 export class ProjectsManager {
     list: Project[] = []
     ui: HTMLElement
@@ -394,7 +395,16 @@ export class ProjectsManager {
             if (selectedProjects.length > 0) {
                 
                 // Export the selected projects
-                const json = JSON.stringify(selectedProjects, null, 2)
+                
+                    //function for the second argument of the STRINGIFY
+                function removeUIfromExport(key, value) {
+                    if (key === "ui") {
+                        return undefined
+                    }
+                    return value
+                }
+
+                const json = JSON.stringify(selectedProjects, removeUIfromExport, 2) //remove null from the second argument
                 const blob = new Blob([json], { type: "application/json" })
                 const url = URL.createObjectURL(blob)
                 const a = document.createElement("a")
