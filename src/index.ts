@@ -1,13 +1,10 @@
 import { IProject, ProjectStatus, UserRole } from "./classes/Project"
 import { ProjectsManager} from "./classes/ProjectsManager"
-import { showModal, closeModal, toggleModal } from "./classes/ModalManager"
+import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager"
 
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 const projectManager = new ProjectsManager(projectListUI)
-
-
-
 
 
 // This document object is provided by the browser, and its main purpose is to help us interact with the DOM
@@ -17,7 +14,6 @@ if (newProjectBtn) {
 } else {
     console.warn("New project button was not found")
 }
-
 
 
 //Obtaining data from the form via giving an id to the form and using FormData
@@ -107,4 +103,13 @@ if (importProjectsBtn) {
 } else {
     console.log("The import button was not found. Check the ID!")
 }
-    
+
+//Main button of project(aside) return to the projects list
+const btnMainProjects = document.querySelector("#asideBtnProjects")
+btnMainProjects?.addEventListener("click", (e) => {
+    e.preventDefault()
+    changePageContent("project-page", "flex")
+
+
+
+})

@@ -1,4 +1,4 @@
-import { showModal, closeModal, toggleModal } from "./ModalManager"
+import { showModal, closeModal, toggleModal } from "./UiManager"
 
 
 export class MessagePopUp {

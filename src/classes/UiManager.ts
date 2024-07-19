@@ -49,3 +49,28 @@ export function closeModalProject(id: string, projectsManager: ProjectsManager) 
     }
 }
 
+export function changePageContent(pageToShow: string, modeDisplay: string) {
+    const showPage = document.querySelector<HTMLElement>(`#${pageToShow}`)
+    if (!showPage) { return }
+
+    //Show the page to Show
+    showPage.style.display = modeDisplay
+    console.log(`show the loaded page: ${pageToShow}`);
+    
+
+    //Hide the rest of pages of the content area.We keep asidea area rest in peace
+    const allPages = document.querySelectorAll<HTMLElement>("[data-page]")
+    allPages.forEach(page => {
+        if (page.id !== pageToShow) {
+            page.style.display = "none"
+            console.log(`hide the page: ${page.id}`);
+        }
+    })
+}
+    
+    // export function changePageContent(pageToShow: string, pageToHide: string, modeDisplay: string) {
+    //     const showPage = document.querySelector<HTMLElement>(pageToShow)
+    //     const hidePage = document.querySelector<HTMLElement>(pageToHide)
+    //     if (!showPage || !hidePage) { return }
+    //     showPage.style.display = modeDisplay
+    //     hidePage.style.display = "none"

@@ -1,5 +1,5 @@
 import { Project, IProject, ProjectStatus, UserRole } from "./Project"
-import { showModal, closeModal, toggleModal, closeModalProject } from "./ModalManager"
+import { showModal, closeModal, toggleModal, closeModalProject , changePageContent} from "./UiManager"
 import { MessagePopUp } from "./MessagePopUp"
 
 let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
@@ -24,6 +24,12 @@ export class ProjectsManager {
             throw new Error(`A project with the name [ ${data.name} ] already exists`)
         }
         const project = new Project(data)
+        project.ui.addEventListener("click", () => {
+            changePageContent("project-details", "flex")
+        })
+
+
+
         this.ui.append(project.ui)
         this.list.push(project)
         this.removeDefaultProject();

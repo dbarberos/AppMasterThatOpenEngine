@@ -13,15 +13,15 @@
     <aside id="sidebar">
         <img id="company-logo" src="./assets/company-logo.svg" alt="Construction company" title="company-logo">
         <ul id="nav-buttons">
-            <li><span class="material-icons-round" style="padding: 0px 10px;">location_city</span>Projects</li>
-            <li>Projects</li>
-            <li>Projects</li>
+            <li id="asideBtnProjects" class="buttonB" ><span class="material-icons-round" >location_city</span>Projects</li>
+            <li id="asideBtnUsers" class="buttonB"><span class="material-icons-round" >people_alt</span>Users</li>
+            
         </ul>
     </aside>
     
     
     <main id="content">
-        <section class="page" id="project-page" style="display: ">
+        <section class="page" id="project-page" data-page style="display: ">
             <dialog id="new-project-modal" >
                 <form id="new-project-form" action="" name="new-project-form" method="post" action="/send/">
                     <h2>New Project</h2>
@@ -180,7 +180,8 @@
 
             </div>
         </section>
-        <section class="page" id="project-details" style="display: none;">
+        
+        <section class="page" id="project-details" data-page style="display: ">
             <header>
                 <div>
                     <h2>Hospital Center</h2>
@@ -268,7 +269,7 @@
             </div>
         </section>
 
-        <section class="page" class="users-page" style="display: none;">
+        <section class="page" class="users-page" data-page style="display: ">
 
             <dialog id="new-user-modal" >
                 <form action="" name="formulario" method="post" action="/send/" class="user-form" enctype="multipart/form-data">
