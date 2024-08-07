@@ -22,11 +22,11 @@
     
     <main id="content">
         <section class="page" id="project-page" data-page style="display: ">
-            <dialog id="new-project-modal" >
+            <dialog id="new-project-modal" open="" >
                 <form id="new-project-form" action="" name="new-project-form" method="post" action="/send/">
                     <h2>New Project</h2>
                     <div class="input-list">
-                        <div class="form-field-user_container">
+                        <div class="form-field-container">
                             <label><span class="material-icons-round">apartment
                             </span>Name</label>
                             <input name="name" style="width: 90%;" type="text" size="30"  placeholder = "What´s the name of your project">
@@ -35,15 +35,35 @@
                                 <p>Give it a short name</p>
                             </details>
                         </div>
-                        <div class="form-field-user_container">
+
+                        <div class="form-field-container">
+                            <label><span class="material-icons-round">text_fields</span>Acronym</label>
+                            <input name="acronym" style="width: 90%;" type="text" size="30" placeholder="Enter a brief acronym for the project" maxlength="5" data-uppercase="acronym">
+                            <details>
+                                <summary>Tip</summary>
+                                <p>No more than four characters</p>
+                            </details>
+                        </div>
+                        <div class="form-field-container">
                             <label><span class="material-icons-round">
                                 article
                             </span>Decription</label>
-                            <textarea name="description" id="" cols="50" rows="5" placeholder="Give your project a nice description!So people is jealous about it"></textarea>
+                            <textarea name="description" id="" cols="50" rows="5" placeholder="Give your project a nice description! So people is jealous about it"></textarea>
                         </div>
-                        <div class="form-field-user_container" >
+                        <div class="form-field-container">
                             <label><span class="material-icons-round">
-                                account_circle
+                                engineering
+                            </span>Business Unit</label>
+                            <select name="businessUnit">
+                                <option value="Edification">Edification</option>
+                                <option value="Civil">Civil</option>
+                                <option value="Transport">Transport</option>
+                                <option value="Bridge">Bridge</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-field-container" >
+                            <label><span class="material-icons-round"> 
                             </span>Rol</label>
                             <select name="userRole">
                                 <option>Architect</option>
@@ -62,7 +82,7 @@
                                 <option value="Structural Engineer">Structural Engineer</option>
                             </datalist> -->
                         </div>
-                        <div class="form-field-user_container">
+                        <div class="form-field-container">
                             <label><span class="material-icons-round">
                                 not_listed_location
                             </span>Status</label>
@@ -72,7 +92,7 @@
                                 <option>Finished</option>
                             </select>
                         </div>
-                        <div class="form-field-user_container">
+                        <div class="form-field-container">
                             <label><span class="material-icons-round">
                                 calendar_month
                             </span>Finish Date</label>
@@ -200,6 +220,10 @@
                             <p>Community hospital located at downtown</p>
                         </div>
                         <div style="display: flex; column-gap: 30px; padding: 15px; justify-content: space-around;">
+                            <div>
+                                <p style="color: #969696; font-size: var(--font-base);">Business Unit</p>
+                                <p>Commercial Construction</p>
+                            </div>
                             <div>
                                 <p style="color: #969696; font-size: var(--font-base);">Status</p>
                                 <p>Active</p>

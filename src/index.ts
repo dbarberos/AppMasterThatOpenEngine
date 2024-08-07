@@ -1,7 +1,7 @@
-import { IProject, ProjectStatus, UserRole } from "./classes/Project"
-import { ProjectsManager} from "./classes/ProjectsManager"
-import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager"
-
+import { IProject, ProjectStatus, UserRole, BusinessUnit } from "./classes/Project";
+import { ProjectsManager } from "./classes/ProjectsManager";
+import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager";
+import "./classes/HTMLUtilities.ts";
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 const projectManager = new ProjectsManager(projectListUI)
@@ -19,13 +19,15 @@ if (newProjectBtn) {
 //Obtaining data from the form via giving an id to the form and using FormData
 const projectForm = document.getElementById("new-project-form")
 const cancelForm: Element | null = document.getElementById("cancel-project-btn");
-let closePopUpHandler: () => void
+// let closePopUpHandler: () => void
 if (projectForm && projectForm instanceof HTMLFormElement) {
     projectForm.addEventListener("submit", (event) => {
         event.preventDefault()
         const formData = new FormData(projectForm)
         const projectDetails: IProject = {
-            name: formData.get("name") as string,
+            name: formData.get("name") as string,           
+            acronym: formData.get("acronym") as string,
+            businessUnit: BusinessUnit[formData.get("businessUnit")as keyof typeof BusinessUnit],
             description: formData.get("description") as string,
             status: formData.get("status") as ProjectStatus,
             userRole: formData.get("userRole") as UserRole,

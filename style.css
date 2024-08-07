@@ -433,7 +433,7 @@ details {
 
 /* From Styles Flecha en contenido desplegado */
 .form-field-container details[open] summary::marker {
-    content: "⮟ ";
+    content: "⮟";
 }
 
 label {

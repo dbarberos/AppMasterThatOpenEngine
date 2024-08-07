@@ -1,9 +1,9 @@
-import { Project, IProject, ProjectStatus, UserRole } from "./Project"
+import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from "./Project"
 import { showModal, closeModal, toggleModal, closeModalProject , changePageContent} from "./UiManager"
 import { MessagePopUp } from "./MessagePopUp"
 
-let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
-let cancelExportProjectBtnClickListener: EventListener | null = null  //GMAnaging the EVENTLISTENER
+// let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
+// let cancelExportProjectBtnClickListener: EventListener | null = null  //GMAnaging the EVENTLISTENER
 
 export class ProjectsManager {
     list: Project[] = []
@@ -27,9 +27,8 @@ export class ProjectsManager {
         project.ui.addEventListener("click", () => {
             changePageContent("project-details", "flex")
         })
-
-
-
+        
+        
         this.ui.append(project.ui)
         this.list.push(project)
         this.removeDefaultProject();
@@ -39,7 +38,9 @@ export class ProjectsManager {
         if (this.defaultProjectCreated) { return }
         const defaultData = {
             name: "Example Project",
+            acronym: "EP",
             description: "This is a A Big Building",
+            businessUnit: "Commercial Construction" as BusinessUnit,
             status: "Active" as ProjectStatus,
             userRole: "Developer" as UserRole,
             finishDate: new Date("2022-02-03"),
@@ -116,7 +117,7 @@ export class ProjectsManager {
             // Fire the dialog where you select the projects you whant to import
             this.showImportJSONModal(projects)
 
-/* // ESTE CODIGO HA SIDO TRANSLADADOPASADO A LA FUNCIÓN QUE MUESTRA EL LISTADO PARA SELECCIONAR
+/* // ESTE CODIGO HA SIDO TRANSLADADO A LA FUNCIÓN QUE MUESTRA EL LISTADO PARA SELECCIONAR
             // for (const project of projects) {
             //     try {
             //         this.newProject(project)
