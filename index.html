@@ -22,7 +22,7 @@
     
     <main id="content">
         <section class="page" id="project-page" data-page style="display: ">
-            <dialog id="new-project-modal" open="" >
+            <dialog id="new-project-modal" >
                 <form id="new-project-form" action="" name="new-project-form" method="post" action="/send/">
                     <h2>New Project</h2>
                     <div class="input-list">
@@ -204,45 +204,47 @@
         <section class="page" id="project-details" data-page style="display: ">
             <header>
                 <div>
-                    <h2>Hospital Center</h2>
-                    <p style="color: var(--color-grey)"> Community hospital location city</p>
+                    <h2 data-project-info="name">Hospital Center</h2>
+                    <!-- <p style="color: var(--color-grey)"> Community hospital location city</p> -->
                 </div>
             </header>
             <div class="main-page-content">
                 <div style="display: flex; flex-direction: column;row-gap: 15px;">
-                    <div class="dashboard-card" style="padding: 10px 0; row-gap: 15px;">
+                    <div class="dashboard-card" style="padding: 10px; row-gap: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; ">
-                            <p style="font-size: 20px; background-color: #ca8134; padding: 15px; border-radius: 100%; aspect-ratio: 1; ">HC</p>
+                            <p style="font-size: 20px; background-color: #ca8134; padding: 15px; border-radius: 100%; aspect-ratio: 1; display: flex; align-items: center;" data-project-info="acronym">HC</p>
                             <button class="btn-secondary">Edit</button>
                         </div>
                         <div style="padding: 0 30px;">
-                            <h5>Hospital central</h5>
-                            <p>Community hospital located at downtown</p>
+                            <h5 data-project-info="name">Hospital central</h5>
+                            <p data-project-info="description" >Community hospital located at downtown</p>
                         </div>
-                        <div style="display: flex; column-gap: 30px; padding: 15px; justify-content: space-around;">
+                        <div style="display: flex; column-gap: 15px; padding: 15px 0px; justify-content: space-around;">
                             <div>
-                                <p style="color: #969696; font-size: var(--font-base);">Business Unit</p>
-                                <p>Commercial Construction</p>
+                                <p style="color: #969696; font-size: var(--font-base);flex-basis: auto;">Business Unit</p>
+                                <p data-project-info="businessUnit">Commercial Construction</p>
                             </div>
                             <div>
-                                <p style="color: #969696; font-size: var(--font-base);">Status</p>
-                                <p>Active</p>
+                                <p style="color: #969696; font-size: var(--font-base);flex-basis: auto;">Status</p>
+                                <p data-project-info="status">Active</p>
                             </div>
                             <div>
-                                <p style="color: #969696; font-size: var(--font-base);">Cost</p>
-                                <p>€ 2.542.000</p>
+                                <p style="color: #969696; font-size: var(--font-base);flex-basis: auto;">Cost</p>
+                                <p data-project-info="cost">€ 2.542.000</p>
                             </div>
                             <div>
-                                <p style="color: #969696; font-size: var(--font-base);">Role</p>
-                                <p>Engineer</p>
+                                <p style="color: #969696; font-size: var(--font-base);flex-basis: auto;">Role</p>
+                                <p data-project-info="userRole">Engineer</p>
                             </div>
                             <div>
-                                <p style="color: #969696; font-size: var(--font-base);">Finish Date</p>
-                                <p>2023-05-01</p>
+                                <p style="color: #969696; font-size: var(--font-base);flex-basis: auto;">Finish Date</p>
+                                <p data-project-info="finishDate">2023-05-01</p>
                             </div>
                         </div>
-                        <div>Progress Bar</div>
-
+                        <div>
+                            <p data-project-info="progress=" style="color: #969696; font-size: var(--font-base);flex-basis: auto;">Progress</p>
+                            <progress value="50" max="100"></progress>
+                        </div>
                     </div>
                     <div class="dashboard-card">
                         <div style="padding: 20px 30px; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">

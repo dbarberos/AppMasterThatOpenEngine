@@ -484,9 +484,15 @@ fieldset {
 .dashboard-card {
     background-color: var(--background-l00);
     border-radius: 8px;
+    
     display: flex;
     flex-basis: content;
     flex-direction: column;
+    & p {
+        font-size: var(--font-base);
+        
+
+    }
 }
 
 .dashboard-card:nth-child(2) {
@@ -497,9 +503,48 @@ fieldset {
     display: grid;
     padding: 20px 40px;
     gap: 30px;
-    grid-template-columns: 450px 1fr;
+    grid-template-columns: 500px 1fr;
     height: 100%;
 }
+
+progress {
+    width: 100%;
+    height: var(--font-sm);
+    border : none;
+    border-radius: var(--br-9xs);
+    background-color: #ccc;
+    padding: 0;
+}
+
+progress[value] {
+    background-size: calc(var(--progress) * 1%) var(--font-sm);
+    background-image: linear-gradiente(to right, #009688, #009688);
+}
+
+progress::-webkit-progress-bar {
+    background-color: #ccc;
+    border-radius: var(--br-9xs);
+}
+progress::-webkit-progress-value {
+    background-color: #009688;
+    border-radius: var(--br-9xs);
+}
+
+progress::-moz-progress-bar {
+    background-colo: #009688;
+        border-radius: var(--br-9xs);
+
+}
+
+
+
+/* To-do list page */
+
+.todo-item {
+    font-size: var(--font-base);
+}
+
+
 
 /* User page management */
 
