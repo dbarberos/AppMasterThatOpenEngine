@@ -9,13 +9,13 @@ export class ProjectsManager {
     list: Project[] = []
     ui: HTMLElement
     defaultProjectCreated: boolean = false
-
+    
     constructor(container: HTMLElement) {
         this.ui = container
         this.defaultProjectCreated = false
         this.createDefaultProject()
     }
-
+    
     newProject(data: IProject) {
         const projectNames = this.list.map((project) => {
             return project.name
@@ -31,14 +31,12 @@ export class ProjectsManager {
             
         })
         
-
         this.ui.append(project.ui)
         this.list.push(project)
         this.removeDefaultProject();
         return project
-
     }
-
+    
     private setDetailsPage(project: Project) {
         const detailPage = document.getElementById("project-details")
         if (!detailPage) { return }
@@ -62,16 +60,10 @@ export class ProjectsManager {
         // Update the background color of the acronym in the dashboard-card
         const acronymElement = detailPage.querySelector('[data-project-info="acronym"]');
         if (acronymElement) {
-            //Get the parent element of the <p> tag
-            // const acronymContainer = acronymElement.parentElement;
-            if (acronymElement) {
-                acronymElement.style.backgroundColor = project.backgroundColorAcronym;
-            }
-            // acronymElement.style.backgroundColor = project.backgroundColorAcronym;
+            acronymElement.style.backgroundColor = project.backgroundColorAcronym;
         }
-    }
-    
-    
+    } 
+        
     createDefaultProject() {
         if (this.defaultProjectCreated) { return }
         const defaultData = {
@@ -92,6 +84,7 @@ export class ProjectsManager {
         this.list.push(defaultProject)
         this.defaultProjectCreated = true
     }
+    
     removeDefaultProject() {
         if (this.defaultProjectCreated && this.list.length > 1) {
             // Remove the defautl project from the Ui and from the array list
@@ -103,26 +96,26 @@ export class ProjectsManager {
             this.defaultProjectCreated = false;
         }
     }
-
+    
     getProject(id: string) {
         const project = this.list.find((project) => {
             return project.id === id
         })
         return project
     }
-
+    
     getProjectByName(name: string) {
         const project = this.list.find((project) => {
             return project.name === name
         })
         return project
     }
-
+    
     totalProjectsCost() {
         const TotalBudget = this.list.reduce((acumulative, Project) => acumulative + Project.cost, 0)
         return TotalBudget
     }
-
+    
     deleteProject(id: string) {
         const project = this.getProject(id)
         if (!project) { return }
@@ -140,7 +133,7 @@ export class ProjectsManager {
         this.showExportJSONModal(projects, fileName)
         console.log("After showExportJSONModal")
     }
-
+    
     imprtFromJSON() {
         // Create a file input element to allow the user to select a JSON file
         const input = document.createElement("input")
@@ -154,7 +147,7 @@ export class ProjectsManager {
             const projects: IProject[] = JSON.parse(json as string)
             // Fire the dialog where you select the projects you whant to import
             this.showImportJSONModal(projects)
-
+        
 /* // ESTE CODIGO HA SIDO TRANSLADADO A LA FUNCIÓN QUE MUESTRA EL LISTADO PARA SELECCIONAR
             // for (const project of projects) {
             //     try {
@@ -163,7 +156,7 @@ export class ProjectsManager {
             //         console.log(error)
             //     }
 */
-
+        
         })
         
         input.addEventListener("change", () => {
@@ -173,11 +166,11 @@ export class ProjectsManager {
         })
         input.click()
     }
-
+    
     confirmBtnClickListener: EventListener | null = null
     cancelImportProjectBtnClickListener: EventListener | null = null
     cancelExportProjectBtnClickListener: EventListener | null = null
-
+    
     showImportJSONModal(projects: IProject[]) {
         // Create a modal dialog element
         const modalListOfProjectsJson = document.getElementById("modal-list-of-projects-json")
@@ -521,7 +514,7 @@ export class ProjectsManager {
         console.log("Error: cleanCheckList is null")
         }
     }
-
+    
     selectAllCheckboxes(list: Element | null) {
         if (!list) {
             throw new Error("List element not found");
@@ -539,7 +532,7 @@ export class ProjectsManager {
             (checkbox as HTMLInputElement).checked = false;
         });
     }
-
+    
 }
 
 
