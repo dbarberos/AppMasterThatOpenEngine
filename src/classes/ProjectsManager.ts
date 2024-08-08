@@ -26,21 +26,59 @@ export class ProjectsManager {
         const project = new Project(data)
         project.ui.addEventListener("click", () => {
             changePageContent("project-details", "flex")
+            this.setDetailsPage(project)
+            console.log(" details pages set in a new window");
+            
         })
         
-        
+
         this.ui.append(project.ui)
         this.list.push(project)
         this.removeDefaultProject();
         return project
+
     }
+
+    private setDetailsPage(project: Project) {
+        const detailPage = document.getElementById("project-details")
+        if (!detailPage) { return }
+        
+        for (const key in project) {
+            const dataElement = detailPage.querySelectorAll(`[data-project-info="${key}"]`)
+            if (dataElement) {
+                if (key === "finishDate") {
+                    const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month:"long", day:"numeric"})
+                    dataElement.forEach(element => {
+                        element.textContent = formattedDate
+                    })                       
+                } else {
+                dataElement.forEach(element => {
+                    element.textContent = project[key]
+                })
+                }
+                
+            }
+        }
+        // Update the background color of the acronym in the dashboard-card
+        const acronymElement = detailPage.querySelector('[data-project-info="acronym"]');
+        if (acronymElement) {
+            //Get the parent element of the <p> tag
+            // const acronymContainer = acronymElement.parentElement;
+            if (acronymElement) {
+                acronymElement.style.backgroundColor = project.backgroundColorAcronym;
+            }
+            // acronymElement.style.backgroundColor = project.backgroundColorAcronym;
+        }
+    }
+    
+    
     createDefaultProject() {
         if (this.defaultProjectCreated) { return }
         const defaultData = {
             name: "Example Project",
             acronym: "EP",
             description: "This is a A Big Building",
-            businessUnit: "Commercial Construction" as BusinessUnit,
+            businessUnit: "Edification" as BusinessUnit,
             status: "Active" as ProjectStatus,
             userRole: "Developer" as UserRole,
             finishDate: new Date("2022-02-03"),

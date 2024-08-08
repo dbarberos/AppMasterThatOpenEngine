@@ -12,6 +12,7 @@ export interface IProject {
     status: ProjectStatus
     userRole: UserRole
     finishDate: Date
+    backgroundColorAcronym:string
 }
 // const dummyProject: IProject = {
 //     name: "",
@@ -48,52 +49,53 @@ export class Project implements IProject {
     ui: HTMLDivElement
     cost: number = 0
     progress: number = 0
-    
+    backgroundColorAcronym: string
+
     constructor(data: IProject) {
         // const projectKeys = Object.keys(dummyProject)
         for (const key in data) {  
             
             if (key === "businessUnit") {
                 this[key] = BusinessUnit[data[key] as keyof typeof BusinessUnit]
+            } else if (key === "finishDate") {
+                this.finishDate = new Date(data.finishDate)
             } else {
                 this[key] = data[key]
             }
         }
-        
+
+        this.backgroundColorAcronym = this.calculateBackgroundColorAcronym()
         this.setUi();
         if (!this.id) { this.id = uuidv4() } //In order to not change the ID when we import projects from JSON file
         console.log(data);
         
+    }
+
+    private calculateBackgroundColorAcronym(): string {
+        switch (this.businessUnit) {
+            case "Edification":
+                return "#f08080"; // Light red
+            case "Civil":
+                return "#90ee90"; // Light green
+            case "Transport":
+                return "#add8e6"; // Light blue
+            case "Bridge":
+                return "#c8a2c8"; // Light yellow
+            case "Other":
+                return "#d3d3d3"; // Light grey
+            default:
+                return "#ca8134"; // Default color
+        }
     }
     
     setUi() {
         if (this.ui && this.ui instanceof HTMLElement) {return}
         this.ui = document.createElement("div")
         this.ui.className = "project-card"
-
-        let backgroundColorAcronym = "#ca8134";
-
-        switch (this.businessUnit) {
-            case "Edification":
-                backgroundColorAcronym = "#f08080"; //Light red
-                break;
-            case "Civil":
-                backgroundColorAcronym = "#90ee90"; //Light green
-                break;
-            case "Transport":
-                backgroundColorAcronym = "#add8e6"; //Light blue
-                break;
-            case "Bridge":
-                backgroundColorAcronym = "#c8a2c8"; //Light yellow
-                break;
-            case "Other":
-                backgroundColorAcronym = "#d3d3d3"; // Light grey
-                break;
-        }
-
+        
         this.ui.innerHTML = `
             <div class="card-header">
-                <p style="background-color: ${backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center;  ">${this.acronym}</p>
+                <p style="background-color: ${this.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; ">${this.acronym}</p>
                 <div>
                     <h5>${this.name}</h5>
                     <p>${this.description}</p>
