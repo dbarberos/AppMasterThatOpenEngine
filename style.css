@@ -52,6 +52,7 @@
     --color-pippin: #fee2e2;
     --color-old-brick: #991b1b;
     --color-athens-gray1: #f9fafb;
+    --color-fontbase: #fff;
 
     /* Gaps */
     --gap-9xs: 4px;
@@ -92,6 +93,39 @@
     --br-circle: 50%;
 }   
 
+.light-mode {
+    --primary: #87ceeb;
+    --primary-l00: #add8e6;
+    --primary-200: #6495ed;
+    --primary-300: #4682b4;
+    --primary-400: #34a8ff;
+    --secundary: #8bc34a;
+    --secundary-100: #c6e2b5;
+    --secundary-200: #f7dc6f;
+    --secundary-300: #fff59d;
+    --background: #f7f7f7; /* new color white #f9f9f9 */
+    --background-l00: #ffffff;
+    --background-200: #e5e5e5;
+    --background-300: #d3d3d3;
+    --color-grey-light: #FFFFFF;
+    --color-grey: #c7c5b8;
+    --color-athens-gray: #f2f2f2;
+    --color-ebony-clay: #455a64;
+    --color-river-bed: #73879b;
+    --color-royal-blue: #87ceeb;
+    --color-pale-sky: #b2b8cf;
+    --color-scandal: #c9f7f5;
+    --colro-eden: #34c759;
+    --color-mischka: #e5e5ea;
+    --color-lemon-chiffon: #fff2cc;
+    --color-korma: #ffc107;
+    --color-pippin: #ffe4e1;
+    --color-old-brick: #ffc080;
+    --color-athens-gray1: #f7f7f7;
+    --color-fontbase: #808b9f;
+
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -106,7 +140,7 @@ body {
     grid-template-areas: "sidebar content";
     height: 100vh;
     background-color: var(--background);
-    color: #fff;
+    color: var(--color-fontbase);
 }
 /* General style */
 
@@ -123,6 +157,32 @@ h5 {
     font-size: var(--font-lg);
 }
 
+#theme-switch {
+    height: 40px;
+    width: 40px;
+    padding: 0;
+    border-radius: 50%;
+    background-color: var(--background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    
+}
+#theme-switch svg {
+    fill: var(--color-fontbase)
+}
+#theme-switch svg:last-child {
+    display: none;
+}
+.light-mode #theme-switch svg:first-child {
+    display: none;
+}
+.light-mode #theme-switch svg:last-child {
+    display: block
+}
 button {
     padding: 8px 15px;
     cursor: pointer;
