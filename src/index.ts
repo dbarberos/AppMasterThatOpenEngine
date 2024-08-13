@@ -2,6 +2,7 @@ import { IProject, ProjectStatus, UserRole, BusinessUnit } from "./classes/Proje
 import { ProjectsManager } from "./classes/ProjectsManager";
 import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager";
 import "./classes/HTMLUtilities.ts";
+import "./classes/LightMode.ts";
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 const projectManager = new ProjectsManager(projectListUI)
