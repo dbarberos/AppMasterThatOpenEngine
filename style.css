@@ -91,9 +91,19 @@
     --br-9980xl: 9999px;
     --br-9xs: 4px;
     --br-circle: 50%;
+    
+    /*Animation dark-light theme  */
+    --size: 45px;
+    --line: color-mix(in lch, white, transparent 85%);
+    background: linear-gradient(90deg,
+            var(--line) 1px,
+            transparent 1px var(--size)) 50% 50% / var(--size) var(--size),
+        linear-gradient(var(--line) 1px, transparent 1px var(--size)) 50% 50% / var(--size) var(--size), hsl(210 70% 34%);
+    --animation-duration: 1s;
+
 }   
 
-.light-mode {
+.light-mode, [data-theme="light"]  {
     --primary: #87ceeb;
     --primary-l00: #add8e6;
     --primary-200: #6495ed;
@@ -123,6 +133,7 @@
     --color-old-brick: #ffc080;
     --color-athens-gray1: #f7f7f7;
     --color-fontbase: #808b9f;
+    --animation-duration: 1s;
 
 }
 
@@ -138,10 +149,32 @@ body {
     display: grid;
     grid-template-columns: 300px 1fr;
     grid-template-areas: "sidebar content";
-    height: 100vh;
+    min-height: 100vh;
     background-color: var(--background);
     color: var(--color-fontbase);
 }
+
+
+body::before {
+    --size:30px;
+    --line: color-mix(in lch,canvasText, transparent 85%);
+    content: '';
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    background: radial-gradient(4px 4px at 50% 50%,
+        var(--line) 2px,
+        transparent 2px var(--size)
+        )
+        50% 50% / var(--size) var(--size);
+    mask: linear-gradient(-25deg, transparent 30%, white);
+    top: 0;
+    transform-style: flat;
+    pointer-events: none;
+    z-index: -1;
+}
+
+
 /* General style */
 
 h2 {
@@ -169,6 +202,7 @@ h5 {
     position: fixed;
     bottom: 20px;
     left: 20px;
+    cursor: pointer;
     
 }
 #theme-switch svg {
@@ -183,6 +217,70 @@ h5 {
 .light-mode #theme-switch svg:last-child {
     display: block
 }
+
+/* Animation for the change dark-light mode */
+
+/* @media(prefers-color-scheme: dark) {
+    color-scheme: dark only;
+} */
+body {
+    view-transition-name: body;
+    backface-visibility: hidden;
+    transition: background-color var(--animation-duration) ease-in-out;
+}
+
+::view-transition-old(body) {
+    --sr: 0deg; 
+    background: #f7f7f7; /* canvas*/
+    animation: pan var(--animation-duration) ease-in-out;
+    backface-visibility: hidden;
+    box-shadow: 2.2px 61.3px 73.1px -2px hsl(0 0% 0% / 0.58);
+}
+
+::view-transition-new(body) {
+    --sr: 180deg;
+    background: #202124; /* canvas*/
+    animation: pan var(--animation-duration) ease-in-out;
+    box-shadow: 2.2px 61.3px 73.1px -2px hsl(0 0% 0% / 0.58);
+}
+
+
+@keyframes pan {
+    0% {
+        transform: scale(1) rotateY(var(--sr));
+    }
+
+    25% {
+        transform: scale(0.5) rotateY(var(--sr));
+        box-shadow: 1.8px 50.7px 51.4px -3.2px hsl(0 0% 0% / 0.32);
+    }
+
+    75% {
+        transform: scale(0.5) rotateY(calc(var(--sr) + 180deg));
+        box-shadow: 1.8px 50.7px 51.4px -3.2px hsl(0 0% 0% / 0.32);
+    }
+
+    100% {
+        transform: scale(1) rotateY(calc(var(--sr) + 180deg));
+    }
+}
+
+:root {
+    view-transition-name: none;
+}
+
+/* [aria-pressed] {
+    transition: background 0.2;
+    cursor: pointer;
+    background-color: color-mix(in lch, canvas, canvasText calc(var(--intent) * 15%));
+} */
+
+/* button:is(:focus-visible, :hover) {
+    --intent: 1;
+} */
+
+/* Button definition */
+
 button {
     padding: 8px 15px;
     cursor: pointer;
