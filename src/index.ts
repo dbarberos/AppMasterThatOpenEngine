@@ -8,6 +8,12 @@ const projectListUI = document.getElementById("project-list") as HTMLElement
 const projectManager = new ProjectsManager(projectListUI)
 
 
+//Set the initial view of the APP with the projects page, hidding the rest of sections
+document.addEventListener('DOMContentLoaded', () => {
+    changePageContent('project-page', 'flex'); 
+});
+
+
 // This document object is provided by the browser, and its main purpose is to help us interact with the DOM
 const newProjectBtn = document.getElementById("new-project-btn")
 if (newProjectBtn) {

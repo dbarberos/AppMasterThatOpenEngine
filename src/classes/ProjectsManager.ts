@@ -145,7 +145,7 @@ export class ProjectsManager {
             const json = reader.result
             if (!json) { return }
             const projects: IProject[] = JSON.parse(json as string)
-            // Fire the dialog where you select the projects you whant to import
+            // Fire the dialog where you select the projects you want to import
             this.showImportJSONModal(projects)
         
 /* // ESTE CODIGO HA SIDO TRANSLADADO A LA FUNCIÓN QUE MUESTRA EL LISTADO PARA SELECCIONAR
@@ -191,7 +191,7 @@ export class ProjectsManager {
         // Change the Modal Title
         const title = document.querySelector("#modal-header-title h4")
         if (title) {
-            title.textContent = "Select Projects to Import"
+            title.textContent = "SELECT PROJECT/S TO IMPORT"
         } else {
             throw new Error("Title element not found")
         }
@@ -227,9 +227,7 @@ export class ProjectsManager {
                 event?.preventDefault()
             }
         })
-
-
-
+        
         // Confirmation-Cancellation button for taking the selection
         const confirmBtn = document.querySelector("#confirm-json-list")
         if (!confirmBtn) {
@@ -240,10 +238,10 @@ export class ProjectsManager {
         confirmBtn.textContent = checkmarkSymbol
 
         //Disable checkboxes for existing project
-        projectListJson?.querySelectorAll("li input[type='checkbox']").forEach((checkbox) => {
-            const parentNode = checkbox.parentNode
+        projectListJson?.querySelectorAll("li > label > input[type='checkbox']").forEach((checkbox) => {
+            const parentNode = checkbox.closest("li")
             if (parentNode) {
-                const projectName: string | null = checkbox.parentNode.textContent
+                const projectName: string | null = parentNode.textContent
                 if (projectName) {
                 const existingProject = this.getProjectByName(projectName)
                     if (existingProject) {
@@ -292,10 +290,10 @@ export class ProjectsManager {
 
             //Get the selected projects from the checkboxes
             const selectedProjects: IProject[] = []
-            projectListJson?.querySelectorAll("li input[type='checkbox']:checked").forEach((checkbox) => {
-                const parentNode = checkbox.parentNode
+            projectListJson?.querySelectorAll("li > label > input[type='checkbox']:checked").forEach((checkbox) => {
+                const parentNode = checkbox.closest("li")
                 if (parentNode) {
-                    const projectName = checkbox.parentNode.textContent
+                    const projectName = parentNode.textContent
                     const project = projects.find((project) => project.name === projectName)
                     if (project) {
                         selectedProjects.push(project)
@@ -363,7 +361,7 @@ export class ProjectsManager {
         // Change the Modal Title
         const title = document.querySelector("#modal-header-title h4")
         if (title) {
-            title.textContent = "Select Projects to Export"
+            title.textContent = "SELECT PROJECT/S TO EXPORT"
         } else {
             throw new Error("Title element not found")
         }
@@ -413,10 +411,10 @@ export class ProjectsManager {
 
             // Get the selected projects from the checkboxes
             const selectedProjects: IProject[] = []
-            projectListJson?.querySelectorAll("li input[type='checkbox']:checked").forEach((checkbox) => {
-                const parentNode = checkbox.parentNode
+            projectListJson?.querySelectorAll("li > label > input[type='checkbox']:checked").forEach((checkbox) => {
+                const parentNode = checkbox.closest("li")
                 if (parentNode) {
-                    const projectName = checkbox.parentNode.textContent
+                    const projectName = parentNode.textContent
                     const project = projects.find((project) => project.name === projectName)
                     if (project) {
                         selectedProjects.push(project)
@@ -490,14 +488,33 @@ export class ProjectsManager {
         if (!projectListJson) {
             throw new Error("Project list element not found")
         }
-        projectListJson.innerHTML = "" //This clear the list beffor adding the projects
+        projectListJson.innerHTML = "" //This clear the list befor adding the projects
         console.log("Before display the list of projects")
         projects.forEach((project) => {
             const listItems = document.createElement("li")
-            
+
+            // Create the checkbox with a custom label and checkmark
+            const checkboxLabel = document.createElement("label")
+            checkboxLabel.classList.add("radio") //Added "radio" class for stiling
+            // Append the checkbox label to the list item
+            listItems.appendChild(checkboxLabel)
+
             const checkbox = document.createElement("input")
             checkbox.type = "checkbox"
-            listItems.appendChild(checkbox)
+            checkboxLabel.appendChild(checkbox)
+
+            const checkmark = document.createElement("span")
+            checkmark.classList.add("checkmark")
+            checkboxLabel.appendChild(checkmark)
+            
+
+            
+            // const listItems = document.createElement("li")
+
+            // const checkbox = document.createElement("input")
+            // checkbox.type = "checkbox"
+            // listItems.appendChild(checkbox)
+
             const projectNametext = document.createTextNode(project.name)
             listItems.appendChild(projectNametext)
             listItems.classList.add("checkbox-json")

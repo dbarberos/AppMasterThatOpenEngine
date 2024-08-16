@@ -4,6 +4,7 @@ export function toUpperCase(input: HTMLInputElement) {
     input.value = input.value.toUpperCase();
 }
 
+// Alltext inside the input is in capital letters
 // Add the DOMContentLoaded event listener
 document.addEventListener("DOMContentLoaded", () => {
     // Select all inputs elements with the data-uppercase attribute
