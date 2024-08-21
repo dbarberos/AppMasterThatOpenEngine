@@ -623,6 +623,21 @@ dialog {
     background-color: transparent;
     border: none;
     margin: auto;
+    transition: scale 0.2s ease;
+      /* display 0.2s ease allow-discrete; */
+    scale: 1;
+    overflow-x: hidden;
+
+    &[open] {
+        scale: 1;
+        transition: scale 0.2s ease-in-out;
+        overflow-x: hidden;
+
+        @starting-style {
+            scale: 0;
+            overflow-x: hidden;
+        }
+    }
 }
 
 dialog::backdrop {
@@ -1274,23 +1289,147 @@ progress::-moz-progress-bar {
     }
 }
 
-/* Error Pop Up */
+/* Notification Pop Up */
 
-.message-popup {
+.popup-success,
+.popup-warning,
+.popup-error,
+.popup-update,
+.popup-info,
+.popup-default {
+    width: clamp(200px, 50em, 700px);
+    min-width: 700px;
+    transition: transform 0.15s ease-out;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+.message-popup, 
+.message-content, 
+.message-btns {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    column-gap: var(--gap-lg);
-    padding: var(--padding-base);
-    padding-right: 5px;
-    color: var(--color-grey-light);
-    row-gap: var(--gap-s);
-    width: 500px;
-    min-width: 200px;
-    /* background-color: var(--background-200); */
-    /* border-radius: 10px; */
     }
+
+.message-popup,
+.message-content {
+    align-items: center;
+    justify-content: space-between;
+    column-gap: var(--gap-lg);
+}
+
+.message-popup {
+    border-radius: 0.75em;
+    height: auto;
+    }
+
+.message-content {
+    width: 100%;
+    height: 10vh;
+    min-height:150px;
+}
+
+.message-icon {
+    flex-shrink: 0; 
+
+    
+    font-size: 100px;
+    margin: auto;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 20px;
+}
+
+.message-icon-svg {
+    box-shadow: none;
+    background-color: inherit;
+    margin: auto;
+    display: flex;
+        justify-content: center;
+        align-items: center;
+    
+
+}
+
+.message-text {
+    line-height: 1.333;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    row-gap: var(--gap-5xs);
+    padding-top: var(--padding-base);
+    width: 100%;
+    height: fit-content;
+    padding:10xp 0;  
+
+}
+
+.message-text-title {
+    font-size: 1.40em;
+    font-weight: bold;
+}
+
+.message-text-message {
+    font-size: 1em;
+    opacity: 0.75;
+}
+.message-btns {
+    display: flex;    
+    flex-direction: column;
+    min-width: 4em;
+    height: 100%;
+    flex-shrink: 0;
+
+}
+
+.message-btn {
+    background-color: transparent;
+    height:100%;
+    box-sizing: border-box;
+    box-shadow: none;
+    border: var(--color-light) 1px solid;
+    flex-grow: 1;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    min-width: 100px;
+}
+
+.message-btn:hover {
+    background-color: var(--color-light);
+    box-shadow: none;
+}
+
+.message-btn-text {
+    display: inline-block;
+    margin: auto;
+    text-shadow: none;
+    color: inherit;
+}
+
+.message-btn:first-of-type {
+    border-radius: 0 0.75rem 0 0;
+}
+
+.message-btn:last-of-type {
+    border-radius: 0 0 0.75rem 0;
+}
+
+.message-btn:only-child {
+    border-radius: 0 0.75rem 0.75rem 0;
+}
+
+
+.message-btn:active,
+.message-btn:focus {
+    cursor: pointer;
+}
+
+.message-btn:focus {
+    outline: transparent;
+}
+
 
 .popup-success {
     background-color: var(--popup-success);
@@ -1331,25 +1470,10 @@ progress::-moz-progress-bar {
     font-size: var(--font-lg);
     transition: 0.3s;
     background-color: inherit;
+    box-shadow:none;
 }
 
-/* .message-popup-mask-over-btn {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: 0px;
-    right: 0px;
-    width: calc(100% + 2px);
-    height: calc(100% + 4px);
-    background-color: inherit;
-    transition: 0.3s ease-out;
-    transform: translateX(0);
-    transform: scaleX(1);
-    z-index: 2;
-    clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0);
-    transform: scaleY(0);
-    transition-delay:0.3s;
-} */
+
 
 .btn-popup::before {
     content: '';
@@ -1379,7 +1503,6 @@ progress::-moz-progress-bar {
     transition: 0.2s ease-out;
     transform: scaleY(1);
     z-index: 2;
-    ;
 }
     
 
@@ -1400,11 +1523,14 @@ progress::-moz-progress-bar {
     width: 100%;
     transform: scaleY(0);
     transition-delay: 0.30s;
+    box-shadow: none;
 }
 
 .btn-popup:hover {
     background-color: inherit;
     border: 1px solid var(--color-grey-light);
+    box-shadow: none;
+    color: var(--color-fontbase);
 }
 
 .btn-popup div {

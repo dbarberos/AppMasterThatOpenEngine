@@ -2,15 +2,17 @@ import { showModal, closeModal, toggleModal } from "./UiManager"
 
 
 export class MessagePopUp {
-    title: "error" | "warning" | "info" | "success" | "update"
+    type: "error" | "warning" | "info" | "success" | "update" | "message" | "clock" | "uparrow"
+    title: string
     message: string
     icon: string
     nameClass: string
     ui: HTMLElement
-    parent :HTMLElement
+    parent: HTMLElement
+    actions: []
 
     setIcon(): string {
-        switch (this.title) {
+        switch (this.type) {
             case "error":
                 return "report"
                 break;
@@ -24,7 +26,16 @@ export class MessagePopUp {
                 return "notifications_active"
                 break;
             case "update":
-                return "info"
+                return "notifications_active"
+                break;
+            case "message":
+                return "message"
+                break;
+            case "clock":
+                return "clock"
+                break;
+            case "uparrow":
+                return "arrowup"
                 break;
             default:
                 return "radio_button_unchecked"
@@ -50,6 +61,9 @@ export class MessagePopUp {
             case "info":
                 return "popup-update"
                 break;
+            case "uparrow":
+                return "popup-update"
+                break;
             default:
                 return "popup-default"
                 break;
@@ -58,60 +72,122 @@ export class MessagePopUp {
 
     constructor(
         container: HTMLElement,
-        title: "error" | "warning" | "info" | "success" | "update",
-        messageText: string
+        type: "error" | "warning" | "info" | "success" | "update",
+        title: string,
+        messageText: string,
+        btnActions: []
     ) {
+        this.type = type
         this.title = title
         this.message = messageText
         this.icon = this.setIcon()
         this.nameClass = this.setNameClass()
         this.parent = container
+        this.actions = btnActions
+        // this.showNotificationMessage()
     }
 
+    showNotificationMessage(buttonCallbacks: { [action: string]: () => void } = {}): Promise<void> {
+        return new Promise((resolve) => {
+            //Check is a dialog already exist
+            const existingDialog = this.parent.querySelector(".nameClass")
+            if (existingDialog && this.parent.contains(existingDialog)) {
+                // existingDialog.remove
 
-    showMessageError() {
-        //Check is a dialog already exist
-        const existingDialog = this.parent.querySelector(".nameClass")
-        if (existingDialog && this.parent.contains(existingDialog)) {
-            //Remove the existing dialog only if it´s a child of this.parent
-            this.parent.removeChild(existingDialog)
-            }            
-        
-        //Create a new dialog element
-        this.ui = document.createElement("dialog");
-        this.ui.classList.add(this.nameClass);
-        this.ui.id = "message-error-popup";
-        //Set the dialog content
-        this.ui.innerHTML = `
-            <div class="message-popup">
-                <div style="display: flex; column-gap: var(--gap-lg); align-items: center;">
-                    <div id="message-popup-icon">
-                        <span class="material-icons-round" style="font-size: var(--font-icon-lg);">
-                        ${this.icon}
-                        </span>
-                    </div>
-                    <div id="message-popup-text"  style="display: flex; flex-direction: column; justify-content: start;row-gap: var(--gap-5xs);">
-                        <h5 style="font-weight: bold; text-transform: uppercase;">${this.title}</h5>
-                        <p>${this.message}</p>
-                    </div>
+
+                //Remove the existing dialog only if it´s a child of this.parent
+                this.parent.removeChild(existingDialog)
+                }            
+            
+            //Create a new dialog element
+            this.ui = document.createElement("dialog");
+            this.ui.classList.add(this.nameClass);
+            this.ui.id = "message-error-popup";
+
+            //Create the buttons according to actions array
+            let buttonsHTML = "";
+            if (this.actions && this.actions.length > 0) { // Check if actions is defined and not empty
+                this.actions.forEach(action => {
+                    buttonsHTML += `<button style="all=initial" class="message-btn" data-action="${action}"><span class="message-btn-text">${action}</span></button>`;
+                });
+            } else {
+                // Handle the case where actions is undefined or empty
+                buttonsHTML = '<button style="all=initial" class="message-btn"><span class="message-btn-text">ok</span></button>'; // Default button
+            }
+            
+            //Set the dialog content
+            this.ui.innerHTML = `
+                <div class="message-popup">
+                    <div class="message-content">
+                        <div id="message-popup-icon" class="message-icon" >
+                            <svg class="message-icon-svg" role="img" aria-label="${this.icon}" width="100px" height="100px">
+                                <use href="#${this.icon}"></use> 
+                            </svg>
+                        </div>
+                        <div class="message_text" id="message-popup-text"  style="display: flex; flex-direction: column; justify-content: start;row-gap: var(--gap-5xs);">
+                            <h5 class="message-text-title" >${this.title}</h5>
+                            <p class="message-text-message">${this.message}</p>
+                        </div>
+                        <div class="message-btns">
+                        ${buttonsHTML}
+                        </div>
+                    </div>                
                 </div>
-                <button class="btn-popup">
-                    <div id="btn-popup-text">Got it</div>
-                </button>
-            </div>
-            `;
-        this.parent.appendChild(this.ui);
-        (this.ui as HTMLDialogElement).showModal();
-        const closeBtn = this.ui.querySelector(".btn-popup");
+                `;
+            
+            // <div id="message-popup-icon" class="message-icon >
+            //     <span span class="material-icons-round" class="message-icon-svg" >
+            //         ${ this.icon }
+            //      </span>
+            //  </div>
+            
+            this.parent.appendChild(this.ui);
+            (this.ui as HTMLDialogElement).showModal();
 
-        if (closeBtn) {
-            closeBtn.addEventListener("click", () => {
-                (this.ui as HTMLDialogElement).close()
-                this.ui.remove()
+            //Prevent the use of the keydown Escape
+            this.ui.addEventListener('keydown', (event) => {
+                if (event.code === 'Escape') {
+                    event.stopPropagation()
+                    event?.preventDefault()
+                }
             })
-        };
-  
+
+            // *** Use a mutation observer to wait for ALL buttons ***
+            const observer = new MutationObserver((mutations) => {
+                // Check if the number of buttons matches the actions array
+                const buttons = this.ui.querySelectorAll('.button-popup'); // Select all buttons
+                if (buttons.length === this.actions.length) {
+                    observer.disconnect(); // Stop observing
+                    // resolve(); // Resolve the Promise, indicating all buttons are ready
+                }
+            })           
+            observer.observe(this.ui, { childList: true, subtree: true }); // Observe for changes
+            
+            // *** Attach event listeners to ALL buttons AFTER adding the dialog to the DOM ***
+            const buttons = this.ui.querySelectorAll('.message-btn');
+            buttons.forEach(button => {
+                const action = button.getAttribute("data-action");
+                if (action && buttonCallbacks[action]) {
+                    button.addEventListener("click", () => {
+                        buttonCallbacks[action](); // Execute the callback for this action                        
+                    });
+                }
+            });
+            
+            resolve(); // Resolve the Promise after attaching event listeners
+        }); 
     }
+    
+    
+    closeMessageModal() {
+        if (this.ui instanceof HTMLDialogElement) {
+            this.ui.close();
+            this.ui.remove(); // Optional: Remove the dialog from the DOM after closing
+            }
+    }
+    
+
+
 }    
 
 

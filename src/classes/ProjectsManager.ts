@@ -238,7 +238,7 @@ export class ProjectsManager {
         confirmBtn.textContent = checkmarkSymbol
 
         //Disable checkboxes for existing project
-        projectListJson?.querySelectorAll("li > label > input[type='checkbox']").forEach((checkbox) => {
+        projectListJson?.querySelectorAll("li > label > input[type='checkbox']").forEach(async (checkbox) => {
             const parentNode = checkbox.closest("li")
             if (parentNode) {
                 const projectName: string | null = parentNode.textContent
@@ -256,11 +256,11 @@ export class ProjectsManager {
                         parentNode.appendChild(questionMarkIcon);
 
                         //Create the MessagePopUp instance outside the eventlistener in order to pass the info to the instance
-                        const messagePopUp = new MessagePopUp(
-                            document.body,
-                            "info",
-                            "A project with that name already exists and cannot be imported. Please delete the project with the same name before trying to import.",
-                        );
+                        // const messagePopUp = new MessagePopUp(
+                        //     document.body,
+                        //     "info",
+                        //     "A project with that name already exists and cannot be imported. Please delete the project with the same name before trying to import.",
+                        // );
                         //Add the CSS class to the Got it button to apply the mask for animation
                         // const gotItBtn = this.ui.querySelector("#btn-popup")
                         // gotItBtn?.classList.add("message-popup-mask-over-btn")
@@ -268,9 +268,30 @@ export class ProjectsManager {
                     
                         
                         // Add event listener to the question mark icon
-                        questionMarkIcon.addEventListener("click", () => {
-                            messagePopUp.showMessageError();
+                        questionMarkIcon.addEventListener("click",  async () => {
+                            const messagePopUp = new MessagePopUp(
+                                document.body,
+                                "info",
+                                "This Project already exists",
+                                "A project with that name already exists and cannot be imported.Please delete the project with the same name before trying to import.",
+                                ["Got it"]
+                            )                            
+
+                            // Define ALL your button callbacks for the messagePopUp created
+                            const buttonCallbacks = {
+                                "Got it": () => {
+                                    console.log("Got it button clicked!");
+                                    messagePopUp.closeMessageModal();// ... logic for "Got it" button ...
+                                },
+                                
+                                // Add more callbacks for other buttons as needed
+                            };
+                            
+                            // *** Wait for the buttons to be rendered and event listeners attached ***
+                            await messagePopUp.showNotificationMessage(buttonCallbacks); 
+                             
                         });
+
                         //change cursor to pointer on hover
                         questionMarkIcon.addEventListener("mouseover", () => {
                             questionMarkIcon.style.cursor = "pointer"
