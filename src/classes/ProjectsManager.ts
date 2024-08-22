@@ -557,7 +557,7 @@ export class ProjectsManager {
         if (!list) {
             throw new Error("List element not found");
         }
-        list.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
+        list.querySelectorAll("input[type='checkbox']:not(:disabled)").forEach((checkbox) => {
             (checkbox as HTMLInputElement).checked = true;
         });
     }

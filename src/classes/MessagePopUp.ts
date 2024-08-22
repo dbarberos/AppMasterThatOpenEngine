@@ -2,7 +2,7 @@ import { showModal, closeModal, toggleModal } from "./UiManager"
 
 
 export class MessagePopUp {
-    type: "error" | "warning" | "info" | "success" | "update" | "message" | "clock" | "uparrow"
+    type: "error" | "warning" | "info" | "success" | "update" | "message" | "clock" | "arrowup"
     title: string
     message: string
     icon: string
@@ -26,7 +26,7 @@ export class MessagePopUp {
                 return "notifications_active"
                 break;
             case "update":
-                return "notifications_active"
+                return "update"
                 break;
             case "message":
                 return "message"
@@ -34,7 +34,7 @@ export class MessagePopUp {
             case "clock":
                 return "clock"
                 break;
-            case "uparrow":
+            case "arrowup":
                 return "arrowup"
                 break;
             default:
@@ -55,14 +55,20 @@ export class MessagePopUp {
             case "notifications_active":
                 return "popup-info"
                 break;
+            case "update":
+                return "popup-update"
+                break;
             case "check_circle":
                 return "popup-success"
                 break;
-            case "info":
-                return "popup-update"
+            case "message":
+                return "popup-message"
+                break;
+            case "clock":
+                return "popup-clock"
                 break;
             case "uparrow":
-                return "popup-update"
+                return "popup-uparrow"
                 break;
             default:
                 return "popup-default"
@@ -72,7 +78,7 @@ export class MessagePopUp {
 
     constructor(
         container: HTMLElement,
-        type: "error" | "warning" | "info" | "success" | "update",
+        type: "error" | "warning" | "info" | "success" | "update" | "message" | "clock" | "arrowup",
         title: string,
         messageText: string,
         btnActions: []
@@ -117,10 +123,10 @@ export class MessagePopUp {
             
             //Set the dialog content
             this.ui.innerHTML = `
-                <div class="message-popup">
-                    <div class="message-content">
-                        <div id="message-popup-icon" class="message-icon" >
-                            <svg class="message-icon-svg" role="img" aria-label="${this.icon}" width="100px" height="100px">
+                <div class="message-popup" >
+                    <div class="message-content toast toast-${this.nameClass}">
+                        <div id="message-popup-icon" class="message-icon toast-icon" >
+                            <svg class="message-icon-svg " role="img" aria-label="${this.icon}" width="100px" height="100px">
                                 <use href="#${this.icon}"></use> 
                             </svg>
                         </div>
