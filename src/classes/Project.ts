@@ -69,6 +69,12 @@ export class Project implements IProject {
         if (!this.id) { this.id = uuidv4() } //In order to not change the ID when we import projects from JSON file
         console.log(data);
         
+        // I have passed the eventListener of the click over the UI because problems with the overwrite, since the event listener that I am trying to attach to the UI element is being added before the element actually exists in the DOM. In this new way, with the event listener attachment inside the Project constructor, it's added as soon as the UI element is created.
+        // this.ui.addEventListener("click", () => {
+        //     changePageContent("project-details", "flex")
+        //     ProjectsManager.setDetailsPage(this) // Pass 'this' to refer to the current project
+        //     console.log("Details page set in a new window")
+        // })
     }
 
     private calculateBackgroundColorAcronym(): string {

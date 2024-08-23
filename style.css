@@ -1416,7 +1416,7 @@ progress::-moz-progress-bar {
 .popup-update,
 .popup-info,
 .popup-default {
-    width: clamp(200px, 50em, 700px);
+    width: clamp(200px, 50em, 900px);
     min-width: 700px;
     transition: transform 0.15s ease-out;
     -webkit-user-select: none;
@@ -1446,7 +1446,7 @@ progress::-moz-progress-bar {
 
 .message-content {
     width: 100%;
-    height: 150px;
+    height: 200px;
     min-height:150px;
 }
 
@@ -1490,11 +1490,13 @@ progress::-moz-progress-bar {
 }
 
 .message-text-title {
+    line-height: 1.3;
     font-size: 1.40em;
     font-weight: bold;
 }
 
 .message-text-message {
+    line-height: 1.5;
     font-size: 1em;
     opacity: 0.75;
 }
@@ -1545,6 +1547,9 @@ progress::-moz-progress-bar {
 
 .message-btn:last-of-type {
     border-radius: 0 0 0.75rem 0;
+}
+.message-btn:not(:first-child):not(:last-child) {
+    border-radius: 0;
 }
 
 .message-btn:only-child {
@@ -1719,8 +1724,14 @@ button  .btn-popup{
 }
 
 .disabled-checkbox {
-    /* background-color: var(--color-grey-light); */
+
     color: var(--popup-error);
     opacity: 0.7;
+    /* text-decoration: line-through; */
+}
+
+.overwrite-checkbox {
+    color: var(--popup-warning);
+    opacity: 1;
     /* text-decoration: line-through; */
 }

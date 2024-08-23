@@ -1,6 +1,7 @@
 import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from "./Project"
 import { showModal, closeModal, toggleModal, closeModalProject , changePageContent} from "./UiManager"
 import { MessagePopUp } from "./MessagePopUp"
+import { v4 as uuidv4 } from 'uuid'
 
 // let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
 // let cancelExportProjectBtnClickListener: EventListener | null = null  //GMAnaging the EVENTLISTENER
@@ -16,25 +17,105 @@ export class ProjectsManager {
         this.createDefaultProject()
     }
     
-    newProject(data: IProject) {
+    newProject(data: IProject): Project | undefined {
         const projectNames = this.list.map((project) => {
             return project.name
         })
         if (projectNames.includes(data.name)) {
-            throw new Error(`A project with the name [ ${data.name} ] already exists`)
-        }
-        const project = new Project(data)
-        project.ui.addEventListener("click", () => {
-            changePageContent("project-details", "flex")
-            this.setDetailsPage(project)
-            console.log(" details pages set in a new window");
+            console.log(`A project with the name [ ${data.name} ] already exists`)
+            //Create a Confirmation Modal to prompt the user about the duplication and offer options
+            return new Promise<Project | undefined>((resolve) => {// Return a Promise
+                const popupDuplicateProject = new MessagePopUp(
+                    document.body,
+                    "warning",
+                    `A project with the name "${data.name}" already exist`,
+
+                    `<b><u>Overwrite:</b></u> Replace the existing project with the imported data.<br>
+                <b><u>Skip:</b></u> Do not import the duplicated project.<br>
+                <b><u>Rename:</b></u> Enter a new name for the imported project.`,
+                    ["Overwrite", "Skip", "Rename"],
+                )
+                
+                // Define ALL your button callbacks for the messagePopUp created
+                const buttonCallbacks = {
+                    "Overwrite": () => {
+                        console.log("Overwrite button clicked!");
+                        popupDuplicateProject.closeMessageModal();
+
+                        // Find and remove the existing project from the ui & list since you are going to use it later
+                        const existingProjectIndex = this.list.findIndex(project => project.name === data.name);
+                        if (existingProjectIndex !== -1) {
+
+                            // 1. Remove the existing project's UI from the display
+                            this.ui.removeChild(this.list[existingProjectIndex].ui);
+                            console.log("Old project removed fromthe UI");
+
+                            // 2. Remove the existing project from the list
+                            this.list = this.list.filter((project) => project.name !== data.name);
+                            console.log("Removed the oLd Project name from the List of names");
+                            
+
+                            // 3. Create a new project with the imported data
+                            const newProject = new Project(data);
+                            newProject.ui.addEventListener("click", () => {
+                                changePageContent("project-details", "flex")
+                                this.setDetailsPage(newProject)
+                                console.log(" details pages set in a new window");
+                            })
+                            // 4. Add the new project to the list and UI
+                            this.list.push(newProject);
+                            console.log("Added new project to the List of names");
+                            this.ui.append(newProject.ui);
+                            console.log("Added new project to the UI");
+                            
+                            // 5. Resolve with the newly created project
+                            resolve(newProject); 
+
+                        } else {
+                            // Handle the case where the project is not found (shouldn't happen, just in case
+                            console.error("Project to overwrite not found in the list.");
+                            resolve(undefined); // Or resolve with an appropriate error value
+                        }
+                    },
+                    "Skip": () => {
+                        console.log("Skip button clicked!");
+                        popupDuplicateProject.closeMessageModal();
+                        resolve(undefined); // Resolve with undefined to indicate skipping
+
+                    },
+                    "Rename": () => {
+                        console.log("Rename button clicked!");
+                        popupDuplicateProject.closeMessageModal();
+
+                        // const renameProject = new RenameProjectModal(
+                        //     document.body,
+                        //     data
+                        // )
+                        // renameProject.openRenameModal();
+                        // this.defaultProjectCreated = false;
+
+                        // Make sure to call resolve() with the created project after renaming
+                    }
+                }
+                popupDuplicateProject.showNotificationMessage(buttonCallbacks);
+                
+            })
             
-        })
-        
-        this.ui.append(project.ui)
-        this.list.push(project)
-        this.removeDefaultProject();
-        return project
+        } else {
+            // No duplicate, create the project
+            const project = new Project(data)
+            project.ui.addEventListener("click", () => {
+                changePageContent("project-details", "flex")
+                this.setDetailsPage(project)
+                console.log(" details pages set in a new window");
+            
+            })
+            this.ui.append(project.ui)
+            this.list.push(project)
+            this.removeDefaultProject();
+            return project
+        }
+
     }
     
     private setDetailsPage(project: Project) {
@@ -145,6 +226,31 @@ export class ProjectsManager {
             const json = reader.result
             if (!json) { return }
             const projects: IProject[] = JSON.parse(json as string)
+
+
+            //Check that each project is assigned a unique ID.
+            projects.forEach((project) => {
+                if (!project.id) {
+                    console.warn(`Project "${project.name}" is missing an ID. Generating a new one...`)
+                    const messagePopUp = new MessagePopUp(
+                        document.body,
+                        "warning",
+                        "ID missing",
+                        `Project "${project.name}" is missing an ID. Generating a new one...`,
+                        ["Got it"]
+                    )
+
+                    // Define ALL your button callbacks for the messagePopUp created
+                    const buttonCallbacks = {
+                        "Got it": () => {
+                            console.log("Got it button clicked!");
+                            messagePopUp.closeMessageModal();// ... logic for "Got it" button ...
+                        },
+                    }
+                    project.id = uuidv4(); // Genera un nuevo ID si no existe
+                }
+            })
+            
             // Fire the dialog where you select the projects you want to import
             this.showImportJSONModal(projects)
         
@@ -268,13 +374,14 @@ export class ProjectsManager {
                     
                         
                         // Add event listener to the question mark icon
-                        questionMarkIcon.addEventListener("click",  async () => {
+                        questionMarkIcon.addEventListener("click", async () => {
+                            const projectExistingID = existingProject.id
                             const messagePopUp = new MessagePopUp(
                                 document.body,
                                 "info",
                                 "This Project already exists",
-                                "A project with that name already exists and cannot be imported.Please delete the project with the same name before trying to import.",
-                                ["Got it"]
+                                'The specified project name is already in use. To import this project and replace the existing data, select the button "Allow overwrite"',
+                                ["Got it", "Allow overwrite"]
                             )                            
 
                             // Define ALL your button callbacks for the messagePopUp created
@@ -283,13 +390,27 @@ export class ProjectsManager {
                                     console.log("Got it button clicked!");
                                     messagePopUp.closeMessageModal();// ... logic for "Got it" button ...
                                 },
-                                
-                                // Add more callbacks for other buttons as needed
+                                "Allow overwrite": () => {
+                                    console.log("Overwrite button clicked!");
+
+                                    //The logic for enabling the checkbox of the project
+                                    if (projectExistingID) {
+                                        console.log(`the project ID is: ${projectExistingID}`);
+                                        (checkbox as HTMLInputElement).disabled = false;
+                                        (parentNode as HTMLElement).classList.remove("disabled-checkbox");
+                                        // Add visual clues to the overwrite checkbox
+                                        (parentNode as HTMLElement).classList.add("overwrite-checkbox");                                         
+                                    } else {
+                                        console.log("Errror:Could not find the project ID.");
+                                        
+                                    }
+                                    messagePopUp.closeMessageModal();
+                                }
+ 
                             };
                             
                             // *** Wait for the buttons to be rendered and event listeners attached ***
-                            await messagePopUp.showNotificationMessage(buttonCallbacks); 
-                             
+                            await messagePopUp.showNotificationMessage(buttonCallbacks, );                              
                         });
 
                         //change cursor to pointer on hover
@@ -306,7 +427,7 @@ export class ProjectsManager {
         })
             
 
-        this.confirmBtnClickListener = (e: Event) => {
+        this.confirmBtnClickListener = async (e: Event) => {
             e.preventDefault()
 
             //Get the selected projects from the checkboxes
@@ -314,7 +435,11 @@ export class ProjectsManager {
             projectListJson?.querySelectorAll("li > label > input[type='checkbox']:checked").forEach((checkbox) => {
                 const parentNode = checkbox.closest("li")
                 if (parentNode) {
-                    const projectName = parentNode.textContent
+                    // Get the first child node, which should be the text node
+                    // the fisrt child is de checkbox
+                    // the second child is the proper name
+                    // the third child is the question mark
+                    const projectName = parentNode.childNodes[1].textContent?.trim()
                     const project = projects.find((project) => project.name === projectName)
                     if (project) {
                         selectedProjects.push(project)
@@ -329,15 +454,24 @@ export class ProjectsManager {
             //Check whether any project is selecter before confirm
             //if none project is selected, close the modal the same way cancel button
             if (selectedProjects.length > 0) {
+                console.log(selectedProjects);
+                
 
                 //Import the selected projects
-                for (const project of selectedProjects)
+                for (const project of selectedProjects) {
                     try {
-                        this.newProject(project)
+                        const newProjectResult = await this.newProject(project); // Wait for the Promise
+                        if (newProjectResult) { // Check if a project was created (not skipped)
+                            console.log("Project imported successfully:", newProjectResult.name);
+                        } else {
+                            console.log("Project import skipped:", project.name);
+                        }
                     } catch (error) {
-                        console.log("Error importing project: " + project.name)
+                        console.error("Error importing project:", project.name, error);
                     }
-            }
+                }
+                        
+              }
             this.clearProjectCheckList("#json-projects-list")
             closeModalProject("modal-list-of-projects-json", this)
         }
