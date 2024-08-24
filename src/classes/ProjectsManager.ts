@@ -64,43 +64,174 @@ export class ProjectsManager {
                             })
                             // 4. Add the new project to the list and UI
                             this.list.push(newProject);
-                            console.log("Added new project to the List of names");
-                            this.ui.append(newProject.ui);
-                            console.log("Added new project to the UI");
+                            console.log("Added new project to the List of names")
+                            this.ui.append(newProject.ui)
+                            console.log("Added new project to the UI")
                             
                             // 5. Resolve with the newly created project
-                            resolve(newProject); 
+                            resolve(newProject);
 
                         } else {
                             // Handle the case where the project is not found (shouldn't happen, just in case
-                            console.error("Project to overwrite not found in the list.");
+                            console.error("Project to overwrite not found in the list.")
                             resolve(undefined); // Or resolve with an appropriate error value
                         }
                     },
                     "Skip": () => {
-                        console.log("Skip button clicked!");
-                        popupDuplicateProject.closeMessageModal();
+                        console.log("Skip button clicked!")
+                        popupDuplicateProject.closeMessageModal()
                         resolve(undefined); // Resolve with undefined to indicate skipping
-
                     },
                     "Rename": () => {
-                        console.log("Rename button clicked!");
-                        popupDuplicateProject.closeMessageModal();
+                        console.log("Rename button clicked!")
+                        // **Get the project name BEFORE creating the dialog**
+                        const projectToRename = this.list.find((project) => project.name === data.name);
+                        const existingProjectName = projectToRename ? projectToRename.name : "Project Name"; 
 
-                        // const renameProject = new RenameProjectModal(
-                        //     document.body,
-                        //     data
-                        // )
-                        // renameProject.openRenameModal();
-                        // this.defaultProjectCreated = false;
+                        // 1. Create the rename dialog
+                        const renameDialog = document.createElement("dialog");
+                        // renameDialog.id = id;
+                        renameDialog.className = "popup-default";
+                        document.body.insertBefore(renameDialog, document.body.lastElementChild);
 
-                        // Make sure to call resolve() with the created project after renaming
+                        const box = document.createElement("div");
+                        box.className = "message-content toast toast-popup-default";
+                        renameDialog.appendChild(box);
+
+
+
+                        const renameIcon = document.createElement("div");
+                        renameIcon.className = "message-icon";
+                        box.appendChild(renameIcon);
+
+                        const renameIconSVG = document.createElementNS("http://www.w3.org/2000/svg","svg");
+                        renameIconSVG.setAttribute("class", "message-icon-svgDark");
+                        renameIconSVG.setAttribute("role", "img");
+                        renameIconSVG.setAttribute("aria-label", "rename");
+                        renameIconSVG.setAttribute("width", "24px");
+                        renameIconSVG.setAttribute("height", "24px");
+                        renameIconSVG.setAttribute("fill", "#08090a");
+                        renameIcon.appendChild(renameIconSVG);
+
+                        const renameIconUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+                        renameIconUse.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#rename");
+                        renameIconUse.setAttributeNS("http://www.w3.org/2000/svg", "xlink:href", "#rename");
+                        renameIconSVG.appendChild(renameIconUse);
+
+
+                        const content = document.createElement("div");
+                        content.className = "toast-column";
+                        box.appendChild(content);
+
+
+                        const text = document.createElement("div");
+                        text.className = "message-text";
+                        content.appendChild(text);
+
+                        const renameTitle = document.createElement("h5");
+                        renameTitle.className = "message-text-title";
+                        renameTitle.textContent = "Project name";
+                        text.appendChild(renameTitle);
+
+
+                        const renameSubtitle = document.createElement("p");
+                        renameSubtitle.className = "message-text-message";
+                        renameSubtitle.textContent = "Select the text field and populate it with a new name";
+                        text.appendChild(renameSubtitle);
+
+                        const boxInput = document.createElement("div");
+                        boxInput.className = "message-text";
+                        content.appendChild(boxInput);
+
+                        
+                        const renameInputName = document.createElement("input");
+                        renameInputName.className = "toast-input-text";
+                        renameInputName.type = "text";
+                        renameInputName.setAttribute("id", "newProjectName");
+                        renameInputName.setAttribute("placeholder", existingProjectName);
+                        renameInputName.setAttribute("autofocus", "false"); 
+                        boxInput.appendChild(renameInputName);
+
+
+                        const renameInputLabel = document.createElement("label");
+                        renameInputLabel.className = "toast-input-text";
+                        renameInputLabel.textContent = existingProjectName
+                        renameInputLabel.setAttribute("autofocus", "false"); 
+                        boxInput.appendChild(renameInputLabel);
+
+
+                        const renameBtns = document.createElement("div");
+                        renameBtns.className = "message-btns";
+                        box.appendChild(renameBtns);
+
+                        const rBtnA = document.createElement("button");
+                        rBtnA.className = "message-btn";
+                        rBtnA.type = "button";
+                        rBtnA.setAttribute("id", "confirmRename");
+                        renameBtns.appendChild(rBtnA)
+
+                        const rBtnText = document.createElement("span");
+                        rBtnText.className = "message-btn-text";
+                        rBtnText.textContent = "Do it";
+                        rBtnA.appendChild(rBtnText);
+
+                        const rBtnC = document.createElement("button");
+                        rBtnC.className = "message-btn";
+                        rBtnC.type = "button";
+                        rBtnC.setAttribute("id", "cancelRename");
+                        renameBtns.appendChild(rBtnC)
+
+                        const btnTextC = document.createElement("span");
+                        btnTextC.className = "message-btn-text";
+                        btnTextC.textContent = "Cancel";
+                        rBtnC.appendChild(btnTextC);
+
+
+
+                        // 2. Append the dialog to the body and show it
+                        document.body.appendChild(renameDialog)
+                        renameDialog.showModal()
+
+                        // 3. Handle Confirm and Cancel buttons
+                        const confirmRenameBtn = renameDialog.querySelector('#confirmRename')
+                        const cancelRenameBtn = renameDialog.querySelector('#cancelRename')
+                        const newProjectNameInput = renameDialog.querySelector('#newProjectName') as HTMLInputElement;
+
+                        if (confirmRenameBtn && cancelRenameBtn && newProjectNameInput) {
+                            confirmRenameBtn.addEventListener('click', () => {
+                                const newName = newProjectNameInput.value.trim()
+
+                                // Basic validation: Check if the name is empty
+                                if (newName === "") {
+                                    alert("Please enter a valid project name.")
+                                    return;
+                                }
+
+                                // Update the project name
+                                data.name = newName;
+
+                                // Create the new project and resolve the Promise
+                                const newProject = new Project(data);
+                                this.list.push(newProject)
+                                this.ui.append(newProject.ui)
+                                resolve(newProject)
+
+                                // Close the dialog
+                                renameDialog.close()
+                            });
+
+                            cancelRenameBtn.addEventListener('click', () => {
+                                renameDialog.close()
+                                resolve(undefined); // Resolve as undefined to indicate renaming was cancelled
+                            });
+                        }
+                        popupDuplicateProject.closeMessageModal()
                     }
                 }
                 popupDuplicateProject.showNotificationMessage(buttonCallbacks);
-                
             })
-            
+                
+
         } else {
             // No duplicate, create the project
             const project = new Project(data)

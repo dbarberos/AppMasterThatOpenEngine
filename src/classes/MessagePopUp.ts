@@ -126,7 +126,7 @@ export class MessagePopUp {
                 <div class="message-popup" >
                     <div class="message-content toast toast-${this.nameClass}">
                         <div id="message-popup-icon" class="message-icon toast-icon" >
-                            <svg class="message-icon-svg " role="img" aria-label="${this.icon}" width="100px" height="100px">
+                            <svg class="message-icon-svg" role="img" aria-label="${this.icon}" width="100px" height="100px">
                                 <use href="#${this.icon}"></use> 
                             </svg>
                         </div>

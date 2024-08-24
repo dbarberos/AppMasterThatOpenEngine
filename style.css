@@ -220,9 +220,98 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+}
 
+.toast-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 10px;
+    /* width:100%; */
+    height: 100%;
+    margin-left: auto;
+    justify-content: space-evenly;
+    position:relative;
+    
     
 }
+
+
+.message-text input {
+        width: 475px;
+} 
+
+.message-text input + label {
+        display: block;
+        /* Ensures the label takes up its own line */
+        position: relative;
+        transform-origin: left top;
+        /* Allows for precise positioning */
+        top: -52px;
+left: 5px;
+        /* Adjust this value to control vertical spacing */
+        font-size: 1.1em;
+        /* Adjust font size as needed */
+        color: var(--color-fontbase);
+
+
+
+    /* position: absolute;
+    left: 18px;
+    top: 17px;
+    transform-origin: left top; */
+    transition: all 0.25s linear;
+}
+
+.message-text input::placeholder{
+    color: transparent;
+    /* color:var(--color-light); */
+    transition:color 0.25 linear;
+    text-shadow: none;
+
+}
+
+
+.message-text input:focus:enabled,
+.message-text input:active:enabled {
+    &::placeholder {
+        color: var(--color-fontbase-dark);
+        opacity: 0.5;
+    }
+
+    &~label {
+        transform: translateY(+52px) scale(0.75);
+        font-weight: 600;
+        color: var(--color-fontbase-dark);
+    }
+}
+
+.toast-input-text input:valid {
+    &+label {
+        transform: translateY(-34px) scale(0.9);
+        font-weight: 600;
+    }
+}
+.toast-input-text input:valid {
+    color: var(---color-light);
+    
+        &+label {
+            transform: translateY(-34px) scale(0.9);
+            font-weight: 600;
+        }
+}
+.toast-input-text input:disabled {
+    color: var(--base3);
+    background: var(--color-shadow);
+    border-color: var(--color-shadoww);
+    /* box-shadow: var(--input-shadow-neutral); */
+    transition: unset;
+
+    &+label {
+        color: var(--color-light);
+    }
+}
+
 
 .light-mode {
     --primary: #87ceeb;
@@ -1471,10 +1560,22 @@ progress::-moz-progress-bar {
     z-index: 1;
     color: var(--color-fontbase);
     margin-left: 18px;
-
-    
-
 }
+.message-icon-svgDark {
+    height: 55px;
+    width: 55px;
+    box-shadow: none;
+    background-color: inherit;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    color: #08090a;
+    margin-left: 18px;
+}
+
+
 
 .message-text {
     line-height: 1.333;
