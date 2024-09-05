@@ -24,3 +24,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+
+
+//Take the actual date for use it in the form in case the user do not give one.
+export function getActualDate () {
+    const getActualDate = new Date();
+    const finishDateInput = document.getElementById('finishDateInput') as HTMLInputElement;;
+    if (finishDateInput) {
+    const month = (getActualDate.getMonth() + 1).toString().padStart(2, "0")
+    const day = getActualDate.getDate().toString().padStart(2, "0")
+    finishDateInput.value = `${getActualDate.getFullYear()}-${month}-${day}`
+    } else {
+        console.error('No input element with id "finishDateInput" found.');
+    }
+}
+    

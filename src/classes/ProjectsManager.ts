@@ -86,7 +86,7 @@ export class ProjectsManager {
                         console.log("Rename button clicked!")
                         // **Get the project name BEFORE creating the dialog**
                         const projectToRename = this.list.find((project) => project.name === data.name);
-                        const existingProjectName = projectToRename ? projectToRename.name : "Project Name"; 
+                        const existingProjectName = projectToRename ? projectToRename.name : "Project Name";
 
                         // 1. Create the rename dialog
                         const renameDialog = document.createElement("dialog");
@@ -97,14 +97,12 @@ export class ProjectsManager {
                         const box = document.createElement("div");
                         box.className = "message-content toast toast-popup-default";
                         renameDialog.appendChild(box);
-
-
-
+                        
                         const renameIcon = document.createElement("div");
                         renameIcon.className = "message-icon";
                         box.appendChild(renameIcon);
 
-                        const renameIconSVG = document.createElementNS("http://www.w3.org/2000/svg","svg");
+                        const renameIconSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                         renameIconSVG.setAttribute("class", "message-icon-svgDark");
                         renameIconSVG.setAttribute("role", "img");
                         renameIconSVG.setAttribute("aria-label", "rename");
@@ -149,14 +147,17 @@ export class ProjectsManager {
                         renameInputName.type = "text";
                         renameInputName.setAttribute("id", "newProjectName");
                         renameInputName.setAttribute("placeholder", existingProjectName);
-                        renameInputName.setAttribute("autofocus", "false"); 
+                        renameInputName.setAttribute("autofocus", "");
+                        renameInputName.setAttribute("required", "");
+                        renameInputName.setAttribute("minlength", "5");
+                        renameInputName.setAttribute("autocomplete", "off");
                         boxInput.appendChild(renameInputName);
 
 
                         const renameInputLabel = document.createElement("label");
                         renameInputLabel.className = "toast-input-text";
                         renameInputLabel.textContent = existingProjectName
-                        renameInputLabel.setAttribute("autofocus", "false"); 
+                        renameInputLabel.setAttribute("autofocus", "false");
                         boxInput.appendChild(renameInputLabel);
 
 
@@ -203,7 +204,44 @@ export class ProjectsManager {
 
                                 // Basic validation: Check if the name is empty
                                 if (newName === "") {
-                                    alert("Please enter a valid project name.")
+                                    const popupEnterNewName = new MessagePopUp(
+                                        document.body,
+                                        "error",
+                                        `A project with a empty name is not allow`,
+
+                                        "Please enter a valid project name.",
+                                        ["Got it"],
+                                    )
+                                    // Define ALL your button callbacks for the messagePopUp created
+                                    const buttonCallbacks = {
+                                        "Got it": () => {
+                                            console.log("Got it button clicked!")
+                                            popupEnterNewName.closeMessageModal()
+                                        },
+                                    }
+                                    popupEnterNewName.showNotificationMessage(buttonCallbacks);
+
+                                    return;
+                                }
+
+                                // Validation: Check if the minimun length is 5 characters
+                                if (newName.length < 5) {
+                                    const popupEnter5CharactersName = new MessagePopUp(
+                                        document.body,
+                                        "error",
+                                        "Invalid Project Name",
+                                        "Please enter a project name that is at least 5 characters long.",
+                                        ["Got it"],
+                                    )
+                                    // Define ALL your button callbacks for the messagePopUp created
+                                    const buttonCallbacks = {
+                                        "Got it": () => {
+                                            console.log("Got it button clicked!")
+                                            popupEnter5CharactersName.closeMessageModal()
+                                        },
+                                    }
+                                    popupEnter5CharactersName.showNotificationMessage(buttonCallbacks);
+
                                     return;
                                 }
 
@@ -212,6 +250,14 @@ export class ProjectsManager {
 
                                 // Create the new project and resolve the Promise
                                 const newProject = new Project(data);
+
+                                // ATTACH THE EVENT LISTENER HERE
+                                newProject.ui.addEventListener("click", () => {
+                                    changePageContent("project-details", "flex")
+                                    this.setDetailsPage(newProject);
+                                    console.log("Details page set in a new window");
+                                });
+
                                 this.list.push(newProject)
                                 this.ui.append(newProject.ui)
                                 resolve(newProject)
@@ -230,7 +276,22 @@ export class ProjectsManager {
                 }
                 popupDuplicateProject.showNotificationMessage(buttonCallbacks);
             })
-                
+        }
+        // Check for the 'edit' data attribute on the form
+        const projectForm = document.getElementById("new-project-form");
+        const isEditMode = projectForm && projectForm.dataset.edit === "true";
+
+        if (isEditMode) {
+            // Update existing project
+            // ... (Your logic to update the project using 'data')
+
+            // Remove the data attribute after updating
+            if (projectForm) {
+                delete projectForm.dataset.edit;
+            }
+
+
+
 
         } else {
             // No duplicate, create the project
@@ -238,7 +299,7 @@ export class ProjectsManager {
             project.ui.addEventListener("click", () => {
                 changePageContent("project-details", "flex")
                 this.setDetailsPage(project)
-                console.log(" details pages set in a new window");
+                console.log("Details pages set in a new window");
             
             })
             this.ui.append(project.ui)
@@ -261,6 +322,11 @@ export class ProjectsManager {
                     dataElement.forEach(element => {
                         element.textContent = formattedDate
                     })                       
+                } else if (key === "cost") {
+                    const costElement = detailPage.querySelector(`[data-project-info="cost"]`)
+                    if (costElement) {
+                        costElement.textContent = `${project["cost"]}`
+                    }
                 } else {
                 dataElement.forEach(element => {
                     element.textContent = project[key]
@@ -270,11 +336,80 @@ export class ProjectsManager {
             }
         }
         // Update the background color of the acronym in the dashboard-card
-        const acronymElement = detailPage.querySelector('[data-project-info="acronym"]');
+        const acronymElement = detailPage.querySelector('[data-project-info="acronym"]') as HTMLElement
         if (acronymElement) {
             acronymElement.style.backgroundColor = project.backgroundColorAcronym;
         }
+
+        // Set the data-projectId attribute with the unique ID of the proyect 
+        const projectDatasetAttributeId = document.getElementById("edit-project-details")
+        if (projectDatasetAttributeId) {
+            projectDatasetAttributeId.dataset.projectId = project.id.toString()
+        }
+
+
+
     } 
+
+    populateProjectDetailsForm(project: Project) {
+        const projectDetailsForm = document.getElementById("new-project-form")
+        if (!projectDetailsForm) { return }
+
+
+        for (const key in project) {
+            const inputField = projectDetailsForm.querySelectorAll(`[data-form-value="${key}"]`)
+            if (inputField.length > 0) {
+                if (key === "finishDate") {
+                    // Format date for input type="date"
+                    const formattedDate = project.finishDate.toISOString().split('T')[0]
+
+
+                    // const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+
+                    inputField.forEach(element => {
+                        (element as HTMLElement).value = formattedDate
+                        console.log(`${project[key]}`);
+                        
+                    })
+                } else {
+                    inputField.forEach(element => {
+                        // Handle different input types                        
+                        if (element instanceof HTMLInputElement) {
+                            element.value = project[key] // For text, date inputs
+                        } else if (element instanceof HTMLTextAreaElement) {
+                            element.value = project[key] // For textareas
+                        } else if (element instanceof HTMLSelectElement) {
+                            // For select elements, set the selected option
+                            const options = element.options
+                            for (let i = 0; i < options.length; i++) {
+                                if (options[i].value === project[key]) {
+                                    options[i].selected = true
+                                    break
+                                }
+                            }
+                        }
+                        console.log(`${project[key]}`);
+                    })                    
+                }
+            }
+        }
+
+    }
+
+
+    setDifferencesInUpdateProject(project: Project) {
+        const projectDetailsForm = document.getElementById("new-project-form")
+        if (!projectDetailsForm) { return }
+        
+
+
+    }
+
+
+
+
+
+
         
     createDefaultProject() {
         if (this.defaultProjectCreated) { return }

@@ -13,11 +13,50 @@ document.addEventListener('DOMContentLoaded', () => {
     changePageContent('project-page', 'flex'); 
 });
 
-
 // This document object is provided by the browser, and its main purpose is to help us interact with the DOM
 const newProjectBtn = document.getElementById("new-project-btn")
 if (newProjectBtn) {
-    newProjectBtn.addEventListener("click", () => {showModal("new-project-modal")})
+
+    newProjectBtn.addEventListener("click", () => {
+        showModal("new-project-modal")
+
+        // Set Edit Mode "off" in the Form: mean this form is for a new project not an update
+        const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
+        if (projectForm) {
+            projectForm.dataset.edit = ""; // Set the data attribute to indicate edit mode
+            // *** RESET THE FORM ***
+            // 1. Target specific input types
+            const inputsToReset = projectForm.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, select');
+
+            // 2. Loop through and reset each element
+            inputsToReset.forEach(element => {
+                (element as HTMLInputElement).value = ''; // Reset to empty string
+
+                // Additional handling for select elements:
+                if (element instanceof HTMLSelectElement) {
+                    element.selectedIndex = 0; // Reset to the first option
+                }
+            });
+
+            // projectForm.reset();
+        }
+        // Set Edit Mode Update Modal Title in case previously we update a project
+        // Update Modal Title
+        const modalProjectTitle = document.getElementById("modal-project-title");
+        if (modalProjectTitle) {
+            modalProjectTitle.textContent = "New Project";
+        }
+        // Update Button Text
+        const submitButton = document.getElementById("accept-project-btn");
+        if (submitButton) {
+            submitButton.textContent = "Accept";
+        }
+        const discardButton = document.getElementById("cancel-project-btn");
+        if (discardButton) {
+            discardButton.textContent = "Cancel";
+        }
+    })
+    
 } else {
     console.warn("New project button was not found")
 }
@@ -27,57 +66,137 @@ if (newProjectBtn) {
 const projectForm = document.getElementById("new-project-form")
 const cancelForm: Element | null = document.getElementById("cancel-project-btn");
 // let closePopUpHandler: () => void
+
+
 if (projectForm && projectForm instanceof HTMLFormElement) {
-    projectForm.addEventListener("submit", (event) => {
-        event.preventDefault()
-        const formData = new FormData(projectForm)
-        const projectDetails: IProject = {
-            name: formData.get("name") as string,           
-            acronym: formData.get("acronym") as string,
-            businessUnit: BusinessUnit[formData.get("businessUnit")as keyof typeof BusinessUnit],
-            description: formData.get("description") as string,
-            status: formData.get("status") as ProjectStatus,
-            userRole: formData.get("userRole") as UserRole,
-            finishDate: new Date(formData.get("finishDate") as string)
-        };
-        try {
-            const project = projectManager.newProject(projectDetails);
-            projectForm.reset()
-            closeModal("new-project-modal")
-        } catch (err) {
-            const errorPopUp = document.querySelector(".message-popup")
-            const contentError = {
-                contentDescription : err.message,
-                contentTitle : "Error",
-                contentClass : "popup-error",
-                contentIcon : "report"
-            }
-            if (err) {
-                const text = document.querySelector("#message-popup-text p")
-                text.textContent = contentError.contentDescription
-                const title = document.querySelector("#message-popup-text h5")
-                title.textContent = contentError.contentTitle
-                const icon = document.querySelector("#message-popup-icon span")
-                icon.textContent = contentError.contentIcon
-                errorPopUp?.classList.add(contentError.contentClass)
-                toggleModal("message-popup")
-            }
-            const closePopUp: Element | null = document.querySelector(".btn-popup") 
-            if (closePopUp) {
-                const closePopUpHandler = () => {
-                    toggleModal("message-popup");
-                    closePopUp.removeEventListener("click", closePopUpHandler);
+    //When the form is for a new Project
+    if (!projectForm.dataset.edit) {
+        projectForm.addEventListener("submit", (event) => {
+            event.preventDefault()
+            const formData = new FormData(projectForm)
+
+            // *** Get the finishDate from the form data ***
+            let finishProjectDate: Date | null = null // Allow null initially
+            const finishProjectDateString = formData.get("finishDate") as string
+            // Try to create a Date object, handling potential errors
+            if (finishProjectDateString) {
+                finishProjectDate = new Date(finishProjectDateString)
+                // Check if the Date object is valid
+                if (isNaN(finishProjectDate.getTime())) {
+                    // Handle invalid date input (e.g., show an error message)
+                    console.error("Invalid date input:", finishProjectDateString);
+                    finishProjectDate = null; // Reset to null if invalid
                 }
-                closePopUp.addEventListener("click", closePopUpHandler);
             }
-        }
-        /* catch (err) {
-            const errorDisp = new MessagePopUp(ProjectForm, error, error)
-            errorDisp.showError()
-        }
-        */
-    })
-    
+            // Set to current date if no valid date was provided
+            if (!finishProjectDate) {
+                finishProjectDate = new Date("2112-10-21"); // Create a new Date object for today
+            }
+            // Now you can safely use finishProjectDate as a Date object
+
+
+
+            const projectDetails: IProject = {
+                name: formData.get("name") as string,
+                acronym: formData.get("acronym") as string,
+                businessUnit: BusinessUnit[formData.get("businessUnit") as keyof typeof BusinessUnit],
+                description: formData.get("description") as string,
+                status: formData.get("status") as ProjectStatus,
+                userRole: formData.get("userRole") as UserRole,
+                finishDate: finishProjectDate,
+                cost: formData.get("cost") as Number,
+
+
+
+                // finishDate: new Date(formData.get("finishDate") as string)
+            };
+            try {
+                const project = projectManager.newProject(projectDetails);
+                projectForm.reset()
+                closeModal("new-project-modal")
+            } catch (err) {
+                const errorPopUp = document.querySelector(".message-popup")
+                const contentError = {
+                    contentDescription: err.message,
+                    contentTitle: "Error",
+                    contentClass: "popup-error",
+                    contentIcon: "report"
+                }
+                if (err) {
+                    const text = document.querySelector("#message-popup-text p")
+                    text.textContent = contentError.contentDescription
+                    const title = document.querySelector("#message-popup-text h5")
+                    title.textContent = contentError.contentTitle
+                    const icon = document.querySelector("#message-popup-icon span")
+                    icon.textContent = contentError.contentIcon
+                    errorPopUp?.classList.add(contentError.contentClass)
+                    toggleModal("message-popup")
+                }
+                const closePopUp: Element | null = document.querySelector(".btn-popup")
+                if (closePopUp) {
+                    const closePopUpHandler = () => {
+                        toggleModal("message-popup");
+                        closePopUp.removeEventListener("click", closePopUpHandler);
+                    }
+                    closePopUp.addEventListener("click", closePopUpHandler);
+                }
+            }
+            /* catch (err) {
+                const errorDisp = new MessagePopUp(ProjectForm, error, error)
+                errorDisp.showError()
+            }
+            */
+        })
+    }
+    //when the form is for update data of an existing Project
+    if (projectForm.dataset.edit === "true") {
+        projectForm.addEventListener("submit", (event) => {
+            event.preventDefault()
+            const formData = new FormData(projectForm)
+
+            // *** Get the finishDate from the form data ***
+            let finishProjectDate: Date | null = null // Allow null initially
+            const finishProjectDateString = formData.get("finishDate") as string
+            // Try to create a Date object, handling potential errors
+            if (finishProjectDateString) {
+                finishProjectDate = new Date(finishProjectDateString)
+                // Check if the Date object is valid
+                if (isNaN(finishProjectDate.getTime())) {
+                    // Handle invalid date input (e.g., show an error message)
+                    console.error("Invalid date input:", finishProjectDateString);
+                    finishProjectDate = null; // Reset to null if invalid
+                }
+            }
+
+            const projectDetails: IProject = {
+                name: formData.get("name") as string,
+                acronym: formData.get("acronym") as string,
+                businessUnit: BusinessUnit[formData.get("businessUnit") as keyof typeof BusinessUnit],
+                description: formData.get("description") as string,
+                status: formData.get("status") as ProjectStatus,
+                userRole: formData.get("userRole") as UserRole,
+                finishDate: finishProjectDate,
+                cost: formData.get("cost") as Number,
+            }
+
+            try {
+                const project = projectManager.newProject(projectDetails);
+                projectForm.reset()
+                closeModal("new-project-modal")
+            } catch (err) {
+
+
+
+            }
+
+
+
+        })
+    }
+
+
+
+
     if (cancelForm) {
         cancelForm.addEventListener("click", (e) => {
             e.preventDefault()
@@ -90,6 +209,21 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
     } else {
     console.log("The project form was not found. Check the ID!")
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Export projects to a JSON
 document.addEventListener("DOMContentLoaded", () => {
@@ -119,6 +253,77 @@ btnMainProjects?.addEventListener("click", (e) => {
     e.preventDefault()
     changePageContent("project-page", "flex")
 
-
-
 })
+
+//Button for edit Project Details.
+const btnEditProjectDetails = document.querySelector("#edit-project-details")
+if (btnEditProjectDetails) {
+    btnEditProjectDetails?.addEventListener("click", (e) => {
+        console.log("Button edit project details clicked");
+        e.preventDefault()
+
+        // Get the project ID from the data attribute
+        const projectCardId = (e.currentTarget as HTMLElement).closest('[data-project-id]') as HTMLElement
+        console.log("Div with the ID selected");
+        
+        if (projectCardId) {
+            const projectId = projectCardId.dataset.projectId                    
+        
+            if (projectId) {
+                // You now have the project ID!
+                console.log("Editing project with ID:", projectId);
+
+                // Fetch the project data using the ID and the funtion getProject inside ProjectsManager class
+                const projectToEdit = projectManager.getProject(projectId);
+                if (projectToEdit) {
+                    console.log("Project to edit", projectToEdit);
+                    
+                    // Populate the form fields with project data
+                    projectManager.populateProjectDetailsForm(projectToEdit)
+                    // Populate the form fields with projectToEdit data
+                    // ... your existing form population logic ...
+                    console.log("Form populated", document.getElementById("new-project-form"));
+                    
+
+                    showModal("new-project-modal")
+                    console.log("Showed Modal Windows:", document.getElementById("new-project-modal"));
+                    
+
+                    // Set Edit Mode on the Form
+                    const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
+                    if (projectForm) {
+                        projectForm.dataset.edit = "true"; // Set the data attribute to indicate edit mode
+                    }
+
+                    // Set Edit Mode 
+                    // Update Modal Title
+                    const modalProjectTitle = document.getElementById("modal-project-title");
+                    if (modalProjectTitle) {
+                        modalProjectTitle.textContent = "Update Project";
+                    }
+
+                    // Update Button Text
+                    const submitButton = document.getElementById("accept-project-btn");
+                    if (submitButton) {
+                        submitButton.textContent = "Save Changes";
+                    }
+                    const discardButton = document.getElementById("cancel-project-btn");
+                    if (discardButton) {
+                        discardButton.textContent = "Discard Changes";
+                    }
+
+                    
+                } else {
+                    console.error("Project not found!");
+                }
+            } else {
+                console.error("Project ID not found on the clicked element!");
+            }
+        }
+
+        })
+} else {
+    console.warn("Edit project button was not found")
+}
+    
+    

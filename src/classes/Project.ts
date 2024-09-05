@@ -98,10 +98,11 @@ export class Project implements IProject {
         if (this.ui && this.ui instanceof HTMLElement) {return}
         this.ui = document.createElement("div")
         this.ui.className = "project-card"
+        // this.ui.dataset.projectId = this.id
         
         this.ui.innerHTML = `
             <div class="card-header">
-                <p style="background-color: ${this.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; ">${this.acronym}</p>
+                <p style="background-color: ${this.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${this.acronym}</p>
                 <div>
                     <h5>${this.name}</h5>
                     <p>${this.description}</p>

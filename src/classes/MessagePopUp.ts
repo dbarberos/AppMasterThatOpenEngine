@@ -150,6 +150,9 @@ export class MessagePopUp {
             this.parent.appendChild(this.ui);
             (this.ui as HTMLDialogElement).showModal();
 
+            // Automatically focus on the newly opened dialog ***
+            this.ui.focus()
+
             //Prevent the use of the keydown Escape
             this.ui.addEventListener('keydown', (event) => {
                 if (event.code === 'Escape') {
