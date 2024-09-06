@@ -9,6 +9,7 @@ export class MessagePopUp {
     nameClass: string
     ui: HTMLElement
     parent: HTMLElement
+    messageHeight: string /// New feature
     actions: []
 
     setIcon(): string {
@@ -81,7 +82,8 @@ export class MessagePopUp {
         type: "error" | "warning" | "info" | "success" | "update" | "message" | "clock" | "arrowup",
         title: string,
         messageText: string,
-        btnActions: []
+        btnActions: [],
+        messageHeight?: string /// New feature, ? symbol makes it optional
     ) {
         this.type = type
         this.title = title
@@ -90,8 +92,18 @@ export class MessagePopUp {
         this.nameClass = this.setNameClass()
         this.parent = container
         this.actions = btnActions
+        this.messageHeight = messageHeight || this.getDefaultHeight() /// New feature
         // this.showNotificationMessage()
     }
+
+    private getDefaultHeight(): string {
+        // Get the default height from the parent container's computed style
+        const computedStyle = window.getComputedStyle(this.parent);
+        return computedStyle.getPropertyValue('height'); 
+    }
+
+
+
 
     showNotificationMessage(buttonCallbacks: { [action: string]: () => void } = {}): Promise<void> {
         return new Promise((resolve) => {

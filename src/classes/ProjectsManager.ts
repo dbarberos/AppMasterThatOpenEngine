@@ -276,23 +276,7 @@ export class ProjectsManager {
                 }
                 popupDuplicateProject.showNotificationMessage(buttonCallbacks);
             })
-        }
-        // Check for the 'edit' data attribute on the form
-        const projectForm = document.getElementById("new-project-form");
-        const isEditMode = projectForm && projectForm.dataset.edit === "true";
-
-        if (isEditMode) {
-            // Update existing project
-            // ... (Your logic to update the project using 'data')
-
-            // Remove the data attribute after updating
-            if (projectForm) {
-                delete projectForm.dataset.edit;
-            }
-
-
-
-
+         
         } else {
             // No duplicate, create the project
             const project = new Project(data)
@@ -346,10 +330,81 @@ export class ProjectsManager {
         if (projectDatasetAttributeId) {
             projectDatasetAttributeId.dataset.projectId = project.id.toString()
         }
-
-
-
     } 
+
+
+    updateProject (projectId: string, dataToUpdate: Project) {
+        const projectIndex = this.list.findIndex(p => p.id === projectId)
+        
+        if (projectIndex !== -1) {
+            //Preserve the original ID
+            dataToUpdate.id = this.list[projectIndex].id
+
+            // Update the Project Data in the Array.
+            this.list[projectIndex] = {
+                ...this.list[projectIndex], // Keep existing properties
+                ...dataToUpdate // Update with new values
+            }
+
+            this.setDetailsPage(this.list[projectIndex])
+            return this.list[projectIndex]
+            // return true; // Indicate successful update
+
+        } else {
+            console.error("Project not found in the list!")
+            return false
+        }
+    }
+
+    updateProjectUi(projectToUpdateTheUi: Project): HTMLDivElement {
+        // Update the UI.
+        // Ensure projectToUpdate.ui is defined
+        if (projectToUpdateTheUi.ui) {
+
+            // Create a new UI element with updated content
+            const newUiElement = document.createElement('div')
+            newUiElement.className = "project-card"
+            newUiElement.dataset.projectId = projectToUpdateTheUi.id
+            newUiElement.innerHTML = `
+                <div class="card-header">
+                    <p style="background-color: ${projectToUpdateTheUi.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${projectToUpdateTheUi.acronym}</p>
+                    <div>
+                        <h5>${projectToUpdateTheUi.name}</h5>
+                        <p>${projectToUpdateTheUi.description}</p>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-property">
+                        <p style="color: #969696;">Business Unit</p>
+                        <p>${projectToUpdateTheUi.businessUnit}</p>
+                    </div>
+                    <div class="card-property">
+                        <p style="color: #969696;">Status</p>
+                        <p>${projectToUpdateTheUi.status}</p>
+                    </div>
+                    <div class="card-property">
+                        <p style="color: #969696;">User Role</p>
+                        <p>${projectToUpdateTheUi.userRole}</p>
+                    </div>
+                    <div class="card-property">
+                        <p style="color: #969696;">Cost</p>
+                        <p>$${projectToUpdateTheUi.cost}</p>
+                    </div>
+                    <div class="card-property">
+                        <p style="color: #969696;">Progress</p>
+                        <p>${projectToUpdateTheUi.progress * 100}%</p>
+                    </div>
+                </div>
+            `;
+
+            // Return the updated UI element
+            return newUiElement
+
+        } else {            
+            throw new Error("Project UI element not found for update!")
+        }
+    }
+    
 
     populateProjectDetailsForm(project: Project) {
         const projectDetailsForm = document.getElementById("new-project-form")
@@ -393,24 +448,65 @@ export class ProjectsManager {
                 }
             }
         }
-
+        
     }
 
 
-    setDifferencesInUpdateProject(project: Project) {
-        const projectDetailsForm = document.getElementById("new-project-form")
-        if (!projectDetailsForm) { return }
-        
+    getChangedProjectDataForUpdate(projectOrigin: Project, projectToUpdate: IProject) {
+                
+        //Create a object to hold the key - value pairs of changed data between projectOrigin and projectToUpdate:
+        const changedData: { [key: string]: [string, string] } = {};
 
+        for (const key in projectOrigin) {
+
+            // Exclude the 'ui' property from comparison
+            if (key === "ui") {
+                continue
+            }
+            const currentProjectValue = projectOrigin[key];
+            const valueToUpdate = projectToUpdate[key];
+
+            // Compare and store the difference (handling dates appropriately)
+            if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
+                if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
+                    changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
+                }
+            } else if (currentProjectValue !== valueToUpdate) {
+                changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
+            }
+        }
+        return changedData
 
     }
 
+    renderProjectList(): void {
+        const projectListUiElements = document.getElementById('project-list');
+        if (projectListUiElements) {
+
+            // Clear the existing elements inside the #project-list div
+            projectListUiElements.innerHTML = ""
+
+            // Re-render the project list with the updated data
+            this.list.forEach(project => {
+                const projectUiElement = this.updateProjectUi(project);
+                projectListUiElements.appendChild(projectUiElement);
+
+                // // Remove any existing click listeners (optional but recommended)
+                // projectUiElement.removeEventListener("click", this.handleProjectClick);
+
+                // Attach the click listener 
+                projectUiElement.addEventListener("click", () => {
+                    changePageContent("project-details", "flex");
+                    this.setDetailsPage(project);
+                    console.log("Details page set in a new window");
+                });
 
 
+            });
+        }
+    }
 
 
-
-        
     createDefaultProject() {
         if (this.defaultProjectCreated) { return }
         const defaultData = {
