@@ -1,8 +1,9 @@
-import { IProject, ProjectStatus, UserRole, BusinessUnit } from "./classes/Project";
+import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project";
 import { ProjectsManager } from "./classes/ProjectsManager";
 import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager";
 import "./classes/HTMLUtilities.ts";
 import "./classes/LightMode.ts";
+import { MessagePopUp } from "./classes/MessagePopUp"
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 const projectManager = new ProjectsManager(projectListUI)
@@ -20,10 +21,9 @@ if (newProjectBtn) {
     newProjectBtn.addEventListener("click", () => {
         showModal("new-project-modal")
 
-        // Set Edit Mode "off" in the Form: mean this form is for a new project not an update
-        const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
+         const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
         if (projectForm) {
-            projectForm.dataset.edit = ""; // Set the data attribute to indicate edit mode
+
             // *** RESET THE FORM ***
             // 1. Target specific input types
             const inputsToReset = projectForm.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, select');
@@ -37,10 +37,9 @@ if (newProjectBtn) {
                     element.selectedIndex = 0; // Reset to the first option
                 }
             });
-
-            // projectForm.reset();
         }
-        // Set Edit Mode Update Modal Title in case previously we update a project
+
+        // Set Modal in case previously we update a project
         // Update Modal Title
         const modalProjectTitle = document.getElementById("modal-project-title");
         if (modalProjectTitle) {
@@ -65,15 +64,18 @@ if (newProjectBtn) {
 //Obtaining data from the form via giving an id to the form and using FormData
 const projectForm = document.getElementById("new-project-form")
 const cancelForm: Element | null = document.getElementById("cancel-project-btn");
-// let closePopUpHandler: () => void
-
+const submitFormButton = document.getElementById("accept-project-btn")
 
 if (projectForm && projectForm instanceof HTMLFormElement) {
-    //When the form is for a new Project
-    if (!projectForm.dataset.edit) {
-        projectForm.addEventListener("submit", (event) => {
-            event.preventDefault()
-            const formData = new FormData(projectForm)
+    
+    // projectForm.addEventListener("submit", (event) => {
+    submitFormButton.addEventListener("click", (e) => {
+        e.preventDefault()
+        const formData = new FormData(projectForm)
+        const checkProjectID = submitFormButton?.dataset.projectId
+
+        if (!checkProjectID) {
+            //When the form is for a new Project
 
             // *** Get the finishDate from the form data ***
             let finishProjectDate: Date | null = null // Allow null initially
@@ -95,7 +97,6 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
             // Now you can safely use finishProjectDate as a Date object
 
 
-
             const projectDetails: IProject = {
                 name: formData.get("name") as string,
                 acronym: formData.get("acronym") as string,
@@ -105,11 +106,8 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
                 userRole: formData.get("userRole") as UserRole,
                 finishDate: finishProjectDate,
                 cost: formData.get("cost") as Number,
-
-
-
-                // finishDate: new Date(formData.get("finishDate") as string)
             };
+
             try {
                 const project = projectManager.newProject(projectDetails);
                 projectForm.reset()
@@ -141,88 +139,157 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
                     closePopUp.addEventListener("click", closePopUpHandler);
                 }
             }
-            /* catch (err) {
-                const errorDisp = new MessagePopUp(ProjectForm, error, error)
-                errorDisp.showError()
-            }
-            */
-        })
-    }
-    //when the form is for update data of an existing Project
-    if (projectForm.dataset.edit === "true") {
-        projectForm.addEventListener("submit", (event) => {
-            event.preventDefault()
-            const formData = new FormData(projectForm)
 
-            // *** Get the finishDate from the form data ***
-            let finishProjectDate: Date | null = null // Allow null initially
-            const finishProjectDateString = formData.get("finishDate") as string
-            // Try to create a Date object, handling potential errors
-            if (finishProjectDateString) {
-                finishProjectDate = new Date(finishProjectDateString)
-                // Check if the Date object is valid
-                if (isNaN(finishProjectDate.getTime())) {
-                    // Handle invalid date input (e.g., show an error message)
-                    console.error("Invalid date input:", finishProjectDateString);
-                    finishProjectDate = null; // Reset to null if invalid
+        } else {
+            //When the form is for update an existing Project
+
+            console.log("Button submit clicked in the edit project mode");
+            e.preventDefault()
+
+            // Get the project ID from the data attribute
+            const projectFormId = (e.currentTarget as HTMLElement).closest('[data-project-id]') as HTMLElement
+            console.log("Button with the ID selected");
+
+            if (projectFormId) {
+                const projectIdNumber = projectFormId.dataset.projectId
+                if (projectIdNumber) {
+                    // You now have the project ID!
+                    console.log("Saving project with ID:", projectIdNumber);
+                    projectFormId.dataset.projectId = ""
+
+
+                    // Get all the data from the Form. The data to be updated and the others.
+                    const formDataToUpdate = new FormData(projectForm)
+
+                    // *** Get the finishDate from the form data ***
+                    let finishProjectDate: Date | null = null // Allow null initially
+                    const finishProjectDateString = formDataToUpdate.get("finishDate") as string
+                    // Try to create a Date object, handling potential errors
+                    if (finishProjectDateString) {
+                        finishProjectDate = new Date(finishProjectDateString)
+                        // Check if the Date object is valid
+                        if (isNaN(finishProjectDate.getTime())) {
+                            // Handle invalid date input (e.g., show an error message)
+                            console.error("Invalid date input:", finishProjectDateString);
+                            finishProjectDate = null; // Reset to null if invalid
+                        }
+                    }
+                    const projectToUpdate = projectManager.getProject(projectIdNumber) as Project
+
+                    const projectDetailsToUpdate: Project = {
+                        name: formDataToUpdate.get("name") as string,
+                        acronym: formDataToUpdate.get("acronym") as string,
+                        businessUnit: BusinessUnit[formDataToUpdate.get("businessUnit") as keyof typeof BusinessUnit],
+                        description: formDataToUpdate.get("description") as string,
+                        status: formDataToUpdate.get("status") as ProjectStatus,
+                        userRole: formDataToUpdate.get("userRole") as UserRole,
+                        finishDate: finishProjectDate as Date,
+                        cost: formDataToUpdate.get("cost") ? parseFloat(formDataToUpdate.get("cost") as string) : 0,
+                        id: projectIdNumber as string,
+                        ui: projectManager.updateProjectUi(projectToUpdate) as HTMLDivElement, 
+                        progress: projectToUpdate.progress as number,                        
+                    }
+                    projectDetailsToUpdate.backgroundColorAcronym = Project.calculateBackgroundColorAcronym(projectDetailsToUpdate.businessUnit)
+                    
+                    
+                    if (projectToUpdate) {
+                        const changesInProject = projectManager.getChangedProjectDataForUpdate(projectToUpdate, projectDetailsToUpdate)
+                        // Check if there are any changes
+                        if (Object.keys(changesInProject).length > 0) {
+
+                            // Construct the message for using later in the MessagePopUp
+                            let messageContent = "The following project details will be updated in the project:<br><br>";
+                            for (const key in changesInProject) {
+                                messageContent += `<b>${key}:</b><br>From: <i>${changesInProject[key][0]}</i><br>To: <i style="color: var(--popup-warning);">${changesInProject[key][1]}</i><br><br>`;
+                            }
+
+                            // Create and show the MessagePopUp and show the message above
+                            const updateConfirmationPopup = new MessagePopUp(
+                                document.body,
+                                "info",
+                                "Confirm Project Update",
+                                messageContent,
+                                ["Confirm update", "Cancel"]
+                            );
+
+                            // Define button callbacks
+                            const buttonCallbacks = {
+                                "Confirm update": () => {
+
+                                    // User confirmed, proceed with updating the project
+                                    console.log("User confirmed the update. Proceed with saving changes.");
+                                    const updatedProject = projectManager.updateProject(projectIdNumber, projectDetailsToUpdate);
+                                    console.log(updatedProject);
+
+                                    // Update the UI to reflect the changes
+                                    if (updatedProject) {
+                                        projectToUpdate.ui = projectManager.updateProjectUi(projectToUpdate);                                        
+                                    }
+                                    //Render again the list of projects with the new data uddated
+                                    projectManager.renderProjectList()
+
+
+                                    projectForm.reset()
+                                    
+                                    updateConfirmationPopup.closeMessageModal();
+                                    closeModal("new-project-modal"); // Close the edit form modal
+                                    console.log("Project updated", updatedProject)
+                                    console.log(projectManager.list) 
+
+                                },
+                                "Cancel": () => {
+                                    // User cancelled, do nothing or provide feedback
+                                    console.log("User cancelled the update.");
+                                    updateConfirmationPopup.closeMessageModal();
+                                }
+                            };
+
+                            updateConfirmationPopup.showNotificationMessage(buttonCallbacks);
+                        } else {
+                            // No changes detected, show a new MessagePopUp with this information
+                            const noChangesPopup = new MessagePopUp(
+                                document.body,
+                                "info",
+                                "No Changes Detected",
+                                "No changes were detected in the project details. Sorry there is nothing to update.",
+                                ["Got it"]
+                            );
+
+                            // Define button callback
+                            const buttonCallbacks = {
+                                "Got it": () => {
+                                    noChangesPopup.closeMessageModal();
+                                    console.log("No changes to update in the project.");
+                                }
+                            }
+                            
+                            noChangesPopup.showNotificationMessage(buttonCallbacks);
+                            
+                        }
+                    }
                 }
+            } else {
+                console.log("No Element found with retrieved ID data ");
             }
-
-            const projectDetails: IProject = {
-                name: formData.get("name") as string,
-                acronym: formData.get("acronym") as string,
-                businessUnit: BusinessUnit[formData.get("businessUnit") as keyof typeof BusinessUnit],
-                description: formData.get("description") as string,
-                status: formData.get("status") as ProjectStatus,
-                userRole: formData.get("userRole") as UserRole,
-                finishDate: finishProjectDate,
-                cost: formData.get("cost") as Number,
-            }
-
-            try {
-                const project = projectManager.newProject(projectDetails);
-                projectForm.reset()
-                closeModal("new-project-modal")
-            } catch (err) {
-
-
-
-            }
-
-
-
-        })
-    }
-
-
-
+        }
+    })       
 
     if (cancelForm) {
         cancelForm.addEventListener("click", (e) => {
             e.preventDefault()
             projectForm.reset()
+            // Delete the data-projectId attribute with the unique ID of the proyect in the button of "Save Changes"
+            const projectDatasetAttributeIdInForm = document.getElementById("accept-project-btn")
+            if (projectDatasetAttributeIdInForm) {
+                projectDatasetAttributeIdInForm.dataset.projectId = ""
+            }
             toggleModal("new-project-modal")
         })
     } else {
         console.log("The cancel button was not found. Check the ID!")
     }
-    } else {
-    console.log("The project form was not found. Check the ID!")
+    
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Export projects to a JSON
@@ -288,15 +355,8 @@ if (btnEditProjectDetails) {
                     showModal("new-project-modal")
                     console.log("Showed Modal Windows:", document.getElementById("new-project-modal"));
                     
-
-                    // Set Edit Mode on the Form
-                    const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
-                    if (projectForm) {
-                        projectForm.dataset.edit = "true"; // Set the data attribute to indicate edit mode
-                    }
-
-                    // Set Edit Mode 
-                    // Update Modal Title
+                    // Set Edit Mode
+                    // Update Modal Title                    
                     const modalProjectTitle = document.getElementById("modal-project-title");
                     if (modalProjectTitle) {
                         modalProjectTitle.textContent = "Update Project";
@@ -311,8 +371,11 @@ if (btnEditProjectDetails) {
                     if (discardButton) {
                         discardButton.textContent = "Discard Changes";
                     }
-
-                    
+                    // Set the data-projectId attribute with the unique ID of the proyect in the button of "Save Changes"
+                    const projectDatasetAttributeIdInForm = document.getElementById("accept-project-btn")
+                    if (projectDatasetAttributeIdInForm) {
+                        projectDatasetAttributeIdInForm.dataset.projectId = projectId.toString()
+                    }                    
                 } else {
                     console.error("Project not found!");
                 }
@@ -320,7 +383,6 @@ if (btnEditProjectDetails) {
                 console.error("Project ID not found on the clicked element!");
             }
         }
-
         })
 } else {
     console.warn("Edit project button was not found")
