@@ -92,15 +92,15 @@ export class MessagePopUp {
         this.nameClass = this.setNameClass()
         this.parent = container
         this.actions = btnActions
-        this.messageHeight = messageHeight || this.getDefaultHeight() /// New feature
+        this.messageHeight = messageHeight || "200" /// New feature
         // this.showNotificationMessage()
     }
 
-    private getDefaultHeight(): string {
-        // Get the default height from the parent container's computed style
-        const computedStyle = window.getComputedStyle(this.parent);
-        return computedStyle.getPropertyValue('height'); 
-    }
+    // private getDefaultHeight(): string {
+    //     // Get the default height from the parent container's computed style
+    //     const computedStyle = window.getComputedStyle(this.parent);
+    //     return computedStyle.getPropertyValue('height'); 
+    // }
 
 
 
@@ -136,7 +136,7 @@ export class MessagePopUp {
             //Set the dialog content
             this.ui.innerHTML = `
                 <div class="message-popup" >
-                    <div class="message-content toast toast-${this.nameClass}">
+                    <div class="message-content toast toast-${this.nameClass}" style="height: ${this.messageHeight}">
                         <div id="message-popup-icon" class="message-icon toast-icon" >
                             <svg class="message-icon-svg" role="img" aria-label="${this.icon}" width="100px" height="100px">
                                 <use href="#${this.icon}"></use> 
