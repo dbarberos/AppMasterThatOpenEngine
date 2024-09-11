@@ -86,7 +86,7 @@ export class ProjectsManager {
                         console.log("Rename button clicked!")
                         // **Get the project name BEFORE creating the dialog**
                         const projectToRename = this.list.find((project) => project.name === data.name);
-                        const existingProjectName = projectToRename ? projectToRename.name : "Project Name"; 
+                        const existingProjectName = projectToRename ? projectToRename.name : "Project Name";
 
                         // 1. Create the rename dialog
                         const renameDialog = document.createElement("dialog");
@@ -97,14 +97,12 @@ export class ProjectsManager {
                         const box = document.createElement("div");
                         box.className = "message-content toast toast-popup-default";
                         renameDialog.appendChild(box);
-
-
-
+                        
                         const renameIcon = document.createElement("div");
                         renameIcon.className = "message-icon";
                         box.appendChild(renameIcon);
 
-                        const renameIconSVG = document.createElementNS("http://www.w3.org/2000/svg","svg");
+                        const renameIconSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                         renameIconSVG.setAttribute("class", "message-icon-svgDark");
                         renameIconSVG.setAttribute("role", "img");
                         renameIconSVG.setAttribute("aria-label", "rename");
@@ -149,14 +147,17 @@ export class ProjectsManager {
                         renameInputName.type = "text";
                         renameInputName.setAttribute("id", "newProjectName");
                         renameInputName.setAttribute("placeholder", existingProjectName);
-                        renameInputName.setAttribute("autofocus", "false"); 
+                        renameInputName.setAttribute("autofocus", "");
+                        renameInputName.setAttribute("required", "");
+                        renameInputName.setAttribute("minlength", "5");
+                        renameInputName.setAttribute("autocomplete", "off");
                         boxInput.appendChild(renameInputName);
 
 
                         const renameInputLabel = document.createElement("label");
                         renameInputLabel.className = "toast-input-text";
                         renameInputLabel.textContent = existingProjectName
-                        renameInputLabel.setAttribute("autofocus", "false"); 
+                        renameInputLabel.setAttribute("autofocus", "false");
                         boxInput.appendChild(renameInputLabel);
 
 
@@ -203,7 +204,44 @@ export class ProjectsManager {
 
                                 // Basic validation: Check if the name is empty
                                 if (newName === "") {
-                                    alert("Please enter a valid project name.")
+                                    const popupEnterNewName = new MessagePopUp(
+                                        document.body,
+                                        "error",
+                                        `A project with a empty name is not allow`,
+
+                                        "Please enter a valid project name.",
+                                        ["Got it"],
+                                    )
+                                    // Define ALL your button callbacks for the messagePopUp created
+                                    const buttonCallbacks = {
+                                        "Got it": () => {
+                                            console.log("Got it button clicked!")
+                                            popupEnterNewName.closeMessageModal()
+                                        },
+                                    }
+                                    popupEnterNewName.showNotificationMessage(buttonCallbacks);
+
+                                    return;
+                                }
+
+                                // Validation: Check if the minimun length is 5 characters
+                                if (newName.length < 5) {
+                                    const popupEnter5CharactersName = new MessagePopUp(
+                                        document.body,
+                                        "error",
+                                        "Invalid Project Name",
+                                        "Please enter a project name that is at least 5 characters long.",
+                                        ["Got it"],
+                                    )
+                                    // Define ALL your button callbacks for the messagePopUp created
+                                    const buttonCallbacks = {
+                                        "Got it": () => {
+                                            console.log("Got it button clicked!")
+                                            popupEnter5CharactersName.closeMessageModal()
+                                        },
+                                    }
+                                    popupEnter5CharactersName.showNotificationMessage(buttonCallbacks);
+
                                     return;
                                 }
 
@@ -212,6 +250,14 @@ export class ProjectsManager {
 
                                 // Create the new project and resolve the Promise
                                 const newProject = new Project(data);
+
+                                // ATTACH THE EVENT LISTENER HERE
+                                newProject.ui.addEventListener("click", () => {
+                                    changePageContent("project-details", "flex")
+                                    this.setDetailsPage(newProject);
+                                    console.log("Details page set in a new window");
+                                });
+
                                 this.list.push(newProject)
                                 this.ui.append(newProject.ui)
                                 resolve(newProject)
@@ -230,15 +276,14 @@ export class ProjectsManager {
                 }
                 popupDuplicateProject.showNotificationMessage(buttonCallbacks);
             })
-                
-
+         
         } else {
             // No duplicate, create the project
             const project = new Project(data)
             project.ui.addEventListener("click", () => {
                 changePageContent("project-details", "flex")
                 this.setDetailsPage(project)
-                console.log(" details pages set in a new window");
+                console.log("Details pages set in a new window");
             
             })
             this.ui.append(project.ui)
@@ -261,6 +306,11 @@ export class ProjectsManager {
                     dataElement.forEach(element => {
                         element.textContent = formattedDate
                     })                       
+                } else if (key === "cost") {
+                    const costElement = detailPage.querySelector(`[data-project-info="cost"]`)
+                    if (costElement) {
+                        costElement.textContent = `${project["cost"]}`
+                    }
                 } else {
                 dataElement.forEach(element => {
                     element.textContent = project[key]
@@ -270,12 +320,201 @@ export class ProjectsManager {
             }
         }
         // Update the background color of the acronym in the dashboard-card
-        const acronymElement = detailPage.querySelector('[data-project-info="acronym"]');
+        const acronymElement = detailPage.querySelector('[data-project-info="acronym"]') as HTMLElement
         if (acronymElement) {
             acronymElement.style.backgroundColor = project.backgroundColorAcronym;
         }
+
+        // Set the data-projectId attribute with the unique ID of the proyect 
+        const projectDatasetAttributeId = document.getElementById("edit-project-details")
+        if (projectDatasetAttributeId) {
+            projectDatasetAttributeId.dataset.projectId = project.id.toString()
+        }
     } 
+
+
+    updateProject (projectId: string, dataToUpdate: Project) {
+        const projectIndex = this.list.findIndex(p => p.id === projectId)
         
+        if (projectIndex !== -1) {
+            //Preserve the original ID
+            dataToUpdate.id = this.list[projectIndex].id
+
+            // Update the Project Data in the Array.
+            this.list[projectIndex] = {
+                ...this.list[projectIndex], // Keep existing properties
+                ...dataToUpdate // Update with new values
+            }
+
+            this.setDetailsPage(this.list[projectIndex])
+            return this.list[projectIndex]
+            // return true; // Indicate successful update
+
+        } else {
+            console.error("Project not found in the list!")
+            return false
+        }
+    }
+
+    updateProjectUi(projectToUpdateTheUi: Project): HTMLDivElement {
+        // Update the UI.
+        // Ensure projectToUpdate.ui is defined
+        if (projectToUpdateTheUi.ui) {
+
+            // Create a new UI element with updated content
+            const newUiElement = document.createElement('div')
+            newUiElement.className = "project-card"
+            newUiElement.dataset.projectId = projectToUpdateTheUi.id
+            newUiElement.innerHTML = `
+                <div class="card-header">
+                    <p style="background-color: ${projectToUpdateTheUi.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${projectToUpdateTheUi.acronym}</p>
+                    <div>
+                        <h5>${projectToUpdateTheUi.name}</h5>
+                        <p>${projectToUpdateTheUi.description}</p>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-property">
+                        <p style="color: #969696;">Business Unit</p>
+                        <p>${projectToUpdateTheUi.businessUnit}</p>
+                    </div>
+                    <div class="card-property">
+                        <p style="color: #969696;">Status</p>
+                        <p>${projectToUpdateTheUi.status}</p>
+                    </div>
+                    <div class="card-property">
+                        <p style="color: #969696;">User Role</p>
+                        <p>${projectToUpdateTheUi.userRole}</p>
+                    </div>
+                    <div class="card-property">
+                        <p style="color: #969696;">Cost</p>
+                        <p>$${projectToUpdateTheUi.cost}</p>
+                    </div>
+                    <div class="card-property">
+                        <p style="color: #969696;">Progress</p>
+                        <p>${projectToUpdateTheUi.progress * 100}%</p>
+                    </div>
+                </div>
+            `;
+
+            // Return the updated UI element
+            return newUiElement
+
+        } else {            
+            throw new Error("Project UI element not found for update!")
+        }
+    }
+    
+
+    populateProjectDetailsForm(project: Project) {
+        const projectDetailsForm = document.getElementById("new-project-form")
+        if (!projectDetailsForm) { return }
+
+
+        for (const key in project) {
+            const inputField = projectDetailsForm.querySelectorAll(`[data-form-value="${key}"]`)
+            if (inputField.length > 0) {
+                if (key === "finishDate") {
+                    // Format date for input type="date"
+                    const formattedDate = project.finishDate.toISOString().split('T')[0]
+
+
+                    // const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+
+                    inputField.forEach(element => {
+                        (element as HTMLElement).value = formattedDate
+                        console.log(`${project[key]}`);
+                        
+                    })
+                } else {
+                    inputField.forEach(element => {
+                        // Handle different input types                        
+                        if (element instanceof HTMLInputElement) {
+                            element.value = project[key] // For text, date inputs
+                        } else if (element instanceof HTMLTextAreaElement) {
+                            element.value = project[key] // For textareas
+                        } else if (element instanceof HTMLSelectElement) {
+                            // For select elements, set the selected option
+                            const options = element.options
+                            for (let i = 0; i < options.length; i++) {
+                                if (options[i].value === project[key]) {
+                                    options[i].selected = true
+                                    break
+                                }
+                            }
+                        }
+                        console.log(`${project[key]}`);
+                    })                    
+                }
+            }
+        }
+        
+    }
+
+
+    getChangedProjectDataForUpdate(projectOrigin: Project, projectToUpdate: IProject) {
+                
+        //Create a object to hold the key - value pairs of changed data between projectOrigin and projectToUpdate:
+        const changedData: { [key: string]: [string, string] } = {};
+
+        for (const key in projectOrigin) {
+
+            // Exclude the 'ui' property from comparison
+            if (key === "ui") {
+                continue
+            } else if (key === "backgroundColorAcronym") {
+                continue
+            }
+
+            const currentProjectValue = projectOrigin[key];
+            const valueToUpdate = projectToUpdate[key];
+
+            // Compare and store the difference (handling dates appropriately)
+            if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
+                if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
+                    changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
+                }
+            } else if (key === "description" && !currentProjectValue) {
+                if (currentProjectValue !== valueToUpdate) {
+                    changedData[key] = ["Original description", "New description"];
+                }
+            
+            } else if (currentProjectValue !== valueToUpdate) {
+                changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
+            }
+        }
+        return changedData
+
+    }
+
+    renderProjectList(): void {
+        const projectListUiElements = document.getElementById('project-list');
+        if (projectListUiElements) {
+
+            // Clear the existing elements inside the #project-list div
+            projectListUiElements.innerHTML = ""
+
+            // Re-render the project list with the updated data
+            this.list.forEach(project => {
+                const projectUiElement = this.updateProjectUi(project);
+                projectListUiElements.appendChild(projectUiElement);
+
+                // // Remove any existing click listeners (optional but recommended)
+                // projectUiElement.removeEventListener("click", this.handleProjectClick);
+
+                // Attach the click listener 
+                projectUiElement.addEventListener("click", () => {
+                    changePageContent("project-details", "flex");
+                    this.setDetailsPage(project);
+                    console.log("Details page set in a new window");
+                });
+
+
+            });
+        }
+    }
+
+
     createDefaultProject() {
         if (this.defaultProjectCreated) { return }
         const defaultData = {

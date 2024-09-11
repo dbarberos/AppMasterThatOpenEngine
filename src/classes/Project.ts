@@ -64,7 +64,7 @@ export class Project implements IProject {
             }
         }
 
-        this.backgroundColorAcronym = this.calculateBackgroundColorAcronym()
+        this.backgroundColorAcronym = Project.calculateBackgroundColorAcronym(this.businessUnit)
         this.setUi();
         if (!this.id) { this.id = uuidv4() } //In order to not change the ID when we import projects from JSON file
         console.log(data);
@@ -77,8 +77,8 @@ export class Project implements IProject {
         // })
     }
 
-    private calculateBackgroundColorAcronym(): string {
-        switch (this.businessUnit) {
+    static calculateBackgroundColorAcronym(businessUnit: BusinessUnit): string {
+        switch (businessUnit) {
             case "Edification":
                 return "#f08080"; // Light red
             case "Civil":
@@ -98,10 +98,12 @@ export class Project implements IProject {
         if (this.ui && this.ui instanceof HTMLElement) {return}
         this.ui = document.createElement("div")
         this.ui.className = "project-card"
+        this.ui.dataset.projectId = this.id
+
         
         this.ui.innerHTML = `
             <div class="card-header">
-                <p style="background-color: ${this.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; ">${this.acronym}</p>
+                <p style="background-color: ${this.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${this.acronym}</p>
                 <div>
                     <h5>${this.name}</h5>
                     <p>${this.description}</p>
