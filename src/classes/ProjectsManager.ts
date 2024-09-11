@@ -462,10 +462,14 @@ export class ProjectsManager {
             // Exclude the 'ui' property from comparison
             if (key === "ui") {
                 continue
+<<<<<<< HEAD
             } else if (key === "backgroundColorAcronym") {
                 continue
             }
 
+=======
+            }
+>>>>>>> b282a32dfb2ae285190415a79a8d92e3062ee790
             const currentProjectValue = projectOrigin[key];
             const valueToUpdate = projectToUpdate[key];
 
@@ -474,11 +478,14 @@ export class ProjectsManager {
                 if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
                     changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
                 }
+<<<<<<< HEAD
             } else if (key === "description" && !currentProjectValue) {
                 if (currentProjectValue !== valueToUpdate) {
                     changedData[key] = ["Original description", "New description"];
                 }
             
+=======
+>>>>>>> b282a32dfb2ae285190415a79a8d92e3062ee790
             } else if (currentProjectValue !== valueToUpdate) {
                 changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
             }
