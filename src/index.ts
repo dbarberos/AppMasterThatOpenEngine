@@ -95,7 +95,7 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
                 }
                 // Set to current date if no valid date was provided
                 if (!finishProjectDate) {
-                    finishProjectDate = new Date("2112-10-21"); // Create a new Date object for today
+                    finishProjectDate = new Date("2026-12-31"); // Create a new Date object for today
                 }
                 // Now you can safely use finishProjectDate as a Date object
 
