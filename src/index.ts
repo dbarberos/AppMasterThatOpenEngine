@@ -194,7 +194,7 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
                         
                         
                         if (projectToUpdate) {
-                            const changesInProject = projectManager.getChangedProjectDataForUpdate(projectToUpdate, projectDetailsToUpdate)
+                            let changesInProject = projectManager.getChangedProjectDataForUpdate(projectToUpdate, projectDetailsToUpdate)
                             // Check if there are any changes
                             if (Object.keys(changesInProject).length > 0) {
                                 // Construct the message for using later in the MessagePopUp
@@ -218,11 +218,11 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
                                 }
                                 messageContent += `</table>`
 
-                                // Construct the message for using later in the MessagePopUp
-                                
-                                // for (const key in changesInProject) {
-                                //     messageContent += `<b>${key}:</b><br>From: <i>${changesInProject[key][0]}</i><br>To: <i style="color: var(--popup-warning);">${changesInProject[key][1]}</i><br><br>`;
-                                // }
+                                // Calculate the number of rows in the messageContent table
+                                const messageRowsCount = messageContent.split("<tr>").length
+                                // Calculate the desired message height
+                                const messageHeight = `calc(${messageRowsCount} * 3.5rem + 5rem)`
+
 
                                 // Create and show the MessagePopUp and show the message above
                                 const updateConfirmationPopup = new MessagePopUp(
@@ -230,7 +230,8 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
                                     "info",
                                     "Confirm Project Update",
                                     messageContent,
-                                    ["Confirm update", "Cancel"]
+                                    ["Confirm update", "Cancel"],
+                                    messageHeight
                                 );
 
                                 // Define button callbacks
@@ -254,6 +255,7 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
 
 
                                         projectForm.reset()
+                                        changesInProject = {}
                                         
                                         updateConfirmationPopup.closeMessageModal();
                                         closeModal("new-project-modal"); // Close the edit form modal
@@ -264,6 +266,7 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
                                     "Cancel": () => {
                                         // User cancelled, do nothing or provide feedback
                                         console.log("User cancelled the update.");
+                                        changesInProject = {}
                                         updateConfirmationPopup.closeMessageModal();
                                     }
                                 };
