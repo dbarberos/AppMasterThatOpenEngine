@@ -568,25 +568,6 @@ button:active {
     height: 100%;
 }
 
-.todo-item {
-    padding: 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    /* background: linear-gradient(to left, var(--color-bg), var(--background)); */
-    background-color: var(--background);
-    box-shadow: 7px 7px 15px var(--color-shadow),
-        -10px -10px 25px var(--color-light);
-
-    border-radius: 8px;
-    border: 2px solid var(--color-light);
-    cursor: pointer;
-}
-
-.todo-item:hover {
-    background-color: var(--primary-200);
-}
-
 
 
 /* sidebar styles */ 
@@ -894,6 +875,71 @@ form .input-list {
     padding: 20px;
     row-gap: 25px;    
 }
+
+.todo-form {
+    /* width: fit-content; */
+    width: 750px;
+    min-width: 800px;
+
+    & #todo-title  {
+        position: relative;
+        width: 100%;
+
+        & .title-todo-card {
+            width: 95%;
+        }
+
+        & #todo-title svg {
+            position: absolute;
+            top: 50%;
+            right: 75px;
+            transform: translateY(-50%);
+            box-shadow: none;
+            background-color: inherit;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            color: var(--color-fontbase);
+            margin-left: 18px;
+        }
+    }
+
+
+    & .todo-content {
+        display: grid;
+        grid-template-columns: 5fr 1fr;
+        /* grid-template-columns: minmax (200px, 100px); */
+        grid-template-areas: "description tags";
+        padding: 20px;
+        gap: 10px;
+        align-items: start;
+    }
+
+
+
+
+}
+
+
+
+#todo-title svg {
+    position: absolute;
+    top: 50%;
+    right: 75px;
+    transform: translateY(-50%);
+    box-shadow: none;
+    background-color: inherit;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    color: var(--color-fontbase);
+    margin-left: 18px;
+}
+
 .user-form {
     width: fit-content ;
     min-width: 800px;
@@ -1234,9 +1280,165 @@ progress::-moz-progress-bar {
 
 /* To-do list page */
 
-.todo-item {
+.todo-item {    
+    
+    cursor: pointer;
+    user-select: none;
+    /* background: linear-gradient(to left, var(--color-bg), var(--background)); */
+    background-color: var(--background);
+    box-shadow: 7px 7px 15px var(--color-shadow),
+        -10px -10px 25px var(--color-light);
+
+    
+    border: 2px solid var(--color-light);    
     font-size: var(--font-base);
+    display: grid;
+    grid-template-columns: 10px 1fr;
+    grid-template-areas: "color content";
+    border-radius: 10px;
+
 }
+
+.todo-button {
+    padding: 0px;        
+    height: fit-content;
+    background-color: inherit;
+    color: var(--color-fontbase);
+    
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    column-gap: 0px;
+
+    text-shadow: 1px 1px 0 var(--color-light);
+    box-shadow: -10px -10px 30px var(--color-light), 10px 10px 30px var(--color-shadow);
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+
+    & svg {
+        background-color: inherit;
+    }
+
+}
+.todo-task-move {
+    padding: 0px;
+    height: fit-content;
+    background-color: inherit;
+    color: var(--color-fontbase);
+
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    column-gap: 0px;
+
+    /* text-shadow: 1px 1px 0 var(--color-light); */
+    /* box-shadow: -10px -10px 30px var(--color-light), 10px 10px 30px var(--color-shadow); */
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+
+    & svg {
+        box-shadow: none;
+        background-color: inherit;
+    }
+    & svg:hover {
+        box-shadow: none;
+        color: inherit;
+        cursor: move;
+    }
+    & svg:active {
+        box-shadow: none;
+        color: inherit;
+        cursor: move;
+        background-color: var(--primary-200);
+        border-radius: 100%;
+        aspect-ratio: 1;
+        
+    }
+}
+
+
+.todo-item:hover {
+    background-color: var(--primary-200);
+    border: 3px dashed var(--color-light);
+    
+}
+
+.todo-color-column {
+    grid-area: color;
+    background-color: red;
+    border-radius: 10px 0px 0px 10px ;
+
+}
+
+.todo-card {
+    grid-area: content;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 15px 5px 15px;
+    row-gap: 15px;
+    
+
+}
+
+.todo-taks {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    column-gap: var(--gap-xs)
+}
+.todo-tags-list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+}
+
+.todo-tags-list >* {
+    min-width: fit-content;
+    /* flex:1; */
+}
+.todo-tags {
+    font-size: var(--font-base);
+    color: var(--color-fontbase);
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 2px solid var(--color-fontbase-dark);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(7.9px);
+    -webkit-backdrop-filter: blur(7.9px);
+    padding: 2px 13px;
+    border-radius: 50px;
+    box-sizing: border-box;
+}
+
+.todo-stats {
+    display: flex;
+    flex-direction: row;
+    justify-items:flex-start ;
+    column-gap: var(--gap-s);
+
+    & span {
+        color: var(--color-fontbase-dark);
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1878,3 +2080,9 @@ button  .btn-popup{
     opacity: 1;
     /* text-decoration: line-through; */
 }
+
+
+
+
+
+

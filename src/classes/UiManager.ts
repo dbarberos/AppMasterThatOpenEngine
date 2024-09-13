@@ -74,3 +74,17 @@ export function changePageContent(pageToShow: string, modeDisplay: string) {
     //     if (!showPage || !hidePage) { return }
     //     showPage.style.display = modeDisplay
     //     hidePage.style.display = "none"
+
+
+export function showPageContent(pageToShow: string, modeDisplay: string) {
+    const showPage = document.querySelector<HTMLElement>(`#${pageToShow}`)
+    if (!showPage) { return }
+    showPage.style.display = modeDisplay
+}
+
+export function hidePageContent(pageToHide: string) {
+    const hidePage = document.querySelector<HTMLElement>(`#${pageToHide}`)
+    if (!hidePage) { return }
+    hidePage.style.display = "none"
+}
+    

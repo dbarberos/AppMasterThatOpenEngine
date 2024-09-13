@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
+import { ITodoIssue } from "./ToDoIssue"
 
 export type ProjectStatus = "Pending" | "Active" | "Finished"
 export type UserRole = "Architect" | "Engineer" | "Developer"
@@ -34,6 +35,8 @@ export enum BusinessUnit {
     Bridge = "Bridge",
     Other = "Other"
 }
+
+
 export class Project implements IProject {
     // To satisfy IProject
     name: string
@@ -50,6 +53,9 @@ export class Project implements IProject {
     cost: number = 0
     progress: number = 0
     backgroundColorAcronym: string
+    todoList: ITodoIssue[] = []
+
+    
 
     constructor(data: IProject) {
         // const projectKeys = Object.keys(dummyProject)

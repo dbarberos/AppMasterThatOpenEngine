@@ -4,6 +4,7 @@ import { showModal, closeModal, toggleModal, changePageContent } from "./classes
 import "./classes/HTMLUtilities.ts";
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp"
+import { DragAndDrop } from '@formkit/drag-and-drop';
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 const projectManager = new ProjectsManager(projectListUI)
