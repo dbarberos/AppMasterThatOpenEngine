@@ -558,6 +558,50 @@ button:active {
 
 }
 
+
+.trash-drop-btn {
+    all:unset;
+    width: 200px;
+    background-color: inherit;
+    display: flex;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    border-radius: 100px;
+    border: 2px dashed var(--primary);
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+
+    &:hover {
+        box-shadow: none;
+    }
+
+    &:active {
+        background-color: inherit;
+        box-shadow: none;
+        color: var(--primary);
+    }
+
+    & svg {
+            box-shadow: none;
+            background-color: inherit;
+            
+        }
+    & svg:hover {
+        box-shadow: none;
+        color: inherit;
+        cursor:auto ;
+    }
+    & svg:active {
+        box-shadow: none;
+        color: inherit;
+        cursor: move;
+        background-color: var(--primary-200);
+        border-radius: 100%;        
+    }
+}
+
+
 #company-logo {
     height: 65px;
 }
@@ -858,15 +902,20 @@ dialog[open]:not(:first-of-type) {
 
 /* From Styles */
 form {
-    width: 450px;
+    width: auto;
+    min-width: 450px;
+    max-width: 90%;
     border-radius: 10px;
     background-color: var(--color-bg1);
     color: var(--color-fontbase);
+    padding: 10px;
+    box-sizing: border-box; 
 }
 
 form h2{
     padding: 20px;
     border-bottom: 3px solid var(--background);
+    margin-bottom: 20px;
 }
 
 form .input-list {
@@ -878,8 +927,9 @@ form .input-list {
 
 .todo-form {
     /* width: fit-content; */
-    width: 750px;
-    min-width: 800px;
+    /* width: 750px; */
+    min-width: 450px;
+    max-width: 900px;
 
     & #todo-title  {
         position: relative;
@@ -1008,10 +1058,10 @@ form .form-field-container {
 
 
     & > input {
-        width: 90%;
+        width: 100%;        
     }
     & > textarea {
-        width: 90%;
+        width: 100%;
     }
 
     & #form-project-teams-included {
@@ -1066,8 +1116,6 @@ input[type="text"], textarea, select, input[type="date"], input[type="search"], 
     text-shadow: 1px 1px 0 var(--color-light);
     appearance: none;
         -webkit-appearance: none;
-
-
 }
 
 input[type="text"]:focus, textarea:focus, select:focus, input[type="date"]:focus, input[type="search"], input[type="number"]:focus {
@@ -1088,6 +1136,33 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
+.todo-tags-input {
+    position: relative;
+    display: inline-block;
+    height: fit-content;
+}
+
+
+#todo-tags-list {
+    position: absolute; 
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: inherit;
+    /* border: 1px solid #ccc; */
+    padding: 5px;
+    display: block;
+    list-style: none;
+}
+#todo-tags-list li {
+    display: inline-block;
+    margin: 5px;
+    cursor: pointer;
+}
+
+#todo-tags-list li:hover {
+    background-color: var(--primary-200);
+}
 
 #buttonEndRight {
     padding: 20px;
@@ -1179,10 +1254,18 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 
 fieldset {
     padding: 10px;
-    border-radius: var(--br-5xs);
+    border-radius: 0px;
     color: var(--color-fontbase-dark);
     font-size: var(--color-fontbase);
-    border: 1.5px solid var(--color-fontbase-dark) ;
+    border: none;
+    border-right: 1.5px dashed var(--color-fontbase-dark) ;
+    height:87%;
+}
+
+fieldset:after {
+    content: "";
+    display: table;
+    clear: both;
 }
 
 /* Project details page */
@@ -1213,7 +1296,7 @@ fieldset {
 
     
 .dashboard-card:hover {
-    outline: 2px solid var(--primary);
+    /* outline: 2px solid var(--primary); */
 }
 
 .dashboard-card:nth-child(2) {
@@ -1286,8 +1369,8 @@ progress::-moz-progress-bar {
     user-select: none;
     /* background: linear-gradient(to left, var(--color-bg), var(--background)); */
     background-color: var(--background);
-    box-shadow: 7px 7px 15px var(--color-shadow),
-        -10px -10px 25px var(--color-light);
+    box-shadow: 4px 4px 15px var(--color-shadow),
+        -6px -6px 20px var(--color-light);
 
     
     border: 2px solid var(--color-light);    
@@ -1296,6 +1379,8 @@ progress::-moz-progress-bar {
     grid-template-columns: 10px 1fr;
     grid-template-areas: "color content";
     border-radius: 10px;
+    min-width: 250px;
+    scroll-snap-align: start;
 
 }
 
@@ -1325,6 +1410,8 @@ progress::-moz-progress-bar {
     height: fit-content;
     background-color: inherit;
     color: var(--color-fontbase);
+    border: 2px solid transparent;
+    box-shadow: none;
 
     display: flex;
     align-items: center;
@@ -1335,6 +1422,12 @@ progress::-moz-progress-bar {
     /* box-shadow: -10px -10px 30px var(--color-light), 10px 10px 30px var(--color-shadow); */
     transition: all 0.2s ease-in-out;
     user-select: none;
+
+    & :hover {
+        box-shadow: none;
+        color: inherit;
+        cursor: move;
+    }
 
     & svg {
         box-shadow: none;
@@ -1358,8 +1451,14 @@ progress::-moz-progress-bar {
 
 
 .todo-item:hover {
+    
+    border: 2px dashed var(--primary);
+    
+}
+
+.todo-item:active {
     background-color: var(--primary-200);
-    border: 3px dashed var(--color-light);
+    border: 3px dashed var(--primary);
     
 }
 
@@ -1376,7 +1475,11 @@ progress::-moz-progress-bar {
     flex-direction: column;
     padding: 10px 15px 5px 15px;
     row-gap: 15px;
-    
+    overflow: hidden;
+    text-overflow:ellipsis;
+    overflow-wrap: break-word;
+    width: 90%;
+    white-space: normal;
 
 }
 
@@ -1391,6 +1494,7 @@ progress::-moz-progress-bar {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.25rem 1rem;
+    flex-basis: 100%;
 }
 
 .todo-tags-list >* {
@@ -1408,6 +1512,8 @@ progress::-moz-progress-bar {
     padding: 2px 13px;
     border-radius: 50px;
     box-sizing: border-box;
+    ;
+    
 }
 
 .todo-stats {
@@ -1415,6 +1521,7 @@ progress::-moz-progress-bar {
     flex-direction: row;
     justify-items:flex-start ;
     column-gap: var(--gap-s);
+    flex-wrap: wrap;
 
     & span {
         color: var(--color-fontbase-dark);
@@ -1422,22 +1529,180 @@ progress::-moz-progress-bar {
 
 }
 
+#todo-page {
+    
+    background-color: var(--color-bg);
+
+    display: grid;
+    grid-template-rows: auto 1fr; /* full height of parent element */
+    grid-template-areas: 
+        "head "
+        "content";
+    justify-content: center;    
+    max-width:100%;
+    
+}
+#todo-page, header {
+        grid-area: head;
+    }
+
+#todo-content {    
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    width: calc(100%-50px);
+    padding:0  clamp(75px, 100px, 100px);
+    column-gap: 20px;
+    
+
+    
+    border-radius: 20px;
+    
+    /* border: 4px solid var(--color-bg);
+    box-shadow: 5px 5px 20px var(--color-shadow) inset,
+        -25px -25px 50px var(--color-light) inset; */
+    user-select: none;
+
+    margin: 0 30px 35px 35px;
+    background-color: var(--color-bg);
+    padding: 35px 40px;
+    border: 4px solid var(--color-bg);
+    box-shadow: 5px 5px 20px var(--color-shadow) inset,
+        -25px -25px 50px var(--color-light) inset;
+    box-sizing: border-box;
+}
+
+.todo-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;    
+    color: var(--color-fontbase);
+    min-width: 300px;
+    max-width: 450px; 
+    flex-wrap: nowrap;   
+
+    & .todo-column-head {
+        display: flex;
+        justify-content: flex-start;
+        padding:1rem 0px
+
+    }
+
+    & .todo-column-list {
+        border: 1px solid var(--color-bg);
+        box-shadow: 9px 9px 20px var(--color-shadow),
+                -9px -9px 20px var(--color-light);
+        padding: 25px;
+        border-radius: 10px;
+        min-height: 30%;
+        
+        display: flex;
+        flex-direction: column;
+        row-gap: 25px;
+    }
+}
+
+
+.todo-column-list .todo-issue-card {
+    grid-area: content;
+    background-color: var(--color-bg1);
+    background: linear-gradient(to left, var(--color-bg), var(--background));
+    box-shadow: 2px 2px 10px var(--color-shadow),
+        -2px -2px 10px var(--color-light);
+
+    border-radius: 8px;
+
+    border: 1px solid var(--color-light);
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+}
+
+.todo-issue-card:hover {
+    outline: 2px dashed var(--primary);
+
+}
+
+.todo-column-list .todo-issue-card:active {
+    box-shadow:
+        /*-5px -5px 10px var(--color-light), 05px 5px 10px var(--color-shadow),*/
+        inset -15px -15px 100px var(--color-shadow), inset 15px 15px 70px var(--color-light);
+    background: var(--primary-200);
+    color: var(--color-fontbase);
+    outline: none;
+}
+
+#details-page-todo-list {
+    background-color:var(--color-bg1) ;
+    margin-left: 10px;
+    margin-top: 20px;
+    
+}
+
+#details-page-todo-maincontainer {
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: 100%;
+    background-color: transparent;
+    /* scrollbar-color: transparent transparent; */
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+    scrollbar-width: 10px;
+    scroll-snap-type: mandatory;
+    
+
+    &::-webkit-scrollbar {
+        width: 10px;
+        background-color: inherit;
+    }
+    &::-moz-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+    &::-ms-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+    &:hover::-webkit-scrollbar-thumb {
+        scrollbar-color: red transparent;
+        background-color:var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &:hover::-moz-scrollbar-thumb {        background-color: var(--primary-200);
+    border-radius: 10px;
+    scrollbar-width: 4px;
+
+    }
+    &:hover::-ms-scrollbar-thumb {
+        background-color:var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background: red;
+        border-radius: 10px;
+}
+
+}
+#details-page-todo-maincontainer:hover {
+    scrollbar-color: var(--primary-200) transparent;
+    scrollbar-width:thin;
+    
+
+  
+
+
+}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+#details-page-todo-secondcontainer {
+    background-color: transparent;
+    height: 80%;
+}
 
 
 

@@ -28,7 +28,7 @@ export class ToDoIssue implements IToDoIssue {
     ui: HTMLDivElement
     backgroundColorColumn: string
 
-    constructor(data:) {
+    constructor(data: IToDoIssue) {
         for (const key in data) {
 
             if (key === "dueDate") {
@@ -41,7 +41,9 @@ export class ToDoIssue implements IToDoIssue {
         } 
 
         this.backgroundColorColumn = ToDoIssue.calculateBackgroundColorColumn(this.statusColumn)
-        this.setUi();
+
+            this.setUi();
+
         if (!this.id) { this.id = uuidv4() } //In order to not change the ID if the option of import toDoIssues is implemented
         console.log(data);
     }
@@ -49,15 +51,15 @@ export class ToDoIssue implements IToDoIssue {
     static calculateBackgroundColorColumn(statusColumn: string): string {
         switch (statusColumn) {
             case "backlog":
-                return "#05478a";
+                return "#7057a1";
             case "wip":
-                return "#c24914";
+                return "#caa97e";
             case "qa":
-                return "#f2c464";
+                return "#da9595";
             case "completed":
-                return "#005e38";
+                return "#85b6a2E";
             default:
-                return "#7a288a";
+                return "#4fa5b1";
         }
     }
 
@@ -65,20 +67,21 @@ export class ToDoIssue implements IToDoIssue {
         if (this.ui && this.ui instanceof HTMLElement) { return }
         this.ui = document.createElement("div")
         this.ui.className = "todo-item"
-        this.ui.dataset.projectId = this.id
+        this.ui.dataset.projectId = this.todoProject
+        this.ui.dataset.todoId = this.id
+        const dueDateFormatted = this.dueDate.toLocaleDateString("es-ES", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+        }).replace(/\//g, "-");
 
         this.ui.innerHTML = `
-            <div class="todo-color-column"></div>
+            <div class="todo-color-column" style="background-color: ${this.backgroundColorColumn}"></div>
 
             <div  class="todo-card" style="display: flex; flex-direction: column; border: 5px solid border-left-color: ${this.backgroundColorColumn}; ">
                 <div class="todo-taks" >
                     <div class="todo-tags-list">
-                        <span class="todo-tags">${this.tags}</span>
-                        <span class="todo-tags">${this.tags}</span>
-                        <span class="todo-tags">${this.tags}</span>
-                        <span class="todo-tags">${this.tags}</span>
-                        <span class="todo-tags">${this.tags}</span>
-                        <span class="todo-tags">${this.tags}</span>
+                        ${this.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}
                     </div>
                     <button class="todo-task-move">
                         <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
@@ -88,20 +91,20 @@ export class ToDoIssue implements IToDoIssue {
                     </button>
                 </div>
                 <div class="todo-title">
-                    <h5 style="overflow-wrap: break-word; margin-left: 15px">${this.title}</h5>
+                    <h5 style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;; margin-left: 15px">${this.title}</h5>
                 </div>
                 <div class="todo-stats">
                     <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
                         <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
                             <use href="#flag"></use>
                         </svg>
-                        ${this.dueDate}
+                        ${dueDateFormatted}
                     </span>
                     <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
                         <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
                             <use href="#chat-bubble"></use>
                         </svg>
-                        ${this.assignedUsers}
+                        ${this.assignedUsers.length} assigned
                     </span>
                 </div>
             </div>

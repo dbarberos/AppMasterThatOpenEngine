@@ -2,6 +2,8 @@ import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from "./Proj
 import { showModal, closeModal, toggleModal, closeModalProject , changePageContent} from "./UiManager"
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from 'uuid'
+import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
+import { renderToDoIsuueListInsideProject } from "./ToDoManager"
 
 // let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
 // let cancelExportProjectBtnClickListener: EventListener | null = null  //GMAnaging the EVENTLISTENER
@@ -245,25 +247,52 @@ export class ProjectsManager {
                                     return;
                                 }
 
-                                // Update the project name
-                                data.name = newName;
+                                // Validation: Check if the mame does not exist
+                                const existingProject = projectNames.find(newName => newName.toLowerCase() === data.name.toLowerCase ())
+                                
+                                if (existingProject) {
+                                    // Tag already exists, show error message
+                                    const existProjectName = new MessagePopUp(
+                                        document.body,
+                                        "error",
+                                        "Duplicate Tag",
+                                        `A project named "${newName}" already exists. Please choose a different name.`,
+                                        ["Got it"]
+                                    );
+                                    // Define button callback
+                                    const buttonCallbacks = {
+                                        "Got it": () => {
+                                            existProjectName.closeMessageModal();
+                                        }
+                                    }
+                                    existProjectName.showNotificationMessage(buttonCallbacks);
+                                    const deleteNameInput = document.querySelector("#newProjectName") as HTMLInputElement | null
+                                    if (deleteNameInput) {
+                                        deleteNameInput.value =""
+                                    }
+                                } else {
 
-                                // Create the new project and resolve the Promise
-                                const newProject = new Project(data);
 
-                                // ATTACH THE EVENT LISTENER HERE
-                                newProject.ui.addEventListener("click", () => {
-                                    changePageContent("project-details", "flex")
-                                    this.setDetailsPage(newProject);
-                                    console.log("Details page set in a new window");
-                                });
+                                    // Update the project name
+                                    data.name = newName;
 
-                                this.list.push(newProject)
-                                this.ui.append(newProject.ui)
-                                resolve(newProject)
+                                    // Create the new project and resolve the Promise
+                                    const newProject = new Project(data);
 
-                                // Close the dialog
-                                renameDialog.close()
+                                    // ATTACH THE EVENT LISTENER HERE
+                                    newProject.ui.addEventListener("click", () => {
+                                        changePageContent("project-details", "flex")
+                                        this.setDetailsPage(newProject);
+                                        console.log("Details page set in a new window");
+                                    });
+
+                                    this.list.push(newProject)
+                                    this.ui.append(newProject.ui)
+                                    resolve(newProject)
+
+                                    // Close the dialog
+                                    renameDialog.close()
+                                }
                             });
 
                             cancelRenameBtn.addEventListener('click', () => {
@@ -280,12 +309,25 @@ export class ProjectsManager {
         } else {
             // No duplicate, create the project
             const project = new Project(data)
+            // *** Create and populate UI for ToDoIssues when a new project is created ***
+            project.todoList.forEach((toDoIssue) => {
+                //Create the UI element
+                renderToDoIsuueListInsideProject(toDoIssue)
+                
+                
+                
+                //Set the projectId in the dataset
+                toDoIssue.ui.dataset.projectId = project.id
+            })
+            
             project.ui.addEventListener("click", () => {
-                changePageContent("project-details", "flex")
                 this.setDetailsPage(project)
+                changePageContent("project-details", "flex")
                 console.log("Details pages set in a new window");
             
             })
+            console.log(project.todoList)
+
             this.ui.append(project.ui)
             this.list.push(project)
             this.removeDefaultProject();
@@ -330,6 +372,45 @@ export class ProjectsManager {
         if (projectDatasetAttributeId) {
             projectDatasetAttributeId.dataset.projectId = project.id.toString()
         }
+
+        // Set the data-projectId attribute with the unique ID of the proyect in the button of new To-Do
+        const projectToDoDatasetAttributeId = document.getElementById("new-todo-issue-btn")
+        if (projectToDoDatasetAttributeId) {
+            projectToDoDatasetAttributeId.dataset.projectId = project.id.toString()
+        }
+
+        //Create de list of ToDo cards for that specifict project
+        //We have to manage new project and imported projects from Json. Tose last project don´t have ui HTML elements imported.
+
+        //Get the target element
+        const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
+
+         // Clear any existing content in the container 
+        while (projectListToDosUI.firstChild) {
+            projectListToDosUI.removeChild(projectListToDosUI.firstChild);
+        }
+        // Iterate through the todoList and append each UI element
+        project.todoList.forEach(toDoIssue => {
+            if (!toDoIssue.ui) {
+                renderToDoIsuueListInsideProject(toDoIssue)
+            }
+
+            // Append the new div to the todoListContainer
+            projectListToDosUI.appendChild(toDoIssue.ui);
+            
+        })
+        
+
+
+
+
+
+
+
+
+
+
+
     } 
 
 
@@ -526,7 +607,11 @@ export class ProjectsManager {
             userRole: "Developer" as UserRole,
             finishDate: new Date("2022-02-03"),
             cost: 0,
-            progress: 1
+            progress: 1,
+            id: "default-project",
+            todoList: [],
+            backgroundColorAcronym: "#ccc"
+
         }
         
         const defaultProject = new Project(defaultData)
@@ -561,6 +646,17 @@ export class ProjectsManager {
         })
         return project
     }
+
+    getToDoListForProject(projectId: string): IToDoIssue[] {
+        const project = this.getProject(projectId)
+        if (project) {
+            return project.todoList
+        } else {
+            return []
+        }
+    }
+
+
     
     totalProjectsCost() {
         const TotalBudget = this.list.reduce((acumulative, Project) => acumulative + Project.cost, 0)

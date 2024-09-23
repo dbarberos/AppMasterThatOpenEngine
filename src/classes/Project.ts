@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
-import { ITodoIssue } from "./ToDoIssue"
+import { IToDoIssue } from "./ToDoIssue"
+import { renderToDoIsuueListInsideProject } from "./ToDoManager";
 
 export type ProjectStatus = "Pending" | "Active" | "Finished"
 export type UserRole = "Architect" | "Engineer" | "Developer"
@@ -13,7 +14,9 @@ export interface IProject {
     status: ProjectStatus
     userRole: UserRole
     finishDate: Date
-    backgroundColorAcronym:string
+    cost: Number
+    todoList: IToDoIssue[] 
+
 }
 // const dummyProject: IProject = {
 //     name: "",
@@ -46,14 +49,14 @@ export class Project implements IProject {
     status: "Pending" | "Active" | "Finished"
     userRole: "Architect" | "Engineer" | "Developer"
     finishDate: Date
+    cost: number = 0
     
     // Class internals
     id: string
-    ui: HTMLDivElement
-    cost: number = 0
+    ui: HTMLDivElement    
     progress: number = 0
     backgroundColorAcronym: string
-    todoList: ITodoIssue[] = []
+    todoList: IToDoIssue[] = []
 
     
 
@@ -71,9 +74,26 @@ export class Project implements IProject {
         }
 
         this.backgroundColorAcronym = Project.calculateBackgroundColorAcronym(this.businessUnit)
+        // // Handle todoList and todoList.todoIssue.ui
+        this.todoList = data.todoList || []
+        // //Generate UI for the existing todoIssue
+        // data.todoList.forEach(toDoIssue => {
+        //     renderToDoIsuueListInsideProject(toDoIssue);
+        // });
+
+
+
+
+
+        // Handle Project.ui
         this.setUi();
         if (!this.id) { this.id = uuidv4() } //In order to not change the ID when we import projects from JSON file
         console.log(data);
+
+        // lets create the ui for the list of todo ISssue if the proyect is imported. I mean exist todoIssue data but does not exist ui variable
+
+
+
         
         // I have passed the eventListener of the click over the UI because problems with the overwrite, since the event listener that I am trying to attach to the UI element is being added before the element actually exists in the DOM. In this new way, with the event listener attachment inside the Project constructor, it's added as soon as the UI element is created.
         // this.ui.addEventListener("click", () => {

@@ -7,11 +7,11 @@ import { v4 as uuidv4 } from 'uuid'
 
 
 
-function newToDoIssue(projectId: string, toDoList: ToDoIssue[], data: IToDoIssue): ToDoIssue | undefined {
-    const toDoNames = toDoList.map((toDoIssue) => {
+export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IToDoIssue): ToDoIssue | undefined {
+    const toDoTitles = toDoList.map((toDoIssue) => {
         return toDoIssue.title
     })
-    if (toDoNames.includes(data.title)) {
+    if (toDoTitles.includes(data.title)) {
         console.log(`A issue with the name [ ${data.title} ] already exists`);
         //Create a Confirmation Modal to prompt the user about the duplication and offer options
         return new Promise<ToDoIssue | undefined>((resolve) => {// Return a Promise
@@ -253,7 +253,9 @@ function newToDoIssue(projectId: string, toDoList: ToDoIssue[], data: IToDoIssue
                             });
 
                             toDoList.push(newToDoIssue)
-                            toDoList.ui.append(newToDoIssue.ui)
+                            toDoList.forEach((toDoIssue) => {
+                                (toDoIssue as any).ui.appendChild(newToDoIssue.ui)
+                            })                            
                             resolve(newToDoIssue)
 
                             // Close the dialog
@@ -274,19 +276,29 @@ function newToDoIssue(projectId: string, toDoList: ToDoIssue[], data: IToDoIssue
         // No duplicate, create the issue
         const toDoIssue = new ToDoIssue(data)
         toDoIssue.ui.addEventListener("click", () => {
-            showPageContent("todo-details", "flex")
-            setDetailsIssuePage(toDoIssue)
+            showPageContent("todo-details", "flex")//this should show the banner with the data of only one ISSUE not de board
+            setDetailsIssuePage(toDoIssue) //for the new windows (todo-detalis)where the data of the todo issue is shown. From that place is where you can edit the content of the todoIssue
             console.log("Details pages set in a new window");
 
         })
-        toDoList.ui.append(toDoIssue.ui)
+        // toDoIssue.ui.append(toDoIssue.ui)
+        setIssueInsideDetailsProjectPage(toDoIssue)
         toDoList.push(toDoIssue)
         return toDoIssue
     }
 }
 
+export function setIssueInsideDetailsProjectPage(toDoIssue: ToDoIssue) { 
+    //Get the target element
+    const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
 
-function setDetailsIssuePage(toDoIssue: ToDoIssue) {
+    // Append the new div to the todoListContainer
+    projectListToDosUI.appendChild(toDoIssue.ui);
+
+}
+
+
+export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
     // Set the details page for the issue  
     const detailPage = document.getElementById("todo-details")
     if (!detailPage) { return }
@@ -324,7 +336,58 @@ function setDetailsIssuePage(toDoIssue: ToDoIssue) {
     }
 }
 
-function updateToDoIssue(toDoList: ToDoIssue[], toDoIssueId: string, dataToUpdate: ToDoIssue) { 
+
+export function renderToDoIsuueListInsideProject(toDoIssue: IToDoIssue) {
+        
+    if (toDoIssue.ui && toDoIssue.ui instanceof HTMLElement) {
+        return
+    }
+    toDoIssue.ui = document.createElement("div")
+    toDoIssue.ui.className = "todo-item"
+    toDoIssue.ui.dataset.projectId = toDoIssue.todoProject
+    toDoIssue.ui.dataset.todoId = toDoIssue.id   
+    const dueDateFormatted = toDoIssue.dueDate ? new Date(toDoIssue.dueDate): new Date()
+
+    toDoIssue.ui.innerHTML = `
+        <div class="todo-color-column" style="background-color: ${toDoIssue.backgroundColorColumn}"></div>
+
+        <div  class="todo-card" style="display: flex; flex-direction: column; border: 5px solid border-left-color: ${toDoIssue.backgroundColorColumn}; ">
+            <div class="todo-taks" >
+                <div class="todo-tags-list">
+                    ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}
+                </div>
+                <button class="todo-task-move">
+                    <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                        <use href="#drag-indicator"></use>
+                    </svg>
+
+                </button>
+            </div>
+            <div class="todo-title">
+                <h5 style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;; margin-left: 15px">${toDoIssue.title}</h5>
+            </div>
+            <div class="todo-stats">
+                <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                    <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                        <use href="#flag"></use>
+                    </svg>
+                    ${dueDateFormatted}
+                </span>
+                <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                    <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                        <use href="#chat-bubble"></use>
+                    </svg>
+                    ${toDoIssue.assignedUsers.length} assigned
+                </span>
+            </div>
+        </div>
+    `    
+    } 
+
+
+
+
+export function updateToDoIssue(toDoList: ToDoIssue[], toDoIssueId: string, dataToUpdate: ToDoIssue) { 
     const toDoIssueIndex = toDoList.findIndex(p => p.id === toDoIssueId)
     if (toDoIssueIndex !== -1) {
         //Preserve the original ID
@@ -342,7 +405,7 @@ function updateToDoIssue(toDoList: ToDoIssue[], toDoIssueId: string, dataToUpdat
     }
 }
 
-function updateProjectUi(toDoIssueToUpdateTheUi: ToDoIssue): HTMLDivElement {
+export function updateToDoIssueUi(toDoIssueToUpdateTheUi: ToDoIssue): HTMLDivElement {
     // Update the UI.
     // Ensure toDoIssueToUpdate.ui is defined
     if (toDoIssueToUpdateTheUi.ui) {
@@ -396,7 +459,7 @@ function updateProjectUi(toDoIssueToUpdateTheUi: ToDoIssue): HTMLDivElement {
     }
 }
 
-function populateToDoIssueDetailsForm(toDoIssue: ToDoIssue) {
+export function populateToDoIssueDetailsForm(toDoIssue: ToDoIssue) {
     // Get the form elements
     const toDoIssueDetailsForm = document.getElementById("todo-issue-form");
     if (!toDoIssueDetailsForm) { return }
@@ -439,7 +502,7 @@ function populateToDoIssueDetailsForm(toDoIssue: ToDoIssue) {
 }
 
 
-function getChangedToDoIssueDataForUpdate(toDoIssueOrigin: ToDoIssue, toDoIssueToUpdate: IToDoIssue) {
+export function getChangedToDoIssueDataForUpdate(toDoIssueOrigin: ToDoIssue, toDoIssueToUpdate: IToDoIssue) {
 
     //Create a object to hold the key - value pairs of changed data between toDoIssueOrigin and toDoIssueToUpdate:
     const changedFields: { [key: string]: [string, string] } = {};
@@ -480,7 +543,7 @@ function getChangedToDoIssueDataForUpdate(toDoIssueOrigin: ToDoIssue, toDoIssueT
     return changedFields
 }
 
-function renderToDoIssueList(toDoList: ToDoIssue[]): void {
+export function renderToDoIssueList(toDoList: ToDoIssue[]): void {
     const toDoIssueListUiElements = document.getElementById('todo-list');
     if (toDoIssueListUiElements) {
 
@@ -505,51 +568,98 @@ function renderToDoIssueList(toDoList: ToDoIssue[]): void {
     }
 }
 
-getToDoIssue(id: string) {
-    const toDoIssue = this.list.find((project) => {
-        return project.id === id
+export function getToDoIssue(toDoList: ToDoIssue[], id: string) {
+    const toDoIssue = toDoList.find((project) => {
+        return toDoIssue.id === id
     })
-    return project
+    return toDoIssue
+}
+
+export function getToDoIssueByTitle(toDoList: ToDoIssue[], title: string) {
+    const toDoIssue = toDoList.find((project) => {
+        return toDoIssue.title === title
+    })
+    return toDoIssue
+}
+
+export function deleteToDoIssue(toDoList: ToDoIssue[], id: string) {
+    const toDoIssue = getToDoIssue(toDoList, id)
+    if (!toDoIssue) { return }
+    toDoIssue.ui.remove()
+    const remain = toDoList.filter((project) => {
+        return toDoIssue.id !== id
+    })
+    toDoList = remain
 }
 
 
 
 
 
+// Introduce and store tags for the To-DO Input element
+const tagsInput = document.getElementById('todo-tags-input');
+const tagsList = document.getElementById('todo-tags-list');
 
+if (tagsInput) {
+    tagsInput.addEventListener('keydown', (e) => {
+        const inputValue = (e.target as HTMLInputElement).value.trim()
+        if ((e.key === "Enter") && inputValue) {
+            e.preventDefault()
+            const newTags = inputValue.split(/[,]+/).filter((tag) => tag !== "");
+            if (Array.isArray(newTags)) {
+                newTags.forEach(tagText => {
+                    // Check if the tag already exists in the list
+                    const existingTag = Array.from(tagsList?.children ?? []).find(child =>
+                        child.textContent?.trim().toLowerCase() === tagText.toLowerCase()
+                    );
 
+                    if (existingTag) {
+                        // Tag already exists, show error message
+                        const existTagPopup = new MessagePopUp(
+                            document.body,
+                            "warning",
+                            "Duplicate Tag",
+                            `The tag "${tagText}" already exists.`,
+                            ["Got it"]
+                        );
+                        // Define button callback
+                        const buttonCallbacks = {
+                            "Got it": () => {
+                                existTagPopup.closeMessageModal();
+                            }
+                        }
+                        existTagPopup.showNotificationMessage(buttonCallbacks);
+                    } else {
 
-
-
-
-
-
-
-
-
-
-
-
-}
-
-            
-
-
-
-
-
-
+                        // Tag is new, add it to the list
+                        const tag = document.createElement('li')
+                        tag.textContent = tagText
+                        tag.classList.add("todo-tags")
+                        if (tagsList) {
+                            tagsList.appendChild(tag)
+                        }
+                    }
+                })
             }
+            console.log(tagsList);
 
+            (e.target as HTMLInputElement).value = "" // Clear input after adding tags
+        }
+    });
+}
 
-
+if (tagsList) {
+    tagsList.addEventListener('click', (e) => {
+        if (e.target instanceof HTMLElement) {
+            const target = e.target
+            if (target.tagName === 'LI') {
+                const tag = e.target
+                tagsList.removeChild(tag)
+            }
         }
 
-
-        
-            
-    }
-
+    })
 }
+
 
 
