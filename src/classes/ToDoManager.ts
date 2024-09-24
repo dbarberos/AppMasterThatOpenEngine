@@ -1,5 +1,7 @@
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
 import { showModal, closeModal, toggleModal, closeModalProject, changePageContent, showPageContent, hidePageContent } from "./UiManager"
+import { Project } from "./Project"
+import { ProjectsManager } from './ProjectsManager';
 
 import { DragAndDrop } from '@formkit/drag-and-drop';
 import { MessagePopUp } from "./MessagePopUp"
@@ -22,53 +24,77 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
 
                 `<b><u>Overwrite:</b></u> Replace the existing issue with the imported data.<br>
                 <b><u>Skip:</b></u> Do nothing with the new Issue.<br>
-                <b><u>Rename:</b></u> Create de Issue with a new name.`,
+                <b><u>Rename:</b></u> Create the Issue with a new name.`,
                 ["Overwrite", "Skip", "Rename"],
             )
 
             // Define ALL your button callbacks for the messagePopUp created
+            const self = this
             const buttonCallbacks = {
                 "Overwrite": () => {
                     console.log("Overwrite button clicked!");
                     popupDuplicateToDoIssue.closeMessageModal();
 
-                    // Find and remove the existing project from the ui & list since you are going to use it later
-                    const existingProjectIndex = toDoList.findIndex(project => data.title === data.title);
-                    if (existingProjectIndex !== -1) {
+                    // Find the project that contains the ToDoIssue to overwrite
+                    const toDoIssueIds = toDoList.map((toDoIssue) => {
+                        return { id: (toDoIssue as any).id, title: toDoIssue.title }
+                    })
 
-                        // 1. Remove the existing issue's UI from the display
-                        toDoList.ui.removeChild(toDoList[existingProjectIndex].ui);
-                        console.log("Old issue removed fromthe UI");
+                    const toDoIssueIdWithTitle = toDoIssueIds.find((toDoIssue) => {
+                        return toDoIssue.title ===data.title
+                    })
 
-                        // 2. Remove the existing project from the list
-                        toDoList = toDoList.filter((toDoIssue) => toDoIssue.title !== data.title);
-                        console.log("Removed the oLd Issue name from the List of names");
+                    if (toDoIssueIdWithTitle) {
 
 
-                        // 3. Create a new issue with the imported data
-                        const newToDoIssue = new ToDoIssue(data);
-                        newToDoIssue.ui.addEventListener("click", () => {
+                        const project = getProjectByToDoIssueId(toDoIssueIdWithTitle.id)
+                        console.log(toDoIssueIdWithTitle.id)
+                        console.log("Project", project)
+                    
 
-                            //EVENTO QUE SICEDE CUANDO SE HACE CLICK SOBRE UNA DE LAS ETIQUETAS DE TODO
-                            //LA IDEA ES QUE SALGA UNA TARGETA DE LA IZQUIERDA TAPANDO EL ASIDE Y EL PROYECTO SUSTITUYENDOLOS POR LOS DATOS. DEJANDO A LA VISTA EL VISUALIZADOR DE IFC 
+                        if (project) {
+                            // Find and remove the existing ToDoIssue from the ui & list since you are going to use it later
+                            const existingToDoIssueIndex = toDoList.findIndex(toDoIssue => toDoIssue.title === data.title);
+                            if (existingToDoIssueIndex !== -1) {
 
-                            showPageContent("todo-details", "flex")
-                            this.setDetailsIssuePage(newToDoIssue)
-                            console.log(" details pages set in the new window");
-                        })
-                        // 4. Add the new project to the list and UI
-                        this.list.push(newToDoIssue);
-                        console.log("Added new project to the List of names")
-                        this.ui.append(newToDoIssue.ui)
-                        console.log("Added new project to the UI")
+                                //Remove the existing issue's UI from the display 
+                                const existingToDoIssue = toDoList[existingToDoIssueIndex];
+                                (existingToDoIssue as any).ui.remove();
+                                console.log("Old issue removed fromthe UI");
 
-                        // 5. Resolve with the newly created project
-                        resolve(newToDoIssue);
+                                //Update the ToDoIssue in theproject´s ToDoList
+                                const newToDoIssue = new ToDoIssue(data);
+                                project.todoList[existingToDoIssueIndex] = newToDoIssue
 
-                    } else {
-                        // Handle the case where the project is not found (shouldn't happen, just in case
-                        console.error("Project to overwrite not found in the list.")
-                        resolve(undefined); // Or resolve with an appropriate error value
+                                                                
+                                newToDoIssue.ui.addEventListener("click", () => {
+
+                                    //EVENTO QUE SUCEDE CUANDO SE HACE CLICK SOBRE UNA DE LAS ETIQUETAS DE TODO
+                                    //LA IDEA ES QUE SALGA UNA TARGETA DE LA IZQUIERDA TAPANDO EL ASIDE Y EL PROYECTO SUSTITUYENDOLOS POR LOS DATOS. DEJANDO A LA VISTA EL VISUALIZADOR DE IFC 
+
+                                    showPageContent("todo-details", "flex")
+                                    self.setDetailsIssuePage(newToDoIssue)
+                                    console.log(" details pages set in the new window");
+                                })
+
+                                //  Update the ToDoOssue in the project´s toDoListnd UI
+                                //Get the target element
+                                const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
+                                projectListToDosUI.appendChild((newToDoIssue as any).ui);
+
+                                
+                                console.log("Added new project to the UI")
+                                console.dir("New toDoList:", toDoList)
+                            }
+
+                            // Resolve with the newly created toDoIssue
+                            resolve(newToDoIssue)
+
+                        } else {
+                            // Handle the case where the project is not found (shouldn't happen, just in case
+                            console.error("Project to overwrite not found in the list.")
+                            resolve(undefined); // Or resolve with an appropriate error value
+                        }
                     }
                 },
                 "Skip": () => {
@@ -110,11 +136,9 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                     renameIconUse.setAttributeNS("http://www.w3.org/2000/svg", "xlink:href", "#rename");
                     renameIconSVG.appendChild(renameIconUse);
 
-
                     const content = document.createElement("div");
                     content.className = "toast-column";
                     box.appendChild(content);
-
 
                     const text = document.createElement("div");
                     text.className = "message-text";
@@ -125,7 +149,6 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                     renameTitle.textContent = "Project name";
                     text.appendChild(renameTitle);
 
-
                     const renameSubtitle = document.createElement("p");
                     renameSubtitle.className = "message-text-message";
                     renameSubtitle.textContent = "Select the text field and populate it with a new name";
@@ -134,7 +157,6 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                     const boxInput = document.createElement("div");
                     boxInput.className = "message-text";
                     content.appendChild(boxInput);
-
 
                     const renameInputName = document.createElement("input");
                     renameInputName.className = "toast-input-text";
@@ -147,13 +169,11 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                     renameInputName.setAttribute("autocomplete", "off");
                     boxInput.appendChild(renameInputName);
 
-
                     const renameInputLabel = document.createElement("label");
                     renameInputLabel.className = "toast-input-text";
                     renameInputLabel.textContent = existingToDoIssueName
                     renameInputLabel.setAttribute("autofocus", "false");
                     boxInput.appendChild(renameInputLabel);
-
 
                     const renameBtns = document.createElement("div");
                     renameBtns.className = "message-btns";
@@ -180,8 +200,6 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                     btnTextC.className = "message-btn-text";
                     btnTextC.textContent = "Cancel";
                     rBtnC.appendChild(btnTextC);
-
-
 
                     // 2. Append the dialog to the body and show it
                     document.body.appendChild(renameDialog)
@@ -218,6 +236,30 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                                 return;
                             }
 
+                            //Validation do not repeat title for the ToDoIssue
+
+                            if (toDoTitles.includes(newTitle)) {
+                                console.log(`A issue with the name [ ${newTitle} ] already exists`);
+                                const popupTitleToDoIssueRepited = new MessagePopUp(
+                                    document.body,
+                                    "error",
+                                    `A issue with the name "${ newTitle }" already exist`,
+                                    "Please enter a diferent title.",
+                                    ["Got it"],
+                                )
+                                // Define ALL your button callbacks for the messagePopUp created
+                                const buttonCallbacks = {
+                                    "Got it": () => {
+                                        console.log("Got it button clicked!")
+                                        popupTitleToDoIssueRepited.closeMessageModal()
+                                    },
+                                }
+                                popupTitleToDoIssueRepited.showNotificationMessage(buttonCallbacks);
+
+                                return;
+                            }
+
+
                             // Validation: Check if the minimun length is 5 characters
                             if (newTitle.length < 5) {
                                 const popupEnter5CharactersName = new MessagePopUp(
@@ -246,16 +288,23 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                             const newToDoIssue = new ToDoIssue(data);
 
                             // ATTACH THE EVENT LISTENER HERE
+                            
                             newToDoIssue.ui.addEventListener("click", () => {
+
+                                //EVENTO QUE SUCEDE CUANDO SE HACE CLICK SOBRE UNA DE LAS ETIQUETAS DE TODO
+                                //LA IDEA ES QUE SALGA UNA TARGETA DE LA IZQUIERDA TAPANDO EL ASIDE Y EL PROYECTO SUSTITUYENDOLOS POR LOS DATOS. DEJANDO A LA VISTA EL VISUALIZADOR DE IFC
+
                                 showPageContent("todo-details", "flex")
-                                this.setDetailsIssuePage(newToDoIssue)
+                                self.setDetailsIssuePage(newToDoIssue)
                                 console.log("Details page set in a new window");
                             });
 
                             toDoList.push(newToDoIssue)
-                            toDoList.forEach((toDoIssue) => {
-                                (toDoIssue as any).ui.appendChild(newToDoIssue.ui)
-                            })                            
+                            
+                            //  Update the ToDoOssue in the project´s toDoListnd UI
+                            const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
+                            projectListToDosUI.appendChild((newToDoIssue as any).ui)
+
                             resolve(newToDoIssue)
 
                             // Close the dialog
@@ -345,13 +394,18 @@ export function renderToDoIsuueListInsideProject(toDoIssue: IToDoIssue) {
     toDoIssue.ui = document.createElement("div")
     toDoIssue.ui.className = "todo-item"
     toDoIssue.ui.dataset.projectId = toDoIssue.todoProject
-    toDoIssue.ui.dataset.todoId = toDoIssue.id   
-    const dueDateFormatted = toDoIssue.dueDate ? new Date(toDoIssue.dueDate): new Date()
+    toDoIssue.ui.dataset.todoId = toDoIssue.id 
+    const dueDate = new Date (toDoIssue.dueDate)
+    const dueDateFormatted = dueDate.toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).replace(/\//g, "-")
 
     toDoIssue.ui.innerHTML = `
-        <div class="todo-color-column" style="background-color: ${toDoIssue.backgroundColorColumn}"></div>
+        <div class="todo-color-column" style="background-color: ${(toDoIssue as any).backgroundColorColumn}"></div>
 
-        <div  class="todo-card" style="display: flex; flex-direction: column; border: 5px solid border-left-color: ${toDoIssue.backgroundColorColumn}; ">
+        <div  class="todo-card" style="display: flex; flex-direction: column; border: 5px solid border-left-color: ${(toDoIssue as any).backgroundColorColumn}; ">
             <div class="todo-taks" >
                 <div class="todo-tags-list">
                     ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}
@@ -373,11 +427,15 @@ export function renderToDoIsuueListInsideProject(toDoIssue: IToDoIssue) {
                     </svg>
                     ${dueDateFormatted}
                 </span>
-                <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                <span style="text-wrap: nowrap; margin-left: 5px" class="todo-task-move">
                     <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
                         <use href="#chat-bubble"></use>
                     </svg>
                     ${toDoIssue.assignedUsers.length} assigned
+                </span>
+                </span>
+                    <span class="todo-task-move todo-tags" style="textwrap: nowrap; margin-left:5px; color: var(--background) !important; background-color:${(toDoIssue as any).backgroundColorColumn};font-size: var(--font-base)" >
+                        ${ToDoIssue.getStatusColumnText(toDoIssue.statusColumn)}
                 </span>
             </div>
         </div>
@@ -592,7 +650,21 @@ export function deleteToDoIssue(toDoList: ToDoIssue[], id: string) {
     toDoList = remain
 }
 
+function getProjectByToDoIssueId(toDoIssueId: string): Project | undefined {
+    const projectManager = ProjectsManager.getInstance();
+    const projects = projectManager.list
 
+    for (const project of projects) {
+        const todoIssues = project.todoList
+        for (const todoIssue of todoIssues) {
+            if ((todoIssue as any).id === toDoIssueId) {
+                return project
+            }
+        }    
+
+    }
+    return undefined;
+}
 
 
 

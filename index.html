@@ -149,7 +149,7 @@
                                 title="Please enter only numbers" autocomplete="off">
                             <details>
                                 <summary>Tip</summary>
-                                <p>Only allow numbers and one dot</p>
+                                <p>Only allow numbers</p>
                             </details>
                         </div>
 
@@ -441,7 +441,7 @@
 
                         <h3  style="" id="todo-title">
                             <!-- <label><span class="material-icons-round">edit</span></label> -->
-                            <input data-form-todo-value="title" name="title" class="title-todo-card" type="text" size="30" placeholder="Please enter a title for the issue.">
+                            <input data-form-todo-value="title" name="title" class="title-todo-card" type="text" size="30" placeholder="Please enter a title for the issue." required minlength="5">
                             <svg class="todo-icon" role="img" aria-label="edit" width="20" height="20">                            
                                 <use href="#edit"></use>                            
                             </svg>
@@ -520,7 +520,7 @@
 
                                         <div class="form-field-user-container">                                            
                                             <label><span class="material-icons-round">calendar_today</span>Finish issue date</label>
-                                            <input data-form-todo-value="dueDate" name="dueDate" type="date" id="todo-dueDate" style="width: 100%">
+                                            <input data-form-todo-value="dueDate" name="dueDate" type="date" id="todo-dueDate" style="width: 100%" min="2024-01-01">
                                         </div>
 
                                         

@@ -59,7 +59,22 @@ export class ToDoIssue implements IToDoIssue {
             case "completed":
                 return "#85b6a2E";
             default:
-                return "#4fa5b1";
+                return "#ccc";
+        }
+    }
+
+    static getStatusColumnText(statusColumn: string): string {
+        switch (statusColumn) {
+            case "backlog":
+                return "Task Ready"
+            case "wip":
+                return "In Progress"
+            case "qa":
+                return "Needs Review"
+            case "completed":
+                return "Done"
+            default:
+                return "Not Assigned"
         }
     }
 
@@ -100,11 +115,14 @@ export class ToDoIssue implements IToDoIssue {
                         </svg>
                         ${dueDateFormatted}
                     </span>
-                    <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                    <span style="text-wrap: nowrap; margin-left: 5px" class="todo-task-move">
                         <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
                             <use href="#chat-bubble"></use>
                         </svg>
                         ${this.assignedUsers.length} assigned
+                    </span>
+                    <span class="todo-task-move todo-tags" style="textwrap: nowrap; margin-left:5px; color: var(--background) !important; background-color:${this.backgroundColorColumn};font-size: var(--font-base)" >
+                        ${ToDoIssue.getStatusColumnText(this.statusColumn)}
                     </span>
                 </div>
             </div>

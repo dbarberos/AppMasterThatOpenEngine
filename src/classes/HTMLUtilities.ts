@@ -46,71 +46,10 @@ export function getActualDate () {
 
 
 
+//Set the minimum date for de todo Issue Form as de date of tomorrow
+const today = new Date();
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 1);
+const minDate = tomorrow.toISOString().split('T')[0];
 
-
-
-// Pasado a ToDoManager
-// // Introduce and store tags for the To-DO Input element
-// const tagsInput = document.getElementById('todo-tags-input');
-// const tagsList = document.getElementById('todo-tags-list');
-
-// if (tagsInput) {
-//     tagsInput.addEventListener('keydown', (e) => {
-//         const inputValue = (e.target as HTMLInputElement).value.trim()
-//         if ((e.key === "Enter") && inputValue) {
-//             e.preventDefault()
-//             const newTags = inputValue.split(/[,]+/).filter((tag) => tag !== "");
-//             if (Array.isArray(newTags)) {
-//                 newTags.forEach(tagText => {
-//                     // Check if the tag already exists in the list
-//                     const existingTag = Array.from(tagsList?.children ?? []).find(child =>
-//                         child.textContent?.trim().toLowerCase() === tagText.toLowerCase()
-//                     );
-
-//                     if (existingTag) {
-//                         // Tag already exists, show error message
-//                         const existTagPopup = new MessagePopUp(
-//                             document.body,
-//                             "warning",
-//                             "Duplicate Tag",
-//                             `The tag "${tagText}" already exists.`,
-//                             ["Got it"]
-//                         );
-//                         // Define button callback
-//                         const buttonCallbacks = {
-//                             "Got it": () => {
-//                                 existTagPopup.closeMessageModal();
-//                             }
-//                         }
-//                         existTagPopup.showNotificationMessage(buttonCallbacks);
-//                     } else {
-
-//                         // Tag is new, add it to the list
-//                         const tag = document.createElement('li')
-//                         tag.textContent = tagText
-//                         tag.classList.add("todo-tags")
-//                         if (tagsList) {
-//                             tagsList.appendChild(tag)
-//                         }
-//                     }
-//                 })
-//             }
-//             console.log(tagsList);
-            
-//             (e.target as HTMLInputElement).value = "" // Clear input after adding tags
-//         }
-//     });
-// }
-
-// if (tagsList) {
-//     tagsList.addEventListener('click', (e) => {
-//         if (e.target instanceof HTMLElement) {
-//             const target = e.target
-//             if (target.tagName === 'LI') {
-//                 const tag = e.target
-//                 tagsList.removeChild(tag)
-//             }
-//         }
-        
-//     })
-// }
+document.getElementById('todo-dueDate').min = minDate;

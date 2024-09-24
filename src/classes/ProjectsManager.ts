@@ -12,8 +12,28 @@ export class ProjectsManager {
     list: Project[] = []
     ui: HTMLElement
     defaultProjectCreated: boolean = false
+
+    //Applying the singleton design pattern to the ProjectsManager class. This ensures that only one instance of ProjectsManager exists throughout the application, providing a global access point to its functionality.
+
+    private static instance: ProjectsManager
+    private static container: HTMLElement | null = null
+
+    public static setContainer(container: HTMLElement) {
+        ProjectsManager.container = container
+    }
+
+    public static getInstance(): ProjectsManager {
+        if (!ProjectsManager.instance) {
+            if (!ProjectsManager.container) {
+                throw new Error("Container not established")
+            }
+            ProjectsManager.instance = new ProjectsManager(ProjectsManager.container)
+        }
+        return ProjectsManager.instance
+    }
+    //above finished the singleton pattern
     
-    constructor(container: HTMLElement) {
+    private constructor(container: HTMLElement) {
         this.ui = container
         this.defaultProjectCreated = false
         this.createDefaultProject()
@@ -396,21 +416,9 @@ export class ProjectsManager {
             }
 
             // Append the new div to the todoListContainer
-            projectListToDosUI.appendChild(toDoIssue.ui);
+            projectListToDosUI.appendChild((toDoIssue as any).ui);
             
         })
-        
-
-
-
-
-
-
-
-
-
-
-
     } 
 
 
@@ -531,7 +539,6 @@ export class ProjectsManager {
         }
         
     }
-
 
     getChangedProjectDataForUpdate(projectOrigin: Project, projectToUpdate: IProject) {
                 
