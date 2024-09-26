@@ -437,114 +437,114 @@
 
             <dialog id="new-todo-card-modal" >
                 <form id="new-todo-form" action="" name="new-todo-form" method="post" action="/send/" class="todo-form" enctype="multipart/form-data">
-                        <h2 id="modal-todoIssue-title">New To-Do Issue</h2>
+                    <h2 id="modal-todoIssue-title">New To-Do Issue</h2>
 
-                        <h3  style="" id="todo-title">
-                            <!-- <label><span class="material-icons-round">edit</span></label> -->
-                            <input data-form-todo-value="title" name="title" class="title-todo-card" type="text" size="30" placeholder="Please enter a title for the issue." required minlength="5">
-                            <svg class="todo-icon" role="img" aria-label="edit" width="20" height="20">                            
-                                <use href="#edit"></use>                            
-                            </svg>
-                        </h3>                            
-                        <div class="todo-content" >
-                            <fieldset class="data-mandatory" style="display: flex; flex-direction: column; gap: 10px; padding: 20px;">
-                                <legend>Issue notes and comments</legend>
+                    <h3  style="" id="todo-title">
+                        <!-- <label><span class="material-icons-round">edit</span></label> -->
+                        <input data-form-todo-value="title" name="title" class="title-todo-card" type="text" size="30" placeholder="Please enter a title for the issue." required minlength="5">
+                        <svg class="todo-icon" role="img" aria-label="edit" width="20" height="20">                            
+                            <use href="#edit"></use>                            
+                        </svg>
+                    </h3>                            
+                    <div class="todo-content" >
+                        <fieldset class="data-mandatory" style="display: flex; flex-direction: column; gap: 10px; padding: 20px;">
+                            <legend>Issue notes and comments</legend>
+                            
+                            <div class="form-field-container"> 
+                                <textarea data-form-todo-value="description" name="description" id="" style="resize: vertical;  scrollbar-width: none ;" cols="45" rows="22"
+                                    placeholder="Leave a comment"></textarea>
                                 
-                                <div class="form-field-container"> 
-                                    <textarea data-form-todo-value="description" name="description" id="" style="resize: vertical;  scrollbar-width: none ;" cols="45" rows="22"
-                                        placeholder="Leave a comment"></textarea>
-                                    
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; height:fit-content">
+                            
+                                <div class="todo-tags-input">Assigned to
+                                    <ul data-form-todo-value="assignedUsers" name="assignedUsers" id="todo-assignedUsers-list" class="form-filed-container"></ul>
                                 </div>
-                                
-                                <div style="display: flex; flex-direction: column; height:fit-content">
-                                
-                                    <div class="todo-tags-input">Assigned to
-                                        <ul data-form-todo-value="assignedUsers" name="assignedUsers" id="todo-assignedUsers-list" class="form-filed-container"></ul>
-                                    </div>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; height:fit-content">
+
+                                <div class="todo-tags-input">Tags
+                                <ul data-form-todo-value="tags" name="tags" id="todo-tags-list" class="form-filed-container"></ul>                                
                                 </div>
-
-                                <div style="display: flex; flex-direction: column; height:fit-content">
-
-                                    <div class="todo-tags-input">Tags
-                                    <ul data-form-todo-value="tags" name="tags" id="todo-tags-list" class="form-filed-container"></ul>                                
-                                    </div>
-                                </div>
+                            </div>
 
 
-                            </fieldset>
-                            <fieldset style="border: none;" class="data-optional">
-                                <legend>Issue details:</legend>
-                                <div style="display: flex ;flex-direction: column; row-gap: 20px;">
+                        </fieldset>
+                        <fieldset style="border: none;" class="data-optional">
+                            <legend>Issue details:</legend>
+                            <div style="display: flex ;flex-direction: column; row-gap: 20px;">
+
+                                <div class="form-field-container">
+
 
                                     <div class="form-field-container">
 
-
-                                        <div class="form-field-container">
-
-                                            <!-- Funcionalidad: Allow the user to select the column where the task will be located..
-                                            Implementación: U "We will use another dropdown menu (select) that will be populated with the column options. -->
-                                            <label><span class="material-icons-round">view_column</span>Stage</label>
-                                            <select data-form-todo-value="statusColumn" name="statusColumn" id="todo-stage-column" required>
-                                                <option value=""  disabled selected hidden>Select a stage</option>
-                                                <option label="Task ready" value="backlog"></option>
-                                                <option label="In progress" value="wip"></option>
-                                                <option label="Needs review" value="qa"></option>
-                                                <option label="Done" value="done"></option>
-                                                
-                                                <!-- Aquí se cargarán las opciones de columna -->
-                                            </select>
-                                        </div>
-
-                                        <div class="form-field-container todo-tags-input">
-
-                                            <div class="todo-tags-input">
-                                                <label><span class="material-icons-round">label</span>Tags</label>
-                                                <input type="text"  id="todo-tags-input" placeholder="Tag your comment + Enter key" size="24" >
-                                            </div>
-
-                                        </div>
-                                        
-                                        <div class="form-field-user-container">
-
-                                            <!-- Function: Allows user to select a regular user from "users-page".
-                                            Implementatión: We will use a dropdown menu (select) that will be populated with the available users. -->
-                                            <label><span class="material-icons-round">
-                                                    person
-                                                </span>Assignees</label>
-                                            <input data-form-todo-value="assignedUsers" name="assignedUsers" type="text" list="assignees" style="width: 100%" placeholder="In Construction">
-                                            <datalist id ="todo-assigned-user" >
-                                                <option value=""></option>
-                                                <!-- this place for update the users from the "users-page" -->
-                                            </datalist>
-                                        </div>
-
-                                        <div class="form-field-user-container">                                            
-                                            <label><span class="material-icons-round">calendar_today</span>Finish issue date</label>
-                                            <input data-form-todo-value="dueDate" name="dueDate" type="date" id="todo-dueDate" style="width: 100%" min="2024-01-01">
-                                        </div>
-
-                                        
-            
-                                        <div id="form-project-teams-included">
-                                            <label><span class="material-icons-round">article</span>Issue data</label>
-                                            <div class="todo-footer">                                                
-                                                <p data-form-todo-value="todoProject" name="todoProject">Project: <span id="todo-project-name"></span></p>
-                                                <p data-form-todo-value="createdDate" name="createdDate">Creation date: <span id="todo-creation-date"></span></p>
-                                                <p data-form-todo-value="todoUserOrigin" name="todoUserOrigin">Originatoer: <span id="todo-created-by"></span></p>
-                                            </div>
-                                        </div>                                        
+                                        <!-- Funcionalidad: Allow the user to select the column where the task will be located..
+                                        Implementación: U "We will use another dropdown menu (select) that will be populated with the column options. -->
+                                        <label><span class="material-icons-round">view_column</span>Stage</label>
+                                        <select data-form-todo-value="statusColumn" name="statusColumn" id="todo-stage-column" required>
+                                            <option value=""  disabled selected hidden>Select a stage</option>
+                                            <option label="Task ready" value="backlog"></option>
+                                            <option label="In progress" value="wip"></option>
+                                            <option label="Needs review" value="qa"></option>
+                                            <option label="Done" value="done"></option>
+                                            
+                                            <!-- Aquí se cargarán las opciones de columna -->
+                                        </select>
                                     </div>
-                                
-                                    <div id="buttonEndRight">
-                                        <button id="cancel-todo-btn" type="button" class="buttonC">Cancel</button>
-                                        <button id="accept-todo-btn" type="submit" class="buttonB">Accept</button>
-                                    </div>            
-            
+
+                                    <div class="form-field-container todo-tags-input">
+
+                                        <div class="todo-tags-input">
+                                            <label><span class="material-icons-round">label</span>Tags</label>
+                                            <input type="text"  id="todo-tags-input" placeholder="Tag your comment + Enter key" size="24" >
+                                        </div>
+
+                                    </div>
+                                    
+                                    <div class="form-field-user-container">
+
+                                        <!-- Function: Allows user to select a regular user from "users-page".
+                                        Implementatión: We will use a dropdown menu (select) that will be populated with the available users. -->
+                                        <label><span class="material-icons-round">
+                                                person
+                                            </span>Assignees</label>
+                                        <input data-form-todo-value="assignedUsers" name="assignedUsers" type="text" list="assignees" style="width: 100%" placeholder="In Construction">
+                                        <datalist id ="todo-assigned-user" >
+                                            <option value=""></option>
+                                            <!-- this place for update the users from the "users-page" -->
+                                        </datalist>
+                                    </div>
+
+                                    <div class="form-field-user-container">                                            
+                                        <label><span class="material-icons-round">calendar_today</span>Finish issue date</label>
+                                        <input data-form-todo-value="dueDate" name="dueDate" type="date" id="todo-dueDate" style="width: 100%" min="2024-01-01">
+                                    </div>
+
+                                    
+        
+                                    <div id="form-project-teams-included">
+                                        <label><span class="material-icons-round">article</span>Issue data</label>
+                                        <div class="todo-footer">                                                
+                                            <p data-form-todo-value="todoProject" name="todoProject">Project: <span id="todo-project-name"></span></p>
+                                            <p data-form-todo-value="createdDate" name="createdDate">Creation date: <span id="todo-creation-date"></span></p>
+                                            <p data-form-todo-value="todoUserOrigin" name="todoUserOrigin">Originatoer: <span id="todo-created-by"></span></p>
+                                        </div>
+                                    </div>                                        
                                 </div>
-            
-                            </fieldset>
-            
-                        </div>
+                            
+                                <div id="buttonEndRight">
+                                    <button id="cancel-todo-btn" type="button" class="buttonC">Cancel</button>
+                                    <button id="accept-todo-btn" type="submit" class="buttonB">Accept</button>
+                                </div>            
+        
+                            </div>
+        
+                        </fieldset>
+        
+                    </div>
         
 
                 </form>
@@ -602,6 +602,182 @@
                     </div>
                 </div>
 
+            </div>
+        </section>
+
+
+        <section class="half-page" id="todo-details" data-page style="display: " >
+            <div class="sliding-panel-todoIssue open-panel ">
+                <div>
+                    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+                        <div class="todo-detail-datafield" style="margin-top:30px; height: 50px; flex-direction: row; justify-content: flex-start">
+                            <button class="todo-icon-edit" id="delete-todoIssue"
+                                style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
+                                <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                                    <use href="#edit"></use>
+                                </svg>
+                            </button>
+                            <h2 data-todo-info="title">Title To-Do Issue</h2>
+                            <input data-todo-info-origin="title" name="title" class="title-todo-card" type="text" size="var(--font-3xl)"
+                                placeholder="Title" required minlength="5" style="height: 20px; font-size: var(--font-3xl); display:none">
+                        </div>
+                        <div style="display: flex; flex-direction: row; column-gap: 10px; align-items:center">
+                            <button class="todo-icon-edit" id="delete-todoIssue" style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
+                                <svg class="todo-icon-edit" role="img" aria-label="trash" width="30" height="30">
+                                    <use href="#trash"></use>
+                                </svg>                        
+                            </button>
+                            <button class="todo-icon-edit" id="close-todoIssue-details-btn" style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
+                                <svg class="todo.icon.edit" role="img" aria-label="report" width="50" height="50">
+                                    <use href="#report"></use>
+                                </svg>
+                            </button>
+
+                        </div>
+
+
+                    </div>
+
+                    <div style="display:flex; flex-direction: column; row-gap: 10px; padding-bottom: 30px; border-bottom: 2px dotted var(--color-fontbase-dark);"> 
+                        <div class="todo-detail-withlogo">
+                            <div style="display: flex;  align-items: center;column-gap:15px;">
+                                <p style=" margin-left: 4px; font-size: 15px; background-color: #f08080; padding: 6px; border-radius: 100%; aspect-ratio: 1; color: #343537; display: flex; align-items: center;"
+                                    data-todo-info="acronym">Ac</p>
+                                <p style="color: var(--color-fontbase-dark);">Open in: <span data-todo-info="todoProject" style="color: var(--color-fontbase)">Project Name</span></p>
+                            </div>
+                        </div>
+                        <div class="todo-detail-withlogo">
+                            <div style="display: flex;  align-items: center; column-gap:15px;">
+                                <svg class="todo-icon-edit" role="img" aria-label="radio_button_unchecked" width="37" height="37">
+                                    <use href="#radio_button_unchecked"></use>
+                                </svg>
+                                <p style="color: var(--color-fontbase-dark);">Open by: <span data-todo-info="todoUserOrigen" style="color: var(--color-fontbase)">User Origin (WIP)</span>
+                                </p>
+                                
+
+                            </div>
+                            <p style="color: var(--color-fontbase-dark); transform: translateX(55px);">in date: <span data-todo-info="createdDate" style="color: var(--color-fontbase)">***-**-**</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <h5 style="padding: 20px 0;color: var(--color-fontbase-dark)" >Issue Description</h5>
+
+                <div class="todo-detail-datafield" >
+                    <div style="display:flex; flex-direction: row; ;align-items: flex-start;justify-content: flex-start">
+                        <button class="todo-icon-edit" id="delete-todoIssue"
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
+                            <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                                <use href="#edit"></use>
+                            </svg>
+                        </button>
+                        <div style="width:90%; max-height: 100%;">
+                            <p data-todo-info="description" style="height: fit-content;">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Fugiat quasi ut repellat consectetur quod perspiciatis nihil et quae enim aperiam impedit, tempore debitis velit voluptate? Corporis ullam est aut quia.
+                            Voluptatibus, sint illo? Doloremque eligendi illo repudiandae esse dolor? Non neque aut alias odit mollitia recusandae illo temporibus, facilis nostrum maxime dolores est voluptas quam, at eius, a molestias sunt?
+                            Similique asperiores rem ad expedita esse deserunt minima illum, magnam laudantium. Totam hic architecto sed id, dolore harum laudantium qui ipsum? Architecto, laudantium at accusamus placeat quasi corrupti eaque et?
+                            Enim similique commodi sit accusantium asperiores? Culpa natus doloribus ratione provident nisi non ea quis vitae molestiae rem, iusto corrupti similique id incidunt et eum necessitatibus perspiciatis in? Non, fugit.
+                            Dignissimos aspernatur suscipit voluptatibus ipsum alias natus temporibus voluptas perspiciatis. Incidunt dolorem blanditiis quaerat laborum mollitia et nihil obcaecati, repudiandae sequi illo fugiat minus quos, id laudantium amet facilis unde?
+                            Maiores impedit aperiam architecto perspiciatis sapiente laboriosam inventore voluptatibus ipsam adipisci repudiandae suscipit error quas harum quae, assumenda dolore expedita eaque libero aspernatur dolor, neque sunt excepturi. Eos, modi eius?
+                        </p>
+                        </div>
+                        <textarea data-todo-info-origin="description" name="description" id=""
+                        style="resize: vertical;  scrollbar-width: none ; font-size: var(--font-lgse);font-size: 5px; display:none" cols="58" rows="15" placeholder="Leave a comment" ></textarea>
+                    </div>
+                </div>
+
+                <div style= "display:flex;">
+                    <label><span class="material-icons-round">view_column</span></label>
+                    <h5 style="padding: 20px 0;color: var(--color-fontbase-dark)">Stage</h5>
+                </div>
+
+                <div class="todo-detail-datafield" style=" display: flex; flex-direction: row; align-items: center; justify-content: flex-start">
+                    <button class="todo-icon-edit" id="delete-todoIssue"
+                        style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
+                        <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                            <use href="#edit"></use>
+                        </svg>
+                    </button>
+                    <select data-todo-info-origin="statusColumn" name="statusColumn" id="todo-stagecolumn-detail-select" style="height: 20px; font-size: var(--font-lg); display:none ;">
+                        <!-- <option value="" disabled selected hidden>Select a stage</option> -->
+                        <option label="Task ready" value="backlog"></option>
+                        <option label="In progress" value="wip"></option>
+                        <option label="Needs review" value="qa"></option>
+                        <option label="Done" value="done"></option>
+                    </select>
+                    <p data-todo-info="title">Column stage To-Do Issue</p>
+                </div>
+
+                <div style= "display:flex;">
+                    <label><span class="material-icons-round">person</span></label>
+                    <h5 style="padding: 20px 0;color: var(--color-fontbase-dark)">Assigned to</h5>
+                </div>
+
+                <div class="todo-detail-datafield">
+                    <div style="display: flex; flex-direction: row; align-items: flex-start ;justify-content: flex-start">
+                        <button class="todo-icon-edit" id="delete-todoIssue"
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
+                            <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                                <use href="#edit"></use>
+                            </svg>
+                        </button>
+                        <div class="" style="transform: translateY(-60px) translateX(140px);  ">
+                            <input data-todo-info-origin="tags" name="tags" class="tags-todo-card" type="text" size="var(--sm)"
+                                id="todo-tags-detail-input" placeholder="New users + Enter key" style="height:20px; display:none ">
+                        </div>
+
+                        <div data-todo-info-origin="assignedUsers" class="todo-tags-list" name="assignedUsers" id="todo-assignedUsers-detail-list">
+                            <li>WIP_1</li>
+                            <li>WIP_2</li>
+                            <!-- ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')} -->
+                        </div>
+                    </div>
+                </div>
+
+                <div style= "display:flex;">
+                    <label><span class="material-icons-round">label</span></label>
+                    <h5 style="padding: 20px 0;color: var(--color-fontbase-dark)">Tags</h5>
+                </div>
+
+                <div class="todo-detail-datafield">
+                    <div style="display: flex;flex-direction: row; align-items: flex-start ;justify-content: flex-start">
+                        <button class="todo-icon-edit" id="delete-todoIssue"
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
+                            <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                                <use href="#edit"></use>
+                            </svg>
+                        </button>
+                        <div class="" style="transform: translateY(-60px) translateX(75px);  ">
+                            <input data-todo-info-origin="tags" name="tags" class="tags-todo-card" type="text" size="var(--sm)"
+                                id="todo-tags-detail-input" placeholder="New tags + Enter key" style="height:20px; display: none ">
+                        </div>
+                        <div data-todo-info-origin="tags" class="todo-tags-list" name="tags"
+                            id="todo-tags-detail-list">
+                            <li>hola</li>
+                            <li>adios</li>
+                            <!-- ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')} -->
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;">
+                    <label><span class="material-icons-round">calendar_today</span></label>
+                    <h5 style="padding: 20px 0;color: var(--color-fontbase-dark)">Finish issue date</h5>
+                </div>
+
+                <di class="todo-detail-datafield">
+                    <div class="todo-detail-datafield"
+                        style=" display: flex; flex-direction: row; align-items: center; justify-content: flex-start">
+                        <button class="todo-icon-edit" id="delete-todoIssue"
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
+                            <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                                <use href="#edit"></use>
+                            </svg>
+                        </button>
+                        <input data-todo-info-origin="dueDate" name="dueDate" type="date" id="todo-dueDate-details-input" style="height: 20px; font-size: var(--font-lg); display:none ;" min="2024-01-01">
+
+                        <p data-todo-info="dueDate">***-**-** To-Do Issue</p>
+                </div>
             </div>
         </section>
         
@@ -2022,10 +2198,8 @@
                     </div>
                 </div>            
             </div>
-
-            
-
         </section>
+
 
 
 

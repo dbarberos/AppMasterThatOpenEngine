@@ -1,6 +1,28 @@
 import { ProjectsManager } from "./ProjectsManager"
 
 
+//Storage the state of the checkbox sidebar-active
+const sidebarActiveCheckbox = document.getElementById("sidebar-active") as HTMLInputElement
+
+//Recover the state of the checkbox from the local storage
+const sidebarActiveState = localStorage.getItem("sidebar-active")
+if (sidebarActiveState === "active" && sidebarActiveCheckbox !== null) {
+    sidebarActiveCheckbox.checked = true
+}
+
+//Adding an eventListener to the sidebar-active checkbox in order to update the local storage when the checkbox change of state
+sidebarActiveCheckbox?.addEventListener('change', () => {
+    // Save the state in the Local Storage
+    if (sidebarActiveCheckbox.checked) {
+        localStorage.setItem("sidebar-active", "active");
+    } else {
+        localStorage.setItem("sidebar-active", "");
+    }
+});
+
+
+
+
 
 export function showModal(id: string) {
     const modal = document.getElementById(id)
@@ -87,4 +109,3 @@ export function hidePageContent(pageToHide: string) {
     if (!hidePage) { return }
     hidePage.style.display = "none"
 }
-    

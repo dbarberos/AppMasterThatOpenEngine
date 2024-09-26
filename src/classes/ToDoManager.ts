@@ -327,7 +327,7 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
         toDoIssue.ui.addEventListener("click", () => {
             showPageContent("todo-details", "flex")//this should show the banner with the data of only one ISSUE not de board
             setDetailsIssuePage(toDoIssue) //for the new windows (todo-detalis)where the data of the todo issue is shown. From that place is where you can edit the content of the todoIssue
-            console.log("Details pages set in a new window");
+            console.log("Details pags set in a new window");
 
         })
         // toDoIssue.ui.append(toDoIssue.ui)
@@ -347,6 +347,10 @@ export function setIssueInsideDetailsProjectPage(toDoIssue: ToDoIssue) {
 }
 
 
+
+
+
+
 export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
     // Set the details page for the issue  
     const detailPage = document.getElementById("todo-details")
@@ -356,12 +360,14 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
         const dataElement = detailPage.querySelectorAll(`[data-todo-info="${key}"]`)
         if (dataElement) {
             if (key === "dueDate") {
-                const formattedDate = toDoIssue.dueDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+                const dueDate = new Date(toDoIssue.dueDate)
+                const formattedDate = dueDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
                 dataElement.forEach(element => {
                     element.textContent = formattedDate
                 })
             } else if (key === "createdDate") {
-                const formattedDate = toDoIssue.createdDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+                const createdDate = new Date(toDoIssue.createdDate)
+                const formattedDate = createdDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
                 dataElement.forEach(element => {
                     element.textContent = formattedDate
                 })
@@ -379,11 +385,31 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
     }
 
     // Set the data-projectId attribute with the unique ID of the proyect 
-    const projectDatasetAttributeId = document.getElementById("edit-todo-details")
+    const projectDatasetAttributeId = document.querySelectorAll("#todo-details .todo-icon-edit")
     if (projectDatasetAttributeId) {
-        projectDatasetAttributeId.dataset.projectId = toDoIssue.id.toString()
+        projectDatasetAttributeId.forEach((element) => {
+            if (element instanceof HTMLElement) {
+                element.dataset.toDoIssueId = toDoIssue.id.toString()
+            }
+        })       
     }
+
+    // Activate the checkbox sidebar-active (reduce the width) in order to reduce the width os the sidebar
+    const sidebarActiveCheckbox = document.getElementById('sidebar-active') as HTMLInputElement;
+    if (!sidebarActiveCheckbox.checked) {
+        sidebarActiveCheckbox.checked = true
+        localStorage.setItem("sidebar-active","")
+    }
+
 }
+
+
+
+
+
+
+
+
 
 
 export function renderToDoIsuueListInsideProject(toDoIssue: IToDoIssue) {
@@ -394,8 +420,8 @@ export function renderToDoIsuueListInsideProject(toDoIssue: IToDoIssue) {
     toDoIssue.ui = document.createElement("div")
     toDoIssue.ui.className = "todo-item"
     toDoIssue.ui.dataset.projectId = toDoIssue.todoProject
-    toDoIssue.ui.dataset.todoId = toDoIssue.id 
-    const dueDate = new Date (toDoIssue.dueDate)
+    toDoIssue.ui.dataset.todoId = toDoIssue.id
+    const dueDate = new Date(toDoIssue.dueDate)
     const dueDateFormatted = dueDate.toLocaleDateString("es-ES", {
         year: "numeric",
         month: "2-digit",
@@ -439,8 +465,14 @@ export function renderToDoIsuueListInsideProject(toDoIssue: IToDoIssue) {
                 </span>
             </div>
         </div>
-    `    
-    } 
+    `
+    toDoIssue.ui.addEventListener("click", () => {
+        showPageContent("todo-details", "flex")//this should show the banner with the data of only one ISSUE not de board
+        setDetailsIssuePage(toDoIssue) //for the new windows (todo-detalis)where the data of the todo issue is shown. From that place is where you can edit the content of the todoIssue
+        console.log("Details page set in a new window")
+
+    })
+}
 
 
 
@@ -721,10 +753,10 @@ if (tagsInput) {
 }
 
 if (tagsList) {
-    tagsList.addEventListener('click', (e) => {
+    tagsList.addEventListener("click", (e) => {
         if (e.target instanceof HTMLElement) {
             const target = e.target
-            if (target.tagName === 'LI') {
+            if (target.tagName === "LI") {
                 const tag = e.target
                 tagsList.removeChild(tag)
             }
@@ -733,5 +765,46 @@ if (tagsList) {
     })
 }
 
+
+//close de detail To-Do page when the cross button us clicked
+const btnCloseToDoIssueDetailsPage = document.querySelector("#close-todoIssue-details-btn")
+if (btnCloseToDoIssueDetailsPage) {
+    btnCloseToDoIssueDetailsPage.addEventListener("click", (e) => {
+
+        console.log("Close button press")
+        // Delete the data-todoIssueId attribute with the unique ID from the buttons
+        const projectDatasetAttributeId = document.querySelectorAll(".todo-icon-edit")
+        if (projectDatasetAttributeId) {
+            projectDatasetAttributeId.forEach((element) => {
+                if (element instanceof HTMLElement) {
+                    element.dataset.toDoIssueId = ""
+                }
+            })
+        }
+
+        hidePageContent("todo-details")
+
+        //Return the checkbox for managing the width of the sidebar to its original state before showing the todo-Details page
+        const sidebarActiveCheckbox = document.getElementById("sidebar-active") as HTMLInputElement
+        const sidebarActiveState = localStorage.getItem("sidebar-active")
+        if (sidebarActiveCheckbox !== null) {
+            if (sidebarActiveState === "active") {
+                sidebarActiveCheckbox.checked = true
+                localStorage.setItem("sidebar-active", "active")
+            } else if (sidebarActiveState === "") {
+                sidebarActiveCheckbox.checked = false
+                localStorage.setItem("sidebar-active", "")
+
+            }
+        }
+
+
+
+
+
+
+    })
+    
+}
 
 
