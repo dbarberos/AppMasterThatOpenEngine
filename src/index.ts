@@ -45,21 +45,32 @@ if (newProjectBtn) {
             });
         }
 
-        // Set Modal in case previously we updated previously a project
+        // Set Modal in case previously we updated a project
         // Update Modal Title
         const modalProjectTitle = document.getElementById("modal-project-title");
         if (modalProjectTitle) {
             modalProjectTitle.textContent = "New Project";
         }
-        // Update Button Text
+        // Update Button Text and remove dataset -projectID from it
         const submitButton = document.getElementById("accept-project-btn");
         if (submitButton) {
-            submitButton.textContent = "Accept";
+            submitButton.textContent = "Accept"
+            submitButton.dataset.projectId= ""
         }
+
         const discardButton = document.getElementById("cancel-project-btn");
         if (discardButton) {
             discardButton.textContent = "Cancel";
         }
+        //Remove the delete project button from the modal in case previously we updated a prject
+        const parentDeleteBtn = document.getElementById("titleModalNewProject")
+        if (parentDeleteBtn) {
+            const deleteButton = document.getElementById("delete-project-btn")
+            if (deleteButton) {
+                parentDeleteBtn.removeChild(deleteButton)
+            }
+        }
+        
     })
     
 } else {
@@ -380,7 +391,7 @@ if (btnEditProjectDetails) {
         console.log("Div with the ID selected");
         
         if (projectCardId) {
-            const projectId = projectCardId.dataset.projectId                    
+            const projectId = projectCardId.dataset.projectId
         
             if (projectId) {
                 // You now have the project ID!
@@ -417,22 +428,206 @@ if (btnEditProjectDetails) {
                     if (discardButton) {
                         discardButton.textContent = "Discard Changes";
                     }
+
+                    //Create delete-project button                    
+                    
+                    // Comprobar si ya existe un botón de borrar proyecto
+                    const existingDeleteButton = document.getElementById("delete-project-btn");
+                    if (!existingDeleteButton) {
+
+                        //Create delete-project button
+
+                        const parentDeleteBtn = document.getElementById("titleModalNewProject")
+
+                        const deleteProjectButton = document.createElement("button");
+                        deleteProjectButton.className = "message-btn";
+                        deleteProjectButton.type = "button";
+                        deleteProjectButton.setAttribute("id", "delete-project-btn");
+                        deleteProjectButton.className = "todo-icon-edit";
+                        deleteProjectButton.style.borderRadius = "var(--br-circle)"
+                        deleteProjectButton.style.aspectRatio = "1"
+                        deleteProjectButton.style.padding = "0px"
+                        deleteProjectButton.style.justifyContent = "center"
+
+                        const svgTrash = document.createElement("svg");
+                        const deleteButtonIconSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        deleteButtonIconSVG.setAttribute("class", "todo-icon-edit");
+                        deleteButtonIconSVG.setAttribute("role", "img");
+                        deleteButtonIconSVG.setAttribute("aria-label", "trash");
+                        deleteButtonIconSVG.setAttribute("width", "30px");
+                        deleteButtonIconSVG.setAttribute("height", "30px");
+                        deleteButtonIconSVG.setAttribute("fill", "#08090a");
+                        deleteButtonIconSVG.setAttribute("id", "delete-project-btn-svg");
+                        deleteProjectButton.appendChild(deleteButtonIconSVG);
+
+                        const deleteButtonIconUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+                        deleteButtonIconUse.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#trash");
+                        deleteButtonIconUse.setAttributeNS("http://www.w3.org/2000/svg", "xlink:href", "#trash");
+                        deleteButtonIconSVG.appendChild(deleteButtonIconUse);
+            
+                        parentDeleteBtn?.appendChild(deleteProjectButton)
+
+
+                        //    Set the data-projectId attribute with the unique ID of the proyect in the button of "Delete Project"
+                        deleteProjectButton.dataset.projectId = projectId.toString()
+            
+
+                
+                        // const deleteProjectBtn = document.getElementById("delete-project")
+                        // if (deleteProjectBtn) {
+                        //     deleteProjectBtn.style.display = 'flex'
+                        
+                    }
+
+                    //Call the function for delete the project only when the btn is clicked
+                    const deleteProjectBtn = document.getElementById("titleModalNewProject")
+
+                    if (deleteProjectBtn) {
+                        console.log("eventListenind os the delete Project Btn")
+                        deleteProjectBtn.addEventListener("click", handleTitleClick);
+                    } else {
+                        console.error("Delete project button was not found")
+                    }
+                            
+                    
+                    
+
                     // Set the data-projectId attribute with the unique ID of the proyect in the button of "Save Changes"
                     const projectDatasetAttributeIdInForm = document.getElementById("accept-project-btn")
                     if (projectDatasetAttributeIdInForm) {
                         projectDatasetAttributeIdInForm.dataset.projectId = projectId.toString()
-                    }                    
+                    }
                 } else {
                     console.error("Project not found!");
                 }
-            } else {
-                console.error("Project ID not found on the clicked element!");
             }
+        } else {
+            console.error("Project ID not found on the clicked element!");
         }
-        })
+    })
 } else {
     console.warn("Edit project button was not found")
 }
+
+function handleTitleClick(event: Event) {
+        //Event Delegation: The handleModalClick function now handles clicks on the modal.It uses targetElement.closest('#delete-project-btn-svg') to check if the click originated from the "Delete Project" button or any of its parent elements.
+        //Efficiency: With event delegation, you only have one event listener attached to the modal, even if you dynamically add or remove multiple "Delete Project" buttons.
+
+    const targetElement = event.target as HTMLElement
+
+    // Check if the clicked element (or any of its parents) has the ID "delete-project-btn-svg"
+    if (targetElement.closest('#delete-project-btn-svg')) {
+        handleDeleteProjectButtonClick(event);
+    }
+}
+
+
+//
+
+function handleDeleteProjectButtonClick(e: Event) {
+    e.preventDefault()
+    console.log("Button delete project clicked")
+
+    //Get the button element from the event
+    const deleteProjectBtn = (e.target as HTMLElement).closest("#delete-project-btn")
+
+    if (deleteProjectBtn) {
+        // Check if the project's todoList is empty    
+        const projectIdToDelete = (deleteProjectBtn as HTMLElement)?.dataset.projectId
+        console.log("projectId:", projectIdToDelete)
+        if (projectIdToDelete) {
+            const projectToDelete = projectManager.getProject(projectIdToDelete);
+        
+            if (projectToDelete) {
+                if (projectToDelete.todoList.length > 0) {
+                    // Project has To-Do issues, show confirmation popup
+                    const popupDeleteProjectConfirmationWithToDoIssues = new MessagePopUp(
+                        document.body,
+                        "warning",
+                        "The Project has pending tasks to be resolved",
+                        `This project has <span style="color: var(--color-warning2)">${projectToDelete.todoList.length}</span> associated To-Do issues. Are you sure you want to delete it? This action cannot be undone`,
+                        ["Delete anyway", "Cancel"]
+                    )
+                    //Define button callbacks
+                    const buttonCallbacks = {
+                        "Delete anyway": () => {
+                            console.log("User confirmed deletion even with tasks")
+                            projectManager.deleteProject(projectIdToDelete)
+                            //Remove the delete project button from the modal
+                            if (deleteProjectBtn.parentElement) {
+                                deleteProjectBtn.parentElement.removeChild(deleteProjectBtn)
+                            }
+                            // Close the modals
+                            popupDeleteProjectConfirmationWithToDoIssues.closeMessageModal();
+                            closeModal("new-project-modal"); // Close the edit form modal
+
+                            // Update the UI (re-render project list)
+                            projectManager.renderProjectList()
+                            console.log(projectManager.list)
+
+                            // Open project-page
+                            changePageContent("project-page", "flex")
+                        },
+                        "Cancel": () => {
+                            // User cancelled, close the popup and do nothing
+                            console.log("User cancelled the deletion.");
+                            popupDeleteProjectConfirmationWithToDoIssues.closeMessageModal();
+                        }
+                    }
+                    popupDeleteProjectConfirmationWithToDoIssues.showNotificationMessage(buttonCallbacks);
+                } else {
+                    // Project hasn´t got To-Do issues, proceed with the options for deletion
+                    // Create and show the MessagePopUp for confirmation
+                    const popupDeleteProjectConfirmation = new MessagePopUp(
+                        document.body,
+                        "warning",
+                        "Confirm Project Deletion",
+                        `Are you sure you want to delete the project: "${projectToDelete.name}"? This action cannot be undone.`,
+                        ["Yes,go on", "Cancel"],
+                    )
+
+                    // Define button callbacks
+                    const buttonCallbacks = {
+                        "Yes,go on": () => {
+                            // User confirmed, proceed with deleting the project
+                            console.log("User confirmed the deletion. Proceed with deleting the project.")
+                            projectManager.deleteProject(projectIdToDelete)
+
+                            //Remove the delete project button from the modal
+                            if (deleteProjectBtn.parentElement) {
+                                deleteProjectBtn.parentElement.removeChild(deleteProjectBtn)
+                            }
+
+                            // Close the modals
+                            popupDeleteProjectConfirmation.closeMessageModal();
+                            closeModal("new-project-modal"); // Close the edit form modal
+
+                            // Update the UI (re-render project list)
+                            projectManager.renderProjectList()
+                            console.log(projectManager.list)
+
+                            // Open project-page
+                            changePageContent("project-page", "flex")
+                        },
+                        "Cancel": () => {
+                            // User cancelled, do nothing or provide feedback
+                            console.log("User cancelled the deletion.");
+                            popupDeleteProjectConfirmation.closeMessageModal();
+                        }
+                    }
+                    popupDeleteProjectConfirmation.showNotificationMessage(buttonCallbacks)
+                }
+            } else {
+                console.error("Project not found for deletion!")
+            }
+        } else {
+            console.error("Project Id not found")
+        }
+    } else {
+        console.error("Delete project button was not found")
+    }
+} 
+
 
 //Main button of To-Do Board(aside) open the To-Do Board
 const btnToDoIssueBoard = document.querySelector("#asideBtnToDoBoards")

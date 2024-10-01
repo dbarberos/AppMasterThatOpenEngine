@@ -98,6 +98,9 @@
     --padding-40xl-2: 59.2px;
 
     /* Border radiuses */
+    --br-base: 15px;
+    --br-xs: 12;
+    --br-2xs: 10px;
     --br-5xs: 8px;
     --br-9980xl: 9999px;
     --br-9xs: 4px;
@@ -1151,16 +1154,194 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     padding: 5px;
     display: block;
     list-style: none;
+    /* height: 80%; */
+
+
+    scrollbar-width: fit;
+    scrollbar-color: transparent;
+
+    flex-grow: 1;
+    overflow-y: scroll;
+    background-color: transparent;
+    scrollbar-gutter: stable;
+    scroll-snap-type: mandatory;
+
+
+    &::-webkit-scrollbar-button {
+        display: none;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        display: none;
+    }
+
+    ::-moz-scrollbar-button {
+        display: none;
+    }
+
+    &::-webkit-scrollbar {
+        width: 10px;
+        background-color: inherit;
+    }
+
+    &::-moz-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+
+    &::-ms-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        scrollbar-color: var(--primary-200) transparent;
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &:hover::-moz-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+
+    }
+
+    &:hover::-ms-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: var(--primary-200);
+        border-radius: 10px;
+        }
 }
-#todo-tags-list li {
+
+
+#todo-tags-list:hover {
+    scrollbar-color: var(--primary-200) transparent;
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar-button {
+            display: none;
+        }
+}
+
+
+
+
+
+
+#todo-tags-list li,span{
+    /* scroll-snap-align: start; */
     display: inline-block;
     margin: 5px;
     cursor: pointer;
+    gap: 0.25rem 1 rem;
 }
 
-#todo-tags-list li:hover {
+#todo-tags-list li:hover,span:hover {
     background-color: var(--primary-200);
 }
+
+.todo-form-field-container {
+    max-height: 150px;
+    scrollbar-width: fit;
+    scrollbar-color: transparent;
+
+    flex-grow: 1;
+    overflow-y: scroll;
+    background-color: transparent;
+    scrollbar-gutter: stable;
+    scroll-snap-type: mandatory;
+
+    &::-webkit-scrollbar {
+        width: 10px;
+        background-color: inherit;
+    }
+
+    &::-moz-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+
+    &::-ms-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+
+    &:hover {
+        scrollbar-color: var(--primary-200) transparent;
+        scrollbar-width: thin;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        scrollbar-color: var(--primary-200) transparent;
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &:hover::-moz-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+
+    }
+
+    &:hover::-ms-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: var(--primary-200);
+        border-radius: 10px;
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #buttonEndRight {
     padding: 20px;
@@ -1258,6 +1439,12 @@ fieldset {
     border: none;
     border-right: 1.5px dashed var(--color-fontbase-dark) ;
     height:87%;
+
+    &.todo-fieldset {
+        border: 1.5px dotted var(--color-fontbase-dark);
+        border-radius: 15px;
+        padding: 20px 0;
+    }
 }
 
 fieldset:after {
@@ -1287,7 +1474,11 @@ fieldset:after {
     cursor: pointer;
 
     & p {
-        font-size: var(--font-base);      
+        font-size: var(--font-base); 
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        
     };
 
 }
@@ -1360,6 +1551,7 @@ progress::-moz-progress-bar {
 
 
 /* To-do list page */
+
 
 .todo-item {    
     
@@ -1487,6 +1679,8 @@ progress::-moz-progress-bar {
     justify-content: space-between;
     column-gap: var(--gap-xs)
 }
+
+
 .todo-tags-list {
     display: flex;
     align-items: center;
@@ -1510,7 +1704,8 @@ progress::-moz-progress-bar {
     padding: 2px 13px;
     border-radius: 50px;
     box-sizing: border-box;
-    ;
+    width:fit-content;
+    
     
 }
 
@@ -1644,7 +1839,7 @@ progress::-moz-progress-bar {
     /* scrollbar-color: transparent transparent; */
     scrollbar-gutter: stable;
     overscroll-behavior: contain;
-    scrollbar-width: 10px;
+    /* scrollbar-width: 2px; */
     scroll-snap-type: mandatory;
     
 
@@ -1740,6 +1935,15 @@ progress::-moz-progress-bar {
     
 }
 
+
+.todo-detail-datafiled-title {
+    display: flex;
+    margin-top: 25px;
+    padding-left: 30px;
+    height: 50px;
+    align-items: center
+}
+
 .todo-detail-datafield {
     position: relative;
     display: flex;
@@ -1747,8 +1951,10 @@ progress::-moz-progress-bar {
     align-items: flex-start;
     justify-content: center;
     row-gap: 5px;
+    column-gap: 20px;
     min-height: 30px;
     padding: 10px 0;
+    height: fit-content;
 
     & .todo-icon-edit {
         /* position: absolute; */
@@ -1785,6 +1991,9 @@ progress::-moz-progress-bar {
 
     & h2, p {
         padding-left: 20px;
+        overflow: hidden;
+        word-break: break-all;
+
     }
 
     & .todo-detail-withlogo {

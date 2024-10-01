@@ -371,6 +371,34 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
                 dataElement.forEach(element => {
                     element.textContent = formattedDate
                 })
+            } else if (key === "todoProject") {
+                const projectsManager = ProjectsManager.getInstance()
+                const project = projectsManager.list.find(project => project.id === toDoIssue[key])
+                if (project) {
+                    dataElement.forEach(element => {
+                        element.textContent = project.name
+                    })
+                }
+            } else if (key === "statusColumn") {
+                dataElement.forEach(element => {                
+                    element.textContent = ToDoIssue.getStatusColumnText(toDoIssue.statusColumn);
+                    (element as HTMLElement).style.backgroundColor = toDoIssue.backgroundColorColumn
+                })
+            } else if (key === "tags") {
+                const tagListDetailPage = document.getElementById("todo-tags-list-details-page")
+                toDoIssue.tags.forEach((tag) => {
+                    const tagElement = document.createElement('span');
+                    tagElement.textContent = tag;
+                    tagElement.classList.add('todo-tags');
+                    tagListDetailPage?.appendChild(tagElement);
+                });
+
+
+
+
+
+
+
             } else {
                 dataElement.forEach((element) => {
                     element.textContent = toDoIssue[key]
@@ -378,6 +406,19 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
             }
         }
     }
+
+    //Update the backgroundColor of the acronym symbol
+    const nameAndColorOfAcronym = detailPage.querySelector(`[data-todo-info="acronym"]`) as HTMLElement
+    const projectsManager = ProjectsManager.getInstance()
+    const project = projectsManager.list.find(project => project.id === toDoIssue["todoProject"])
+    if (project && nameAndColorOfAcronym !== null) {
+        nameAndColorOfAcronym.textContent = project.acronym
+        nameAndColorOfAcronym.style.backgroundColor = project.backgroundColorAcronym
+    }
+
+
+
+
     // Update the background color of the todo-card in the todo-details-page
     const columnElement = detailPage.querySelector('[data-todo-info="statusColumn"]') as HTMLElement
     if (columnElement) {
@@ -458,10 +499,9 @@ export function renderToDoIsuueListInsideProject(toDoIssue: IToDoIssue) {
                         <use href="#chat-bubble"></use>
                     </svg>
                     ${toDoIssue.assignedUsers.length} assigned
-                </span>
-                </span>
-                    <span class="todo-task-move todo-tags" style="textwrap: nowrap; margin-left:5px; color: var(--background) !important; background-color:${(toDoIssue as any).backgroundColorColumn};font-size: var(--font-base)" >
-                        ${ToDoIssue.getStatusColumnText(toDoIssue.statusColumn)}
+                </span>                
+                <span class="todo-task-move todo-tags" style="textwrap: nowrap; margin-left:5px; color: var(--background) !important; background-color:${(toDoIssue as any).backgroundColorColumn};font-size: var(--font-base)" >
+                    ${ToDoIssue.getStatusColumnText(toDoIssue.statusColumn)}
                 </span>
             </div>
         </div>
@@ -700,69 +740,76 @@ function getProjectByToDoIssueId(toDoIssueId: string): Project | undefined {
 
 
 
-// Introduce and store tags for the To-DO Input element
-const tagsInput = document.getElementById('todo-tags-input');
-const tagsList = document.getElementById('todo-tags-list');
+//  Introduce and store tags for the To-DO Input element
 
-if (tagsInput) {
-    tagsInput.addEventListener('keydown', (e) => {
-        const inputValue = (e.target as HTMLInputElement).value.trim()
-        if ((e.key === "Enter") && inputValue) {
-            e.preventDefault()
-            const newTags = inputValue.split(/[,]+/).filter((tag) => tag !== "");
-            if (Array.isArray(newTags)) {
-                newTags.forEach(tagText => {
-                    // Check if the tag already exists in the list
-                    const existingTag = Array.from(tagsList?.children ?? []).find(child =>
-                        child.textContent?.trim().toLowerCase() === tagText.toLowerCase()
-                    );
+handleTagsInput("todo-tags-input", "todo-tags-list");
+handleTagsInput("todo-tags-detail-input", "todo-tags-list-details-page");
 
-                    if (existingTag) {
-                        // Tag already exists, show error message
-                        const existTagPopup = new MessagePopUp(
-                            document.body,
-                            "warning",
-                            "Duplicate Tag",
-                            `The tag "${tagText}" already exists.`,
-                            ["Got it"]
+function handleTagsInput(tagsInputId, tagsListId) {
+    const tagsInput = document.getElementById(tagsInputId);
+    const tagsList = document.getElementById(tagsListId);
+
+    if (tagsInput) {
+        tagsInput.addEventListener("keydown", (e) => {
+            const inputValue = (e.target as HTMLInputElement).value.trim()
+            if ((e.key === "Enter") && inputValue) {
+                e.preventDefault()
+                const newTags = inputValue.split(/[,]+/).filter((tag) => tag !== "");
+                if (Array.isArray(newTags)) {
+                    newTags.forEach(tagText => {
+                        // Check if the tag already exists in the list
+                        const existingTag = Array.from(tagsList?.children ?? []).find(child =>
+                            child.textContent?.trim().toLowerCase() === tagText.toLowerCase()
                         );
-                        // Define button callback
-                        const buttonCallbacks = {
-                            "Got it": () => {
-                                existTagPopup.closeMessageModal();
+
+                        if (existingTag) {
+                            // Tag already exists, show error message
+                            const existTagPopup = new MessagePopUp(
+                                document.body,
+                                "warning",
+                                "Duplicate Tag",
+                                `The tag "${tagText}" already exists.`,
+                                ["Got it"]
+                            );
+                            // Define button callback
+                            const buttonCallbacks = {
+                                "Got it": () => {
+                                    existTagPopup.closeMessageModal();
+                                }
+                            }
+                            existTagPopup.showNotificationMessage(buttonCallbacks);
+                        } else {
+
+                            // Tag is new, add it to the list
+                            const tag = document.createElement('li')
+                            tag.textContent = tagText
+                            tag.classList.add("todo-tags")
+                            if (tagsList) {
+                                tagsList.appendChild(tag)
                             }
                         }
-                        existTagPopup.showNotificationMessage(buttonCallbacks);
-                    } else {
+                    })
+                }
+                console.log(tagsList);
 
-                        // Tag is new, add it to the list
-                        const tag = document.createElement('li')
-                        tag.textContent = tagText
-                        tag.classList.add("todo-tags")
-                        if (tagsList) {
-                            tagsList.appendChild(tag)
-                        }
-                    }
-                })
+                (e.target as HTMLInputElement).value = "" // Clear input after adding tags
             }
-            console.log(tagsList);
+            
+        })
+    }
 
-            (e.target as HTMLInputElement).value = "" // Clear input after adding tags
-        }
-    });
-}
-
-if (tagsList) {
-    tagsList.addEventListener("click", (e) => {
-        if (e.target instanceof HTMLElement) {
-            const target = e.target
-            if (target.tagName === "LI") {
-                const tag = e.target
-                tagsList.removeChild(tag)
+    if (tagsList) {
+        tagsList.addEventListener("click", (e) => {
+            if (e.target instanceof HTMLElement) {
+                const target = e.target
+                if (target.tagName === "LI") {
+                    const tag = e.target
+                    tagsList.removeChild(tag)
+                }
             }
-        }
 
-    })
+        })
+    }
 }
 
 
@@ -782,6 +829,19 @@ if (btnCloseToDoIssueDetailsPage) {
             })
         }
 
+        //Delete the data from the "todo-tags-list-details-page" <ul> element to clean up for avoiding add extra tags to the next todo Detail
+        const deleteTagsListFromDetail = document.getElementById("todo-tags-list-details-page")
+        // Clear any existing content in the container 
+        if (deleteTagsListFromDetail) {
+            while (deleteTagsListFromDetail.firstChild) {
+                deleteTagsListFromDetail.removeChild(deleteTagsListFromDetail.firstChild);
+            }
+        }
+
+
+
+
+
         hidePageContent("todo-details")
 
         //Return the checkbox for managing the width of the sidebar to its original state before showing the todo-Details page
@@ -797,14 +857,7 @@ if (btnCloseToDoIssueDetailsPage) {
 
             }
         }
-
-
-
-
-
-
-    })
-    
+    })    
 }
 
 

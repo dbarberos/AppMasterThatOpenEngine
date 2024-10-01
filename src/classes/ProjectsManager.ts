@@ -679,6 +679,52 @@ export class ProjectsManager {
         })
         this.list = remain
     }
+
+    // async deleteProject(id: string) {
+    //     try {
+    //         const project = this.getProject(id);
+    //         if (!project) {
+    //             console.error("Project not found for deletion!");
+    //             return;
+    //         }
+
+    //         const response = await fetch(`/your-api-endpoint/${id}`, {
+    //             method: 'DELETE'
+    //         });
+
+    //         if (response.ok) {
+    //             // Successful deletion on the server
+    //             // 1. Remove from UI:
+    //             project.ui.remove();
+    //             // 2. Remove from client-side list:
+    //             this.list = this.list.filter((p) => p.id !== id);
+    //             console.log("Project deleted successfully!");
+    //         } else {
+    //             // Handle errors (e.g., 404)
+    //             console.error("Error deleting project:", response.status);
+    //             // Display an error message to the user
+    //         }
+    //     } catch (error) {
+    //         console.error("Error deleting project:", error);
+    //         // Handle network errors or other unexpected issues
+    //     }
+    // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     exprtToJSON(fileName: string = "projects") {
         console.log("Inside exprtToJSON")
