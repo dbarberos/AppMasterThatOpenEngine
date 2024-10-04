@@ -29,7 +29,7 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
             )
 
             // Define ALL your button callbacks for the messagePopUp created
-            const self = this
+            const self = this;
             const buttonCallbacks = {
                 "Overwrite": () => {
                     console.log("Overwrite button clicked!");
@@ -73,7 +73,7 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                                     //LA IDEA ES QUE SALGA UNA TARGETA DE LA IZQUIERDA TAPANDO EL ASIDE Y EL PROYECTO SUSTITUYENDOLOS POR LOS DATOS. DEJANDO A LA VISTA EL VISUALIZADOR DE IFC 
 
                                     showPageContent("todo-details", "flex")
-                                    self.setDetailsIssuePage(newToDoIssue)
+                                    setDetailsIssuePage(newToDoIssue)
                                     console.log(" details pages set in the new window");
                                 })
 
@@ -295,7 +295,7 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                                 //LA IDEA ES QUE SALGA UNA TARGETA DE LA IZQUIERDA TAPANDO EL ASIDE Y EL PROYECTO SUSTITUYENDOLOS POR LOS DATOS. DEJANDO A LA VISTA EL VISUALIZADOR DE IFC
 
                                 showPageContent("todo-details", "flex")
-                                self.setDetailsIssuePage(newToDoIssue)
+                                setDetailsIssuePage(newToDoIssue)
                                 console.log("Details page set in a new window");
                             });
 
@@ -342,12 +342,8 @@ export function setIssueInsideDetailsProjectPage(toDoIssue: ToDoIssue) {
     const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
 
     // Append the new div to the todoListContainer
-    projectListToDosUI.appendChild(toDoIssue.ui);
-
+    projectListToDosUI.appendChild(toDoIssue.ui)
 }
-
-
-
 
 
 
@@ -361,13 +357,13 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
         if (dataElement) {
             if (key === "dueDate") {
                 const dueDate = new Date(toDoIssue.dueDate)
-                const formattedDate = dueDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+                const formattedDate = dueDate.toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })
                 dataElement.forEach(element => {
                     element.textContent = formattedDate
                 })
             } else if (key === "createdDate") {
                 const createdDate = new Date(toDoIssue.createdDate)
-                const formattedDate = createdDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+                const formattedDate = createdDate.toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })
                 dataElement.forEach(element => {
                     element.textContent = formattedDate
                 })
@@ -387,17 +383,11 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
             } else if (key === "tags") {
                 const tagListDetailPage = document.getElementById("todo-tags-list-details-page")
                 toDoIssue.tags.forEach((tag) => {
-                    const tagElement = document.createElement('span');
+                    const tagElement = document.createElement('li');
                     tagElement.textContent = tag;
                     tagElement.classList.add('todo-tags');
                     tagListDetailPage?.appendChild(tagElement);
-                });
-
-
-
-
-
-
+                })
 
             } else {
                 dataElement.forEach((element) => {
@@ -407,6 +397,34 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
         }
     }
 
+
+    //Change the color or the Due Date if the date is > of today date
+    const dueDate = new Date(toDoIssue.dueDate)
+    const todayDate = new Date()
+
+    const checkDueDate = detailPage.querySelector(`[data-todo-info="dueDate"]`)
+    if (dueDate < todayDate) {
+        if (checkDueDate instanceof HTMLElement) {
+            checkDueDate.style.color = "var(--popup-warning)"
+            checkDueDate.textContent += " - Due date exceeded"
+        }
+        
+    } else {
+        //keep the original style for the dueDate        
+        if (checkDueDate instanceof HTMLElement) {
+            const rightdueDate = dueDate.toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })
+
+            const formattedDate = detailPage.querySelector(`[data-todo-info="dueDate"]`)
+            if (formattedDate instanceof HTMLElement) {
+                formattedDate.style.color = "var(--color-fontbase)"
+                formattedDate.textContent = rightdueDate
+            }        
+        }
+    }
+
+
+    
+
     //Update the backgroundColor of the acronym symbol
     const nameAndColorOfAcronym = detailPage.querySelector(`[data-todo-info="acronym"]`) as HTMLElement
     const projectsManager = ProjectsManager.getInstance()
@@ -415,9 +433,6 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
         nameAndColorOfAcronym.textContent = project.acronym
         nameAndColorOfAcronym.style.backgroundColor = project.backgroundColorAcronym
     }
-
-
-
 
     // Update the background color of the todo-card in the todo-details-page
     const columnElement = detailPage.querySelector('[data-todo-info="statusColumn"]') as HTMLElement
@@ -441,13 +456,7 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
         sidebarActiveCheckbox.checked = true
         localStorage.setItem("sidebar-active","")
     }
-
 }
-
-
-
-
-
 
 
 
@@ -800,11 +809,15 @@ function handleTagsInput(tagsInputId, tagsListId) {
 
     if (tagsList) {
         tagsList.addEventListener("click", (e) => {
+            e.stopPropagation()
             if (e.target instanceof HTMLElement) {
                 const target = e.target
                 if (target.tagName === "LI") {
                     const tag = e.target
-                    tagsList.removeChild(tag)
+                    // Check the Input element is visible. Because we use this fiunction in several parts of the app
+                    if (tagsInput && (tagsInput.style.display === "block" || !tagsInput.style.display)) {
+                        tag.remove()                        
+                    }
                 }
             }
 
@@ -838,10 +851,6 @@ if (btnCloseToDoIssueDetailsPage) {
             }
         }
 
-
-
-
-
         hidePageContent("todo-details")
 
         //Return the checkbox for managing the width of the sidebar to its original state before showing the todo-Details page
@@ -860,4 +869,409 @@ if (btnCloseToDoIssueDetailsPage) {
     })    
 }
 
+
+//Edit the continent of a container in the todo-details page when press de edit button
+
+//Add event "click" to the edit button of the todo-details page
+const editButtons = document.querySelectorAll('#todo-details .todo-icon-edit.svg-edit');
+editButtons.forEach(button => {
+    
+    // Check if the click event that saves the input information is being listened to
+    button.addEventListener("click", (e) => {
+
+        // Verify that the aria-label attribute of the child svg element has the value "edit""
+        const svgInsideBtnElement = button.querySelector("svg")
+        if (svgInsideBtnElement && svgInsideBtnElement.getAttribute("aria-label") === "edit") {
+            button.removeEventListener('click', handleSaveToDoIssueBtnClick);
+            button.addEventListener('click', handleEditToDoIssueBtnClick);
+        }
+    })
+    
+})
+
+
+
+//Function for managing data when edit-todo-field button is clicked
+function handleEditToDoIssueBtnClick(e) {
+    e.stopPropagation()
+    console.log("target of the click:", e.target)
+    const buttonEditOrSave = e.currentTarget
+    
+
+    //Get the edit buttton clicked(there are severals)
+    const targetToDoIssueBtn = e.target.closest(".todo-icon-edit.svg-edit")    
+    console.log('Button edit clicked:', targetToDoIssueBtn)
+
+
+    const svgInsideEditBtnElement = targetToDoIssueBtn.querySelector("svg")
+    if (svgInsideEditBtnElement && svgInsideEditBtnElement.getAttribute("aria-label") === "edit") {
+
+
+        if (targetToDoIssueBtn) {
+            //Get the parent element of the edit button that contain the button, the input and the element with the todo data
+            const parentToDoIssueElement = targetToDoIssueBtn.parentElement
+            console.log('Parent element:', parentToDoIssueElement)
+            //Obtaining the key of the data is going to be updated (title, description, etc)
+            const toDoIssueDataKey = parentToDoIssueElement.dataset.todoInfoBtn
+            console.log('Data key:', toDoIssueDataKey)
+
+            //Get the element displaying the current toDo data inside the parent element
+            const elementToDoFieldToUpdate = parentToDoIssueElement.querySelector(`[data-todo-info="${toDoIssueDataKey}"]`)
+            console.log('Element to update:', elementToDoFieldToUpdate)
+
+            //Obtain the current elements of the elementToDoFieldToUpdate to update the HTML to the original state
+            let originalToDoIssueListItems
+            if (elementToDoFieldToUpdate.tagName === "UL") {
+                originalToDoIssueListItems = Array.from(elementToDoFieldToUpdate.children)
+                console.log(originalToDoIssueListItems)
+            }
+
+            // Get the element with the input field  where to introduce the updated data
+            const inputToDoFieldForUpdate = parentToDoIssueElement.querySelector(`[data-todo-info-origin="${toDoIssueDataKey}"]`)
+            console.log('Input field:', inputToDoFieldForUpdate)
+
+            // Modify the SVG icon
+            const svgElement = targetToDoIssueBtn.querySelector('svg')
+            svgElement.setAttribute('aria-label', 'save')
+            svgElement.innerHTML = '<use href="#save"></use>'
+
+            //Manage event listeners
+            buttonEditOrSave.removeEventListener("click", handleEditToDoIssueBtnClick)
+            buttonEditOrSave.addEventListener("click", handleSaveToDoIssueBtnClick)
+
+
+            // store the original elements inside elementToDoFieldToUpdate in the case of "tags" and "assignedUsers" in order to restore them when you click outside the input and not save the changes
+            if (elementToDoFieldToUpdate.tagName === "UL") {
+                const originalToDoIssueListItems = Array.from(elementToDoFieldToUpdate.children)
+                console.log(originalToDoIssueListItems)
+            }
+    
+            if (!elementToDoFieldToUpdate || !inputToDoFieldForUpdate) {
+                return
+            } else {
+
+                console.log('Hiding element:', elementToDoFieldToUpdate)
+                console.log('Showing input field:', inputToDoFieldForUpdate)
+
+                //Hide the current element with the todo Data and show the input field to update the date
+                elementToDoFieldToUpdate.style.display = "none"
+                inputToDoFieldForUpdate.style.display = "block"
+                //Focus the atention in the input element
+                inputToDoFieldForUpdate.focus()
+
+                // What happend if someone click outside the input element
+                // Add a click event to the document to blur and change the display of elements
+                document.addEventListener('click', (e) => {
+                    if (e.target !== inputToDoFieldForUpdate && !inputToDoFieldForUpdate.contains(e.target) && e.target !== elementToDoFieldToUpdate && !elementToDoFieldToUpdate.contains(e.target)) {
+                        inputToDoFieldForUpdate.blur();
+                        inputToDoFieldForUpdate.style.display = 'none';
+                        elementToDoFieldToUpdate.style.display = 'block';
+                        // Modify the SVG icon
+                        svgElement.setAttribute('aria-label', 'edit')
+                        svgElement.innerHTML = '<use href="#edit"></use>'
+                        const todoField = document.querySelector('.father-todoissue-textarea')
+                        if (todoField instanceof HTMLElement) {
+                            todoField.style.minHeight = `0px`
+                        }
+
+                        //Restore the border of fieldset to transparent
+                        const todoFieldset = document.querySelector('.father-todoissue-textarea-fielset') as HTMLElement
+                        if (todoFieldset) {
+                            todoFieldset.style.border = '1.5px dotted var(--color-fontbase-dark)'
+                        }
+
+
+
+                        //Restore the continent of elementToDoFieldToUpdate to the original state
+                        if (elementToDoFieldToUpdate.tagName === "UL") {
+                            elementToDoFieldToUpdate.innerHTML = ""
+                            originalToDoIssueListItems.forEach((item) => {
+                                elementToDoFieldToUpdate.appendChild((item as HTMLElement).cloneNode(true))
+                            })
+                        }
+
+                        //Manage eventListeners
+                        editButtons.forEach(button => {
+                            button.addEventListener('click', handleEditToDoIssueBtnClick);
+                            button.removeEventListener('click', handleSaveToDoIssueBtnClick);
+                        });
+
+
+                    }
+                })
+
+                // Modify the SVG icon
+                const svgElement = targetToDoIssueBtn.querySelector('svg')
+                svgElement.setAttribute('aria-label', 'save')
+                svgElement.innerHTML = '<use href="#save"></use>'
+
+
+                //Obtain the current value of the todo field to update in order to show this data inside the input field
+                const currentToDoIssueValue = elementToDoFieldToUpdate.textContent
+
+
+                //Set the data above in the input field 
+                if (inputToDoFieldForUpdate.tagName === "INPUT" && inputToDoFieldForUpdate.type === "date") {
+                    //Parse the chain of text in a date
+                    const dateParts = currentToDoIssueValue.split(' de ');
+                    const dayParse = parseInt(dateParts[0]);
+                    const monthParse = getMonthFromString(dateParts[1]);
+                    const yearParse = parseInt(dateParts[2]);
+
+                    const dateToDoValue = new Date(yearParse, monthParse - 1, dayParse + 1);
+
+                    //format the date if it is a date input
+            
+                    inputToDoFieldForUpdate.value = dateToDoValue.toISOString().slice(0, 10)
+
+                } else if (inputToDoFieldForUpdate.nodeName === "TEXTAREA") {
+                    const todoField = document.querySelector('.father-todoissue-textarea');
+                    
+                    console.log("father of the textarea:", todoField)
+                    if (todoField instanceof HTMLElement) {
+                        const textarea = todoField.querySelector('[data-todo-info-origin="description"]');
+                        console.log("textarea Element:", textarea)
+                        if (textarea) {
+                            // textarea.addEventListener('input', () => {
+                            // Calculate the height of the textarea
+                            const textareaHeights = 100
+                            console.log("height of the textarea:", textareaHeights)
+                            const textareaHeightscroll = (textarea as HTMLElement).scrollHeight;
+                            console.log("height of the textarea:", textareaHeightscroll)
+
+                            // Set the parent element's height to match the textarea's height
+                            const textareaHeightTaken = textareaHeights > textareaHeightscroll ? textareaHeights : textareaHeightscroll;
+                            console.log("height of the textarea:", textareaHeightTaken)
+                            todoField.style.minHeight = `${textareaHeightTaken}px`
+                            // });
+
+                            //Set the border of fieldset to transparent
+                            const todoFieldset = document.querySelector('.father-todoissue-textarea-fielset') as HTMLElement
+                            if (todoFieldset) {
+                                todoFieldset.style.border = 'none'
+                            }
+
+                        }
+                    }
+
+                    inputToDoFieldForUpdate.value = currentToDoIssueValue
+        
+                } else if (inputToDoFieldForUpdate.tagName === "INPUT" && inputToDoFieldForUpdate.type === "text" && inputToDoFieldForUpdate.dataset.todoInfoOrigin === "tags") {
+                    console.log("we are in tags")
+
+                    // Display again the task list directly
+                    elementToDoFieldToUpdate.style.display = "block"
+
+                    //Manage the addition or substraction of tags inside the ToDo Issue
+                    // calling function handleTagsInput with the correct elements IDs
+            
+                    handleTagsInput("todo-tags-detail-input", "todo-tags-list-details-page")
+
+                    // Clear the input field, it is not neccesary the currentToDoIssueValue
+                    // inputToDoFieldForUpdate.value = ""; 
+            
+
+                } else if (inputToDoFieldForUpdate.tagName === "SELECT") {
+                    const statusTextConversion = currentToDoIssueValue
+                    let statusValue = ""
+                    
+                    switch (statusTextConversion) {
+                        case "Task Ready":
+                            statusValue = "backlog"
+                            break
+                        case "In Progress":
+                            statusValue = "wip"
+                            break
+                        case "Needs Review":
+                            statusValue = "qa"
+                            break
+                        case "Done":
+                            statusValue = "completed"
+                            break
+                        default:
+                            statusValue = "Not Assigned"
+                    }
+                    inputToDoFieldForUpdate.value = statusValue
+
+                } else {
+                inputToDoFieldForUpdate.value = currentToDoIssueValue
+                }
+
+
+                
+        
+                targetToDoIssueBtn.addEventListener('click', (e) => {
+                    e.stopPropagation()
+                    console.log("target save btn clicked:", targetToDoIssueBtn)
+
+                    // Verify that the aria-label attribute of the child svg element has the value "save""
+                    const svgInsideBtnElement = targetToDoIssueBtn.querySelector("svg")
+                    if (svgInsideBtnElement && svgInsideBtnElement.getAttribute("aria-label") === "save") {
+
+
+                        handleSaveToDoIssueBtnClick(parentToDoIssueElement, inputToDoFieldForUpdate, toDoIssueDataKey, elementToDoFieldToUpdate)
+                    }
+                }, { once: true })
+            }
+        }
+    }
+}
+
+
+
+// Function to parse a text string and extract the month component
+function getMonthFromString(monthString) {
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    if (typeof monthString !== "string" || monthString.trim() === "") {
+        throw new Error ("Invalid month")
+    }
+    const monthIndex = months.indexOf(monthString);
+    if (monthIndex !== -1) {
+        return monthIndex + 1
+    } else {
+        throw new Error(`Month missing: ${monthString}`);
+    }
+}
+
+
+
+// Function for managing data when save-todo-field button is clicked
+function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, originalElement?) { 
+
+    console.log('Save button clicked:', parentElement, inputField, dataKey, originalElement)
+
+    //Manage eventListeners
+    editButtons.forEach(button => {
+        button.addEventListener('click', handleEditToDoIssueBtnClick);
+        button.removeEventListener('click', handleSaveToDoIssueBtnClick);
+    });
+
+    //Restore the border of fieldset to transparent
+    const todoFieldset = document.querySelector('.father-todoissue-textarea-fielset') as HTMLElement
+    if (todoFieldset) {
+        todoFieldset.style.border = '1.5px dotted var(--color-fontbase-dark)'
+    }
+
+    //Obtain the value of the input todo field
+    const newToDoIssueFieldValue = inputField.value.trim()
+    console.log('New value for newToDoIssueFieldValue:', newToDoIssueFieldValue)
+
+    //Validate the value of the new data
+
+
+    //(añade tu lógica aquí)
+
+    //Check the input is not empty
+    if (newToDoIssueFieldValue.trim() === "") {
+        const popupToDoDataFieldInvalid = new MessagePopUp(
+            document.body,
+            "error",
+            "The field is empty",
+            "Please fill in the field or click outside the field if you do not need to update the data.",
+            ["Got it"]
+        )
+        // Define button callback
+        const buttonCallbacks = {
+            "Got it": () => {
+                popupToDoDataFieldInvalid.closeMessageModal();
+            }
+        }
+        popupToDoDataFieldInvalid.showNotificationMessage(buttonCallbacks);
+    }
+    
+
+
+    // if title check does not exist a previous Issue with the same name
+    if (dataKey === "title") {
+        //Obtain the ID ToDo Issue
+        const todoIssueId = parentElement.querySelector(".todo-icon-edit.svg-edit").dataset.toDoIssueId;
+        console.log("todoIssueId:", todoIssueId)
+
+        //Look for the todo Issue in the project List
+        // const projectManager = ProjectsManager.getInstance()
+        const project = getProjectByToDoIssueId(todoIssueId)
+        const todoIssueList = project ? project.todoList : []
+        console.log("Project:", project)
+
+        //Chech if the title issue already exist
+        const existingToDoIssue = todoIssueList.find(
+            (issue) => issue.title === newToDoIssueFieldValue && issue.id !== todoIssueId
+        );
+
+        if (existingToDoIssue) {
+            // Mostrar mensaje de error
+            const popupTitleExists = new MessagePopUp(
+                document.body,
+                "error",
+                "Title already exists",
+                "A ToDo Issue with this title already exists in this project. Please choose another title.",
+                ["Got it"]
+            );
+            popupTitleExists.showNotificationMessage({
+                "Got it": () => {
+                    popupTitleExists.closeMessageModal();
+                }
+            });
+            return; // Detener la ejecución si el título ya existe
+        }
+    }
+    
+   
+
+    // Formatea la fecha si es un campo de fecha
+    if (inputField.tagName === 'INPUT' && inputField.type === 'date') {
+        const newToDoIssueDateFieldValue = new Date(newToDoIssueFieldValue).toLocaleDateString();
+        originalElement.textContent = newToDoIssueDateFieldValue;
+    } else {
+
+        // Replace the original element's value with the new one
+        originalElement.textContent = newToDoIssueFieldValue;
+        console.log('Updated element:', originalElement)
+
+    }
+
+
+    //TextArea remove the height of the element created to displace elements below
+    const todoField = document.querySelector('.father-todoissue-textarea')
+    if (todoField instanceof HTMLElement) {
+        todoField.style.minHeight = `0px`
+    }
+
+
+    // Hide the input field and show the original element
+    inputField.blur()
+    inputField.style.display = 'none';
+    originalElement.style.display = 'block';
+    // Modify the SVG icon
+    const svgElement = parentElement.querySelector('svg')
+    svgElement.setAttribute('aria-label', 'edit')
+    svgElement.innerHTML = '<use href="#edit"></use>'
+
+    
+
+
+
+    // Guarda el nuevo valor en tu estructura de datos
+
+
+    // updateTodoData(dataKey, newValue);
+}
+
+
+
+
+
+// Función para actualizar los datos de la tarea
+function updateTodoData(dataKey, newValue) {
+    // Encuentra la tarea en tu estructura de datos
+    const todoToUpdate = // ... (tu lógica para encontrar la tarea)
+
+        // Actualiza el valor de la propiedad correspondiente
+        todoToUpdate[dataKey] = newValue;
+
+    // Guarda la estructura de datos actualizada (local storage, base de datos, etc.)
+    // ... (tu lógica para guardar los datos)
+}
+
+// ... (tu código existente)
 

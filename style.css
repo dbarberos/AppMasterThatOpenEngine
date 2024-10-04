@@ -1156,7 +1156,6 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     list-style: none;
     /* height: 80%; */
 
-
     scrollbar-width: fit;
     scrollbar-color: transparent;
 
@@ -1311,7 +1310,105 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
+#todo-tags-list-details-page {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: inherit;
+    padding: 5px;
+    display: block;
+    list-style: none;
+    /* height: 80%; */
 
+    scrollbar-width: fit;
+    scrollbar-color: transparent;
+
+    flex-grow: 1;
+    overflow-y: scroll;
+    background-color: transparent;
+    scrollbar-gutter: stable;
+    scroll-snap-type: mandatory;
+
+
+    &::-webkit-scrollbar-button {
+        display: none;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        display: none;
+    }
+
+    ::-moz-scrollbar-button {
+        display: none;
+    }
+
+    &::-webkit-scrollbar {
+        width: 10px;
+        background-color: inherit;
+    }
+
+    &::-moz-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+
+    &::-ms-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        scrollbar-color: var(--primary-200) transparent;
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &:hover::-moz-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+
+    }
+
+    &:hover::-ms-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: var(--primary-200);
+        border-radius: 10px;
+    }
+}
+
+
+#todo-tags-list-details-page:hover {
+    scrollbar-color: var(--primary-200) transparent;
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar-button {
+        display: none;
+    }
+}
+
+#todo-tags-list-details-page li,
+span {
+    /* scroll-snap-align: start; */
+    display: inline-block;
+    margin: 5px;
+    cursor: pointer;
+    gap: 0.25rem 1 rem;
+}
+
+#todo-tags-list-details-page li:hover,
+span:hover {
+    background-color: var(--primary-200);
+}
 
 
 
@@ -1941,7 +2038,8 @@ progress::-moz-progress-bar {
     margin-top: 25px;
     padding-left: 30px;
     height: 50px;
-    align-items: center
+    align-items: center;
+    user-select: none;
 }
 
 .todo-detail-datafield {
@@ -1955,6 +2053,7 @@ progress::-moz-progress-bar {
     min-height: 30px;
     padding: 10px 0;
     height: fit-content;
+    user-select: none;
 
     & .todo-icon-edit {
         /* position: absolute; */

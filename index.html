@@ -307,6 +307,14 @@
                     <path
                         d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v10zM18 4h-2.5l-.71-.71c-.18-.18-.44-.29-.7-.29H9.91c-.26 0-.52.11-.7.29L8.5 4H6c-.55 0-1 .45-1 1s.45 1 1 1h12c.55 0 1-.45 1-1s-.45-1-1-1z" />
                 </symbol>
+                <symbol id="save" viewBox="0 0 24 24" fill="#dfd9d9">
+                    <path d="M0 0h24v24H0V0z" fill="none" />
+                    <path d="M0 0h24v24H0V0z" fill="none" />
+                    <path
+                        d="M17.59 3.59c-.38-.38-.89-.59-1.42-.59H5c-1.11 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7.83c0-.53-.21-1.04-.59-1.41l-2.82-2.83zM12 19c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm1-10H7c-1.1 0-2-.9-2-2s.9-2 2-2h6c1.1 0 2 .9 2 2s-.9 2-2 2z" />
+                    </svg>
+                </symbol>
+    
             </svg>
 
             <dialog id="modal-list-of-projects-json" >
@@ -2040,17 +2048,19 @@
                 <div>
                     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
                         <div class="todo-detail-datafield"
-                            style="margin-top:30px; min-height: 50px; flex-direction: row; justify-content: flex-start; padding-right: 15px;">
-                            <button class="todo-icon-edit" id="delete-todoIssue"
+                            style="margin-top:30px; min-height: 50px; flex-direction: row; justify-content: flex-start; padding-right: 15px;" data-todo-info-btn="title">
+                            <button class="todo-icon-edit svg-edit" id="delete-todoIssue"
                                 style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="title">
-                                <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                                <svg  role="img" aria-label="edit" width="22" height="22">
                                     <use href="#edit"></use>
                                 </svg>
                             </button>
                             <h2 data-todo-info="title">Title To-Do Issue</h2>
+                            
                             <input data-todo-info-origin="title" name="title" class="title-todo-card" type="text"
-                                size="var(--font-3xl)" placeholder="Title" required minlength="5"
-                                style="height: 20px; font-size: var(--font-3xl); display:none">
+                            size="var(--font-3xl)" placeholder="Title" required minlength="5"
+                            style="height: 20px; font-size: var(--font-3xl); transform: translateY(-2px) translateX(29px);display:none">
+                            
                         </div>
                         <div style="display: flex; flex-direction: row; column-gap: 10px; align-items:center">
                             <button class="todo-icon-edit" id="delete-todoIssue"
@@ -2069,7 +2079,7 @@
                     </div>
 
                     <div
-                        style="display:flex; flex-direction: column; row-gap: 10px; padding-bottom: 30px; border-bottom: 2px dotted var(--color-fontbase-dark);">
+                        style="display:flex; flex-direction: column; row-gap: 10px; padding-bottom: 30px; border-bottom: 2px dotted var(--color-fontbase-dark); user-select: none;">
                         <div class="todo-detail-withlogo">
                             <div style="display: flex;  align-items: center;column-gap:15px;">
                                 <p style=" margin-left: 4px; font-size: 15px; background-color: #f08080; padding: 6px; border-radius: 100%; aspect-ratio: 1; color: #343537; display: flex; align-items: center;"
@@ -2080,8 +2090,8 @@
                         </div>
                         <div class="todo-detail-withlogo">
                             <div style="display: flex;  align-items: center; column-gap:15px;">
-                                <svg class="todo-icon-edit" role="img" aria-label="radio_button_unchecked" width="37"
-                                    height="37">
+                                <svg class="todo-icon-edit svg-edit" role="img" aria-label="radio_button_unchecked" width="37"
+                                    height="37" style="box-shadow: none;">
                                     <use href="#radio_button_unchecked"></use>
                                 </svg>
                                 <p style="color: var(--color-fontbase-dark);">Open by: <span data-todo-info="todoUserOrigen"
@@ -2096,15 +2106,21 @@
                 </div>              
 
                 <div class="todo-detail-datafield">
-                    <div style="display:flex; flex-direction: row; ;align-items: flex-start;justify-content: flex-start; margin-top: 25px;">
-                        <button class="todo-icon-edit" id="delete-todoIssue"
+                    <div style="display:flex; flex-direction: row; ;align-items: flex-start;justify-content: flex-start; margin-top: 25px;" data-todo-info-btn="description">
+                        <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
                             style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center, box-shadow: transparent" data-todo-info-btn="description">
-                            <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                            <svg role="img" aria-label="edit" width="22" height="22">
                                 <use href="#edit"></use>
                             </svg>
                         </button>
-                        <fieldset class="todo-fieldset">
+                        <fieldset class="todo-fieldset father-todoissue-textarea-fielset">                            
                             <legend style="transform: translatex(15px)"><h3  >Issue Description: </h3></legend>
+                            <div style="height: auto; display: flex; flex-direction: column; flex-grow: 1; transition:min-height 0.3s ease; " class="father-todoissue-textarea">
+                                <textarea data-todo-info-origin="description" name="description" id=""
+                                style="resize: vertical;  scrollbar-width: none ; font-size: var(--font-lgse);font-size: var(--font-lg); transform: translateY(-15px) translateX(5px); max-height: 550px; height: auto; overflow: visible; display: none"
+                                cols="59" rows="15" placeholder="Leave a comment"></textarea>
+                            </div>
+
                             <div style="width:90%; max-height: 100%;">
                                 <p data-todo-info="description" style="height: fit-content; color: var(--color-fontbase)">Lorem ipsum dolor sit amet, consectetur
                                     adipisicing elit. Fugiat quasi ut repellat consectetur quod perspiciatis nihil et quae enim
@@ -2115,20 +2131,10 @@
                                     Similique asperiores rem ad expedita esse deserunt minima illum, magnam laudantium. Totam hic
                                     architecto sed id, dolore harum laudantium qui ipsum? Architecto, laudantium at accusamus
                                     placeat quasi corrupti eaque et?
-                                    Enim similique commodi sit accusantium asperiores? Culpa natus doloribus ratione provident nisi
-                                    non ea quis vitae molestiae rem, iusto corrupti similique id incidunt et eum necessitatibus
-                                    perspiciatis in? Non, fugit.
-                                    Dignissimos aspernatur suscipit voluptatibus ipsum alias natus temporibus voluptas perspiciatis.
-                                    Incidunt dolorem blanditiis quaerat laborum mollitia et nihil obcaecati, repudiandae sequi illo
-                                    fugiat minus quos, id laudantium amet facilis unde?
-                                    Maiores impedit aperiam architecto perspiciatis sapiente laboriosam inventore voluptatibus ipsam
-                                    adipisci repudiandae suscipit error quas harum quae, assumenda dolore expedita eaque libero
-                                    aspernatur dolor, neque sunt excepturi. Eos, modi eius?
+                                    
                                 </p>
                             </div>
-                            <textarea data-todo-info-origin="description" name="description" id=""
-                                style="resize: vertical;  scrollbar-width: none ; font-size: var(--font-lgse);font-size: 5px; display:none"
-                                cols="58" rows="15" placeholder="Leave a comment"></textarea>
+                            
                         </fieldset>
                     </div>
                 </div>
@@ -2139,20 +2145,20 @@
                 </div>
 
                 <div class="todo-detail-datafield"
-                    style=" display: flex; flex-direction: row; align-items: center; justify-content: flex-start">
-                    <button class="todo-icon-edit" id="delete-todoIssue"
+                    style=" display: flex; flex-direction: row; align-items: center; justify-content: flex-start" data-todo-info-btn="statusColumn">
+                    <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
                         style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="statusColumn">
-                        <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17" >
+                        <svg  role="img" aria-label="edit" width="22" height="22" >
                             <use href="#edit"></use>
                         </svg>
                     </button>
                     <select data-todo-info-origin="statusColumn" name="statusColumn" id="todo-stagecolumn-detail-select"
-                        style="height: 20px; font-size: var(--font-lg); display:none ;">
+                        style="height: 20px; font-size: var(--font-lg); transform: translateY(0px) translateX(40px); ; background-color: var(--color-bg1); opacity: 0.5; display: none;">
                         <!-- <option value="" disabled selected hidden>Select a stage</option> -->
-                        <option label="Task ready" value="backlog"></option>
-                        <option label="In progress" value="wip"></option>
-                        <option label="Needs review" value="qa"></option>
-                        <option label="Done" value="done"></option>
+                        <option label="Task ready" value="backlog" style="color:var(--background-100)"></option>
+                        <option label="In progress" value="wip" tyle="color:var(--background-100)"></option>
+                        <option label="Needs review" value="qa" tyle="color:var(--background-100)"></option>
+                        <option label="Done" value="done" tyle="color:var(--background-100)"></option>
                     </select>
                     <p> 
                         <span class="todo-task-move todo-tags"
@@ -2166,26 +2172,25 @@
                     <h3 style="padding: 20px 0;color: var(--color-fontbase-dark)">Assigned to</h3>
                 </div>
 
-                <div class="todo-detail-datafield">
-                    <div style="display: flex; flex-direction: row; align-items: flex-start ;justify-content: flex-start">
-                        <button class="todo-icon-edit" id="delete-todoIssue"
+                <div class="todo-detail-datafield" style="position: relative;">
+                    <div style="display: flex; flex-direction: row; align-items: flex-start ;justify-content: flex-start" data-todo-info-btn="assignedUsers">
+                        <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
                             style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="assignedUsers">
-                            <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                            <svg  role="img" aria-label="edit" width="22" height="22">
                                 <use href="#edit"></use>
                             </svg>
                         </button>
-                        <div class="" style="transform: translateY(-60px) translateX(140px);  ">
-                            <input data-todo-info-origin="assignedUsers" name="assignedUsers" class="assignedUsers-todo-card" type="text" size="var(--sm)"
-                                id="todo-tags-detail-input" placeholder="New users + Enter key"
-                                style="height:20px; display:none ">
-                        </div>
+                        
+                        <input data-todo-info-origin="assignedUsers" name="assignedUsers" class="assignedUsers-todo-card" type="text" size="var(--sm)"
+                            id="todo-assignedUsers-detail-input" placeholder="New users + Enter key"
+                            style="height:20px; transform: translateY(-50px) translateX(200px); width: fit-content; min-width: 50%;  position :absolute; display: none">
+                        
 
-                        <div data-todo-info="assignedUsers" class="todo-tags-list" name="assignedUsers"
-                            id="todo-assignedUsers-detail-list">
-                            <span>WIP_1</span>
-                            <span>WIP_2</span>
+                        <ul data-todo-info="assignedUsers" class="todo-tags-list todo-form-field-container" name="assignedUsers" id="todo-assignedUsers-detail-list" style="padding-left:20px; position:relative;">
+                            <li class="todo-tags">WIP_1</li>
+                            <li class="todo-tags">WIP_2</li>
                             <!-- ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')} -->
-                        </div>
+                        </ul>
                     </div>
                 </div>
 
@@ -2195,22 +2200,22 @@
                 </div>
 
                 <div class="todo-detail-datafield">
-                    <div style="display: flex;flex-direction: row; align-items: flex-start ;justify-content: flex-start">
-                        <button class="todo-icon-edit" id="delete-todoIssue"
+                    <div style="display: flex;flex-direction: row; align-items: flex-start ;justify-content: flex-start" data-todo-info-btn="tags">
+                        <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
                             style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="tags">
-                            <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                            <svg  role="img" aria-label="edit" width="22" height="22">
                                 <use href="#edit"></use>
                             </svg>
                         </button>
-                        <div class="" style="transform: translateY(-60px) translateX(75px);  ">
-                            <input data-todo-info-origin="tags" name="tags" class="tags-todo-card" type="text" size="var(--sm)"
-                                id="todo-tags-detail-input" placeholder="New tags + Enter key"
-                                style="height:20px; display: none ">
-                        </div>
                         
-                        <div data-todo-info="tags" name="tags" class="todo-tags-list" id="todo-tags-list-details-page" style="padding-left: 20px;">
+                        <input data-todo-info-origin="tags" name="tags" class="tags-todo-card" type="text" size="var(--sm)"
+                            id="todo-tags-detail-input" placeholder="New tags + Enter key"
+                            style="height:20px; transform: translateY(-50px) translateX(200px); min-width: 50%; width: fit-content; display: none ">
+                        
+                        
+                        <ul data-todo-info="tags" name="tags" class="todo-tags-list todo-form-field-container" id="todo-tags-list-details-page" style="padding-left: 20px; position: relative">
 
-                        </div>
+                        </ul>
                     </div>
                 </div>
 
@@ -2219,20 +2224,21 @@
                     <h4 style="padding: 20px 0;color: var(--color-fontbase-dark)">Finish issue date</h4>
                 </div>
 
-                <di class="todo-detail-datafield">
+                <div class="todo-detail-datafield">
                     <div class="todo-detail-datafield"
-                        style=" display: flex; flex-direction: row; align-items: center; justify-content: flex-start">
-                        <button class="todo-icon-edit" id="delete-todoIssue"
+                        style=" display: flex; flex-direction: row; align-items: center; justify-content: flex-start" data-todo-info-btn="dueDate">
+                        <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
                             style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="dueDate">
-                            <svg class="todo-icon-edit" role="img" aria-label="edit" width="17" height="17">
+                            <svg  role="img" aria-label="edit" width="22" height="22">
                                 <use href="#edit"></use>
                             </svg>
                         </button>
                         <input data-todo-info-origin="dueDate" name="dueDate" type="date" id="todo-dueDate-details-input"
-                            style="height: 20px; font-size: var(--font-lg); display:none ;" min="2024-01-01">
+                            style="height: 20px; font-size: var(--font-lg); transform: translateY(-60px) translateX(250px); min-width: 50%; width: fit-content;display:none ;" min="2024-01-01">
 
                         <p data-todo-info="dueDate">***-**-** To-Do Issue</p>
                     </div>
+                </div>
             </div>
         </section>
 

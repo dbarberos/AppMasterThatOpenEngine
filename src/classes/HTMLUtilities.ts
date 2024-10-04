@@ -43,13 +43,22 @@ export function getActualDate () {
 
 
 
-
-
-
 //Set the minimum date for de todo Issue Form as de date of tomorrow
 const today = new Date();
 const tomorrow = new Date(today);
 tomorrow.setDate(tomorrow.getDate() + 1);
 const minDate = tomorrow.toISOString().split('T')[0];
 
-document.getElementById('todo-dueDate').min = minDate;
+const dueDateElement = document.getElementById("todo-dueDate") as HTMLInputElement
+const dueDateDetailsInputElement = document.getElementById("todo-dueDate-details-input") as HTMLInputElement
+const dueDateFinishProjectElement = document.getElementById("finisProjecthDate") as HTMLInputElement
+
+if (dueDateElement && dueDateDetailsInputElement) {
+
+    dueDateElement.min = minDate
+    dueDateDetailsInputElement.min = minDate
+    dueDateFinishProjectElement.min = minDate
+    
+} else {
+    console.error("One or both of the elements with IDs 'todo-dueDate' and 'todo-dueDate-details-input' do not exist.")
+}
