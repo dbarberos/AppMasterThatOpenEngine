@@ -605,6 +605,155 @@ button:active {
 }
 
 
+
+.scrollbar-manage {    
+    scrollbar-width: none;
+    /* scrollbar-color: transparent; */
+
+    
+    overflow-y: auto;
+    background-color: transparent;
+    scrollbar-gutter: stable;
+    scroll-snap-type: mandatory;
+
+
+    &::-webkit-scrollbar-button {
+        display: none;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        display: none;
+    }
+
+    ::-moz-scrollbar-button {
+        display: none;
+    }
+
+    &::-webkit-scrollbar {
+        width: 10px;
+        background-color: inherit;
+    }
+
+    &::-moz-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+
+    &::-ms-scrollbar {
+        width: 10px;
+        background-color: inherit;
+
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        scrollbar-color: var(--primary-200) transparent;
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &:hover::-moz-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+
+    }
+
+    &:hover::-ms-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: var(--primary-200);
+        border-radius: 10px;
+    }
+}
+
+
+.scrollbar-manage:hover {
+    scrollbar-color: var(--primary-200) transparent;
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar-button {
+        display: none;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #company-logo {
     height: 65px;
 }
@@ -2088,7 +2237,7 @@ progress::-moz-progress-bar {
         transform: translatey(-16px);
     }
 
-    & h2, p {
+    & h2, p, pre {
         padding-left: 20px;
         overflow: hidden;
         word-break: break-all;

@@ -1,11 +1,12 @@
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
 import { showModal, closeModal, toggleModal, closeModalProject, changePageContent, showPageContent, hidePageContent } from "./UiManager"
 import { Project } from "./Project"
-import { ProjectsManager } from './ProjectsManager';
+import { ProjectsManager } from "./ProjectsManager";
+import { sanitizeHtml } from "./HTMLUtilities"
 
-import { DragAndDrop } from '@formkit/drag-and-drop';
+import { DragAndDrop } from "@formkit/drag-and-drop";
 import { MessagePopUp } from "./MessagePopUp"
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from "uuid"
 
 
 
@@ -925,10 +926,20 @@ function handleEditToDoIssueBtnClick(e) {
                 originalToDoIssueListItems = Array.from(elementToDoFieldToUpdate.children)
                 console.log(originalToDoIssueListItems)
             }
-
+            
             // Get the element with the input field  where to introduce the updated data
             const inputToDoFieldForUpdate = parentToDoIssueElement.querySelector(`[data-todo-info-origin="${toDoIssueDataKey}"]`)
             console.log('Input field:', inputToDoFieldForUpdate)
+
+            //Obtain the original textarea text element of the elementToDoFieldToUpdate to update the HTML to the original state
+            let originalToDoIssueTextareaItem 
+            if (inputToDoFieldForUpdate.tagName === "TEXTAREA") {
+                 originalToDoIssueTextareaItem = elementToDoFieldToUpdate.innerHTML    
+                console.log("originalToDoIssueTextareaItem", originalToDoIssueTextareaItem)
+            }
+
+
+
 
             // Modify the SVG icon
             const svgElement = targetToDoIssueBtn.querySelector('svg')
@@ -953,8 +964,18 @@ function handleEditToDoIssueBtnClick(e) {
                 console.log('Hiding element:', elementToDoFieldToUpdate)
                 console.log('Showing input field:', inputToDoFieldForUpdate)
 
+                //Calculation of the textarea rendered element height before hiddding for using when blur the input
+                let elementToDoFieldUpdateHeight
+                const textareaBoundingBoxHeight = document.querySelector(`[data-todo-info="description"]`)
+                if (textareaBoundingBoxHeight instanceof HTMLElement) {
+                    const elementToDoFieldUpdateRect = textareaBoundingBoxHeight.getBoundingClientRect()
+                    elementToDoFieldUpdateHeight = elementToDoFieldUpdateRect.height;
+                }
+
+
+
                 //Hide the current element with the todo Data and show the input field to update the date
-                elementToDoFieldToUpdate.style.display = "none"
+                elementToDoFieldToUpdate.style.display = "none"                
                 inputToDoFieldForUpdate.style.display = "block"
                 //Focus the atention in the input element
                 inputToDoFieldForUpdate.focus()
@@ -978,6 +999,21 @@ function handleEditToDoIssueBtnClick(e) {
                         const todoFieldset = document.querySelector('.father-todoissue-textarea-fielset') as HTMLElement
                         if (todoFieldset) {
                             todoFieldset.style.border = '1.5px dotted var(--color-fontbase-dark)'
+                        }
+
+                        //Restore the continent of elementToDoFieldToUpdate when is a textarea input
+                        if (inputToDoFieldForUpdate.tagName === "TEXTAREA") {                             
+                            elementToDoFieldToUpdate.innerText = originalToDoIssueTextareaItem 
+                            elementToDoFieldToUpdate.style.whiteSpace = "pre-wrap" 
+                            
+                            elementToDoFieldToUpdate.parentElement.style.display = 'block';
+
+                            
+
+                            const textareaHeightwhenblur = inputToDoFieldForUpdate.scrollHeight;
+                            const maxHeightForToDoTextarea = 330
+                            elementToDoFieldToUpdate.parentElement.style.minHeight = `${Math.min(textareaHeightwhenblur, maxHeightForToDoTextarea)}px`
+
                         }
 
 
@@ -1007,7 +1043,7 @@ function handleEditToDoIssueBtnClick(e) {
 
 
                 //Obtain the current value of the todo field to update in order to show this data inside the input field
-                const currentToDoIssueValue = elementToDoFieldToUpdate.textContent
+                const currentToDoIssueValue = elementToDoFieldToUpdate.innerHTML
 
 
                 //Set the data above in the input field 
@@ -1025,6 +1061,10 @@ function handleEditToDoIssueBtnClick(e) {
                     inputToDoFieldForUpdate.value = dateToDoValue.toISOString().slice(0, 10)
 
                 } else if (inputToDoFieldForUpdate.nodeName === "TEXTAREA") {
+                    //for this case hide the father of the elementToDoFieldTo Update to render properly
+                    elementToDoFieldToUpdate.parentElement.style.display = "none"
+
+                    
                     const todoField = document.querySelector('.father-todoissue-textarea');
                     
                     console.log("father of the textarea:", todoField)
@@ -1032,18 +1072,25 @@ function handleEditToDoIssueBtnClick(e) {
                         const textarea = todoField.querySelector('[data-todo-info-origin="description"]');
                         console.log("textarea Element:", textarea)
                         if (textarea) {
-                            // textarea.addEventListener('input', () => {
+                            
                             // Calculate the height of the textarea
-                            const textareaHeights = 100
+                            const textareaHeights = 300
                             console.log("height of the textarea:", textareaHeights)
                             const textareaHeightscroll = (textarea as HTMLElement).scrollHeight;
-                            console.log("height of the textarea:", textareaHeightscroll)
+                            console.log("height of the SCROLL textarea:", textareaHeightscroll)
+                            
+                            console.log("height of the element rendered:", elementToDoFieldUpdateHeight)
 
+
+                            
                             // Set the parent element's height to match the textarea's height
-                            const textareaHeightTaken = textareaHeights > textareaHeightscroll ? textareaHeights : textareaHeightscroll;
+                            const textareaHeightTaken = textareaHeights > elementToDoFieldUpdateHeight ? textareaHeights : elementToDoFieldUpdateHeight;
                             console.log("height of the textarea:", textareaHeightTaken)
-                            todoField.style.minHeight = `${textareaHeightTaken}px`
-                            // });
+
+                            const minHeighForElement = Math.min(textareaHeightTaken, textareaHeights)
+                            todoField.style.minHeight = `${minHeighForElement}px`
+                           
+                            
 
                             //Set the border of fieldset to transparent
                             const todoFieldset = document.querySelector('.father-todoissue-textarea-fielset') as HTMLElement
@@ -1054,7 +1101,30 @@ function handleEditToDoIssueBtnClick(e) {
                         }
                     }
 
+
+                    //for this case hide the father of the elementToDoFieldTo Update to render properly
+                    elementToDoFieldToUpdate.parentElement.style.display = "none"
+
+
+                    const currentToDoIssueValue = elementToDoFieldToUpdate.innerHTML
+
                     inputToDoFieldForUpdate.value = currentToDoIssueValue
+                    
+                    //Make sure the element that will display the text preserves newlines and long spaces.
+                    elementToDoFieldToUpdate.style.whiteSpace = "pre-wrap"
+                    
+                    //Updates the textarea's height to match its content.
+                    const textareaHeightAfterUpdate = inputToDoFieldForUpdate.scrollHeight;
+                    const maxHeightForToDoTextarea = 700
+                    if (elementToDoFieldToUpdate.parentElement instanceof HTMLElement) {
+                        elementToDoFieldToUpdate.parentElement.style.minHeight = `${Math.min(textareaHeightAfterUpdate, maxHeightForToDoTextarea)}px`;
+                        // elementToDoFieldToUpdate.parentElement.style.maxHeight = "none"
+                        // elementToDoFieldToUpdate.style.height = `${Math.min(textareaHeightAfterUpdate, maxHeightForToDoTextarea)}px`;
+                    
+                    }
+
+
+
         
                 } else if (inputToDoFieldForUpdate.tagName === "INPUT" && inputToDoFieldForUpdate.type === "text" && inputToDoFieldForUpdate.dataset.todoInfoOrigin === "tags") {
                     console.log("we are in tags")
@@ -1222,6 +1292,22 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
     if (inputField.tagName === 'INPUT' && inputField.type === 'date') {
         const newToDoIssueDateFieldValue = new Date(newToDoIssueFieldValue).toLocaleDateString();
         originalElement.textContent = newToDoIssueDateFieldValue;
+    } else if (inputField.tagName === 'TEXTAREA') {
+        //TextArea remove the height of the element created to displace elements below
+        const todoField = document.querySelector('.father-todoissue-textarea')
+        if (todoField instanceof HTMLElement) {
+            todoField.style.minHeight = `0px`
+        }
+        //And in Textarea show the father of the elementToDoIssueToUpdate
+        originalElement.parentElement.style.display = "block"
+
+        //Get the element displaying the current toDo data inside the parent element
+        // parentElement.style.Height = "0px"
+
+        // Replace the original element's value with the new one
+        originalElement.textContent = newToDoIssueFieldValue;
+        console.log('Updated element:', originalElement)
+
     } else {
 
         // Replace the original element's value with the new one
@@ -1231,11 +1317,10 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
     }
 
 
-    //TextArea remove the height of the element created to displace elements below
-    const todoField = document.querySelector('.father-todoissue-textarea')
-    if (todoField instanceof HTMLElement) {
-        todoField.style.minHeight = `0px`
-    }
+    
+    
+
+
 
 
     // Hide the input field and show the original element

@@ -635,7 +635,7 @@
                 <div style="display: flex; flex-direction: column;row-gap: 40px;">
                     <div id="form-project-details" class="dashboard-card" style="padding: 17px; row-gap: 20px 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; ">
-                            <p style="font-size: 20px; background-color: #f08080; padding: 15px; border-radius: 100%; aspect-ratio: 1; color: #343537; display: flex; align-items: center;" data-project-info="acronym">EP</p>
+                            <abbr title="Acronym of the project" style="font-size: 20px; background-color: #f08080; padding: 15px; border-radius: 100%; aspect-ratio: 1; color: #343537; display: flex; align-items: center;" data-project-info="acronym">EP</abbr>
                             <button id="edit-project-details" class="">Edit</button>
                         </div>
                         <div style="padding: 0 30px;">
@@ -2082,8 +2082,8 @@
                         style="display:flex; flex-direction: column; row-gap: 10px; padding-bottom: 30px; border-bottom: 2px dotted var(--color-fontbase-dark); user-select: none;">
                         <div class="todo-detail-withlogo">
                             <div style="display: flex;  align-items: center;column-gap:15px;">
-                                <p style=" margin-left: 4px; font-size: 15px; background-color: #f08080; padding: 6px; border-radius: 100%; aspect-ratio: 1; color: #343537; display: flex; align-items: center;"
-                                    data-todo-info="acronym">Ac</p>
+                                <abbr title="Acronym of the project" style=" margin-left: 4px; font-size: 15px; background-color: #f08080; padding: 6px; border-radius: 100%; aspect-ratio: 1; color: #343537; display: flex; align-items: center;"
+                                    data-todo-info="acronym">Ac</abbr>
                                 <p style="color: var(--color-fontbase-dark);">Open in: <span data-todo-info="todoProject"
                                         style="color: var(--color-fontbase)">Project Name</span></p>
                             </div>
@@ -2103,41 +2103,45 @@
                             <p style="color: var(--color-fontbase-dark); transform: translateX(55px);">in date: <span data-todo-info="createdDate" style="color: var(--color-fontbase)">***-**-**</span>
                         </div>
                     </div>
-                </div>              
+                </div>
+                
+                <div style=" max-height: calc(100% - 800px); overflow-y: auto;" class="scrollbar-manage">
 
-                <div class="todo-detail-datafield">
-                    <div style="display:flex; flex-direction: row; ;align-items: flex-start;justify-content: flex-start; margin-top: 25px;" data-todo-info-btn="description">
-                        <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
-                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center, box-shadow: transparent" data-todo-info-btn="description">
-                            <svg role="img" aria-label="edit" width="22" height="22">
-                                <use href="#edit"></use>
-                            </svg>
-                        </button>
-                        <fieldset class="todo-fieldset father-todoissue-textarea-fielset">                            
-                            <legend style="transform: translatex(15px)"><h3  >Issue Description: </h3></legend>
-                            <div style="height: auto; display: flex; flex-direction: column; flex-grow: 1; transition:min-height 0.3s ease; " class="father-todoissue-textarea">
-                                <textarea data-todo-info-origin="description" name="description" id=""
-                                style="resize: vertical;  scrollbar-width: none ; font-size: var(--font-lgse);font-size: var(--font-lg); transform: translateY(-15px) translateX(5px); max-height: 550px; height: auto; overflow: visible; display: none"
-                                cols="59" rows="15" placeholder="Leave a comment"></textarea>
-                            </div>
+                    <div class="todo-detail-datafield">
+                        <div style="display:flex; flex-direction: row; ;align-items: flex-start;justify-content: flex-start; margin-top: 25px;" data-todo-info-btn="description">
+                            <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
+                                style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center, box-shadow: transparent" data-todo-info-btn="description">
+                                <svg role="img" aria-label="edit" width="22" height="22">
+                                    <use href="#edit"></use>
+                                </svg>
+                            </button>
+                            <fieldset class="todo-fieldset father-todoissue-textarea-fielset" >
+                                <legend style="transform: translatex(15px)"><h3  >Issue Description: </h3></legend>
+                                <div style="height: auto; display: flex; flex-direction: column; flex-grow: 1; transition:min-height 0.3s ease; " class="father-todoissue-textarea">
+                                    <textarea data-todo-info-origin="description" name="description" id=""
+                                    style="resize: vertical;  scrollbar-width: none ; font-size: var(--font-lgse);font-size: var(--font-lg); transform: translateY(-15px) translateX(5px); max-height: 550px; height: auto; overflow: visible; display: none"
+                                    cols="59" rows="15" placeholder="Leave a comment"></textarea>
+                                </div>
 
-                            <div style="width:90%; max-height: 100%;">
-                                <p data-todo-info="description" style="height: fit-content; color: var(--color-fontbase)">Lorem ipsum dolor sit amet, consectetur
-                                    adipisicing elit. Fugiat quasi ut repellat consectetur quod perspiciatis nihil et quae enim
-                                    aperiam impedit, tempore debitis velit voluptate? Corporis ullam est aut quia.
-                                    Voluptatibus, sint illo? Doloremque eligendi illo repudiandae esse dolor? Non neque aut alias
-                                    odit mollitia recusandae illo temporibus, facilis nostrum maxime dolores est voluptas quam, at
-                                    eius, a molestias sunt?
-                                    Similique asperiores rem ad expedita esse deserunt minima illum, magnam laudantium. Totam hic
-                                    architecto sed id, dolore harum laudantium qui ipsum? Architecto, laudantium at accusamus
-                                    placeat quasi corrupti eaque et?
-                                    
-                                </p>
-                            </div>
-                            
-                        </fieldset>
+                                <div style="width:90%; max-height: calc(100% - 900px);">
+                                    <p data-todo-info="description" style="height: fit-content; color: var(--color-fontbase)">Lorem ipsum dolor sit amet, consectetur
+                                        adipisicing elit. Fugiat quasi ut repellat consectetur quod perspiciatis nihil et quae enim
+                                        aperiam impedit, tempore debitis velit voluptate? Corporis ullam est aut quia.
+                                        Voluptatibus, sint illo? Doloremque eligendi illo repudiandae esse dolor? Non neque aut alias
+                                        odit mollitia recusandae illo temporibus, facilis nostrum maxime dolores est voluptas quam, at
+                                        eius, a molestias sunt?
+                                        Similique asperiores rem ad expedita esse deserunt minima illum, magnam laudantium. Totam hic
+                                        architecto sed id, dolore harum laudantium qui ipsum? Architecto, laudantium at accusamus
+                                        placeat quasi corrupti eaque et?
+                                        
+                                    </p>
+                                </div>
+                                
+                            </fieldset>
+                        </div>
                     </div>
                 </div>
+
 
                 <div class="todo-detail-datafiled-title">
                     <label><span class="material-icons-round">view_column</span></label>
