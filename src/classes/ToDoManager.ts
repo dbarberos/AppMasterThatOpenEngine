@@ -875,6 +875,7 @@ if (btnCloseToDoIssueDetailsPage) {
 
 //Add event "click" to the edit button of the todo-details page
 const editButtons = document.querySelectorAll('#todo-details .todo-icon-edit.svg-edit');
+let isEditModeInToDoIssue = false
 editButtons.forEach(button => {
     
     // Check if the click event that saves the input information is being listened to
@@ -883,6 +884,7 @@ editButtons.forEach(button => {
         // Verify that the aria-label attribute of the child svg element has the value "edit""
         const svgInsideBtnElement = button.querySelector("svg")
         if (svgInsideBtnElement && svgInsideBtnElement.getAttribute("aria-label") === "edit") {
+            isEditModeInToDoIssue = true
             button.removeEventListener('click', handleSaveToDoIssueBtnClick);
             button.addEventListener('click', handleEditToDoIssueBtnClick);
         }
@@ -900,7 +902,7 @@ function handleEditToDoIssueBtnClick(e) {
     
 
     //Get the edit buttton clicked(there are severals)
-    const targetToDoIssueBtn = e.target.closest(".todo-icon-edit.svg-edit")    
+    const targetToDoIssueBtn = e.target.closest('.todo-icon-edit.svg-edit')
     console.log('Button edit clicked:', targetToDoIssueBtn)
 
 
@@ -934,21 +936,15 @@ function handleEditToDoIssueBtnClick(e) {
             //Obtain the original textarea text element of the elementToDoFieldToUpdate to update the HTML to the original state
             let originalToDoIssueTextareaItem 
             if (inputToDoFieldForUpdate.tagName === "TEXTAREA") {
-                 originalToDoIssueTextareaItem = elementToDoFieldToUpdate.innerHTML    
+                originalToDoIssueTextareaItem = elementToDoFieldToUpdate.innerHTML    
                 console.log("originalToDoIssueTextareaItem", originalToDoIssueTextareaItem)
             }
-
-
 
 
             // Modify the SVG icon
             const svgElement = targetToDoIssueBtn.querySelector('svg')
             svgElement.setAttribute('aria-label', 'save')
             svgElement.innerHTML = '<use href="#save"></use>'
-
-            //Manage event listeners
-            buttonEditOrSave.removeEventListener("click", handleEditToDoIssueBtnClick)
-            buttonEditOrSave.addEventListener("click", handleSaveToDoIssueBtnClick)
 
 
             // store the original elements inside elementToDoFieldToUpdate in the case of "tags" and "assignedUsers" in order to restore them when you click outside the input and not save the changes
@@ -983,7 +979,7 @@ function handleEditToDoIssueBtnClick(e) {
                 // What happend if someone click outside the input element
                 // Add a click event to the document to blur and change the display of elements
                 document.addEventListener('click', (e) => {
-                    if (e.target !== inputToDoFieldForUpdate && !inputToDoFieldForUpdate.contains(e.target) && e.target !== elementToDoFieldToUpdate && !elementToDoFieldToUpdate.contains(e.target)) {
+                    if (isEditModeInToDoIssue && e.target !== inputToDoFieldForUpdate && !inputToDoFieldForUpdate.contains(e.target) && e.target !== elementToDoFieldToUpdate && !elementToDoFieldToUpdate.contains(e.target)) {
                         inputToDoFieldForUpdate.blur();
                         inputToDoFieldForUpdate.style.display = 'none';
                         elementToDoFieldToUpdate.style.display = 'block';
@@ -1006,17 +1002,12 @@ function handleEditToDoIssueBtnClick(e) {
                             elementToDoFieldToUpdate.innerText = originalToDoIssueTextareaItem 
                             elementToDoFieldToUpdate.style.whiteSpace = "pre-wrap" 
                             
-                            elementToDoFieldToUpdate.parentElement.style.display = 'block';
-
-                            
+                            elementToDoFieldToUpdate.parentElement.style.display = 'block'                            
 
                             const textareaHeightwhenblur = inputToDoFieldForUpdate.scrollHeight;
                             const maxHeightForToDoTextarea = 330
                             elementToDoFieldToUpdate.parentElement.style.minHeight = `${Math.min(textareaHeightwhenblur, maxHeightForToDoTextarea)}px`
-
                         }
-
-
 
                         //Restore the continent of elementToDoFieldToUpdate to the original state
                         if (elementToDoFieldToUpdate.tagName === "UL") {
@@ -1026,13 +1017,13 @@ function handleEditToDoIssueBtnClick(e) {
                             })
                         }
 
+                        isEditModeInToDoIssue = false
+
                         //Manage eventListeners
                         editButtons.forEach(button => {
                             button.addEventListener('click', handleEditToDoIssueBtnClick);
                             button.removeEventListener('click', handleSaveToDoIssueBtnClick);
-                        });
-
-
+                        })
                     }
                 })
 
@@ -1040,6 +1031,10 @@ function handleEditToDoIssueBtnClick(e) {
                 const svgElement = targetToDoIssueBtn.querySelector('svg')
                 svgElement.setAttribute('aria-label', 'save')
                 svgElement.innerHTML = '<use href="#save"></use>'
+                //Manage eventListeners
+                editButtons.forEach(button => {                    
+                    button.removeEventListener('click', handleEditToDoIssueBtnClick);
+                })
 
 
                 //Obtain the current value of the todo field to update in order to show this data inside the input field
@@ -1081,7 +1076,6 @@ function handleEditToDoIssueBtnClick(e) {
                             
                             console.log("height of the element rendered:", elementToDoFieldUpdateHeight)
 
-
                             
                             // Set the parent element's height to match the textarea's height
                             const textareaHeightTaken = textareaHeights > elementToDoFieldUpdateHeight ? textareaHeights : elementToDoFieldUpdateHeight;
@@ -1089,7 +1083,6 @@ function handleEditToDoIssueBtnClick(e) {
 
                             const minHeighForElement = Math.min(textareaHeightTaken, textareaHeights)
                             todoField.style.minHeight = `${minHeighForElement}px`
-                           
                             
 
                             //Set the border of fieldset to transparent
@@ -1097,7 +1090,6 @@ function handleEditToDoIssueBtnClick(e) {
                             if (todoFieldset) {
                                 todoFieldset.style.border = 'none'
                             }
-
                         }
                     }
 
@@ -1118,9 +1110,6 @@ function handleEditToDoIssueBtnClick(e) {
                     const maxHeightForToDoTextarea = 700
                     if (elementToDoFieldToUpdate.parentElement instanceof HTMLElement) {
                         elementToDoFieldToUpdate.parentElement.style.minHeight = `${Math.min(textareaHeightAfterUpdate, maxHeightForToDoTextarea)}px`;
-                        // elementToDoFieldToUpdate.parentElement.style.maxHeight = "none"
-                        // elementToDoFieldToUpdate.style.height = `${Math.min(textareaHeightAfterUpdate, maxHeightForToDoTextarea)}px`;
-                    
                     }
 
 
@@ -1162,9 +1151,11 @@ function handleEditToDoIssueBtnClick(e) {
                             statusValue = "Not Assigned"
                     }
                     inputToDoFieldForUpdate.value = statusValue
+                    elementToDoFieldToUpdate.textContent = ToDoIssue.getStatusColumnText(statusValue)
 
                 } else {
-                inputToDoFieldForUpdate.value = currentToDoIssueValue
+                    inputToDoFieldForUpdate.value = currentToDoIssueValue
+                    
                 }
 
 
@@ -1178,7 +1169,7 @@ function handleEditToDoIssueBtnClick(e) {
                     const svgInsideBtnElement = targetToDoIssueBtn.querySelector("svg")
                     if (svgInsideBtnElement && svgInsideBtnElement.getAttribute("aria-label") === "save") {
 
-
+                        
                         handleSaveToDoIssueBtnClick(parentToDoIssueElement, inputToDoFieldForUpdate, toDoIssueDataKey, elementToDoFieldToUpdate)
                     }
                 }, { once: true })
@@ -1206,15 +1197,10 @@ function getMonthFromString(monthString) {
 
 
 // Function for managing data when save-todo-field button is clicked
-function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, originalElement?) { 
+function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, originalElement?) {
 
     console.log('Save button clicked:', parentElement, inputField, dataKey, originalElement)
 
-    //Manage eventListeners
-    editButtons.forEach(button => {
-        button.addEventListener('click', handleEditToDoIssueBtnClick);
-        button.removeEventListener('click', handleSaveToDoIssueBtnClick);
-    });
 
     //Restore the border of fieldset to transparent
     const todoFieldset = document.querySelector('.father-todoissue-textarea-fielset') as HTMLElement
@@ -1223,16 +1209,35 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
     }
 
     //Obtain the value of the input todo field
-    const newToDoIssueFieldValue = inputField.value.trim()
-    console.log('New value for newToDoIssueFieldValue:', newToDoIssueFieldValue)
+    let newToDoIssueFieldValue
 
-    //Validate the value of the new data
+    if (inputField) {
 
+        if (inputField instanceof HTMLInputElement) {
+            newToDoIssueFieldValue = inputField.value.trim()
+        } else if (inputField instanceof HTMLTextAreaElement) {
+            newToDoIssueFieldValue = inputField.value.trim()
+        } else if (inputField instanceof HTMLSelectElement) {
+            if (inputField.multiple) {
+                newToDoIssueFieldValue = Array.from(inputField.selectedOptions).map(option => option.value)
+            } else {
+                newToDoIssueFieldValue = inputField.value
+            }
+        } else if (inputField instanceof HTMLFormElement) {
+            newToDoIssueFieldValue = inputField.value.trim()
+        } else {
+            newToDoIssueFieldValue = inputField.value || inputField.textContent.trim()
+        }
+    
+        console.log('New value for newToDoIssueFieldValue:', newToDoIssueFieldValue)
+    } else {
+        console.error("inputField is undefined")
+    }
 
-    //(añade tu lógica aquí)
+    //***Validate the value of the new data***
 
     //Check the input is not empty
-    if (newToDoIssueFieldValue.trim() === "") {
+    if (newToDoIssueFieldValue.trim() === "" && !["tags", "assignedUsers"].includes(dataKey)) {
         const popupToDoDataFieldInvalid = new MessagePopUp(
             document.body,
             "error",
@@ -1285,13 +1290,16 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
             return; // Detener la ejecución si el título ya existe
         }
     }
-    
-   
+
+
 
     // Formatea la fecha si es un campo de fecha
     if (inputField.tagName === 'INPUT' && inputField.type === 'date') {
         const newToDoIssueDateFieldValue = new Date(newToDoIssueFieldValue).toLocaleDateString();
         originalElement.textContent = newToDoIssueDateFieldValue;
+        originalElement.style.color = "var(--color-fontbase)"
+
+
     } else if (inputField.tagName === 'TEXTAREA') {
         //TextArea remove the height of the element created to displace elements below
         const todoField = document.querySelector('.father-todoissue-textarea')
@@ -1308,6 +1316,27 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
         originalElement.textContent = newToDoIssueFieldValue;
         console.log('Updated element:', originalElement)
 
+    } else if (inputField.tagName === 'SELECT') {
+        console.log("Esto es lo tomado del select", newToDoIssueFieldValue)
+
+        // const selectedOption = inputField.option[inputField.selectedIndex]
+        // const newSelectedToDoIssueFieldValue = selectedOption.value
+        originalElement.textContent = ToDoIssue.getStatusColumnText(newToDoIssueFieldValue.trim())
+        originalElement.style.backgroundColor = ToDoIssue.calculateBackgroundColorColumn(newToDoIssueFieldValue.trim())
+
+    } else if (inputField.tagName === 'INPUT' && inputField.type === 'text' && dataKey ==='tags') {
+        //Obtain the elements of the originalElement to update the HTML to the updated version of the tags
+        
+        let finalToDoIssueListItems
+        if (originalElement.tagName === "UL") {
+            finalToDoIssueListItems = Array.from(originalElement.children)
+            console.log(finalToDoIssueListItems)
+        }
+        //Add the Li tags to the DOM
+        finalToDoIssueListItems.forEach((liElement) => {
+        originalElement.appendChild(liElement)            
+        })
+    
     } else {
 
         // Replace the original element's value with the new one
@@ -1315,13 +1344,6 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
         console.log('Updated element:', originalElement)
 
     }
-
-
-    
-    
-
-
-
 
     // Hide the input field and show the original element
     inputField.blur()
@@ -1332,14 +1354,68 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
     svgElement.setAttribute('aria-label', 'edit')
     svgElement.innerHTML = '<use href="#edit"></use>'
 
+    // Switch back to the edit listener
+    editButtons.forEach(button => {
+        // button.addEventListener('click', handleEditToDoIssueBtnClick);
+        button.removeEventListener('click', handleSaveToDoIssueBtnClick);
+    });
+    
+
     
 
 
 
-    // Guarda el nuevo valor en tu estructura de datos
+    //*** Store the new value inside your data structure ***
+
+    // Get the ToDoIssueId of the updated eleemnt. It is stored in the button element inside the parentElement
+    const todoIssueId = parentElement.querySelector(".todo-icon-edit.svg-edit").dataset.toDoIssueId;
+
+    // Look for the project that contain this ToDoIssue Id. We will take advantage of the singleton designed pattern for ProjectList
+    const project = getProjectByToDoIssueId(todoIssueId);
+    console.log("project", project)
+
+    // Update ToDoIssue data 
+    if (project) {
+        const todoList = project.todoList;
+        const todoIssueIndex = todoList.findIndex((todoIssue) => (todoIssue as any).id === todoIssueId);
+
+        if (todoIssueIndex !== -1) {
+            const todoIssueDataKeyToUpdate = todoList[todoIssueIndex]
+            //Updates the data of the ToDo Issue based on the type of field being updated. 
+            switch (dataKey) {
+                case "title":
+                    todoIssueDataKeyToUpdate.title = newToDoIssueFieldValue;
+                    break;
+                case "description":
+                    todoIssueDataKeyToUpdate.description = newToDoIssueFieldValue;
+                    break;
+                case "dueDate":
+                    todoIssueDataKeyToUpdate.dueDate = new Date(newToDoIssueFieldValue);
+                    break;
+                case "statusColumn":
+                    todoIssueDataKeyToUpdate.statusColumn = newToDoIssueFieldValue;
+                    break;
+                case "tags":
+                    // Actualiza la lista de tags
+                    todoIssueDataKeyToUpdate.tags = Array.from(originalElement.children).map((tag) => tag.textContent);
+                    break;
+                default:
+                    console.log("No se ha implementado la actualización para este campo");
+            }
+
+            // Actualiza la lista de ToDo Issues del proyecto
+            project.todoList[todoIssueIndex] = todoIssueDataKeyToUpdate;
+            console.log("todoIssueDataKeyToUpdate", todoIssueDataKeyToUpdate)
+            console.log("todoIssueIndex", todoIssueIndex)
+            console.log("todoList", todoList)
+
+        }
+
+    }
 
 
-    // updateTodoData(dataKey, newValue);
+
+
 }
 
 

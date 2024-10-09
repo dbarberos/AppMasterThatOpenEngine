@@ -2108,15 +2108,15 @@
                 <div style=" max-height: calc(100% - 800px); overflow-y: auto;" class="scrollbar-manage">
 
                     <div class="todo-detail-datafield">
-                        <div style="display:flex; flex-direction: row; ;align-items: flex-start;justify-content: flex-start; margin-top: 25px;" data-todo-info-btn="description">
+                        <div style="display:flex; flex-direction: row; ;align-items: flex-start;justify-content: flex-start; margin-top: 25px; width: 100%;" data-todo-info-btn="description">
                             <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
                                 style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center, box-shadow: transparent" data-todo-info-btn="description">
                                 <svg role="img" aria-label="edit" width="22" height="22">
                                     <use href="#edit"></use>
                                 </svg>
                             </button>
-                            <fieldset class="todo-fieldset father-todoissue-textarea-fielset" >
-                                <legend style="transform: translatex(15px)"><h3  >Issue Description: </h3></legend>
+                            <fieldset class="todo-fieldset father-todoissue-textarea-fielset" style="width: 100%;" >
+                                <legend style="transform: translatex(15px);"><h3  >Issue Description: </h3></legend>
                                 <div style="height: auto; display: flex; flex-direction: column; flex-grow: 1; transition:min-height 0.3s ease; " class="father-todoissue-textarea">
                                     <textarea data-todo-info-origin="description" name="description" id=""
                                     style="resize: vertical;  scrollbar-width: none ; font-size: var(--font-lgse);font-size: var(--font-lg); transform: translateY(-15px) translateX(5px); max-height: 550px; height: auto; overflow: visible; display: none"
@@ -2162,7 +2162,7 @@
                         <option label="Task ready" value="backlog" style="color:var(--background-100)"></option>
                         <option label="In progress" value="wip" tyle="color:var(--background-100)"></option>
                         <option label="Needs review" value="qa" tyle="color:var(--background-100)"></option>
-                        <option label="Done" value="done" tyle="color:var(--background-100)"></option>
+                        <option label="Done" value="completed" tyle="color:var(--background-100)"></option>
                     </select>
                     <p> 
                         <span class="todo-task-move todo-tags"
