@@ -9,7 +9,6 @@ import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from "uuid"
 
 
-
 export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IToDoIssue): ToDoIssue | undefined {
     const toDoTitles = toDoList.map((toDoIssue) => {
         return toDoIssue.title
@@ -1513,29 +1512,5 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
         renderToDoIssueList(project.todoList)
         
     }
-    
-
-
-
-
-
-
-
 }
-
-
-
-// Función para actualizar los datos de la tarea
-function updateTodoData(dataKey, newValue) {
-    // Encuentra la tarea en tu estructura de datos
-    const todoToUpdate = // ... (tu lógica para encontrar la tarea)
-
-        // Actualiza el valor de la propiedad correspondiente
-        todoToUpdate[dataKey] = newValue;
-
-    // Guarda la estructura de datos actualizada (local storage, base de datos, etc.)
-    // ... (tu lógica para guardar los datos)
-}
-
-// ... (tu código existente)
 
