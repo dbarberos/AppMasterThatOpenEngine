@@ -5,7 +5,7 @@ import { showModal, closeModal, toggleModal, changePageContent } from "./classes
 import "./classes/HTMLUtilities.ts";
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp"
-import { newToDoIssue } from "./classes/ToDoManager"
+import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList } from "./classes/ToDoManager"
 
 
 import { DragAndDrop } from '@formkit/drag-and-drop';
@@ -522,7 +522,6 @@ function handleTitleClick(event: Event) {
 }
 
 
-//
 
 function handleDeleteProjectButtonClick(e: Event) {
     e.preventDefault()
@@ -532,7 +531,9 @@ function handleDeleteProjectButtonClick(e: Event) {
     const deleteProjectBtn = (e.target as HTMLElement).closest("#delete-project-btn")
 
     if (deleteProjectBtn) {
-        // Check if the project's todoList is empty    
+        // ***Check if the project's todoList is empty***
+
+        //Get the projectID
         const projectIdToDelete = (deleteProjectBtn as HTMLElement)?.dataset.projectId
         console.log("projectId:", projectIdToDelete)
         if (projectIdToDelete) {
@@ -582,7 +583,7 @@ function handleDeleteProjectButtonClick(e: Event) {
                         document.body,
                         "warning",
                         "Confirm Project Deletion",
-                        `Are you sure you want to delete the project: "${projectToDelete.name}"? This action cannot be undone.`,
+                        `Are you sure you want to delete the project: "${projectToDelete.name}" This action cannot be undone.`,
                         ["Yes,go on", "Cancel"],
                     )
 
@@ -627,6 +628,78 @@ function handleDeleteProjectButtonClick(e: Event) {
         console.error("Delete project button was not found")
     }
 } 
+
+
+//Delete a ToDoISsue when click the trash delete botton in the todo-detail page
+// document.addEventListener("DOMContentLoaded", function () {
+//     const btnToDoIssueDelete = document.querySelector("#delete-todoissue-btn");
+//     if (btnToDoIssueDelete) {
+//         btnToDoIssueDelete.addEventListener("click", handleDeleteToDoIssueButtonClick);
+//     }
+// })
+const btnToDoIssueDelete = document.querySelector("#delete-todoIssue-btn")
+if (btnToDoIssueDelete) {
+    const svg = btnToDoIssueDelete.querySelector("svg")
+    if (svg) {
+        svg.addEventListener("click", handleDeleteToDoIssueButtonClick)
+    }
+}
+    
+
+function handleDeleteToDoIssueButtonClick(e: Event) {
+    e.preventDefault()
+    console.log("Buttondelete ToDoIssue clicked")
+
+    //Get the button element from the event
+    const deleteToDoIssueBtn = (e.target as HTMLElement).closest("#delete-todoIssue-btn")
+
+    if (deleteToDoIssueBtn) {
+        
+        //Get the projectID
+        const todoIssueIdToDelete = (deleteToDoIssueBtn as HTMLElement)?.dataset.toDoIssueId
+        console.log("todoIssueId:", todoIssueIdToDelete)
+        if (todoIssueIdToDelete) {
+            // Look for the project that contain this ToDoIssue Id and obtain de ToDoList for remove the ToDoIssue
+            const projectWithToDoIssueToDelete = getProjectByToDoIssueId(todoIssueIdToDelete);
+            console.log("project", projectWithToDoIssueToDelete)
+            if (projectWithToDoIssueToDelete) {
+                const popupDeleteToDoIssueConfirmation = new MessagePopUp(
+                    document.body,
+                    "warning",
+                    "Confirm Project Deletion",
+                    `Are you sure you want to delete the To-Do Issue: "${projectWithToDoIssueToDelete.todoList.find((todoIssue) =>todoIssue.id === todoIssueIdToDelete)?.title}" This action cannot be undone.`,
+                    ["Yes,go on", "Cancel"],
+                )
+
+                // Define button callbacks
+                const buttonCallbacks = {
+                    "Yes,go on": () => {
+                        // User confirmed, proceed with deleting the project and update todoList inside Project
+                        console.log("User confirmed the deletion. Proceed with deleting the ToDoIssue.")
+                        const newToDoList = deleteToDoIssue(projectWithToDoIssueToDelete.todoList, todoIssueIdToDelete)
+                        console.log("This is the new todoList:", newToDoList)
+                        projectWithToDoIssueToDelete.todoList = newToDoList ?? [];
+                        console.log("projectWithToDoIssueToDelete:", projectWithToDoIssueToDelete)
+
+                        // Update the UI (re-render todolist in the ProjectDetailPage)
+                        renderToDoIssueList(projectWithToDoIssueToDelete.todoList);
+                        
+                        // Close the Modal and the Todo-Detail page
+                        popupDeleteToDoIssueConfirmation.closeMessageModal();
+                        closeToDoIssueDetailPage()
+                        
+                    },
+                    "Cancel": () => {
+                        // User cancelled, do nothing or provide feedback
+                        console.log("User cancelled the deletion.");
+                        popupDeleteToDoIssueConfirmation.closeMessageModal();
+                    }
+                }
+                popupDeleteToDoIssueConfirmation.showNotificationMessage(buttonCallbacks)
+            }
+        }
+    }
+}
 
 
 //Main button of To-Do Board(aside) open the To-Do Board

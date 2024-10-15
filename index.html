@@ -2043,19 +2043,26 @@
             </div>
         </section>
 
-        <section class="half-page" id="todo-details" data-page style="display: ">
+        <section class="half-page" id="todo-details" data-page style="display: flex">
             <div class="sliding-panel-todoIssue open-panel ">
                 <div>
                     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
                         <div class="todo-detail-datafield"
                             style="margin-top:30px; min-height: 50px; flex-direction: row; justify-content: flex-start; padding-right: 15px;" data-todo-info-btn="title">
-                            <button class="todo-icon-edit svg-edit" id="delete-todoIssue"
-                                style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="title">
+                            <button class="todo-icon-edit svg-edit" 
+                                style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute" data-todo-info-btn="title">
                                 <svg  role="img" aria-label="edit" width="22" height="22">
                                     <use href="#edit"></use>
                                 </svg>
                             </button>
-                            <h2 data-todo-info="title">Title To-Do Issue</h2>
+                            <button class="todo-icon-edit svg-save" 
+                                style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute;"
+                                data-todo-info-btn="title">
+                                <svg role="img" aria-label="save" width="22" height="22">
+                                    <use href="#save"></use>
+                                </svg>
+                            </button>
+                            <h2 style="margin-left: 25px;" data-todo-info="title">Title To-Do Issue</h2>
                             
                             <input data-todo-info-origin="title" name="title" class="title-todo-card" type="text"
                             size="var(--font-3xl)" placeholder="Title" required minlength="5"
@@ -2109,17 +2116,24 @@
 
                     <div class="todo-detail-datafield">
                         <div style="display:flex; flex-direction: row; ;align-items: flex-start;justify-content: flex-start; margin-top: 25px; width: 100%;" data-todo-info-btn="description">
-                            <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
-                                style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center, box-shadow: transparent" data-todo-info-btn="description">
+                            <button class="todo-icon-edit  svg-edit" 
+                                style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; box-shadow: transparent; position: absolute" data-todo-info-btn="description">
                                 <svg role="img" aria-label="edit" width="22" height="22">
                                     <use href="#edit"></use>
                                 </svg>
                             </button>
-                            <fieldset class="todo-fieldset father-todoissue-textarea-fielset" style="width: 100%;" >
+                            <button class="todo-icon-edit  svg-save"
+                                style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; box-shadow: transparent; position: absolute;"
+                                data-todo-info-btn="description">
+                                <svg role="img" aria-label="save" width="22" height="22">
+                                    <use href="#save"></use>
+                                </svg>
+                            </button>
+                            <fieldset class="todo-fieldset father-todoissue-textarea-fielset" style="width: 100%; margin-left: 30px" >
                                 <legend style="transform: translatex(15px);"><h3  >Issue Description: </h3></legend>
                                 <div style="height: auto; display: flex; flex-direction: column; flex-grow: 1; transition:min-height 0.3s ease; " class="father-todoissue-textarea">
                                     <textarea data-todo-info-origin="description" name="description" id=""
-                                    style="resize: vertical;  scrollbar-width: none ; font-size: var(--font-lgse);font-size: var(--font-lg); transform: translateY(-15px) translateX(5px); max-height: 550px; height: auto; overflow: visible; display: none"
+                                    style="resize: vertical;  scrollbar-width: none ; font-size: var(--font-lgse);font-size: var(--font-lg); transform: translateY(-15px) translateX(13px); max-height: 550px; height: auto; overflow: visible; white-space: pre-wrap ;display: none"
                                     cols="59" rows="15" placeholder="Leave a comment"></textarea>
                                 </div>
 
@@ -2150,10 +2164,17 @@
 
                 <div class="todo-detail-datafield"
                     style=" display: flex; flex-direction: row; align-items: center; justify-content: flex-start" data-todo-info-btn="statusColumn">
-                    <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
-                        style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="statusColumn">
+                    <button class="todo-icon-edit  svg-edit" 
+                        style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute;" data-todo-info-btn="statusColumn">
                         <svg  role="img" aria-label="edit" width="22" height="22" >
                             <use href="#edit"></use>
+                        </svg>
+                    </button>
+                    <button class="todo-icon-edit  svg-save"
+                        style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute;"
+                        data-todo-info-btn="statusColumn">
+                        <svg role="img" aria-label="save" width="22" height="22">
+                            <use href="#save"></use>
                         </svg>
                     </button>
                     <select data-todo-info-origin="statusColumn" name="statusColumn" id="todo-stagecolumn-detail-select"
@@ -2166,7 +2187,7 @@
                     </select>
                     <p> 
                         <span class="todo-task-move todo-tags"
-                        style="textwrap: nowrap; margin-left:5px; color: var(--background) !important; ;font-size: var(--font-base)" data-todo-info="statusColumn">Column stage To-Do Issue
+                        style="textwrap: nowrap; margin-left:5px; color: var(--background) !important; font-size: var(--font-base); margin-left: 25px" data-todo-info="statusColumn">Column stage To-Do Issue
                         </span>
                     </p>
                 </div>
@@ -2178,10 +2199,17 @@
 
                 <div class="todo-detail-datafield" style="position: relative;">
                     <div style="display: flex; flex-direction: row; align-items: flex-start ;justify-content: flex-start" data-todo-info-btn="assignedUsers">
-                        <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
-                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="assignedUsers">
+                        <button class="todo-icon-edit  svg-edit" 
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute;" data-todo-info-btn="assignedUsers">
                             <svg  role="img" aria-label="edit" width="22" height="22">
                                 <use href="#edit"></use>
+                            </svg>
+                        </button>
+                        <button class="todo-icon-edit  svg-save"
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute;"
+                            data-todo-info-btn="assignedUsers">
+                            <svg role="img" aria-label="save" width="22" height="22">
+                                <use href="#save"></use>
                             </svg>
                         </button>
                         
@@ -2190,7 +2218,7 @@
                             style="height:20px; transform: translateY(-50px) translateX(200px); width: fit-content; min-width: 50%;  position :absolute; display: none">
                         
 
-                        <ul data-todo-info="assignedUsers" class="todo-tags-list todo-form-field-container" name="assignedUsers" id="todo-assignedUsers-detail-list" style="padding-left:20px; position:relative;">
+                        <ul data-todo-info="assignedUsers" class="todo-tags-list todo-form-field-container" name="assignedUsers" id="todo-assignedUsers-detail-list" style="padding-left:20px; position:relative; margin-left: 25px; list-style: none;">
                             <li class="todo-tags">WIP_1</li>
                             <li class="todo-tags">WIP_2</li>
                             <!-- ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')} -->
@@ -2205,10 +2233,17 @@
 
                 <div class="todo-detail-datafield">
                     <div style="display: flex;flex-direction: row; align-items: flex-start ;justify-content: flex-start" data-todo-info-btn="tags">
-                        <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
-                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="tags">
+                        <button class="todo-icon-edit  svg-edit" 
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute;" data-todo-info-btn="tags">
                             <svg  role="img" aria-label="edit" width="22" height="22">
                                 <use href="#edit"></use>
+                            </svg>
+                        </button>
+                        <button class="todo-icon-edit  svg-save"
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute"
+                            data-todo-info-btn="tags">
+                            <svg role="img" aria-label="save" width="22" height="22">
+                                <use href="#save"></use>
                             </svg>
                         </button>
                         
@@ -2217,7 +2252,7 @@
                             style="height:20px; transform: translateY(-50px) translateX(200px); min-width: 50%; width: fit-content; display: none ">
                         
                         
-                        <ul data-todo-info="tags" name="tags" class="todo-tags-list todo-form-field-container" id="todo-tags-list-details-page" style="padding-left: 20px; position: relative">
+                        <ul data-todo-info="tags" name="tags" class="todo-tags-list todo-form-field-container" id="todo-tags-list-details-page" style="padding-left: 20px; position: relative; margin-left: 25px; list-style: none">
 
                         </ul>
                     </div>
@@ -2231,16 +2266,23 @@
                 <div class="todo-detail-datafield">
                     <div class="todo-detail-datafield"
                         style=" display: flex; flex-direction: row; align-items: center; justify-content: flex-start" data-todo-info-btn="dueDate">
-                        <button class="todo-icon-edit  svg-edit" id="delete-todoIssue"
-                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center" data-todo-info-btn="dueDate">
+                        <button class="todo-icon-edit  svg-edit" 
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute" data-todo-info-btn="dueDate">
                             <svg  role="img" aria-label="edit" width="22" height="22">
                                 <use href="#edit"></use>
+                            </svg>
+                        </button>
+                        <button class="todo-icon-edit  svg-save"
+                            style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center; position: absolute"
+                            data-todo-info-btn="dueDate">
+                            <svg role="img" aria-label="save" width="22" height="22">
+                                <use href="#save"></use>
                             </svg>
                         </button>
                         <input data-todo-info-origin="dueDate" name="dueDate" type="date" id="todo-dueDate-details-input"
                             style="height: 20px; font-size: var(--font-lg); transform: translateY(-60px) translateX(250px); min-width: 50%; width: fit-content;display:none ;" min="2024-01-01">
 
-                        <p data-todo-info="dueDate">***-**-** To-Do Issue</p>
+                        <p style="margin-left:25px;" data-todo-info="dueDate">***-**-** To-Do Issue</p>
                     </div>
                 </div>
             </div>

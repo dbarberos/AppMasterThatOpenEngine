@@ -3,7 +3,7 @@ import { showModal, closeModal, toggleModal, closeModalProject , changePageConte
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
-import { renderToDoIsuueListInsideProject } from "./ToDoManager"
+import { renderToDoIssueListInsideProject } from "./ToDoManager"
 
 // let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
 // let cancelExportProjectBtnClickListener: EventListener | null = null  //GMAnaging the EVENTLISTENER
@@ -332,7 +332,7 @@ export class ProjectsManager {
             // *** Create and populate UI for ToDoIssues when a new project is created ***
             project.todoList.forEach((toDoIssue) => {
                 //Create the UI element
-                renderToDoIsuueListInsideProject(toDoIssue)
+                renderToDoIssueListInsideProject(toDoIssue)
                 
                 
                 
@@ -412,7 +412,7 @@ export class ProjectsManager {
         // Iterate through the todoList and append each UI element
         project.todoList.forEach(toDoIssue => {
             if (!toDoIssue.ui) {
-                renderToDoIsuueListInsideProject(toDoIssue)
+                renderToDoIssueListInsideProject(toDoIssue)
             }
 
             // Append the new div to the todoListContainer

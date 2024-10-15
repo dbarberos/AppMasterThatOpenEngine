@@ -67,39 +67,56 @@ if (dueDateElement && dueDateDetailsInputElement) {
 
 //Sanitization of the ToDo Textarea Issue with JavaScript
 export function sanitizeHtml(html) {
-// Allowed tags
-const allowedTags = ['p', 'br', 'strong', 'em', 'span'];
-// Allowed attributes
-const allowedAttributes = ['style'];
+    // Allowed tags
+    const allowedTags = ['p', 'br', 'strong', 'em', 'span']
+    // Allowed attributes
+    const allowedAttributes = ['style']
 
-// Create a new document fragment to hold the sanitized HTML
-const sanitizedFragment = document.createDocumentFragment();
+    // Create a new document fragment to hold the sanitized HTML
+    const sanitizedFragment = document.createDocumentFragment()
 
-// Parse the HTML string into a DOM
-const parser = new DOMParser();
-const doc = parser.parseFromString(html, 'text/html');
+    // Parse the HTML string into a DOM
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, 'text/html')
 
-// Iterate through the elements in the parsed DOM
-for (const element of doc.body.querySelectorAll('*')) {
-    // Check if the tag is allowed
-    if (allowedTags.includes(element.tagName.toLowerCase())) {
-        // Check if the attributes are allowed
-        for (const attribute of element.attributes) {
-            if (allowedAttributes.includes(attribute.name.toLowerCase())) {
-                // Create a new element and copy the allowed attributes
-                const newElement = document.createElement(element.tagName);
-                newElement.setAttribute(attribute.name, attribute.value);
-                sanitizedFragment.appendChild(newElement);
+    function sanitizeElement(element) {
+        if (!element) {
+            return document.createTextNode("")  
+        }
+
+        if (element.nodeType === Node.TEXT_NODE) {
+            return document.createTextNode(element.nodeValue)
+        } else if (element.nodeType === Node.ELEMENT_NODE) {
+            if (allowedTags.includes(element.tagName.toLowerCase())) {
+                const newElement = document.createElement(element.tagName)
+                for (const attribute of element.attributes) {
+                    if (allowedAttributes.includes(attribute.name.toLowerCase())) {
+                        newElement.setAttribute(attribute.name, attribute.value)
+                    }
+                }
+                for (const child of element.childNodes) {
+                    newElement.appendChild(sanitizeElement(child))
+                }            
+                return newElement;
+            } else {
+                return document.createTextNode(element.outerHTML)
             }
+        } else {
+            return document.createTextNode('')
         }
     }
+    for (const element of doc.body.childNodes) {
+        sanitizedFragment.appendChild(sanitizeElement(element))
     }
-// Create a new div element
-const sanitizedDiv = document.createElement('div');
 
-// Append the sanitized content to the div
-sanitizedDiv.appendChild(sanitizedFragment);
+    // Create a new div element
+    const sanitizedDiv = document.createElement('div')
 
-// Now you can access the innerHTML of the div
-return sanitizedDiv.innerHTML;
+    // Append the sanitized content to the div
+    sanitizedDiv.appendChild(sanitizedFragment)
+
+    // Now you can access the innerHTML of the div
+    // Before returning the sanitized HTML, replace <br> with newline characters
+    const sanitizedHtml = sanitizedDiv.innerHTML.replace(/<br>/g, '\n')
+    return sanitizedDiv.innerHTML;
 }
