@@ -70,7 +70,7 @@ export class ToDoIssue implements IToDoIssue {
             case "wip":
                 return "In Progress"
             case "qa":
-                return "Needs Review"
+                return "In Review"
             case "completed":
                 return "Done"
             default:

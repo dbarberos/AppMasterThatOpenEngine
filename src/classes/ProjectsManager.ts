@@ -81,8 +81,13 @@ export class ProjectsManager {
                             const newProject = new Project(data);
                             newProject.ui.addEventListener("click", () => {
                                 changePageContent("project-details", "flex")
+
+                                // Set the localStorage value for pageWIP to "project-details"
+                                localStorage.setItem("pageWIP", "project-details")
+
                                 this.setDetailsPage(newProject)
-                                console.log(" details pages set in a new window");
+                                console.log(" details pages set in a new window")
+                                localStorage.setItem("selectedProjectId", newProject.id)
                             })
                             // 4. Add the new project to the list and UI
                             this.list.push(newProject);
@@ -268,14 +273,14 @@ export class ProjectsManager {
                                 }
 
                                 // Validation: Check if the mame does not exist
-                                const existingProject = projectNames.find(newName => newName.toLowerCase() === data.name.toLowerCase ())
+                                const existingProject = projectNames.find(existingName => existingName.toLowerCase() === newName.toLowerCase ())
                                 
                                 if (existingProject) {
-                                    // Tag already exists, show error message
+                                    // Name already exists, show error message
                                     const existProjectName = new MessagePopUp(
                                         document.body,
                                         "error",
-                                        "Duplicate Tag",
+                                        "Duplicate Name",
                                         `A project named "${newName}" already exists. Please choose a different name.`,
                                         ["Got it"]
                                     );
@@ -292,9 +297,19 @@ export class ProjectsManager {
                                     }
                                 } else {
 
+                                    
 
                                     // Update the project name
                                     data.name = newName;
+
+                                    //Assign a new Id to the project
+                                    (data as any).id = uuidv4()
+
+                                    //Assign a new id to each todoIssue 
+                                    data.todoList.forEach((toDoIssue) => {
+                                        toDoIssue.id = uuidv4()
+                                    })
+
 
                                     // Create the new project and resolve the Promise
                                     const newProject = new Project(data);
@@ -302,8 +317,13 @@ export class ProjectsManager {
                                     // ATTACH THE EVENT LISTENER HERE
                                     newProject.ui.addEventListener("click", () => {
                                         changePageContent("project-details", "flex")
+
+                                        // Set the localStorage value for pageWIP to "project-details"
+                                        localStorage.setItem("pageWIP", "project-details")
+
                                         this.setDetailsPage(newProject);
                                         console.log("Details page set in a new window");
+                                        localStorage.setItem("selectedProjectId", newProject.id)
                                     });
 
                                     this.list.push(newProject)
@@ -343,7 +363,12 @@ export class ProjectsManager {
             project.ui.addEventListener("click", () => {
                 this.setDetailsPage(project)
                 changePageContent("project-details", "flex")
+
+                // Set the localStorage value for pageWIP to "project-details"
+                localStorage.setItem("pageWIP", "project-details")
+                
                 console.log("Details pages set in a new window");
+                localStorage.setItem("selectedProjectId", project.id)
             
             })
             console.log(project.todoList)
@@ -595,6 +620,7 @@ export class ProjectsManager {
                     changePageContent("project-details", "flex");
                     this.setDetailsPage(project);
                     console.log("Details page set in a new window");
+                    localStorage.setItem("selectedProjectId", project.id)
                 });
 
 
@@ -680,52 +706,7 @@ export class ProjectsManager {
         this.list = remain
     }
 
-    // async deleteProject(id: string) {
-    //     try {
-    //         const project = this.getProject(id);
-    //         if (!project) {
-    //             console.error("Project not found for deletion!");
-    //             return;
-    //         }
-
-    //         const response = await fetch(`/your-api-endpoint/${id}`, {
-    //             method: 'DELETE'
-    //         });
-
-    //         if (response.ok) {
-    //             // Successful deletion on the server
-    //             // 1. Remove from UI:
-    //             project.ui.remove();
-    //             // 2. Remove from client-side list:
-    //             this.list = this.list.filter((p) => p.id !== id);
-    //             console.log("Project deleted successfully!");
-    //         } else {
-    //             // Handle errors (e.g., 404)
-    //             console.error("Error deleting project:", response.status);
-    //             // Display an error message to the user
-    //         }
-    //     } catch (error) {
-    //         console.error("Error deleting project:", error);
-    //         // Handle network errors or other unexpected issues
-    //     }
-    // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+        
     exprtToJSON(fileName: string = "projects") {
         console.log("Inside exprtToJSON")
         const projects: IProject[] = this.list

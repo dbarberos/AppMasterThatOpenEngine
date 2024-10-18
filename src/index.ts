@@ -6,9 +6,11 @@ import "./classes/HTMLUtilities.ts";
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp"
 import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList } from "./classes/ToDoManager"
+import { setUpToDoBoard } from "./classes/DragAndDropManager";
 
 
 import { DragAndDrop } from '@formkit/drag-and-drop';
+
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 ProjectsManager.setContainer(projectListUI)
@@ -18,6 +20,10 @@ const projectManager = ProjectsManager.getInstance()
 //Set the initial view of the APP with the projects page, hidding the rest of sections
 document.addEventListener('DOMContentLoaded', () => {
     changePageContent('project-page', 'block'); 
+    // Set the localStorage value for pageWIP to "project-page"
+    localStorage.setItem("pageWIP", "project-page");
+
+
 });
 
 // Create a new project from de button
@@ -27,7 +33,7 @@ if (newProjectBtn) {
     newProjectBtn.addEventListener("click", () => {
         showModal("new-project-modal")
 
-         const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
+        const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
         if (projectForm) {
 
             // *** RESET THE FORM ***
@@ -376,6 +382,8 @@ const btnMainProjects = document.querySelector("#asideBtnProjects")
 btnMainProjects?.addEventListener("click", (e) => {
     e.preventDefault()
     changePageContent("project-page", "flex")
+    // Set the localStorage value for pageWIP to "project-page"
+    localStorage.setItem("pageWIP", "project-page");
 
 })
 
@@ -663,6 +671,8 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
             const projectWithToDoIssueToDelete = getProjectByToDoIssueId(todoIssueIdToDelete);
             console.log("project", projectWithToDoIssueToDelete)
             if (projectWithToDoIssueToDelete) {
+
+
                 const popupDeleteToDoIssueConfirmation = new MessagePopUp(
                     document.body,
                     "warning",
@@ -678,6 +688,7 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
                         console.log("User confirmed the deletion. Proceed with deleting the ToDoIssue.")
                         const newToDoList = deleteToDoIssue(projectWithToDoIssueToDelete.todoList, todoIssueIdToDelete)
                         console.log("This is the new todoList:", newToDoList)
+
                         projectWithToDoIssueToDelete.todoList = newToDoList ?? [];
                         console.log("projectWithToDoIssueToDelete:", projectWithToDoIssueToDelete)
 
@@ -707,101 +718,129 @@ const btnToDoIssueBoard = document.querySelector("#asideBtnToDoBoards")
 btnToDoIssueBoard?.addEventListener("click", (e) => {
     e.preventDefault()
     changePageContent("todo-page", "block")
+    // Set the localStorage value for pageWIP to "todo-page"
+    localStorage.setItem("pageWIP", "todo-page")
+
+    const storedProjectId = localStorage.getItem("selectedProjectId");
+    if (storedProjectId) {
+        setUpToDoBoard(storedProjectId)
+    } else {
+        setUpToDoBoard()    
+    }
 })
 
+// Create a new todo from 2 buttons (in Details page)
+const newToDoIssueBtn1 = document.querySelector("#new-todo-issue-btn");
+const newToDoIssueBtn2 = document.querySelector("#new-todo-issue-btn2");
 
-// Create a new todo from only 1 buttons (in Details page)
-const newToDoIssueBtn  = document.querySelector("#new-todo-issue-btn")
+// Manejar el evento para el primer botón
+if (newToDoIssueBtn1) {
+    newToDoIssueBtn1.addEventListener("click", () => {
+        createNewToDoIssue();
+    });
+}
 
-if (newToDoIssueBtn) {
-    newToDoIssueBtn.addEventListener("click", () => {
-        console.log("Button Clicked")
+// Manejar el evento para el segundo botón
+if (newToDoIssueBtn2) {
+    newToDoIssueBtn2.addEventListener("click", () => {
+        createNewToDoIssue();
+    });
+}
 
-        const checkProjectId = (newToDoIssueBtn as HTMLElement)?.dataset.projectId ?? ""
-        console.log(checkProjectId)
-        const toDoIssueForm = document.getElementById("new-todo-form") as HTMLFormElement
 
-        if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
 
-            // *** RESET THE FORM BEFORE OPEN IT***
-            // 1. Target specific input types
-            const inputsToReset = toDoIssueForm.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, select');
 
-            // 2. Loop through and reset each element
-            inputsToReset.forEach(element => {
-                (element as HTMLInputElement).value = ''; // Reset to empty string
 
-                // Additional handling for select elements:
-                if (element instanceof HTMLSelectElement) {
-                    element.selectedIndex = 0; // Reset to the first option
-                }
-            })
+// Función para crear un nuevo ToDoIssue
+function createNewToDoIssue() {
+    console.log("Button Clicked to create new To-Do Issue")
+    console.log("Button Clicked")
 
-            //3.Delete de tags stored in the form
-            const tagsListToReset = document.getElementById("todo-tags-list") as HTMLElement
-            while (tagsListToReset.children.length > 0) {
-                tagsListToReset.removeChild(tagsListToReset.children[0])
+    const checkProjectId = (newToDoIssueBtn1 as HTMLElement)?.dataset.projectId ?? ""
+    console.log(checkProjectId)
+    const toDoIssueForm = document.getElementById("new-todo-form") as HTMLFormElement
+
+    if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
+
+        // *** RESET THE FORM BEFORE OPEN IT***
+        // 1. Target specific input types
+        const inputsToReset = toDoIssueForm.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, select');
+
+        // 2. Loop through and reset each element
+        inputsToReset.forEach(element => {
+            (element as HTMLInputElement).value = ''; // Reset to empty string
+
+            // Additional handling for select elements:
+            if (element instanceof HTMLSelectElement) {
+                element.selectedIndex = 0; // Reset to the first option
             }
+        })
 
-            //4.Delete de assignedUsers stored in the form
-            const assignedUsersListToReset = document.querySelector("#todo-assignedUsers-list") as HTMLElement
-            while (assignedUsersListToReset.children.length > 0) {
-                assignedUsersListToReset.removeChild(assignedUsersListToReset.children[0])
-            }
-
-            // 5.Set Modal in case previously we updated a To-Do Issue
-            // Update Modal Title
-            const modalToDoIssueTitle = document.getElementById("modal-todoIssue-title");
-            if (modalToDoIssueTitle) {
-                modalToDoIssueTitle.textContent = "New To-Do Issue";
-            }
-            // Update Button Text
-            const submitButton = document.getElementById("accept-todo-btn");
-            if (submitButton) {
-                submitButton.textContent = "Accept";
-            }
-            const discardButton = document.getElementById("cancel-todo-btn");
-            if (discardButton) {
-                discardButton.textContent = "Cancel";
-            }
-
-            // Set the data-projectId attribute with the unique ID of the proyect in the button of submit new To-Do
-            const projectToDoDatasetAttributeId = document.getElementById("accept-todo-btn")
-            if (checkProjectId !== undefined && projectToDoDatasetAttributeId) {
-                projectToDoDatasetAttributeId.dataset.projectId = checkProjectId.toString()
-            }
-            //Completed the data fixed for this new ToDoIssu as create date or Origin Project (Origin User sould be amended later)
-            const todoProjectElement = document.querySelector('span[id="todo-project-name"]');
-            const createDateElement = document.querySelector('span[id="todo-creation-date"]');
-         
-
-            if (checkProjectId) {
-                const project = projectManager.getProject(checkProjectId)
-                if (project && todoProjectElement) {
-                    todoProjectElement.textContent = project?.name; // Mostrar nombre del proyecto
-                } else {
-                    console.error(`Project not found with ID ${checkProjectId} or todoProjectEleemnt is null`)
-                }
-
-                const currentDate = new Date()
-                if (createDateElement) {
-                    createDateElement.textContent = currentDate.toLocaleDateString("es-ES", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit"
-                    }).replace(/\//g, "-");
-                } else {
-                    console.error("createDataElement is null")
-                }
-
-            }
+        //3.Delete de tags stored in the form
+        const tagsListToReset = document.getElementById("todo-tags-list") as HTMLElement
+        while (tagsListToReset.children.length > 0) {
+            tagsListToReset.removeChild(tagsListToReset.children[0])
         }
 
-        showModal("new-todo-card-modal")
+        //4.Delete de assignedUsers stored in the form
+        const assignedUsersListToReset = document.querySelector("#todo-assignedUsers-list") as HTMLElement
+        while (assignedUsersListToReset.children.length > 0) {
+            assignedUsersListToReset.removeChild(assignedUsersListToReset.children[0])
+        }
+
+        // 5.Set Modal in case previously we updated a To-Do Issue
+        // Update Modal Title
+        const modalToDoIssueTitle = document.getElementById("modal-todoIssue-title");
+        if (modalToDoIssueTitle) {
+            modalToDoIssueTitle.textContent = "New To-Do Issue";
+        }
+        // Update Button Text
+        const submitButton = document.getElementById("accept-todo-btn");
+        if (submitButton) {
+            submitButton.textContent = "Accept";
+        }
+        const discardButton = document.getElementById("cancel-todo-btn");
+        if (discardButton) {
+            discardButton.textContent = "Cancel";
+        }
+
+        // Set the data-projectId attribute with the unique ID of the proyect in the button of submit new To-Do
+        const projectToDoDatasetAttributeId = document.getElementById("accept-todo-btn")
+        if (checkProjectId !== undefined && projectToDoDatasetAttributeId) {
+            projectToDoDatasetAttributeId.dataset.projectId = checkProjectId.toString()
+        }
+        //Completed the data fixed for this new ToDoIssu as create date or Origin Project (Origin User sould be amended later)
+        const todoProjectElement = document.querySelector('span[id="todo-project-name"]');
+        const createDateElement = document.querySelector('span[id="todo-creation-date"]');
+        
+
+        if (checkProjectId) {
+            const project = projectManager.getProject(checkProjectId)
+            if (project && todoProjectElement) {
+                todoProjectElement.textContent = project?.name; // Mostrar nombre del proyecto
+            } else {
+                console.error(`Project not found with ID ${checkProjectId} or todoProjectEleemnt is null`)
+            }
+
+            const currentDate = new Date()
+            if (createDateElement) {
+                createDateElement.textContent = currentDate.toLocaleDateString("es-ES", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit"
+                }).replace(/\//g, "-");
+            } else {
+                console.error("createDataElement is null")
+            }
+
+        }
+    }
+
+    showModal("new-todo-card-modal")
 
         
-    })
-}
+    }
+
 
 //Obtaining data from the form via giving an id to the form and using FormToDoData
 const toDoIssueForm = document.getElementById("new-todo-form")

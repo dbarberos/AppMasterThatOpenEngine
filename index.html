@@ -502,12 +502,12 @@
                                         <!-- Funcionalidad: Allow the user to select the column where the task will be located..
                                         Implementación: U "We will use another dropdown menu (select) that will be populated with the column options. -->
                                         <label><span class="material-icons-round">view_column</span>Stage</label>
-                                        <select data-form-todo-value="statusColumn" name="statusColumn" id="todo-stage-column" required>
+                                        <select data-form-todo-value="statusColumn" name="statusColumn" id="todo-stage-column">
                                             <option value=""  disabled selected hidden>Select a stage</option>
                                             <option label="Task ready" value="backlog"></option>
                                             <option label="In progress" value="wip"></option>
-                                            <option label="Needs review" value="qa"></option>
-                                            <option label="Done" value="done"></option>
+                                            <option label="In review" value="qa"></option>
+                                            <option label="Done" value="completed"></option>
                                             
                                             <!-- Aquí se cargarán las opciones de columna -->
                                         </select>
@@ -1823,13 +1823,28 @@
 
         </section>
 
-        <section class="page todo-page" id="todo-page" data-page style="display: ">
+        <section class="page todo-page" id="todo-page" data-page style="display: ; height:100vh">
             <header style="display: flex; align-items: center; align-content: space-between; flex-wrap: wrap; gap:20px; user-select: none;">
-                <h2 style=" display:flex; align-items: center; column-gap: 20px;">To-Do Board<span class="todo-task-move">
-                    <svg class="todo-task-move" role="img" aria-label="edit" width="32" height="40">
-                        <use href="#kanban"></use>
-                    </svg>
-                </span></h2>
+                <div style="display: flex;column-gap: 20px">
+
+                <h2 style=" display:flex; align-items: center; column-gap: 20px;">To-Do Board
+                    <span class="todo-task-move">
+                        <svg class="todo-task-move" role="img" aria-label="edit" width="32" height="40">
+                            <use href="#kanban"></use>
+                        </svg>
+                    </span>
+
+
+                </h2>
+                <div style="display:flex; align-items: center;column-gap: 10px; ">
+                    <p>Project: </p>
+                    
+                    <select id="projectSelectedToDoBoard" style="padding: 10px; border-radius: 5px; font-size: var(--font-lg); line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal;">
+                    </select>
+                </div>
+
+
+                </div>
                 <div style="display:flex; align-items: center; column-gap: 15px; ">
                     <!-- <div>
                         <button id="export-projects-JSON-btn"
@@ -1855,191 +1870,758 @@
                     </picture>
                 </div>
             </header>
-            <div id="todo-content">
-                
-                <div id="todo-column-backlog" class="todo-column" >
-                    <div class="todo-column-head">
-                        <h4>Task Ready</h4>
-
-                    </div>
-                    <div class="todo-column-list" style="background-color: #7057a1;">
-                        <div class="todo-item">
-                            <div class="todo-color-column"></div>
-                            <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
-                                <div class="todo-taks">
-                                    <div class="todo-tags-list">
-                                        <span class="todo-tags">leg</span>
-                                        <span class="todo-tags">head</span>
-                                        <span class="todo-tags">arm</span>
-                                        <span class="todo-tags">leg</span>
-                                        <span class="todo-tags">head</span>
-                                        <span class="todo-tags">arm</span>
+            <div id="todo-content" style="height: 90%">
+                <div id="details-page-todo-maincontainer" class="todo-column">
+                    <div id="details-page-todo-secondcontainer"  >
+                        <div class="todo-column-head">
+                            <h4>Task Ready</h4>
+                        </div>                        
+                        <div  id="todo-column-backlog" class="todo-column-list details-page-todo-list" style="padding: 25px; display: flex; flex-direction: column; row-gap: 15px; align-content: center; ">
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
                                     </div>
-                                    <button class="todo-task-move">
-                                        <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
-                                            <use href="#drag-indicator"></use>
-                                        </svg>
-                        
-                                    </button>
-                                </div>
-                                <div class="todo-title">
-                                    <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
-                                        longer it is up to you</h5>
-                                </div>
-                                <div class="todo-stats">
-                                    <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
-                                        <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
-                                            <use href="#flag"></use>
-                                        </svg>
-                                        ${this.dueDate}
-                                    </span>
-                                    <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
-                                        <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
-                                            <use href="#chat-bubble"></use>
-                                        </svg>
-                                        ${this.assignedUsers}
-                                    </span>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div> 
                         </div>
-                        <div class="todo-issue-card" style="display: ">
-                            <div class="card-header">
-                                <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
-                                <div>
-                                    <h5>To Do Issue</h5>
-                                    <p>The main description does not go here</p>
+                    </div>
+                </div>
+                <div id="details-page-todo-maincontainer" class="todo-column">
+                    <div id="details-page-todo-secondcontainer"  >
+                        <div class="todo-column-head">
+                            <h4>In Progress</h4>
+                        </div>                        
+                        <div  id="todo-column-wip" class="todo-column-list details-page-todo-list" style="padding: 25px; display: flex; flex-direction: column; row-gap: 15px; align-content: center;">
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-content">
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>Active</p>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>Engineer</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>$2.000.000</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>45%</p>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div id="todo-column-wip" class="todo-column" >
-                    <div class="todo-column-head">
-                        <h4>In Progress</h4>
-                    
-                    </div>
-                    <div class="todo-column-list" style="background-color: #caa97e;">
-                        <div class="todo-issue-card" style="display: ">
-                            <div class="card-header">
-                                <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
-                                <div>
-                                    <h5>To Do Issue</h5>
-                                    <p>The main description does not go here</p>
+                <div id="details-page-todo-maincontainer" class="todo-column">
+                    <div id="details-page-todo-secondcontainer"  >
+                        <div class="todo-column-head">
+                            <h4>In review</h4>
+                        </div>                        
+                        <div  id="todo-column-qa" class="todo-column-list details-page-todo-list" style="padding: 25px; display: flex; flex-direction: column; row-gap: 15px; align-content: center;">
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-content">
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>Active</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>Engineer</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>$2.000.000</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>45%</p>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div id="todo-column-qa" class="todo-column">
-                    <div class="todo-column-head">
-                        <h4>Needs review</h4>
-                    
-                    </div>
-                    <div class="todo-column-list" style="background-color: #da9595">
-                        <div class="todo-issue-card" style="display: ">
-                            <div class="card-header">
-                                <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
-                                <div>
-                                    <h5>To Do Issue</h5>
-                                    <p>The main description does not go here</p>
-                                </div>
-                            </div>
-                            <div class="card-content">
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>Active</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>Engineer</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>$2.000.000</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>45%</p>
-                                </div>
-                            </div>
-                        
                         </div>
                     </div>
                 </div>
-                
-                <div id="tood-column-done" class="todo-column">
-                    <div class="todo-column-head">
-                        <h4>Done</h4>
-                    
-                    </div>
-                    <div class="todo-column-list" style="background-color: #85b6a2;">
-                        <div class="todo-issue-card" style="display: ">
-                            <div class="card-header">
-                                <p style="background-color: #ca8134; padding: 10px; border-radius: 8px; aspect-ratio: 1; ">HC</p>
-                                <div>
-                                    <h5>To Do Issue</h5>
-                                    <p>The main description does not go here</p>
+                <div id="details-page-todo-maincontainer" class="todo-column">
+                    <div id="details-page-todo-secondcontainer"  >
+                        <div class="todo-column-head">
+                            <h4>Done</h4>
+                        </div>                        
+                        <div  id="todo-column-completed" class="todo-column-list details-page-todo-list" style="padding: 25px; display: flex; flex-direction: column; row-gap: 15px; align-content: center;">
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-content">
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>Active</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>Engineer</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>$2.000.000</p>
-                                </div>
-                                <div class="card-property">
-                                    <p style="color: var(--color-fontbase);">Status</p>
-                                    <p>45%</p>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
-                </div>            
+                </div>
+                <div id="details-page-todo-maincontainer" class="todo-column">
+                    <div id="details-page-todo-secondcontainer"  >
+                        <div class="todo-column-head">
+                            <h4>Not Assigned</h4>
+                        </div>                        
+                        <div  id="todo-column-notassigned" class="todo-column-list details-page-todo-list" style="padding: 25px; display: flex; flex-direction: column; row-gap: 15px; align-content: center;">
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-item">
+                                <div class="todo-color-column"></div>
+                                <div class="todo-card" style="display: flex; flex-direction: column; border: 5px solid inherit; ">
+                                    <div class="todo-taks">
+                                        <div class="todo-tags-list">
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                            <span class="todo-tags">leg</span>
+                                            <span class="todo-tags">head</span>
+                                            <span class="todo-tags">arm</span>
+                                        </div>
+                                        <button class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#drag-indicator"></use>
+                                            </svg>
+                            
+                                        </button>
+                                    </div>
+                                    <div class="todo-title">
+                                        <h5 style="overflow-wrap: break-word; margin-left: 15px">Make anything here as you want, even something
+                                            longer it is up to you</h5>
+                                    </div>
+                                    <div class="todo-stats">
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#flag"></use>
+                                            </svg>
+                                            ${this.dueDate}
+                                        </span>
+                                        <span style="text-wrap: nowrap; margin-left: 10px" class="todo-task-move">
+                                            <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
+                                                <use href="#chat-bubble"></use>
+                                            </svg>
+                                            ${this.assignedUsers}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            
             </div>
         </section>
 
@@ -2182,7 +2764,7 @@
                         <!-- <option value="" disabled selected hidden>Select a stage</option> -->
                         <option label="Task ready" value="backlog" style="color:var(--background-100)"></option>
                         <option label="In progress" value="wip" tyle="color:var(--background-100)"></option>
-                        <option label="Needs review" value="qa" tyle="color:var(--background-100)"></option>
+                        <option label="In review" value="qa" tyle="color:var(--background-100)"></option>
                         <option label="Done" value="completed" tyle="color:var(--background-100)"></option>
                     </select>
                     <p> 

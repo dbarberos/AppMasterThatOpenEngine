@@ -4,9 +4,9 @@ import { Project } from "./Project"
 import { ProjectsManager } from "./ProjectsManager";
 import { sanitizeHtml } from "./HTMLUtilities"
 
-import { DragAndDrop } from "@formkit/drag-and-drop";
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from "uuid"
+import { setUpToDoBoard } from "./DragAndDropManager";
 
 
 export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IToDoIssue): ToDoIssue | undefined {
@@ -284,6 +284,9 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                             // Update the issue name
                             data.title = newTitle;
 
+                            //Give a new Id to the New ToDoIssue
+                            data.id = uuidv4()
+
                             // Create the new project and resolve the Promise
                             const newToDoIssue = new ToDoIssue(data);
 
@@ -533,7 +536,7 @@ export function renderToDoIssueListInsideProject(toDoIssue: IToDoIssue) {
         setDetailsIssuePage(toDoIssue) //for the new windows (todo-detalis)where the data of the todo issue is shown. From that place is where you can edit the content of the todoIssue
         console.log("Details page set in a new window")
 
-    })
+    })    
 }
 
 
@@ -712,16 +715,13 @@ export function renderToDoIssueList(toDoList: IToDoIssue[]): void {
         // toDoIssueListUiElements.innerHTML = ""
         while (toDoIssueListUiElements.firstChild) {
             toDoIssueListUiElements.removeChild(toDoIssueListUiElements.firstChild);
-        }
-        console.log("What is left inside the list after removing:", toDoIssueListUiElements )
+            }
+        console.log("What is left inside the list after removing:", toDoIssueListUiElements)
 
         // Re-render the issue list with the updated data
         toDoList.forEach(todoIssue => {
             renderToDoIssueListInsideProject(todoIssue);
-            toDoIssueListUiElements.appendChild((todoIssue as any).ui);
-
-            // // Remove any existing click listeners (optional but recommended)
-            // projectUiElement.removeEventListener("click", this.handleProjectClick);
+            toDoIssueListUiElements.appendChild(todoIssue.ui);
 
             // Attach the click listener 
             todoIssue.ui.addEventListener("click", () => {
@@ -730,6 +730,8 @@ export function renderToDoIssueList(toDoList: IToDoIssue[]): void {
                 console.log("Details page set in a new window");
             });
         });
+    } else {
+        console.error("The father element of the Todo list was not found")
     }
 }
 
@@ -748,14 +750,17 @@ export function getToDoIssueByTitle(toDoList: ToDoIssue[], title: string) {
 }
 
 export function deleteToDoIssue(toDoList: IToDoIssue[], id: string) {
+
     const toDoIssue = getToDoIssue(toDoList, id)
-    if (!toDoIssue) { return }
+    if (!toDoIssue || !toDoIssue.ui) { return toDoList }
     toDoIssue.ui.remove()
+
+    // return toDoList.filter((toDoIssue) => toDoIssue.id !== id)
+
     const remain = toDoList.filter((toDoIssue) => {
         return toDoIssue.id !== id
     })
-    toDoList = remain
-    return toDoList
+    return remain    
 }
 
 export function getProjectByToDoIssueId(toDoIssueId: string): Project | undefined {
@@ -855,10 +860,11 @@ function handleTagsInput(tagsInputId, tagsListId) {
 
 //close de detail To-Do page when the cross button us clicked
 const btnCloseToDoIssueDetailsPage = document.querySelector("#close-todoIssue-details-btn")
+
 if (btnCloseToDoIssueDetailsPage) {
     btnCloseToDoIssueDetailsPage.addEventListener("click", (e) => {
         e.preventDefault()
-        console.log("Close button press")
+        console.log("Close button press")        
         closeToDoIssueDetailPage()
         
     })
@@ -885,9 +891,18 @@ export function closeToDoIssueDetailPage () {
         }
     }
 
-    //Reload the page instead of just close de detail page because to update de todoIssue changed data
-    // hidePageContent("todo-details")
-    changePageContent("project-details","flex")
+    // Recover the localStorage value for pageWIP  and manage wich page reload in the app
+    const pageWIP = localStorage.getItem("pageWIP")
+
+    if (pageWIP === "project-details") {
+
+        //Reload the page instead of just close de detail page because to update de todoIssue changed data
+        // hidePageContent("todo-details")
+        changePageContent("project-details", "flex")
+
+    } else if (pageWIP === "todo-page") {
+        changePageContent("todo-page", "flex")
+    }
 
     //Return the checkbox for managing the width of the sidebar to its original state before showing the todo-Details page
     const sidebarActiveCheckbox = document.getElementById("sidebar-active") as HTMLInputElement
@@ -906,7 +921,7 @@ export function closeToDoIssueDetailPage () {
 
 let isEditModeInToDoIssue = false
 let clickOutsideElementsEvent: ((e: MouseEvent) => void) | null = null
- 
+
 //Edit the continent of a container in the todo-details page when press de edit button
 
 //Add event "click" to the edit button of the todo-details page
@@ -958,7 +973,7 @@ function handleEditToDoIssueBtnClick(e) {
             console.log('Data key:', toDoIssueDataKey)
 
             //Get the element displaying the current toDo data inside the parent element
-            const elementToDoFieldToUpdate = parentToDoIssueElement.querySelector(`[data-todo-info="${toDoIssueDataKey}"]`)
+            let elementToDoFieldToUpdate = parentToDoIssueElement.querySelector(`[data-todo-info="${toDoIssueDataKey}"]`)
             console.log('Element to update:', elementToDoFieldToUpdate)
 
             // Get the element with the input field  where to introduce the updated data
@@ -1441,18 +1456,6 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
     console.log("Edit Btn:", editToDoFieldBtnToUpdate)
     editToDoFieldBtnToUpdate.style.display = "block"
 
-
-    // Modify the SVG icon
-    // const svgElement = parentElement.querySelector('svg')
-    // svgElement.setAttribute('aria-label', 'edit')
-    // svgElement.innerHTML = '<use href="#edit"></use>'
-
-    // Switch back to the edit listener
-    // editButtons.forEach(button => {
-        // button.addEventListener('click', handleEditToDoIssueBtnClick)
-        // button.removeEventListener('click', handleSaveToDoIssueBtnClick)
-    // })
-
     //*** Store the new value inside your data structure ***
 
     // Get the ToDoIssueId of the updated element. It is stored in the button element inside the parentElement
@@ -1482,6 +1485,12 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
                     break;
                 case "statusColumn":
                     todoIssueDataKeyToUpdate.statusColumn = newToDoIssueFieldValue;
+
+                    //Update as well the value of the backgroundColorColumn insise the todoIssue
+                    (todoIssueDataKeyToUpdate as any).backgroundColorColumn = ToDoIssue.calculateBackgroundColorColumn(newToDoIssueFieldValue);
+                    break;
+
+
                     break;
                 case "tags":
                     // Actualiza la lista de tags
@@ -1509,7 +1518,16 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
             
         }
         // Update the rendered list of Ui List inside the project detail page
-        renderToDoIssueList(project.todoList)
+        const pageWIP = localStorage.getItem("pageWIP")
+        if (pageWIP === "project-details") {
+
+            renderToDoIssueList(project.todoList)
+        } else if (pageWIP === "todo-page") {
+            renderToDoIssueList(project.todoList)
+            setUpToDoBoard(project.todoList)
+        }
+
+
         
     }
 }
