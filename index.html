@@ -15,7 +15,7 @@
             <img id="company-logo" src="./assets/company-logo.svg" alt="Construction company" title="company-logo">
             <ul id="navigation-bar">
                 <li id="asideBtnProjects" class="nav-button" ><span class="material-icons-round" >location_city</span>Projects Catalog</li>
-                <li id="asideBtnUsers" class="nav-button"><span class="material-icons-round" >people_alt</span>Index Users</li>
+                <li id="asideBtnProjectDetails" class="nav-button"><span class="material-icons-round" >home_work</span>Project Details</li>
                 <li id="asideBtnToDoBoards" class="nav-button">
                     <span class="material-icons-round" >view_kanban</span>
                     </span>To-Do Boards
@@ -625,7 +625,26 @@
 
 
         <section class="page" id="project-details" data-page style="display: ">
-            <header>
+            <header style="display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap:20px; column-gap: 100px; user-select: none;" >
+                <div style="display: flex;column-gap: 20px">
+                    <h2 style=" display:flex; align-items: center; column-gap: 20px;">Project Details
+                        <span class="todo-task-move">
+                            <svg class="todo-task-move" role="img" aria-label="edit" width="32" height="40">
+                                <use href="#kanban"></use>
+                            </svg>
+                        </span>
+                    </h2>
+                    <div style="display:flex; align-items: center;column-gap: 10px; ">
+                        <p>Swap project: </p>
+                        <select id="projectSelectedProjectDetailPage"
+                            style="padding: 10px; border-radius: 5px; font-size: var(--font-lg); line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal;">
+                        </select>
+                    </div>
+                </div>
+
+
+
+
                 <div>
                     <h2 data-project-info="name">Hospital Center</h2>
                     <!-- <p style="color: var(--color-grey)"> Community hospital location city</p> -->
@@ -1826,25 +1845,20 @@
         <section class="page todo-page" id="todo-page" data-page style="display: ; height:100vh">
             <header style="display: flex; align-items: center; align-content: space-between; flex-wrap: wrap; gap:20px; user-select: none;">
                 <div style="display: flex;column-gap: 20px">
-
-                <h2 style=" display:flex; align-items: center; column-gap: 20px;">To-Do Board
-                    <span class="todo-task-move">
-                        <svg class="todo-task-move" role="img" aria-label="edit" width="32" height="40">
-                            <use href="#kanban"></use>
-                        </svg>
-                    </span>
-
-
-                </h2>
-                <div style="display:flex; align-items: center;column-gap: 10px; ">
-                    <p>Project: </p>
-                    
-                    <select id="projectSelectedToDoBoard" style="padding: 10px; border-radius: 5px; font-size: var(--font-lg); line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal;">
-                    </select>
+                    <h2 style=" display:flex; align-items: center; column-gap: 20px;">To-Do Board
+                        <span class="todo-task-move">
+                            <svg class="todo-task-move" role="img" aria-label="edit" width="32" height="40">
+                                <use href="#kanban"></use>
+                            </svg>
+                        </span>
+                    </h2>
+                    <div style="display:flex; align-items: center;column-gap: 10px; ">
+                        <p>Project: </p>                        
+                        <select id="projectSelectedToDoBoard" style="padding: 10px; border-radius: 5px; font-size: var(--font-lg); line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal;">
+                        </select>
+                    </div>
                 </div>
 
-
-                </div>
                 <div style="display:flex; align-items: center; column-gap: 15px; ">
                     <!-- <div>
                         <button id="export-projects-JSON-btn"
@@ -2800,7 +2814,7 @@
                             style="height:20px; transform: translateY(-50px) translateX(200px); width: fit-content; min-width: 50%;  position :absolute; display: none">
                         
 
-                        <ul data-todo-info="assignedUsers" class="todo-tags-list todo-form-field-container" name="assignedUsers" id="todo-assignedUsers-detail-list" style="padding-left:20px; position:relative; margin-left: 25px; list-style: none;">
+                        <ul data-todo-info="assignedUsers" class="todo-tags-list todo-form-field-container" name="assignedUsers" id="todo-assignedUsers-list-detail-page" style="padding-left:20px; position:relative; margin-left: 25px; list-style: none;">
                             <li class="todo-tags">WIP_1</li>
                             <li class="todo-tags">WIP_2</li>
                             <!-- ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')} -->

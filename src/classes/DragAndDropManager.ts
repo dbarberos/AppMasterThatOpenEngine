@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (valueInsideSelectedProject) {
                 const selectProjectForToDoBoard = document.getElementById("projectSelectedToDoBoard") as HTMLSelectElement
                 selectProjectForToDoBoard.value = storedProjectId;
-                console.log("Project Recover:", storedProject);
+                console.log("Project Recover:", storedProjectId);
             }
         }
     }
@@ -72,25 +72,22 @@ const storedProject = projectsList.find((project) => project.id === selectedProj
     } else {
         console.log("Error in getting the select ToDo Board")
     }
+
+    
+
     //Clean the columns of previous ToDo Issues 
     const columnas = document.querySelectorAll(".todo-column-list");
     columnas.forEach((column) => {
         column.innerHTML = ""
-        })
+    })
+    
+
     //*** Get the list of todoIssue from the project an organize it ***
     // Get the stored project ID and project from local storage
     const storedProjectId = localStorage.getItem("selectedProjectId");
     if (storedProjectId) {        
         organizeToDoIssuesByStatusColumns(storedProjectId)
     }
-
-
-    //
-
-
-
-
-
 
     //Listen when the user change the Project inside the ToDo Board
 
@@ -100,7 +97,7 @@ const storedProject = projectsList.find((project) => project.id === selectedProj
         //Save the Id of the selected project in the local storage
         localStorage.setItem("selectedProjectId", changedProjectId)        
         
-        // Ahora puedes utilizar la variable selectedProjectId
+        // Ahora puedes utilizar la variable selectedProjectIdse actualiza usando la función setUpToDoBoard 
         console.log("selectedProjectId", changedProjectId)
 
         
@@ -157,6 +154,13 @@ const storedProject = projectsList.find((project) => project.id === selectedProj
             });
         } else {
             console.error("project not found for ID:", projectId )
+        }
+
+        // Set the data-projectId attribute with the unique ID of the proyect in the button of new To-Do
+        const projectToDoDatasetAttributeId = document.getElementById("new-todo-issue-btn2")
+        
+        if (projectToDoDatasetAttributeId) {
+            projectToDoDatasetAttributeId.dataset.projectId = projectId
         }
 
 

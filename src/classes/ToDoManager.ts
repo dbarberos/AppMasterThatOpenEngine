@@ -41,7 +41,7 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                     })
 
                     const toDoIssueIdWithTitle = toDoIssueIds.find((toDoIssue) => {
-                        return toDoIssue.title ===data.title
+                        return toDoIssue.title === data.title
                     })
 
                     if (toDoIssueIdWithTitle) {
@@ -243,7 +243,7 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                                 const popupTitleToDoIssueRepited = new MessagePopUp(
                                     document.body,
                                     "error",
-                                    `A issue with the name "${ newTitle }" already exist`,
+                                    `A issue with the name "${newTitle}" already exist`,
                                     "Please enter a diferent title.",
                                     ["Got it"],
                                 )
@@ -334,9 +334,17 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
 
         })
         // toDoIssue.ui.append(toDoIssue.ui)
-        setIssueInsideDetailsProjectPage(toDoIssue)
-        toDoList.push(toDoIssue)
-        return toDoIssue
+        const storedPageWIP = localStorage.getItem("pageWIP")
+        if (storedPageWIP === "todo-page") {
+            setIssueInsideToDoPage(toDoIssue)
+            toDoList.push(toDoIssue)
+            return toDoIssue
+
+        } else {
+            setIssueInsideDetailsProjectPage(toDoIssue)
+            toDoList.push(toDoIssue)
+            return toDoIssue
+        }
     }
 }
 
@@ -348,12 +356,50 @@ export function setIssueInsideDetailsProjectPage(toDoIssue: ToDoIssue) {
     projectListToDosUI.appendChild(toDoIssue.ui)
 }
 
+export function setIssueInsideToDoPage(toDoIssue: ToDoIssue) {
+    // Get the status column from the toDoIssue
+    const status = toDoIssue.statusColumn || "notassigned" // Default to "notassigned" if status is null or undefined
+
+    // Construct the column ID based on the status
+    const columnId = `todo-column-${status.toLowerCase()}`
+
+    // Get the target column element
+    const column = document.getElementById(columnId)
+
+    if (column) {
+        // Append the UI of the toDoIssue to the correct column
+        column.appendChild(toDoIssue.ui);
+    } else {
+        console.error(`Column with ID ${columnId} not found.`);
+    }
+
+
+
+}
 
 
 export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
     // Set the details page for the issue  
     const detailPage = document.getElementById("todo-details")
     if (!detailPage) { return }
+
+    //Delete the data from the "todo-tags-list-details-page" <ul> element to clean up for avoiding add extra tags to the next todo Detail
+    const deleteTagsListFromDetail = document.getElementById("todo-tags-list-details-page")
+    // Clear any existing content in the container 
+    if (deleteTagsListFromDetail) {
+        while (deleteTagsListFromDetail.firstChild) {
+            deleteTagsListFromDetail.removeChild(deleteTagsListFromDetail.firstChild);
+        }
+    }
+    //Delete the data from the "todo-assignedUsers-list-detail-page" <ul> element to clean up for avoiding add extra tags to the next todo Detail
+    const deleteAssignedUsersListFromDetail = document.getElementById("todo-assignedUsers-list-detail-page")
+    // Clear any existing content in the container 
+    if (deleteAssignedUsersListFromDetail) {
+        while (deleteAssignedUsersListFromDetail.firstChild) {
+            deleteAssignedUsersListFromDetail.removeChild(deleteAssignedUsersListFromDetail.firstChild);
+        }
+    }
+
 
     for (const key in toDoIssue) {
         const dataElement = detailPage.querySelectorAll(`[data-todo-info="${key}"]`)
@@ -1036,16 +1082,6 @@ function handleEditToDoIssueBtnClick(e) {
             }
             
 
-            // // Modify the SVG icon
-            // const svgElement = targetToDoIssueBtn.querySelector('svg')
-            // svgElement.setAttribute('aria-label', 'save')
-            // svgElement.innerHTML = '<use href="#save"></use>'
-
-            //Manage eventListeners
-            // editButtons.forEach(button => {
-            //     button.removeEventListener('click', handleEditToDoIssueBtnClick);
-            // })
-
 
     
             if (!elementToDoFieldToUpdate || !inputToDoFieldForUpdate) {
@@ -1158,14 +1194,17 @@ function handleEditToDoIssueBtnClick(e) {
                         case "In Progress":
                             statusValue = "wip"
                             break
-                        case "Needs Review":
+                        case "In Review":
                             statusValue = "qa"
                             break
                         case "Done":
                             statusValue = "completed"
                             break
+                        case "Not Assigned":
+                            statusValue = "notassigned"
+                            break
                         default:
-                            statusValue = "Not Assigned"
+                            statusValue = "notassigned"
                     }
                     inputToDoFieldForUpdate.value = statusValue
                     // elementToDoFieldToUpdate.textContent = ToDoIssue.getStatusColumnText(statusValue)
@@ -1310,6 +1349,9 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
                 newToDoIssueFieldValue = Array.from(inputField.selectedOptions).map(option => option.value)
             } else {
                 newToDoIssueFieldValue = inputField.value
+                if (!newToDoIssueFieldValue) {
+                    newToDoIssueFieldValue ="notassigned"
+                }
             }
         } else if (inputField instanceof HTMLFormElement) {
             newToDoIssueFieldValue = inputField.value.trim()

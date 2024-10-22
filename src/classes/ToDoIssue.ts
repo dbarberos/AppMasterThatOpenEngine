@@ -57,7 +57,7 @@ export class ToDoIssue implements IToDoIssue {
             case "qa":
                 return "#da9595";
             case "completed":
-                return "#85b6a2E";
+                return "#4fa5b1";
             default:
                 return "#ccc";
         }

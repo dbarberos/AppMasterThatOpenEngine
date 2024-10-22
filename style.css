@@ -1828,7 +1828,7 @@ progress::-moz-progress-bar {
 
 .todo-color-column {
     grid-area: color;
-    background-color: red;
+    
     border-radius: 10px 0px 0px 10px ;
 
 }

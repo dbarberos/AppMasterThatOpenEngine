@@ -713,6 +713,29 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
 }
 
 
+//Main button of Project Details(aside) open the Project Details
+const btnProjectDetailsAside = document.querySelector("#asideBtnProjectDetails")
+btnProjectDetailsAside?.addEventListener("click", (e) => {
+    e.preventDefault()
+    changePageContent("project-details", "flex")
+    // Set the localStorage value for pageWIP to "todo-page"
+    localStorage.setItem("pageWIP", "project-details")
+
+
+    const storedProjectId = localStorage.getItem("selectedProjectId");
+    const projectManager = ProjectsManager.getInstance()
+    const projectsList = projectManager.list
+    const selectedProject = projectsList.find(project => project.id === storedProjectId)
+
+
+    if (storedProjectId && selectedProject) {
+        ProjectsManager.setDetailsPage(selectedProject)
+    }
+
+})
+
+
+
 //Main button of To-Do Board(aside) open the To-Do Board
 const btnToDoIssueBoard = document.querySelector("#asideBtnToDoBoards")
 btnToDoIssueBoard?.addEventListener("click", (e) => {
@@ -733,30 +756,27 @@ btnToDoIssueBoard?.addEventListener("click", (e) => {
 const newToDoIssueBtn1 = document.querySelector("#new-todo-issue-btn");
 const newToDoIssueBtn2 = document.querySelector("#new-todo-issue-btn2");
 
-// Manejar el evento para el primer botón
+// Handle the event for the first button
 if (newToDoIssueBtn1) {
     newToDoIssueBtn1.addEventListener("click", () => {
-        createNewToDoIssue();
+        createNewToDoIssue(newToDoIssueBtn1);
     });
 }
 
-// Manejar el evento para el segundo botón
+// Handle the event for the second button
 if (newToDoIssueBtn2) {
     newToDoIssueBtn2.addEventListener("click", () => {
-        createNewToDoIssue();
+        createNewToDoIssue(newToDoIssueBtn2);
     });
 }
 
 
-
-
-
-// Función para crear un nuevo ToDoIssue
-function createNewToDoIssue() {
+// Function in charge of the creaation of a new ToDoIssue
+function createNewToDoIssue(btnNewToDoIssue) {
     console.log("Button Clicked to create new To-Do Issue")
     console.log("Button Clicked")
 
-    const checkProjectId = (newToDoIssueBtn1 as HTMLElement)?.dataset.projectId ?? ""
+    const checkProjectId = (btnNewToDoIssue as HTMLElement)?.dataset.projectId ?? ""
     console.log(checkProjectId)
     const toDoIssueForm = document.getElementById("new-todo-form") as HTMLFormElement
 
@@ -838,33 +858,35 @@ function createNewToDoIssue() {
 
     showModal("new-todo-card-modal")
 
-        
-    }
+}
+
 
 
 //Obtaining data from the form via giving an id to the form and using FormToDoData
-const toDoIssueForm = document.getElementById("new-todo-form")
+// const toDoIssueForm = document.getElementById("new-todo-form")
 const cancelToDoForm: Element | null = document.getElementById("cancel-todo-btn");
 const submitToDoFormButton = document.getElementById("accept-todo-btn")
-newToDoIssueBtn
+const toDoIssueForm = document.getElementById("new-todo-form") as HTMLFormElement
+
 
 if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
 
-    const checkProjectId = submitToDoFormButton?.dataset.projectId
+    // const checkProjectId = submitToDoFormButton?.dataset.projectId
 
     submitToDoFormButton?.addEventListener("click", (e) => {
         e.preventDefault()
-        console.log("submitToDoFormButton press") 
+        console.log("submitToDoFormButton press")
         const formToDoData = new FormData(toDoIssueForm)
         console.log(formToDoData)
-        const checkToDoId = (newToDoIssueBtn as HTMLButtonElement)?.dataset.toDoIssueDetails
-        const checkProjectId = (newToDoIssueBtn as HTMLButtonElement)?.dataset.projectId
-        console.log(checkToDoId)
+        const checkToDoId = (submitToDoFormButton as HTMLButtonElement)?.dataset.toDoIssueId
+        const checkProjectId = (submitToDoFormButton as HTMLButtonElement)?.dataset.projectId
+        // console.log(checkToDoId)
         console.log(checkProjectId)
-        
+    
         if (toDoIssueForm.checkValidity()) {
-
             //Form is valid, proceed with data processing
+
+            // If checkToDoId is empty is because the user is not updating data in the form, so we are going to create a new todoIssue.
             if (!checkToDoId) {
                 //When the form is for a new To-Do Issue not an update
 
@@ -933,10 +955,12 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
 
                         closeModal("new-todo-card-modal")
 
+                        // setUpToDoBoard(checkProjectId) //Testing updatin the todoList inside todo-apge
+
                         // Log the project details
                         const project = projectManager.getProject(checkProjectId);
                         console.log("Project details:", project);
-                    
+                
                     }
 
                 } catch (err) {
@@ -949,11 +973,17 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
                     }
                     if (err) {
                         const text = document.querySelector("#message-popup-text p")
-                        text.textContent = contentError.contentDescription
+                        if (text) {
+                            text.textContent = contentError.contentDescription
+                        }
                         const title = document.querySelector("#message-popup-text h5")
-                        title.textContent = contentError.contentTitle
+                        if (title) {
+                            title.textContent = contentError.contentTitle
+                        }
                         const icon = document.querySelector("#message-popup-icon span")
-                        icon.textContent = contentError.contentIcon
+                        if (icon) {
+                            icon.textContent = contentError.contentIcon
+                        }
                         errorPopUp?.classList.add(contentError.contentClass)
                         toggleModal("message-popup")
                     }
@@ -978,16 +1008,24 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
     if (cancelToDoForm) {
         cancelToDoForm.addEventListener("click", (e) => {
             e.preventDefault()
+            e.stopPropagation() // Prevent event from bubbling up
             toDoIssueForm.reset()
             // Delete the data-ToDoIssueId attribute with the unique ID of the ToDoIssue in the button of "Save Changes"
             const toDoIssueDatasetAttributeIdInForm = document.getElementById("accept-todo-btn")
             if (toDoIssueDatasetAttributeIdInForm) {
                 toDoIssueDatasetAttributeIdInForm.dataset.projectId = ""
             }
+            console.log("Cancel ToDoIssue button was clicked")
             toggleModal("new-todo-card-modal")
         })
+        // Remove any previous event listeners (if any)
+        // cancelToDoForm.removeEventListener("click", existingHandler);
+
+
+
     } else {
         console.log("The cancel Button was not found")
     }
 
 }
+

@@ -321,7 +321,7 @@ export class ProjectsManager {
                                         // Set the localStorage value for pageWIP to "project-details"
                                         localStorage.setItem("pageWIP", "project-details")
 
-                                        this.setDetailsPage(newProject);
+                                        ProjectsManager.setDetailsPage(newProject);
                                         console.log("Details page set in a new window");
                                         localStorage.setItem("selectedProjectId", newProject.id)
                                     });
@@ -354,19 +354,16 @@ export class ProjectsManager {
                 //Create the UI element
                 renderToDoIssueListInsideProject(toDoIssue)
                 
-                
-                
                 //Set the projectId in the dataset
                 toDoIssue.ui.dataset.projectId = project.id
             })
             
             project.ui.addEventListener("click", () => {
-                this.setDetailsPage(project)
+                ProjectsManager.setDetailsPage(project)
                 changePageContent("project-details", "flex")
 
                 // Set the localStorage value for pageWIP to "project-details"
-                localStorage.setItem("pageWIP", "project-details")
-                
+                localStorage.setItem("pageWIP", "project-details")                
                 console.log("Details pages set in a new window");
                 localStorage.setItem("selectedProjectId", project.id)
             
@@ -381,7 +378,7 @@ export class ProjectsManager {
 
     }
     
-    private setDetailsPage(project: Project) {
+    static setDetailsPage(project: Project) {
         const detailPage = document.getElementById("project-details")
         if (!detailPage) { return }
         
@@ -389,19 +386,19 @@ export class ProjectsManager {
             const dataElement = detailPage.querySelectorAll(`[data-project-info="${key}"]`)
             if (dataElement) {
                 if (key === "finishDate") {
-                    const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month:"long", day:"numeric"})
+                    const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
                     dataElement.forEach(element => {
                         element.textContent = formattedDate
-                    })                       
+                    })
                 } else if (key === "cost") {
                     const costElement = detailPage.querySelector(`[data-project-info="cost"]`)
                     if (costElement) {
                         costElement.textContent = `${project["cost"]}`
                     }
                 } else {
-                dataElement.forEach(element => {
-                    element.textContent = project[key]
-                })
+                    dataElement.forEach(element => {
+                        element.textContent = project[key]
+                    })
                 }
                 
             }
@@ -424,13 +421,13 @@ export class ProjectsManager {
             projectToDoDatasetAttributeId.dataset.projectId = project.id.toString()
         }
 
-        //Create de list of ToDo cards for that specifict project
+        //****Create de list of ToDo cards for that specifict project****
         //We have to manage new project and imported projects from Json. Tose last project don´t have ui HTML elements imported.
 
         //Get the target element
         const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
 
-         // Clear any existing content in the container 
+        // Clear any existing content in the container 
         while (projectListToDosUI.firstChild) {
             projectListToDosUI.removeChild(projectListToDosUI.firstChild);
         }
@@ -444,8 +441,71 @@ export class ProjectsManager {
             projectListToDosUI.appendChild((toDoIssue as any).ui);
             
         })
-    } 
 
+        //SetUp the selection intput of existing projects showing the stored inside the local storage selectedProjectId
+        console.log("setUpSelectionProject", project.id)
+        ProjectsManager.setUpSelectionProject("projectSelectedProjectDetailPage",project.id)
+    
+    
+    }
+
+
+
+
+    static setUpSelectionProject(idElementSelection?, projectIdSelected?) {
+        // Get the project list
+        const projectManager = ProjectsManager.getInstance()
+        const projectsList = projectManager.list
+        const selectionProjectForProjectDetailPage = document.getElementById(idElementSelection) as HTMLSelectElement
+
+        if (selectionProjectForProjectDetailPage) {
+            selectionProjectForProjectDetailPage.innerHTML = ""
+
+            // Add a default option to select a project
+            const option = document.createElement("option");
+            option.value = "";
+            option.text = "Select a project"
+            // option.disabled = true
+            option.style.color = "var(--color-fontbase-dark)"
+            selectionProjectForProjectDetailPage.appendChild(option);
+
+            // Populate the select element with project options
+            projectsList.forEach((project) => {
+                const option = document.createElement("option");
+                option.value = project.id;
+                option.text = project.name;
+                selectionProjectForProjectDetailPage.appendChild(option)
+
+                // Select the project corresponding to the stored project ID
+                
+                selectionProjectForProjectDetailPage.value = projectIdSelected              
+                
+            })
+
+        }
+
+        //Listen when the user change the Project inside the ToDo Board
+        selectionProjectForProjectDetailPage.addEventListener("change", () => {
+            const changedProjectId = selectionProjectForProjectDetailPage.value
+
+            //Save the Id of the selected project in the local storage
+            localStorage.setItem("selectedProjectId", changedProjectId)
+
+            // Ahora puedes utilizar la variable selectedProjectId, se actualiza usando la función setUpToDoBoard 
+            console.log("selectedProjectId", changedProjectId)
+
+            // Recover the project with this ID
+            const selectedProject = projectsList.find(project => project.id === changedProjectId);
+
+
+            const storedPageWIP = localStorage.getItem("pageWIP")
+
+            if (storedPageWIP === "project-details" && selectedProject) {
+                ProjectsManager.setDetailsPage(selectedProject)
+            }
+        })
+        
+    }
 
     updateProject (projectId: string, dataToUpdate: Project) {
         const projectIndex = this.list.findIndex(p => p.id === projectId)
@@ -460,7 +520,7 @@ export class ProjectsManager {
                 ...dataToUpdate // Update with new values
             }
 
-            this.setDetailsPage(this.list[projectIndex])
+            ProjectsManager.setDetailsPage(this.list[projectIndex])
             return this.list[projectIndex]
             // return true; // Indicate successful update
 
@@ -618,7 +678,7 @@ export class ProjectsManager {
                 // Attach the click listener 
                 projectUiElement.addEventListener("click", () => {
                     changePageContent("project-details", "flex");
-                    this.setDetailsPage(project);
+                    ProjectsManager.setDetailsPage(project);
                     console.log("Details page set in a new window");
                     localStorage.setItem("selectedProjectId", project.id)
                 });
