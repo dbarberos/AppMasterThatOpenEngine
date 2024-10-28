@@ -1,3 +1,4 @@
+import { updateAsideButtonsState } from "../index.ts"
 import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from "./Project"
 import { showModal, closeModal, toggleModal, closeModalProject , changePageContent} from "./UiManager"
 import { MessagePopUp } from "./MessagePopUp"
@@ -88,6 +89,7 @@ export class ProjectsManager {
                                 this.setDetailsPage(newProject)
                                 console.log(" details pages set in a new window")
                                 localStorage.setItem("selectedProjectId", newProject.id)
+                                updateAsideButtonsState()
                             })
                             // 4. Add the new project to the list and UI
                             this.list.push(newProject);
@@ -324,6 +326,7 @@ export class ProjectsManager {
                                         ProjectsManager.setDetailsPage(newProject);
                                         console.log("Details page set in a new window");
                                         localStorage.setItem("selectedProjectId", newProject.id)
+                                        updateAsideButtonsState()
                                     });
 
                                     this.list.push(newProject)
@@ -366,6 +369,7 @@ export class ProjectsManager {
                 localStorage.setItem("pageWIP", "project-details")                
                 console.log("Details pages set in a new window");
                 localStorage.setItem("selectedProjectId", project.id)
+                updateAsideButtonsState()
             
             })
             console.log(project.todoList)
@@ -490,6 +494,7 @@ export class ProjectsManager {
 
             //Save the Id of the selected project in the local storage
             localStorage.setItem("selectedProjectId", changedProjectId)
+            updateAsideButtonsState()
 
             // Ahora puedes utilizar la variable selectedProjectId, se actualiza usando la función setUpToDoBoard 
             console.log("selectedProjectId", changedProjectId)
@@ -681,6 +686,7 @@ export class ProjectsManager {
                     ProjectsManager.setDetailsPage(project);
                     console.log("Details page set in a new window");
                     localStorage.setItem("selectedProjectId", project.id)
+                    updateAsideButtonsState()
                 });
 
 

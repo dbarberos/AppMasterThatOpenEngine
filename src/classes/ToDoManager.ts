@@ -525,14 +525,16 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
 
 
 export function renderToDoIssueListInsideProject(toDoIssue: IToDoIssue) {
+    console.log('Rendering ToDo Issue:', toDoIssue);
         
     if (toDoIssue.ui && toDoIssue.ui instanceof HTMLElement) {
         return
     }
     toDoIssue.ui = document.createElement("div")
-    toDoIssue.ui.className = "todo-item"
+    toDoIssue.ui.className = "todo-item"    
     toDoIssue.ui.dataset.projectId = toDoIssue.todoProject
     toDoIssue.ui.dataset.todoId = toDoIssue.id
+    toDoIssue.ui.setAttribute("draggable", "true")
     const dueDate = new Date(toDoIssue.dueDate)
     const dueDateFormatted = dueDate.toLocaleDateString("es-ES", {
         year: "numeric",
@@ -548,7 +550,7 @@ export function renderToDoIssueListInsideProject(toDoIssue: IToDoIssue) {
                 <div class="todo-tags-list">
                     ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}
                 </div>
-                <button class="todo-task-move">
+                <button class="todo-task-move handler-move">
                     <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
                         <use href="#drag-indicator"></use>
                     </svg>
@@ -582,7 +584,9 @@ export function renderToDoIssueListInsideProject(toDoIssue: IToDoIssue) {
         setDetailsIssuePage(toDoIssue) //for the new windows (todo-detalis)where the data of the todo issue is shown. From that place is where you can edit the content of the todoIssue
         console.log("Details page set in a new window")
 
-    })    
+    }) 
+    
+
 }
 
 
@@ -615,6 +619,7 @@ export function updateToDoIssueUi(toDoIssueToUpdateTheUi: ToDoIssue): HTMLDivEle
         newUiElement.className = "todo-item"
         newUiElement.dataset.projectId = toDoIssueToUpdateTheUi.id
         newUiElement.dataset.todoId = toDoIssueToUpdateTheUi.id
+        newUiElement.setAttribute("draggable", "true")
         const dueDate = new Date(toDoIssueToUpdateTheUi.dueDate)
         const dueDateFormatted = dueDate.toLocaleDateString("es-ES", {
             year: "numeric",
@@ -630,7 +635,7 @@ export function updateToDoIssueUi(toDoIssueToUpdateTheUi: ToDoIssue): HTMLDivEle
                 <div class="todo-tags-list">
                     ${toDoIssueToUpdateTheUi.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}
                 </div>
-                <button class="todo-task-move">
+                <button class="todo-task-move handler-move">
                     <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
                         <use href="#drag-indicator"></use>
                     </svg>

@@ -1,15 +1,15 @@
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project";
 import { IToDoIssue, ToDoIssue } from "./classes/ToDoIssue"
 import { ProjectsManager } from "./classes/ProjectsManager";
-import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager";
+import { showModal, closeModal, toggleModal, changePageContent, PageChangeEvent, PageShowEvent, PageHideEvent } from "./classes/UiManager";
 import "./classes/HTMLUtilities.ts";
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp"
 import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList } from "./classes/ToDoManager"
-import { setUpToDoBoard } from "./classes/DragAndDropManager";
 
+import { setUpToDoBoard, } from "./classes/DragAndDropManager";
+import "./classes/DragAndDropManager.ts";
 
-import { DragAndDrop } from '@formkit/drag-and-drop';
 
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
@@ -734,23 +734,56 @@ btnProjectDetailsAside?.addEventListener("click", (e) => {
 
 })
 
+export function updateAsideButtonsState() {
+    const btnProjectDetails = document.querySelector("#asideBtnProjectDetails") as HTMLButtonElement;
+    const btnToDoBoards = document.querySelector("#asideBtnToDoBoards") as HTMLButtonElement;
+    const selectedProjectId = localStorage.getItem("selectedProjectId");
+
+    if (btnProjectDetails && btnToDoBoards) {
+        if (!selectedProjectId) {
+            // No hay proyecto seleccionado, deshabilitar botones
+            btnProjectDetails.disabled = true;
+            btnToDoBoards.disabled = true;
+            // Opcional: añadir clase CSS para mostrar visualmente que están deshabilitados
+            btnProjectDetails.classList.add('disabled-button');
+            btnToDoBoards.classList.add('disabled-button');
+        } else {
+            // Hay proyecto seleccionado, habilitar botones
+            btnProjectDetails.disabled = false;
+            btnToDoBoards.disabled = false;
+            // Opcional: remover clase CSS de deshabilitado
+            btnProjectDetails.classList.remove('disabled-button');
+            btnToDoBoards.classList.remove('disabled-button');
+        }
+    }
+}
+
+// Llamar a la función de actualización cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    updateAsideButtonsState();
+})
 
 
 //Main button of To-Do Board(aside) open the To-Do Board
 const btnToDoIssueBoard = document.querySelector("#asideBtnToDoBoards")
-btnToDoIssueBoard?.addEventListener("click", (e) => {
-    e.preventDefault()
-    changePageContent("todo-page", "block")
-    // Set the localStorage value for pageWIP to "todo-page"
-    localStorage.setItem("pageWIP", "todo-page")
+if (btnToDoIssueBoard) {
+    btnToDoIssueBoard?.addEventListener("click", async (e) => {
+        e.preventDefault()
+        const selectedProjectId = localStorage.getItem("selectedProjectId")
+        if (selectedProjectId) {
+            changePageContent("todo-page", "block");
+            // Set the localStorage value for pageWIP to "todo-page"
+            localStorage.setItem("pageWIP", "todo-page");
 
-    const storedProjectId = localStorage.getItem("selectedProjectId");
-    if (storedProjectId) {
-        setUpToDoBoard(storedProjectId)
-    } else {
-        setUpToDoBoard()    
-    }
-})
+            await setUpToDoBoard(selectedProjectId);
+        } else {
+            await setUpToDoBoard()
+        }
+    })
+}
+
+
+
 
 // Create a new todo from 2 buttons (in Details page)
 const newToDoIssueBtn1 = document.querySelector("#new-todo-issue-btn");

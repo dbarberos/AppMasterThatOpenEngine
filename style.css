@@ -549,6 +549,12 @@ button:active {
     outline: none;
 }
 
+.disabled-button {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .tab-button {
         text-align: center;
         background-color: var(--background-200);
@@ -2935,6 +2941,93 @@ button  .btn-popup{
     /* text-decoration: line-through; */
 }
 
+/* Drag and Drop funcionality */
 
+#todo-page .todo-item {
+    cursor: grab;
+    user-select:none;
+    position: relative;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.handler-move {
+    cursor: grab;
+}
 
+.handler-move:active {
+    cursor: grabbing;
+}
+
+.todo-dragging {
+    opacity: 0.5 !important;
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+    cursor: grabbing !important;
+}
+
+/* .todo-selected {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.todo-dropzone {
+    background-color: rgba(0, 0, 0, 0.03);
+    border: 2px dashed rgba(0, 0, 0, 0.1);
+}
+
+.todo-multi-dragging {
+    opacity: 0.75;
+    transform: scale(1.02);
+}
+
+.todo-touch-dragging {
+    opacity: 0.6;
+    transform: scale(1.05);
+}
+
+.todo-column-list.is-dragging-over {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+} */
+
+.is-dragging {
+    opacity: 0.5;
+}
+
+.gu-mirror {
+    position: fixed !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    opacity: .8;
+    pointer-events: none;
+        
+}
+
+.gu-hide {
+    display: none !important;
+}
+
+.gu-unselectable {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+.gu-transit {
+    opacity: .2;
+    transition: opacity 0.2s ease;    
+}
+/* Style for drop zones */
+.dropzone {
+    border: 2px dashed #ccc;
+    /* Dashed border for drop zones */
+    padding: 20px;
+    transition: background-color 0.3s ease;
+    /* Smooth transition */
+}
+
+/* Change background color when an item is dragged over the drop zone */
+.dropzone.over {
+    background-color: rgba(0, 255, 0, 0.2);
+    /* Light green background */
+}
 
