@@ -244,12 +244,7 @@ export function initializeDragAndDrop() {
             // Obtener una "foto" del estado actual del tablero
             const currentBoardState = getCurrentBoardState();
             console.log('Board state captured. Updating todo...');
-
-            // Remover cualquier duplicado existente antes de actualizar
-            setTimeout(() => {
-                removeDuplicateTodos(todoId);
-            }, 0);
-
+            
             // Actualizar el estado del todo movido y la UI
             updateToDoStatusAndUI(todoId, newColumnId);
             console.log('Todo updated. Restoring board state...');
@@ -258,8 +253,12 @@ export function initializeDragAndDrop() {
             restoreBoardState(currentBoardState, todoId);
             console.log('Board state restored.');
 
-            // Verificación final para asegurar que no haya duplicados
-            // verifyAndCorrectTodoPositions();
+            // Remover cualquier duplicado existente antes de actualizar
+            setTimeout(() => {
+                removeDuplicateTodos(todoId);
+            }, 0);
+
+            
 
         }
         console.log('After update - todos in board:', document.querySelectorAll('[data-todo-id]').length);
@@ -320,17 +319,40 @@ function restoreBoardState(state: Map<string, HTMLElement[]>, excludeTodoId: str
 }
 
 function removeDuplicateTodos(todoId: string) {
-    const todos = document.querySelectorAll(`[data-todo-id="${todoId}"]`);
+    const todos = Array.from(document.querySelectorAll(`[data-todo-id="${todoId}"]`));
     if (todos.length > 1) {
         console.log(`Found ${todos.length} instances of todo ${todoId}. Removing duplicates.`);
-        // Mantener solo el primer elemento y eliminar los demás
-        for (let i = 1; i < todos.length; i++) {
-            if (todos[i].parentNode) {
-                todos[i].parentNode.removeChild(todos[i]);
-                console.log(`Removed duplicate ${i} of todo ${todoId}`);
-            } else {
-                console.warn(`Cannot remove duplicate ${i} of todo ${todoId}: no parent node`);
-            }
+        // Encontrar el elemento más reciente (el que está en la nueva columna)
+        const updatedTodo = todos.find(todo => {
+            const parent = todo.parentElement;
+            if (!parent) return false;
+
+            // Verificar si el todo está en la columna correcta según su estado visual
+            const statusSpan = todo.querySelector('.todo-tags[style*="background-color"]') as HTMLElement;
+            if (!statusSpan) return false;
+
+            const currentColumn = parent.id;
+            const statusText = statusSpan.textContent?.toLowerCase() || '';
+            return currentColumn.includes(statusText) || statusText.includes(currentColumn.replace('todo-column-', ''));
+        });
+
+        if (updatedTodo) {
+            // Eliminar todos los elementos excepto el actualizado
+            todos.forEach(todo => {
+                if (todo !== updatedTodo && todo.parentNode) {
+                    todo.parentNode.removeChild(todo);
+                    console.log(`Removed outdated instance of todo ${todoId}`);
+                }
+            });
+        } else {
+            // Si no podemos identificar el elemento actualizado, mantener el último
+            const lastTodo = todos[todos.length - 1];
+            todos.forEach(todo => {
+                if (todo !== lastTodo && todo.parentNode) {
+                    todo.parentNode.removeChild(todo);
+                    console.log(`Removed duplicate instance of todo ${todoId}`);
+                }
+            });
         }
     } else {
         console.log(`No duplicates found for todo ${todoId}`);
@@ -415,15 +437,7 @@ function updateToDoStatusAndUI(todoId: string, newColumnId: string) {
         todo.statusColumn = newStatus;
         todo.backgroundColorColumn = ToDoIssue.calculateBackgroundColorColumn(newStatus);
 
-        // Actualizar el orden de los todos en la columna
-        // const columnTodos = Array.from(document.querySelectorAll(`[data-todo-id]`));
-        // const orderedTodos = columnTodos.map(el => el.getAttribute('data-todo-id'));
-
-        // Guardar el nuevo orden en el proyecto
-        // project.todoList = orderedTodos.map(id => project.todoList.find(t => t.id === id)).filter(Boolean);
-
-
-        // Actualizar el proyecto
+               // Actualizar el proyecto
         projectManager.updateProject(projectId, project);
 
         // Actualizar la UI del todo
