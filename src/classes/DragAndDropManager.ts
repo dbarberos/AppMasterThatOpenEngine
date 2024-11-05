@@ -5,7 +5,7 @@ import { showModal, closeModal, toggleModal, closeModalProject, changePageConten
 
 import dragula from 'dragula';
 
-import { renderToDoIssueListInsideProject, renderToDoIssueList, getProjectByToDoIssueId, setDetailsIssuePage } from "./ToDoManager";
+import { renderToDoIssueListInsideProject, renderToDoIssueList, getProjectByToDoIssueId, setDetailsIssuePage, deleteToDoIssue } from "./ToDoManager";
 import { ToDoIssue, IToDoIssue } from "./ToDoIssue"
 import { MessagePopUp } from "./MessagePopUp"
 
@@ -17,14 +17,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (storedProjectId) {
         const selectProjectForToDoBoard = document.getElementById("projectSelectedToDoBoard") as HTMLSelectElement;
-        if (selectProjectForToDoBoard) {
+        const selectProjectForUsersPage = document.getElementById("projectSelectedUsersPage") as HTMLSelectElement;
+        if (selectProjectForToDoBoard && selectProjectForUsersPage) {
             const projectManager = ProjectsManager.getInstance();
             const projectsList = projectManager.list;
             const valueInsideSelectedProject = projectsList.find((project) => project.id === storedProjectId)
             if (valueInsideSelectedProject) {
-                const selectProjectForToDoBoard = document.getElementById("projectSelectedToDoBoard") as HTMLSelectElement
+                // const selectProjectForToDoBoard = document.getElementById("projectSelectedToDoBoard") as HTMLSelectElement
+                // const selectProjectForUsersPage = document.getElementById("projectSelectedUsersPage") as HTMLSelectElement
                 selectProjectForToDoBoard.value = storedProjectId;
-                console.log("Project Recover:", storedProjectId);
+                selectProjectForUsersPage.value = storedProjectId
+                console.log("Project Recover:", storedProjectId)
+
             }
         }
     }
@@ -39,7 +43,7 @@ export function setUpToDoBoard(selectedProjectId?) {
 
     const selectProjectForToDoBoard = document.getElementById("projectSelectedToDoBoard") as HTMLSelectElement
 
-    setupProjectSelect(projectsList, selectedProjectId)
+    setupProjectSelect(projectsList, selectedProjectId, )
     
     
     //*** Get the list of todoIssue from the project an organize it ***
@@ -152,24 +156,27 @@ function organizeToDoIssuesByStatusColumns(projectId) {
     toDoIssues.forEach((toDoIssue) => {
         // Check if statusColumn is null, undefined, or empty
         const status = toDoIssue.statusColumn === null ? "notassigned" : toDoIssue.statusColumn;
-        const columnId = `todo-column-${status.toLowerCase()}`;
-        const column = document.getElementById(columnId)
+        if (status) {
+            const columnId = `todo-column-${status.toLowerCase()}`;
+            const column = document.getElementById(columnId)
 
-        // If the array for the status column doesn't exist, create it
-        if (!statusColumns[status]) {
-            statusColumns[status] = [];
-        }
-
-        if (column) {
-            // const existingTodo = column.querySelector(`[data-todo-id="${toDoIssue.id}"]`);
-            // if (!existingTodo) {
-            renderToDoIssueListInsideProject(toDoIssue);
-            if (toDoIssue.ui instanceof HTMLElement) {
-                column.appendChild(toDoIssue.ui);
+            // If the array for the status column doesn't exist, create it
+            if (!statusColumns[status]) {
+                statusColumns[status] = [];
             }
-            // } else {
-            //     updateSingleTodoUI(toDoIssue, columnId);
-            // }
+        
+
+            if (column) {
+                // const existingTodo = column.querySelector(`[data-todo-id="${toDoIssue.id}"]`);
+                // if (!existingTodo) {
+                renderToDoIssueListInsideProject(toDoIssue);
+                if (toDoIssue.ui instanceof HTMLElement) {
+                    column.appendChild(toDoIssue.ui);
+                }
+                // } else {
+                //     updateSingleTodoUI(toDoIssue, columnId);
+                // }
+            }
         }
     })
 
@@ -187,7 +194,7 @@ let dragulaInstance: dragula.Drake | null = null
 
 export function initializeDragAndDrop() {
     console.log("Initializing Drag and Drop");
-    // Si ya existe una instancia, destruirla
+    // If an instance already exists, destroy it
     if (dragulaInstance) {
         console.log("Destroying previous Dragula instance");
         dragulaInstance.destroy();
@@ -205,6 +212,10 @@ export function initializeDragAndDrop() {
         return el;
     }).filter((el): el is HTMLElement => el !== null);
 
+    const trashBtn = document.getElementById('trash-drop-btn');
+    if (trashBtn) {
+        columns.push(trashBtn);
+    }
     console.log("Columns found:", columns.length)
 
     dragulaInstance = dragula(columns, {
@@ -220,40 +231,54 @@ export function initializeDragAndDrop() {
 
             return moveHandler !== null;
         },
-        accepts: (el, target) => {
+        accepts: (el, target, source, sibling) => {
+            // Allow dropping on the trash button
+            if (target && target.id === 'trash-drop-btn') {
+                return true;
+            }
+            // Allow dropping on the trash button
             return true;
         },
         direction: 'vertical',
-        revertOnSpill: true
+        revertOnSpill: true,
+        // Add these options to improve the visual experience
+        mirrorContainer: document.body,
+        removeOnSpill: false
+
     });
 
     console.log("Dragula instance created:", dragulaInstance)
 
-    // Evento drop
+    // Event drop
     dragulaInstance.on('drop', (el, target, source) => {
         console.log('Drop event triggered');
         console.log('Before update - todos in board:', document.querySelectorAll('[data-todo-id]').length);
 
         if (!target) return;
 
+        if (target.id === "trash-drop-btn") {
+            handleTodoDelete(el) 
+            return
+        }
+
         const todoId = el.getAttribute('data-todo-id');
         const newColumnId = target.id;
 
         if (todoId && newColumnId) {   
             console.log('Getting current board state...');
-            // Obtener una "foto" del estado actual del tablero
+            // Get a "snapshot" of the current board state
             const currentBoardState = getCurrentBoardState();
             console.log('Board state captured. Updating todo...');
             
-            // Actualizar el estado del todo movido y la UI
+            // Update the state of the moved todo and the UI
             updateToDoStatusAndUI(todoId, newColumnId);
             console.log('Todo updated. Restoring board state...');
 
-            // Restaurar los otros todos
+            // Restore the other todos
             restoreBoardState(currentBoardState, todoId);
             console.log('Board state restored.');
 
-            // Remover cualquier duplicado existente antes de actualizar
+            // Remove any existing duplicates before updating
             setTimeout(() => {
                 removeDuplicateTodos(todoId);
             }, 0);
@@ -265,7 +290,7 @@ export function initializeDragAndDrop() {
         logBoardState();
     });
 
-    // Eventos para efectos visuales
+    // Events for visual effects
     dragulaInstance.on('drag', (el) => {
         el.classList.add('is-dragging');
     });
@@ -273,7 +298,69 @@ export function initializeDragAndDrop() {
     dragulaInstance.on('dragend', (el) => {
         el.classList.remove('is-dragging');
     });
+    dragulaInstance.on('over', (el, container, source) => {
+        if (container.id === 'trash-drop-btn') {
+            container.classList.add('drag-over');
+        }
+    });
+
+    dragulaInstance.on('out', (el, container, source) => {
+        if (container.id === 'trash-drop-btn') {
+            container.classList.remove('drag-over');
+        }
+    });   
+
+
+
+
 }
+
+function handleTodoDelete(el: Element) {
+    const todoId = el.getAttribute('data-todo-id');
+    if (todoId) {
+        // Create and show the MessagePopUp for confirmation
+        const popupDeleteToDoIssueConfirmation = new MessagePopUp(
+            document.body,
+            "warning",
+            "Confirm ToDo Deletion",
+            "Are you sure you want to delete this ToDo Issue? This action cannot be undone.",
+            ["Yes, delete", "Cancel"]
+        );
+
+        const buttonCallbacks = {
+            "Yes, delete": () => {
+                const projectId = localStorage.getItem("selectedProjectId");
+                if (projectId) {
+                    const projectManager = ProjectsManager.getInstance();
+                    const project = projectManager.getProject(projectId);
+                    if (project) {
+                        // Remove the todoIssue from the project
+                        project.todoList = deleteToDoIssue(project.todoList, todoId);
+
+                        // Update the project in the ProjectManager
+                        projectManager.updateProject(project.id, project);
+
+                        // Remove the visual element
+                        el.remove();
+
+                        // Update the board UI
+                        setUpToDoBoard(projectId);
+                    }
+                }
+                popupDeleteToDoIssueConfirmation.closeMessageModal();
+            },
+            "Cancel": () => {
+                console.log("User cancelled the deletion.");
+                // Return the element to its original column
+                setUpToDoBoard(localStorage.getItem("selectedProjectId") || "");
+                popupDeleteToDoIssueConfirmation.closeMessageModal();
+            }
+        };
+
+        popupDeleteToDoIssueConfirmation.showNotificationMessage(buttonCallbacks);
+    }
+}
+
 
 
 function getCurrentBoardState() {
@@ -301,10 +388,10 @@ function restoreBoardState(state: Map<string, HTMLElement[]>, excludeTodoId: str
                 if (todoId !== excludeTodoId) {
                     const existingTodo = column.querySelector(`[data-todo-id="${todoId}"]`);
                     if (!existingTodo) {
-                        // Encontrar el todo correspondiente en el proyecto
+                        // Find the corresponding todo in the project
                         const todoData = project.todoList.find(t => t.id === todoId);
                         if (todoData) {
-                            // Agregar event listeners antes de añadir el elemento
+                            // Add event listeners before adding the element
                             todo.addEventListener("click", () => {
                                 showPageContent("todo-details", "flex");
                                 setDetailsIssuePage(todoData);
@@ -322,22 +409,29 @@ function removeDuplicateTodos(todoId: string) {
     const todos = Array.from(document.querySelectorAll(`[data-todo-id="${todoId}"]`));
     if (todos.length > 1) {
         console.log(`Found ${todos.length} instances of todo ${todoId}. Removing duplicates.`);
-        // Encontrar el elemento más reciente (el que está en la nueva columna)
+        // Find the most recent element (the one in the new column
         const updatedTodo = todos.find(todo => {
             const parent = todo.parentElement;
             if (!parent) return false;
 
-            // Verificar si el todo está en la columna correcta según su estado visual
-            const statusSpan = todo.querySelector('.todo-tags[style*="background-color"]') as HTMLElement;
-            if (!statusSpan) return false;
-
+            // Verify if the todo is in the correct column according to its visual state
             const currentColumn = parent.id;
+            const statusSpan = todo.querySelector('.todo-tags[style*="background-color"]') as HTMLElement;
+
+            if (!statusSpan) return false;
+            
             const statusText = statusSpan.textContent?.toLowerCase() || '';
+            
+            // Special handling for "notassigned"
+            if (currentColumn === 'todo-column-notassigned' || statusText === 'not assigned') {
+                return true;
+            }
+
             return currentColumn.includes(statusText) || statusText.includes(currentColumn.replace('todo-column-', ''));
         });
 
         if (updatedTodo) {
-            // Eliminar todos los elementos excepto el actualizado
+            // Remove all elements except the updated one
             todos.forEach(todo => {
                 if (todo !== updatedTodo && todo.parentNode) {
                     todo.parentNode.removeChild(todo);
@@ -345,7 +439,7 @@ function removeDuplicateTodos(todoId: string) {
                 }
             });
         } else {
-            // Si no podemos identificar el elemento actualizado, mantener el último
+            // If we can't identify the updated element, keep the last one
             const lastTodo = todos[todos.length - 1];
             todos.forEach(todo => {
                 if (todo !== lastTodo && todo.parentNode) {
@@ -372,10 +466,14 @@ function updateToDoStatusAndUI(todoId: string, newColumnId: string) {
     if (!project) return;
 
     const todo = project.todoList.find(todo => todo.id === todoId);
-    if (!todo) return;
+    if (!todo) {
+        console.error(`Todo with id ${todoId} not found in project`)
+        return;
+    }
 
     try {
-        // Actualizar el estado del todo
+        // Update the todo's status
+        console.log(`Updating todo ${todoId}. Old status: ${todo.statusColumn}, New column: ${newColumnId}`)
         const newStatus = newColumnId.replace('todo-column-', '');
         if (!newStatus) {
             console.error('Invalid column ID format:', newColumnId);
@@ -383,22 +481,22 @@ function updateToDoStatusAndUI(todoId: string, newColumnId: string) {
         }
 
         todo.statusColumn = newStatus;
-        todo.backgroundColorColumn = ToDoIssue.calculateBackgroundColorColumn(newStatus);
+        (todo as any).backgroundColorColumn = ToDoIssue.calculateBackgroundColorColumn(newStatus);
 
-               // Actualizar el proyecto
+        // Update the project
         projectManager.updateProject(projectId, project);
 
-        // Actualizar la UI del todo
+        // Update the todo's UI
         const todoElement = document.querySelector(`[data-todo-id="${todoId}"]`) as HTMLElement;
         if (todoElement) {
             updateTodoVisuals(todoElement, todo);
 
-            // Mover el elemento a la nueva columna
+            // Move the element to the new column
             const newColumn = document.getElementById(newColumnId);
             if (newColumn) {
                 newColumn.appendChild(todoElement);
             }
-            // Volver a agregar los event listeners al elemento
+            // Re-add the event listeners to the element
             todoElement.addEventListener("click", () => {
                 showPageContent("todo-details", "flex");
                 setDetailsIssuePage(todo);
@@ -417,18 +515,18 @@ function updateToDoStatusAndUI(todoId: string, newColumnId: string) {
 function updateTodoVisuals(todoElement: HTMLElement, todo: IToDoIssue) {
     const colorColumn = todoElement.querySelector('.todo-color-column') as HTMLElement;
     if (colorColumn) {
-        colorColumn.style.backgroundColor = todo.backgroundColorColumn;
+        colorColumn.style.backgroundColor = (todo as any).backgroundColorColumn;
     }
 
     const todoCard = todoElement.querySelector('.todo-card') as HTMLElement;
     if (todoCard) {
-        todoCard.style.borderLeftColor = todo.backgroundColorColumn;
+        todoCard.style.borderLeftColor = (todo as any).backgroundColorColumn;
     }
 
     const statusSpan = todoElement.querySelector('.todo-tags[style*="background-color"]') as HTMLElement;
     if (statusSpan) {
-        statusSpan.style.backgroundColor = todo.backgroundColorColumn;
-        statusSpan.textContent = ToDoIssue.getStatusColumnText(todo.statusColumn);
+        statusSpan.style.backgroundColor = (todo as any).backgroundColorColumn;
+        statusSpan.textContent = ToDoIssue.getStatusColumnText((todo as any).statusColumn);
     }
 }
 

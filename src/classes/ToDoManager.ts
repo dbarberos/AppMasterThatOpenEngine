@@ -69,19 +69,28 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                                                                 
                                 newToDoIssue.ui.addEventListener("click", () => {
 
-                                    //EVENTO QUE SUCEDE CUANDO SE HACE CLICK SOBRE UNA DE LAS ETIQUETAS DE TODO
-                                    //LA IDEA ES QUE SALGA UNA TARGETA DE LA IZQUIERDA TAPANDO EL ASIDE Y EL PROYECTO SUSTITUYENDOLOS POR LOS DATOS. DEJANDO A LA VISTA EL VISUALIZADOR DE IFC 
+                                    //Event that happens when clicking on one of the TODO tags
+                                    //The idea is to have a card come out from the left covering the ASIDE and the project, replacing them with the data. Leaving the IFC viewer visible
 
                                     showPageContent("todo-details", "flex")
                                     setDetailsIssuePage(newToDoIssue)
                                     console.log(" details pages set in the new window");
                                 })
+                                toDoList.push(newToDoIssue)
 
-                                //  Update the ToDoOssue in the project´s toDoListnd UI
-                                //Get the target element
-                                const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
-                                projectListToDosUI.appendChild((newToDoIssue as any).ui);
+                                const storedPageWIP = localStorage.getItem("pageWIP")
+                                if (storedPageWIP === "todo-page") {
+                                    renderToDoIssueList(project.todoList); 
+                                    setUpToDoBoard(project.todoList);
+                                    
+                                } else if (storedPageWIP === "project-details") {
 
+                                    //  Update the ToDoOssue in the project´s toDoListnd UI
+                                    //Get the target element
+                                    const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
+                                    projectListToDosUI.appendChild((newToDoIssue as any).ui)
+
+                                }
                                 
                                 console.log("Added new project to the UI")
                                 console.dir("New toDoList:", toDoList)
@@ -294,8 +303,8 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                             
                             newToDoIssue.ui.addEventListener("click", () => {
 
-                                //EVENTO QUE SUCEDE CUANDO SE HACE CLICK SOBRE UNA DE LAS ETIQUETAS DE TODO
-                                //LA IDEA ES QUE SALGA UNA TARGETA DE LA IZQUIERDA TAPANDO EL ASIDE Y EL PROYECTO SUSTITUYENDOLOS POR LOS DATOS. DEJANDO A LA VISTA EL VISUALIZADOR DE IFC
+                                //Event that happens when clicking on one of the TODO tags
+                                //The idea is to have a card come out from the left covering the ASIDE and the project, replacing them with the data. Leaving the IFC viewer visible
 
                                 showPageContent("todo-details", "flex")
                                 setDetailsIssuePage(newToDoIssue)
@@ -303,10 +312,22 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
                             });
 
                             toDoList.push(newToDoIssue)
+
+                            const storedPageWIP = localStorage.getItem("pageWIP")
+                            if (storedPageWIP === "todo-page") {
+                                renderToDoIssueList(toDoList);
+                                setUpToDoBoard(toDoList);
+
+
+                                // setIssueInsideToDoPage(newToDoIssue)
+                                // toDoList.push(newToDoIssue)
+
+                            } else if (storedPageWIP === "project-details") {
                             
-                            //  Update the ToDoOssue in the project´s toDoListnd UI
-                            const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
-                            projectListToDosUI.appendChild((newToDoIssue as any).ui)
+                                //  Update the ToDoOssue in the project´s toDoListnd UI
+                                const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
+                                projectListToDosUI.appendChild((newToDoIssue as any).ui)
+                            }
 
                             resolve(newToDoIssue)
 
@@ -333,7 +354,7 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
             console.log("Details pags set in a new window");
 
         })
-        // toDoIssue.ui.append(toDoIssue.ui)
+        
         const storedPageWIP = localStorage.getItem("pageWIP")
         if (storedPageWIP === "todo-page") {
             setIssueInsideToDoPage(toDoIssue)
@@ -351,6 +372,8 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
 export function setIssueInsideDetailsProjectPage(toDoIssue: ToDoIssue) { 
     //Get the target element
     const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
+    // check the issue have the attibute "data-todo-id" assigned. 
+    toDoIssue.ui.dataset.todoId = toDoIssue.id
 
     // Append the new div to the todoListContainer
     projectListToDosUI.appendChild(toDoIssue.ui)
@@ -367,6 +390,9 @@ export function setIssueInsideToDoPage(toDoIssue: ToDoIssue) {
     const column = document.getElementById(columnId)
 
     if (column) {
+        // check the issue have the attibute "data-todo-id" assigned. 
+        toDoIssue.ui.dataset.todoId = toDoIssue.id
+        
         // Append the UI of the toDoIssue to the correct column
         column.appendChild(toDoIssue.ui);
     } else {
@@ -545,7 +571,7 @@ export function renderToDoIssueListInsideProject(toDoIssue: IToDoIssue) {
     toDoIssue.ui.innerHTML = `
         <div class="todo-color-column" style="background-color: ${(toDoIssue as any).backgroundColorColumn}"></div>
 
-        <div  class="todo-card" style="display: flex; flex-direction: column; border: 5px solid border-left-color: ${(toDoIssue as any).backgroundColorColumn}; ">
+        <div  class="todo-card" style="display: flex; flex-direction: column; border-left-color: ${(toDoIssue as any).backgroundColorColumn}; ">
             <div class="todo-taks" >
                 <div class="todo-tags-list">
                     ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}
@@ -630,7 +656,7 @@ export function updateToDoIssueUi(toDoIssueToUpdateTheUi: ToDoIssue): HTMLDivEle
         newUiElement.innerHTML = `
             <div class="todo-color-column" style="background-color: ${(toDoIssueToUpdateTheUi as any).backgroundColorColumn}"></div>
 
-        <div  class="todo-card" style="display: flex; flex-direction: column; border: 5px solid border-left-color: ${(toDoIssueToUpdateTheUi as any).backgroundColorColumn}; ">
+        <div  class="todo-card" style="display: flex; flex-direction: column; border-left-color: ${(toDoIssueToUpdateTheUi as any).backgroundColorColumn}; ">
             <div class="todo-taks" >
                 <div class="todo-tags-list">
                     ${toDoIssueToUpdateTheUi.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}
@@ -1114,9 +1140,7 @@ function handleEditToDoIssueBtnClick(e) {
 
                 //Focus the atention in the input element
                 inputToDoFieldForUpdate.focus()
-
                 
-               
                 //Set the data above in the input field for known what is the original data
 
                 if (inputToDoFieldForUpdate.tagName === "INPUT" && inputToDoFieldForUpdate.type === "date") {
@@ -1287,9 +1311,7 @@ function handleEditToDoIssueBtnClick(e) {
                         if (inputToDoFieldForUpdate.tagName === "INPUT" && inputToDoFieldForUpdate.type === "date") {
                             elementToDoFieldToUpdate = new Date(originalToDoDueDate)
                         }
-                        
                     }
-                   
                 }
                 document.addEventListener('click', clickOutsideElementsEvent);
 
@@ -1303,7 +1325,6 @@ function handleEditToDoIssueBtnClick(e) {
                         console.log("target save btn clicked:", saveToDoFieldBtnToUpdate)                        
                         handleSaveToDoIssueBtnClick(parentToDoIssueElement, inputToDoFieldForUpdate, toDoIssueDataKey, elementToDoFieldToUpdate)
                         isEditModeInToDoIssue = false
-                           
                     }, { once: true })
             }
         }
@@ -1444,27 +1465,14 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
         //And in Textarea show the father of the elementToDoIssueToUpdate
         originalElement.parentElement.style.display = "block"
 
-        //Get the element displaying the current toDo data inside the parent element
-        // parentElement.style.Height = "0px"
-
         // Replace the original element's value with the new one
         const newToDoIssueFieldValue = sanitizeHtml(inputField.value.trim())
         const newToDoIssueFieldValueWithBr = newToDoIssueFieldValue.replace(/\n/g, '<br>');
         originalElement.innerHTML = newToDoIssueFieldValueWithBr
 
-
-
-
-
-        ///this was the old versión
-        // originalElement.textContent = newToDoIssueFieldValue;
-        // console.log('Updated element:', originalElement)
-
     } else if (inputField.tagName === 'SELECT') {
         console.log("Esto es lo tomado del select", newToDoIssueFieldValue)
 
-        // const selectedOption = inputField.option[inputField.selectedIndex]
-        // const newSelectedToDoIssueFieldValue = selectedOption.value
         originalElement.textContent = ToDoIssue.getStatusColumnText(newToDoIssueFieldValue.trim())
         originalElement.style.backgroundColor = ToDoIssue.calculateBackgroundColorColumn(newToDoIssueFieldValue.trim())
 

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 export interface IToDoIssue {
     title: string
     description: string
-    statusColumn: string
+    statusColumn?: string
     tags: string[]
     assignedUsers: string[]
     dueDate: Date
@@ -35,6 +35,9 @@ export class ToDoIssue implements IToDoIssue {
                 this[key] = new Date(data.dueDate)
             } else if (key === "createdDate") {
                 this[key] = new Date(data.createdDate)
+            } else if (key === "statusColumn") {
+                this[key] = data.statusColumn || "notassigned"
+
             } else {
                 this[key] = data[key]
             }
@@ -51,15 +54,15 @@ export class ToDoIssue implements IToDoIssue {
     static calculateBackgroundColorColumn(statusColumn: string): string {
         switch (statusColumn) {
             case "backlog":
-                return "#7057a1";
+                return "var(--color-backlog)";
             case "wip":
-                return "#caa97e";
+                return "var(--color-wip)";
             case "qa":
-                return "#da9595";
+                return "var(--color-qa)";
             case "completed":
-                return "#4fa5b1";
+                return "var(--color-completed)";
             default:
-                return "#ccc";
+                return "var(--color-notassigned)";
         }
     }
 
@@ -94,7 +97,7 @@ export class ToDoIssue implements IToDoIssue {
         this.ui.innerHTML = `
             <div class="todo-color-column" style="background-color: ${this.backgroundColorColumn}"></div>
 
-            <div  class="todo-card" style="display: flex; flex-direction: column; border: 5px solid; border-left-color: ${this.backgroundColorColumn}; ">
+            <div  class="todo-card" style="display: flex; flex-direction: column; border-left-color: ${this.backgroundColorColumn}; ">
                 <div class="todo-taks" >
                     <div class="todo-tags-list">
                         ${this.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}

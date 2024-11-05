@@ -6,9 +6,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
 import { renderToDoIssueListInsideProject } from "./ToDoManager"
 
-// let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
-// let cancelExportProjectBtnClickListener: EventListener | null = null  //GMAnaging the EVENTLISTENER
-
 export class ProjectsManager {
     list: Project[] = []
     ui: HTMLElement
@@ -86,7 +83,7 @@ export class ProjectsManager {
                                 // Set the localStorage value for pageWIP to "project-details"
                                 localStorage.setItem("pageWIP", "project-details")
 
-                                this.setDetailsPage(newProject)
+                                ProjectsManager.setDetailsPage(newProject)
                                 console.log(" details pages set in a new window")
                                 localStorage.setItem("selectedProjectId", newProject.id)
                                 updateAsideButtonsState()
@@ -545,11 +542,11 @@ export class ProjectsManager {
             newUiElement.className = "project-card"
             newUiElement.dataset.projectId = projectToUpdateTheUi.id
             newUiElement.innerHTML = `
-                <div class="card-header">
+                <div class="card-header" style="overflow:auto;" >
                     <p style="background-color: ${projectToUpdateTheUi.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${projectToUpdateTheUi.acronym}</p>
-                    <div>
+                    <div style="width: 95%; word-break: break-all; overflow: auto;display:flex; flex-direction: column; align-items:flex-start; scrollbar-width:none; height: 100%;">
                         <h5>${projectToUpdateTheUi.name}</h5>
-                        <p>${projectToUpdateTheUi.description}</p>
+                        <p style="color: var(--color-fontbase-dark)">${projectToUpdateTheUi.description}</p>
                     </div>
                 </div>
                 <div class="card-content">

@@ -9,6 +9,7 @@ import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueD
 
 import { setUpToDoBoard, } from "./classes/DragAndDropManager";
 import "./classes/DragAndDropManager.ts";
+import { setUpUserPage } from "./classes/UsersManager.ts";
 
 
 
@@ -384,6 +385,7 @@ btnMainProjects?.addEventListener("click", (e) => {
     changePageContent("project-page", "flex")
     // Set the localStorage value for pageWIP to "project-page"
     localStorage.setItem("pageWIP", "project-page");
+    updateAsideButtonsState()
 
 })
 
@@ -639,12 +641,6 @@ function handleDeleteProjectButtonClick(e: Event) {
 
 
 //Delete a ToDoISsue when click the trash delete botton in the todo-detail page
-// document.addEventListener("DOMContentLoaded", function () {
-//     const btnToDoIssueDelete = document.querySelector("#delete-todoissue-btn");
-//     if (btnToDoIssueDelete) {
-//         btnToDoIssueDelete.addEventListener("click", handleDeleteToDoIssueButtonClick);
-//     }
-// })
 const btnToDoIssueDelete = document.querySelector("#delete-todoIssue-btn")
 if (btnToDoIssueDelete) {
     const svg = btnToDoIssueDelete.querySelector("svg")
@@ -656,7 +652,7 @@ if (btnToDoIssueDelete) {
 
 function handleDeleteToDoIssueButtonClick(e: Event) {
     e.preventDefault()
-    console.log("Buttondelete ToDoIssue clicked")
+    console.log("Button delete ToDoIssue clicked")
 
     //Get the button element from the event
     const deleteToDoIssueBtn = (e.target as HTMLElement).closest("#delete-todoIssue-btn")
@@ -692,9 +688,17 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
                         projectWithToDoIssueToDelete.todoList = newToDoList ?? [];
                         console.log("projectWithToDoIssueToDelete:", projectWithToDoIssueToDelete)
 
-                        // Update the UI (re-render todolist in the ProjectDetailPage)
-                        renderToDoIssueList(projectWithToDoIssueToDelete.todoList);
                         
+                        
+                        // Update the ToDo board if we're on that page or the Page-details
+                        const currentPage = localStorage.getItem("pageWIP");
+                        if (currentPage === "todo-page") {
+                            setUpToDoBoard(projectWithToDoIssueToDelete.id);
+                        } else if (currentPage === "project-details") {
+                            // Update the UI (re-render todolist in the ProjectDetailPage)
+                            renderToDoIssueList(projectWithToDoIssueToDelete.todoList);
+                        }
+
                         // Close the Modal and the Todo-Detail page
                         popupDeleteToDoIssueConfirmation.closeMessageModal();
                         closeToDoIssueDetailPage()
@@ -720,6 +724,7 @@ btnProjectDetailsAside?.addEventListener("click", (e) => {
     changePageContent("project-details", "flex")
     // Set the localStorage value for pageWIP to "todo-page"
     localStorage.setItem("pageWIP", "project-details")
+    updateAsideButtonsState()
 
 
     const storedProjectId = localStorage.getItem("selectedProjectId");
@@ -735,30 +740,74 @@ btnProjectDetailsAside?.addEventListener("click", (e) => {
 })
 
 export function updateAsideButtonsState() {
+    const btnProjectPage = document.querySelector("#asideBtnProjects") as HTMLButtonElement;
     const btnProjectDetails = document.querySelector("#asideBtnProjectDetails") as HTMLButtonElement;
     const btnToDoBoards = document.querySelector("#asideBtnToDoBoards") as HTMLButtonElement;
-    const selectedProjectId = localStorage.getItem("selectedProjectId");
+    const btnUsersBoards = document.querySelector("#asideBtnUsers") as HTMLButtonElement;
+    const projectSelectedUsersPage = document.querySelector("#projectSelectedUsersPage") as HTMLSelectElement;
 
-    if (btnProjectDetails && btnToDoBoards) {
+    const selectedProjectId = localStorage.getItem("selectedProjectId");
+    const currentPage = localStorage.getItem("pageWIP");
+
+    // Obtain the list of projects using ProjectManager singleton pattern
+    const projectManager = ProjectsManager.getInstance();
+    const projects = projectManager.list;
+
+    if (btnProjectPage && btnProjectDetails && btnToDoBoards && btnUsersBoards) {
+        
+        // First, enable all buttons.
+        btnProjectPage.disabled = false;
+        btnProjectDetails.disabled = false;
+        btnToDoBoards.disabled = false;
+        btnUsersBoards.disabled = false;
+        // Remove the disabled classes
+        btnProjectPage.classList.remove('disabled-button');
+        btnProjectDetails.classList.remove('disabled-button');
+        btnToDoBoards.classList.remove('disabled-button');
+        btnUsersBoards.classList.remove('disabled-button');
+        // Disable buttons according to the current page
+        switch (currentPage) {
+            case "project-page":
+                btnProjectPage.disabled = true;
+                btnProjectPage.classList.add('disabled-button');
+                break;
+            case "project-details":
+                btnProjectDetails.disabled = true;
+                btnProjectDetails.classList.add('disabled-button');
+                break;
+            case "todo-page":
+                btnToDoBoards.disabled = true;
+                btnToDoBoards.classList.add('disabled-button');
+                break;
+            case "users-page":
+                btnUsersBoards.disabled = true;
+                btnUsersBoards.classList.add('disabled-button');
+                break;
+        }
         if (!selectedProjectId) {
-            // No hay proyecto seleccionado, deshabilitar botones
+            // No project selected, disable buttons
             btnProjectDetails.disabled = true;
             btnToDoBoards.disabled = true;
-            // Opcional: añadir clase CSS para mostrar visualmente que están deshabilitados
+            //Add CSS class to visually show they are disabled
             btnProjectDetails.classList.add('disabled-button');
             btnToDoBoards.classList.add('disabled-button');
-        } else {
-            // Hay proyecto seleccionado, habilitar botones
-            btnProjectDetails.disabled = false;
-            btnToDoBoards.disabled = false;
-            // Opcional: remover clase CSS de deshabilitado
-            btnProjectDetails.classList.remove('disabled-button');
-            btnToDoBoards.classList.remove('disabled-button');
         }
     }
-}
+    // Manage the selection state of the projectSelectedUsersPage
+    if (projectSelectedUsersPage) {
+        const shouldBeDisabled = !selectedProjectId && projects.length === 1 && projects[0].id === "default-project";
 
-// Llamar a la función de actualización cuando se carga la página
+        if (shouldBeDisabled) {
+            projectSelectedUsersPage.disabled = true;
+            projectSelectedUsersPage.classList.add('disabled-select');
+        } else {
+            projectSelectedUsersPage.disabled = false;
+            projectSelectedUsersPage.classList.remove('disabled-select');
+        }
+
+    }
+}
+// Call the update function when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     updateAsideButtonsState();
 })
@@ -774,6 +823,7 @@ if (btnToDoIssueBoard) {
             changePageContent("todo-page", "block");
             // Set the localStorage value for pageWIP to "todo-page"
             localStorage.setItem("pageWIP", "todo-page");
+            updateAsideButtonsState()
 
             await setUpToDoBoard(selectedProjectId);
         } else {
@@ -966,12 +1016,14 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
 
                 // Get the current Date as the Created Date
                 const currentDate = new Date();
+                //Get the value of the statusColumn and assign a default value if necessary.
+                const statusColumnValue = formToDoData.get("statusColumn") as string || "notassigned"
 
 
                 const toDoIssueDetails: IToDoIssue = {
                     title: formToDoData.get("title") as string,
                     description: formToDoData.get("description") as string,
-                    statusColumn: formToDoData.get("statusColumn") as string,
+                    statusColumn: statusColumnValue,
                     tags: tags,
                     assignedUsers: assignedUsers,
                     dueDate: dueDateToDoForm,
@@ -1051,14 +1103,45 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
             console.log("Cancel ToDoIssue button was clicked")
             toggleModal("new-todo-card-modal")
         })
-        // Remove any previous event listeners (if any)
-        // cancelToDoForm.removeEventListener("click", existingHandler);
-
-
-
     } else {
         console.log("The cancel Button was not found")
     }
 
-}
+    }
+    
 
+//Main button of Users(aside) open the Users board
+const btnUsersBoard = document.querySelector("#asideBtnUsers")
+if (btnUsersBoard) {
+    btnUsersBoard?.addEventListener("click", async (e) => {
+        e.preventDefault()
+        const selectedProjectId = localStorage.getItem("selectedProjectId")
+        console.log("Btn Users clicked")
+    
+        changePageContent("users-page", "flex");
+
+        //Show the default content of href = "#/users"(users - index)
+        const defaultUsersIndex = document.querySelector("#users-index") as HTMLElement | null;
+        const teamsPage = document.querySelector("#teams-page") as HTMLElement | null;
+
+        if (defaultUsersIndex) {
+            defaultUsersIndex.style.display = "flex";
+
+            if (teamsPage) {
+                teamsPage.style.display = "none";
+            }
+
+            console.log("Upload Users page")
+            // Set the localStorage value for pageWIP to "todo-page"
+            localStorage.setItem("pageWIP", "users-page");
+            updateAsideButtonsState()
+        }
+    
+        //Set up the select project Element inside the header
+        if (selectedProjectId) {
+            await setUpUserPage(selectedProjectId)
+        } else {
+            await setUpUserPage()
+        }
+    })
+}

@@ -130,9 +130,9 @@ export class Project implements IProject {
         this.ui.innerHTML = `
             <div class="card-header">
                 <p style="background-color: ${this.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${this.acronym}</p>
-                <div>
+                <div style="width: 95%; word-break: break-all; overflow: auto;display:flex; flex-direction: column; align-items:flex-start; scrollbar-width:none;height: 100%;">
                     <h5>${this.name}</h5>
-                    <p>${this.description}</p>
+                    <p style="color: var(--color-fontbase-dark)">${this.description}</p>
                 </div>
             </div>
             <div class="card-content">
