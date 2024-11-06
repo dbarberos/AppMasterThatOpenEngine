@@ -1,12 +1,10 @@
+import { updateAsideButtonsState } from "../index.ts"
 import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from "./Project"
 import { showModal, closeModal, toggleModal, closeModalProject , changePageContent} from "./UiManager"
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
 import { renderToDoIssueListInsideProject } from "./ToDoManager"
-
-// let confirmBtnClickListener: EventListener | null = null   //Managing the EVENTLISTENER
-// let cancelExportProjectBtnClickListener: EventListener | null = null  //GMAnaging the EVENTLISTENER
 
 export class ProjectsManager {
     list: Project[] = []
@@ -81,8 +79,14 @@ export class ProjectsManager {
                             const newProject = new Project(data);
                             newProject.ui.addEventListener("click", () => {
                                 changePageContent("project-details", "flex")
-                                this.setDetailsPage(newProject)
-                                console.log(" details pages set in a new window");
+
+                                // Set the localStorage value for pageWIP to "project-details"
+                                localStorage.setItem("pageWIP", "project-details")
+
+                                ProjectsManager.setDetailsPage(newProject)
+                                console.log(" details pages set in a new window")
+                                localStorage.setItem("selectedProjectId", newProject.id)
+                                updateAsideButtonsState()
                             })
                             // 4. Add the new project to the list and UI
                             this.list.push(newProject);
@@ -268,14 +272,14 @@ export class ProjectsManager {
                                 }
 
                                 // Validation: Check if the mame does not exist
-                                const existingProject = projectNames.find(newName => newName.toLowerCase() === data.name.toLowerCase ())
+                                const existingProject = projectNames.find(existingName => existingName.toLowerCase() === newName.toLowerCase ())
                                 
                                 if (existingProject) {
-                                    // Tag already exists, show error message
+                                    // Name already exists, show error message
                                     const existProjectName = new MessagePopUp(
                                         document.body,
                                         "error",
-                                        "Duplicate Tag",
+                                        "Duplicate Name",
                                         `A project named "${newName}" already exists. Please choose a different name.`,
                                         ["Got it"]
                                     );
@@ -292,9 +296,19 @@ export class ProjectsManager {
                                     }
                                 } else {
 
+                                    
 
                                     // Update the project name
                                     data.name = newName;
+
+                                    //Assign a new Id to the project
+                                    (data as any).id = uuidv4()
+
+                                    //Assign a new id to each todoIssue 
+                                    data.todoList.forEach((toDoIssue) => {
+                                        toDoIssue.id = uuidv4()
+                                    })
+
 
                                     // Create the new project and resolve the Promise
                                     const newProject = new Project(data);
@@ -302,8 +316,14 @@ export class ProjectsManager {
                                     // ATTACH THE EVENT LISTENER HERE
                                     newProject.ui.addEventListener("click", () => {
                                         changePageContent("project-details", "flex")
-                                        this.setDetailsPage(newProject);
+
+                                        // Set the localStorage value for pageWIP to "project-details"
+                                        localStorage.setItem("pageWIP", "project-details")
+
+                                        ProjectsManager.setDetailsPage(newProject);
                                         console.log("Details page set in a new window");
+                                        localStorage.setItem("selectedProjectId", newProject.id)
+                                        updateAsideButtonsState()
                                     });
 
                                     this.list.push(newProject)
@@ -334,16 +354,19 @@ export class ProjectsManager {
                 //Create the UI element
                 renderToDoIssueListInsideProject(toDoIssue)
                 
-                
-                
                 //Set the projectId in the dataset
                 toDoIssue.ui.dataset.projectId = project.id
             })
             
             project.ui.addEventListener("click", () => {
-                this.setDetailsPage(project)
+                ProjectsManager.setDetailsPage(project)
                 changePageContent("project-details", "flex")
+
+                // Set the localStorage value for pageWIP to "project-details"
+                localStorage.setItem("pageWIP", "project-details")                
                 console.log("Details pages set in a new window");
+                localStorage.setItem("selectedProjectId", project.id)
+                updateAsideButtonsState()
             
             })
             console.log(project.todoList)
@@ -356,7 +379,7 @@ export class ProjectsManager {
 
     }
     
-    private setDetailsPage(project: Project) {
+    static setDetailsPage(project: Project) {
         const detailPage = document.getElementById("project-details")
         if (!detailPage) { return }
         
@@ -364,19 +387,19 @@ export class ProjectsManager {
             const dataElement = detailPage.querySelectorAll(`[data-project-info="${key}"]`)
             if (dataElement) {
                 if (key === "finishDate") {
-                    const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month:"long", day:"numeric"})
+                    const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
                     dataElement.forEach(element => {
                         element.textContent = formattedDate
-                    })                       
+                    })
                 } else if (key === "cost") {
                     const costElement = detailPage.querySelector(`[data-project-info="cost"]`)
                     if (costElement) {
                         costElement.textContent = `${project["cost"]}`
                     }
                 } else {
-                dataElement.forEach(element => {
-                    element.textContent = project[key]
-                })
+                    dataElement.forEach(element => {
+                        element.textContent = project[key]
+                    })
                 }
                 
             }
@@ -399,13 +422,13 @@ export class ProjectsManager {
             projectToDoDatasetAttributeId.dataset.projectId = project.id.toString()
         }
 
-        //Create de list of ToDo cards for that specifict project
+        //****Create de list of ToDo cards for that specifict project****
         //We have to manage new project and imported projects from Json. Tose last project don´t have ui HTML elements imported.
 
         //Get the target element
         const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
 
-         // Clear any existing content in the container 
+        // Clear any existing content in the container 
         while (projectListToDosUI.firstChild) {
             projectListToDosUI.removeChild(projectListToDosUI.firstChild);
         }
@@ -419,8 +442,72 @@ export class ProjectsManager {
             projectListToDosUI.appendChild((toDoIssue as any).ui);
             
         })
-    } 
 
+        //SetUp the selection intput of existing projects showing the stored inside the local storage selectedProjectId
+        console.log("setUpSelectionProject", project.id)
+        ProjectsManager.setUpSelectionProject("projectSelectedProjectDetailPage",project.id)
+    
+    
+    }
+
+
+
+
+    static setUpSelectionProject(idElementSelection?, projectIdSelected?) {
+        // Get the project list
+        const projectManager = ProjectsManager.getInstance()
+        const projectsList = projectManager.list
+        const selectionProjectForProjectDetailPage = document.getElementById(idElementSelection) as HTMLSelectElement
+
+        if (selectionProjectForProjectDetailPage) {
+            selectionProjectForProjectDetailPage.innerHTML = ""
+
+            // Add a default option to select a project
+            const option = document.createElement("option");
+            option.value = "";
+            option.text = "Select a project"
+            // option.disabled = true
+            option.style.color = "var(--color-fontbase-dark)"
+            selectionProjectForProjectDetailPage.appendChild(option);
+
+            // Populate the select element with project options
+            projectsList.forEach((project) => {
+                const option = document.createElement("option");
+                option.value = project.id;
+                option.text = project.name;
+                selectionProjectForProjectDetailPage.appendChild(option)
+
+                // Select the project corresponding to the stored project ID
+                
+                selectionProjectForProjectDetailPage.value = projectIdSelected              
+                
+            })
+
+        }
+
+        //Listen when the user change the Project inside the ToDo Board
+        selectionProjectForProjectDetailPage.addEventListener("change", () => {
+            const changedProjectId = selectionProjectForProjectDetailPage.value
+
+            //Save the Id of the selected project in the local storage
+            localStorage.setItem("selectedProjectId", changedProjectId)
+            updateAsideButtonsState()
+
+            // Ahora puedes utilizar la variable selectedProjectId, se actualiza usando la función setUpToDoBoard 
+            console.log("selectedProjectId", changedProjectId)
+
+            // Recover the project with this ID
+            const selectedProject = projectsList.find(project => project.id === changedProjectId);
+
+
+            const storedPageWIP = localStorage.getItem("pageWIP")
+
+            if (storedPageWIP === "project-details" && selectedProject) {
+                ProjectsManager.setDetailsPage(selectedProject)
+            }
+        })
+        
+    }
 
     updateProject (projectId: string, dataToUpdate: Project) {
         const projectIndex = this.list.findIndex(p => p.id === projectId)
@@ -435,7 +522,7 @@ export class ProjectsManager {
                 ...dataToUpdate // Update with new values
             }
 
-            this.setDetailsPage(this.list[projectIndex])
+            ProjectsManager.setDetailsPage(this.list[projectIndex])
             return this.list[projectIndex]
             // return true; // Indicate successful update
 
@@ -455,11 +542,11 @@ export class ProjectsManager {
             newUiElement.className = "project-card"
             newUiElement.dataset.projectId = projectToUpdateTheUi.id
             newUiElement.innerHTML = `
-                <div class="card-header">
+                <div class="card-header" style="overflow:auto;" >
                     <p style="background-color: ${projectToUpdateTheUi.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${projectToUpdateTheUi.acronym}</p>
-                    <div>
+                    <div style="width: 95%; word-break: break-all; overflow: auto;display:flex; flex-direction: column; align-items:flex-start; scrollbar-width:none; height: 100%;">
                         <h5>${projectToUpdateTheUi.name}</h5>
-                        <p>${projectToUpdateTheUi.description}</p>
+                        <p style="color: var(--color-fontbase-dark)">${projectToUpdateTheUi.description}</p>
                     </div>
                 </div>
                 <div class="card-content">
@@ -593,8 +680,10 @@ export class ProjectsManager {
                 // Attach the click listener 
                 projectUiElement.addEventListener("click", () => {
                     changePageContent("project-details", "flex");
-                    this.setDetailsPage(project);
+                    ProjectsManager.setDetailsPage(project);
                     console.log("Details page set in a new window");
+                    localStorage.setItem("selectedProjectId", project.id)
+                    updateAsideButtonsState()
                 });
 
 
@@ -680,52 +769,7 @@ export class ProjectsManager {
         this.list = remain
     }
 
-    // async deleteProject(id: string) {
-    //     try {
-    //         const project = this.getProject(id);
-    //         if (!project) {
-    //             console.error("Project not found for deletion!");
-    //             return;
-    //         }
-
-    //         const response = await fetch(`/your-api-endpoint/${id}`, {
-    //             method: 'DELETE'
-    //         });
-
-    //         if (response.ok) {
-    //             // Successful deletion on the server
-    //             // 1. Remove from UI:
-    //             project.ui.remove();
-    //             // 2. Remove from client-side list:
-    //             this.list = this.list.filter((p) => p.id !== id);
-    //             console.log("Project deleted successfully!");
-    //         } else {
-    //             // Handle errors (e.g., 404)
-    //             console.error("Error deleting project:", response.status);
-    //             // Display an error message to the user
-    //         }
-    //     } catch (error) {
-    //         console.error("Error deleting project:", error);
-    //         // Handle network errors or other unexpected issues
-    //     }
-    // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+        
     exprtToJSON(fileName: string = "projects") {
         console.log("Inside exprtToJSON")
         const projects: IProject[] = this.list

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 export interface IToDoIssue {
     title: string
     description: string
-    statusColumn: string
+    statusColumn?: string
     tags: string[]
     assignedUsers: string[]
     dueDate: Date
@@ -35,6 +35,9 @@ export class ToDoIssue implements IToDoIssue {
                 this[key] = new Date(data.dueDate)
             } else if (key === "createdDate") {
                 this[key] = new Date(data.createdDate)
+            } else if (key === "statusColumn") {
+                this[key] = data.statusColumn || "notassigned"
+
             } else {
                 this[key] = data[key]
             }
@@ -51,15 +54,15 @@ export class ToDoIssue implements IToDoIssue {
     static calculateBackgroundColorColumn(statusColumn: string): string {
         switch (statusColumn) {
             case "backlog":
-                return "#7057a1";
+                return "var(--color-backlog)";
             case "wip":
-                return "#caa97e";
+                return "var(--color-wip)";
             case "qa":
-                return "#da9595";
+                return "var(--color-qa)";
             case "completed":
-                return "#85b6a2E";
+                return "var(--color-completed)";
             default:
-                return "#ccc";
+                return "var(--color-notassigned)";
         }
     }
 
@@ -70,7 +73,7 @@ export class ToDoIssue implements IToDoIssue {
             case "wip":
                 return "In Progress"
             case "qa":
-                return "Needs Review"
+                return "In Review"
             case "completed":
                 return "Done"
             default:
@@ -84,6 +87,7 @@ export class ToDoIssue implements IToDoIssue {
         this.ui.className = "todo-item"
         this.ui.dataset.projectId = this.todoProject
         this.ui.dataset.todoId = this.id
+        this.ui.setAttribute("draggable", "true")
         const dueDateFormatted = this.dueDate.toLocaleDateString("es-ES", {
             year: "numeric",
             month: "2-digit",
@@ -93,12 +97,12 @@ export class ToDoIssue implements IToDoIssue {
         this.ui.innerHTML = `
             <div class="todo-color-column" style="background-color: ${this.backgroundColorColumn}"></div>
 
-            <div  class="todo-card" style="display: flex; flex-direction: column; border: 5px solid border-left-color: ${this.backgroundColorColumn}; ">
+            <div  class="todo-card" style="display: flex; flex-direction: column; border-left-color: ${this.backgroundColorColumn}; ">
                 <div class="todo-taks" >
                     <div class="todo-tags-list">
                         ${this.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')}
                     </div>
-                    <button class="todo-task-move">
+                    <button class="todo-task-move handler-move">
                         <svg class="todo-icon" role="img" aria-label="edit" width="24" height="24">
                             <use href="#drag-indicator"></use>
                         </svg>

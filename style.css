@@ -132,6 +132,34 @@
     --color-arrowup1: #ff69b4;
     --color-arrowup2:#ffa0c9;
     --color-arrowup3:#ffa0c940;
+
+/* ToDo Issue colors */
+
+--color-backlog:#7057a1;
+--color-wip:#caa97e;
+--color-qa:#da9595;
+--color-completed:#4fa5b1;
+--color-notassigned:#ccc;
+
+/* ToDo Details Panel */
+
+--color-tododetails-bg: rgba(40, 40, 40, 0.65);
+
+
+/* Añadir estas nuevas variables */
+    --color-border: #2d2d2d;
+    --color-hover: #3a3a3a;
+    --color-active: #404040;
+    --input-background: var(--color-bg1);
+    --input-border: var(--background-200);
+    --input-shadow: rgba(0, 0, 0, 0.2);
+
+    
+
+
+
+
+
 }
 
 /* Notification styling */
@@ -317,7 +345,72 @@ left: 5px;
     }
 }
 
+.light-mode {
+    /* Colores principales */
+    /* --primary: #2B4C7E;
+    --primary-l00: #E4E8EF;
+    --primary-200: #506E95;
+    --primary-300: #1E3A5F;
+    --primary-400: #3A5D8F; */
 
+    /* Colores secundarios */
+    /* --secundary: #1E88E5;
+    --secundary-100: #E3F2FD;
+    --secundary-200: #64B5F6;
+    --secundary-300: #90CAF9; */
+
+    /* Colores de fondo */
+    --background: #ebf0f7;
+    --background-l00: #F5F7FA;
+    --background-200: #E4E8EF;
+    --background-300: #D0D8E4;
+
+    /* Colores de popup */
+    --popup-success: #43A047;
+    --popup-error: #E53935;
+    --popup-warning: #FFA000;
+    --popup-update: #039BE5;
+    --popup-info: #445668;
+
+    /* Colores de texto y utilidad */
+    --color-fontbase: #4f5a66; /*#394b5e*/
+    --color-fontbase-dark: #a4a7aa; /*#8e9092*/
+    --color-grey-light: #D0D8E4;
+    --color-grey: #607D8B;
+
+    /* Colores de fondo y sombras */
+    --color-bg: #E4E8EF;
+    --color-bg1: #D0D8E4;
+    --color-bg2: #B0BEC5;
+    --color-shadow: #e0e1e4;
+    --color-light: #b4bccc;
+
+    /* Variables específicas para light mode */
+    --color-border: #CFD8DC;
+    --color-hover: #EEF2F6;
+    --color-active: #E4E8EF;
+    --input-background: #F5F7FA;
+    --input-border: #B0BEC5;
+    --input-shadow: rgba(44, 62, 80, 0.05);
+
+    /* ToDo Issue colors */
+    
+        --color-backlog: #a155e9;
+        --color-wip: #fba63c;
+        --color-qa: #e677a1;
+        --color-completed: #66d8e7;
+        --color-notassigned: #ccc;
+
+        /* ToDo Details Panel */
+        
+            --color-tododetails-bg: rgba(231, 230, 230, 0.65);
+}
+
+
+
+
+
+/* 
 .light-mode {
     --primary: #87ceeb;
     --primary-l00: #add8e6;
@@ -328,7 +421,7 @@ left: 5px;
     --secundary-100: #c6e2b5;
     --secundary-200: #f7dc6f;
     --secundary-300: #fff59d;
-    --background: #f7f7f7; /* new color white #f9f9f9 */
+    --background: #f7f7f7; 
     --background-l00: #ffffff;
     --background-200: #e5e5e5;
     --background-300: #d3d3d3;
@@ -348,12 +441,18 @@ left: 5px;
     --color-old-brick: #ffc080;
     --color-athens-gray1: #f7f7f7;
     --color-fontbase: #808b9f;
+    --color-fontbase-dark: #5f6777;
 
+    --color-bg:linear-gradient(275deg, #c8cacf 15%, #EBECF0 95%);
+    --color-bg1: #c6c7ca;
+    --color-bg2: rgb(164, 165, 167);
 
-    --color-bg: #EBECF0;
     --color-shadow: #BABECC;
     --color-light: #FFF;
-}
+
+
+    --color-bg: #ebf0f7; 
+} */
 
 
 * {
@@ -438,7 +537,7 @@ button {
     column-gap: var(--gap-9xs);
 
     text-shadow: 1px 1px 0 var(--color-light);
-    box-shadow: -10px -10px 30px var(--color-light), 10px 10px 30px var(--color-shadow);
+    box-shadow: -7px -7px 15px var(--color-light), 7px 7px 15px var(--color-shadow);
     transition: all 0.2s ease-in-out;
     user-select: none;
     
@@ -537,7 +636,7 @@ button:active {
     outline: 1.5px solid #9696965b;
     width: 100px;
     justify-content: center;
-    color: #969696;
+    color: var(--color-fontbase-dark)
 
     /* min-width: 100px; */
     
@@ -547,6 +646,19 @@ button:active {
     background-color: var(--primary);
     color: var(--color-grey-light);
     outline: none;
+}
+
+.disabled-button {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+
+.disabled-select {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .tab-button {
@@ -565,6 +677,7 @@ button:active {
 .trash-drop-btn {
     all:unset;
     width: 200px;
+    height: 50px;
     background-color: inherit;
     display: flex;
     align-content: center;
@@ -577,6 +690,7 @@ button:active {
 
     &:hover {
         box-shadow: none;
+        height: 50px;
     }
 
     &:active {
@@ -594,6 +708,7 @@ button:active {
         box-shadow: none;
         color: inherit;
         cursor:auto ;
+
     }
     & svg:active {
         box-shadow: none;
@@ -672,7 +787,6 @@ button:active {
     }
 }
 
-
 .scrollbar-manage:hover {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
@@ -681,77 +795,6 @@ button:active {
         display: none;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #company-logo {
@@ -952,15 +995,15 @@ header {
     border: 4px solid var(--color-bg);
     
     box-shadow: 5px 5px 20px var(--color-shadow) inset,
-            -25px -25px 50px var(--color-light) inset;
+            -10px -10px 30px var(--color-light) inset;
     user-select: none;
 }
 
 #project-list .project-card {
     background-color: var(--color-bg1);
     background: linear-gradient(to left, var(--color-bg), var(--background));
-        box-shadow: 5px 5px 20px var(--color-shadow),
-                -5px -5px 50px var(--color-light);
+    box-shadow: 5px 5px 15px var(--color-shadow),
+                -5px -5px 15px var(--color-light);
 
     border-radius: 8px;
     
@@ -971,7 +1014,7 @@ header {
 
 .project-card:hover {
 outline: 2px solid var(--primary);
-
+box-shadow: transparent
 }
 
 #project-list .project-card:active {
@@ -990,6 +1033,8 @@ align-items: center;
 justify-content:start;
 border-bottom: 2px solid #3b3c3f;
 height: 60px;
+overflow: auto;
+scrollbar-width: none;
 }
 
 .card-content {
@@ -1087,7 +1132,8 @@ form .input-list {
         width: 100%;
 
         & .title-todo-card {
-            width: 95%;
+            width: 92%;
+            margin-left: 40px;
         }
 
         & #todo-title svg {
@@ -1802,8 +1848,7 @@ progress::-moz-progress-bar {
 .todo-item {    
     
     cursor: pointer;
-    user-select: none;
-    /* background: linear-gradient(to left, var(--color-bg), var(--background)); */
+    user-select: none;    
     background-color: var(--background);
     box-shadow: 4px 4px 15px var(--color-shadow),
         -6px -6px 20px var(--color-light);
@@ -1817,7 +1862,7 @@ progress::-moz-progress-bar {
     border-radius: 10px;
     min-width: 250px;
     scroll-snap-align: start;
-
+    
 }
 
 .todo-button {
@@ -1862,7 +1907,7 @@ progress::-moz-progress-bar {
     & :hover {
         box-shadow: none;
         color: inherit;
-        cursor: move;
+        cursor: grab;
     }
 
     & svg {
@@ -1872,12 +1917,12 @@ progress::-moz-progress-bar {
     & svg:hover {
         box-shadow: none;
         color: inherit;
-        cursor: move;
+        cursor: grab;
     }
     & svg:active {
         box-shadow: none;
         color: inherit;
-        cursor: move;
+        cursor: grabbing;
         background-color: var(--primary-200);
         border-radius: 100%;
         aspect-ratio: 1;
@@ -1888,7 +1933,7 @@ progress::-moz-progress-bar {
 
 .todo-item:hover {
     
-    border: 2px dashed var(--primary);
+    border: 3px dashed var(--primary);
     
 }
 
@@ -1900,7 +1945,7 @@ progress::-moz-progress-bar {
 
 .todo-color-column {
     grid-area: color;
-    background-color: red;
+    
     border-radius: 10px 0px 0px 10px ;
 
 }
@@ -1909,7 +1954,7 @@ progress::-moz-progress-bar {
     grid-area: content;
     display: flex;
     flex-direction: column;
-    padding: 10px 15px 5px 15px;
+    padding: 10px 15px 5px 5px;    
     row-gap: 15px;
     overflow: hidden;
     text-overflow:ellipsis;
@@ -1970,7 +2015,7 @@ progress::-moz-progress-bar {
 
 #todo-page {
     
-    background-color: var(--color-bg);
+    background-color: var(--color-bg1);
 
     display: grid;
     grid-template-rows: auto 1fr; /* full height of parent element */
@@ -2004,7 +2049,7 @@ progress::-moz-progress-bar {
 
     margin: 0 30px 35px 35px;
     background-color: var(--color-bg);
-    padding: 35px 40px;
+    padding: 30px 40px;
     border: 4px solid var(--color-bg);
     box-shadow: 5px 5px 20px var(--color-shadow) inset,
         -25px -25px 50px var(--color-light) inset;
@@ -2023,22 +2068,58 @@ progress::-moz-progress-bar {
     & .todo-column-head {
         display: flex;
         justify-content: flex-start;
-        padding:1rem 0px
-
+        padding:1rem 0px;
+        position: sticky;
+        top: 0px;
+        padding-left: 15px;
+        
+        z-index: 100;
+        backdrop-filter: blur(8px) saturate(200%);
+        -webkit-backdrop-filter: blur(12px) saturate(200%);
+        background-color: rgba(50, 50, 50, 0.55);
+        background: var(--color-bg1);     
+            /* pweor */
     }
 
     & .todo-column-list {
-        border: 1px solid var(--color-bg);
-        box-shadow: 9px 9px 20px var(--color-shadow),
-                -9px -9px 20px var(--color-light);
+        border: 1px solid var(--color-bg1);
+        /* box-shadow: 3px 5px 12px var(--color-shadow),
+                -9px -9px 20px var(--color-light); */
         padding: 25px;
         border-radius: 10px;
-        min-height: 30%;
+        min-height: 5%;
         
         display: flex;
         flex-direction: column;
         row-gap: 25px;
+        
+        /*pattern*/
+
+        background-image: radial-gradient(var(--line-color) 2px, transparent 2px), radial-gradient(var(--line-color) 2px, transparent 2px);
+        background-size: 10px 10px;
+        background-position: 0 0, 5px 5px;
+        background-color: var(--color-bg1);
     }
+
+    & #todo-column-backlog {
+        --line-color: var(--color-backlog);            
+    }
+
+    & #todo-column-wip {
+        --line-color: var(--color-wip);
+    }
+
+    & #todo-column-qa {
+        --line-color: var(--color-qa);
+    }
+
+    & #todo-column-completed {
+        --line-color: var(--color-completed);
+    }
+    & #todo-column-notassigned {
+        --line-color: var(--color-notassigned);
+    }
+    
 }
 
 
@@ -2071,7 +2152,7 @@ progress::-moz-progress-bar {
 }
 
 #details-page-todo-list {
-    background-color:var(--color-bg1) ;
+    background-color:var(--color-bg) ;
     margin-left: 10px;
     margin-top: 20px;
     
@@ -2162,7 +2243,7 @@ progress::-moz-progress-bar {
     box-sizing: border-box;
     padding: 25px 25px 25px;
     border-radius: 0 35px 35px 0;
-    background: rgba(40, 40, 40, 0.65);
+    background: var(--color-tododetails-bg);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(20px);
     transform: translateX(100%);
@@ -2306,59 +2387,105 @@ progress::-moz-progress-bar {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* User page management */
 
 .users-page {
     position: relative;
     align-items: center;
     padding: 30px 30px;
+    
 }
 
 .header-users {
-    padding: 42px 30px;
+    padding: 30px 40px;
     display: flex;
     flex-direction: row;
     align-content: space-between;
     overflow: hidden;
+    align-items: flex-start
 }
+
+/* Slidding switch buttons */
+
+#users-sliding-nav1 {
+    position: relative;
+    border: none;
+    border-radius: 10em;
+    display: flex;
+    list-style: none;
+    background: var(--color--bg);
+    box-shadow: 20px 40px 40px #00000033;
+    padding: 10px;
+    /* text-shadow: 1px 1px 0 var(--color-light); */
+    box-shadow: -7px -7px 15px var(--color-light), 7px 7px 15px var(--color-shadow);
+    height: 35px;
+    
+}
+
+#users-sliding-nav1 li {
+    margin: 0px;
+}
+
+#users-sliding-nav1 a {
+    position: relative;
+    padding: 0.6em 2em;
+    font-size: var(--font-lg);
+    border: none;
+    outline: none;
+    color: var(--color-fontbase);
+    
+    display: flex;
+    align-items: center;
+    /* display: inline-block; */
+    text-decoration: none;
+    z-index: 3;
+    
+}
+
+.users-slide1,
+.users-slide2 {
+    position: absolute;
+    display: inline-block;
+    height: 2em;
+    border-radius: 10em;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1.05);
+}
+
+.users-slide1 {
+    background-color: var(--primary);
+    z-index: 2;
+}
+
+.users-slide2 {
+    opacity: 0;
+    background: var(--color-light);
+    z-index: 1;
+}
+
+.squeeze {
+    transform: scale(0.9);
+}
+
+
+/* Users page configuration */
+
 
 .users-page-content {
     flex-grow: 1;
-    background-color: var(--background-200);
-    border-radius: 0 8px 8px 8px;
+    background-color: var(--color-bg);
+    border-radius: 20px 20px 20px 20px;
     display: flex;
     flex-direction: column;
     flex-basis: content;
     justify-content: flex-start;
     padding: 20px 40px;
-    margin: 0 30px 40px 30px;
+    margin: 0 30px 40px 35px;
     height: 100vh;
+    outline: 4px solid var(--color-bg);
+    /* border: var(--color-bg1) solid 4px; */
+    box-shadow: 5px 5px 15px var(--color-shadow) inset,
+    -20px -20px 30px var(--color-light) inset ;
+    box-sizing: border-box;
 }
 
 .header-user-page-content {
@@ -2604,7 +2731,7 @@ progress::-moz-progress-bar {
 
 .users-status {
     grid-area: status;
-    color: var(--secundary-200)
+    color: var(--secundary-100)
 }
 
 .users-edit {
@@ -2971,6 +3098,114 @@ button  .btn-popup{
     /* text-decoration: line-through; */
 }
 
+/* Drag and Drop funcionality */
+
+#todo-page .todo-item {
+    cursor: pointer;
+    user-select:none;
+    position: relative;
+    transition: all 0.3s ease, opacity 0.2s ease;
+}
+.handler-move {
+    cursor: grab;
+}
+
+.handler-move:active {
+    cursor: grabbing;
+}
+
+.todo-dragging {
+    opacity: 0.5 !important;
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+    cursor: grabbing !important;
+}
+
+.is-dragging {
+    opacity: 0.5;
+}
+
+.gu-mirror {
+    position: fixed !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    opacity: .8;
+    pointer-events: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        transform-origin: center center;
+        transition: transform 0.1s ease;
+        
+}
+
+.gu-hide {
+    display: none !important;
+}
+
+.gu-unselectable {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+.gu-transit {
+    opacity: .2;
+    transform: scale(0.95);
+    transition: opacity 0.2s ease;    
+}
+/* Style for drop zones */
+.dropzone {
+    border: 2px dashed #ccc;
+    /* Dashed border for drop zones */
+    padding: 20px;
+    transition: background-color 0.3s ease;
+    /* Smooth transition */
+}
+
+/* Change background color when an item is dragged over the drop zone */
+.dropzone.over {
+    background-color: rgba(0, 255, 0, 0.2);
+    /* Light green background */
+}
 
 
+/* #trash-drop-btn {
+    width: 100%;
+    padding: 20px;
+    margin-top: 20px;
+    background-color: #ff6b6b;
+    color: white;
+    border: 2px dashed #c0392b;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+} */
+
+#trash-drop-btn:hover,
+#trash-drop-btn.drag-over {
+    background-color: var(--color-error-darker) !important;
+    border-color: var(--color-error-light);
+    height: 50px;
+}
+.drag-over {
+    /* Cambios en el fondo */
+    background-color: var(--color-error-darker) !important;
+
+    /* Efecto de brillo o resplandor */
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+
+
+    /* Borde pulsante */
+    border: 2px dashed var(--color-error-light) !important;
+
+    /* Transición suave para todos los cambios */
+    transition: all 0.3s ease;
+
+    /* Cambio en la opacidad */
+    opacity: 0.9;
+
+    /* Efecto de cursor */
+    cursor: grabbing;
+
+}
 

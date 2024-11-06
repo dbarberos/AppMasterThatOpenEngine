@@ -88,15 +88,10 @@ export function changePageContent(pageToShow: string, modeDisplay: string) {
             console.log(`hide the page: ${page.id}`);
         }
     })
-}
-    
-    // export function changePageContent(pageToShow: string, pageToHide: string, modeDisplay: string) {
-    //     const showPage = document.querySelector<HTMLElement>(pageToShow)
-    //     const hidePage = document.querySelector<HTMLElement>(pageToHide)
-    //     if (!showPage || !hidePage) { return }
-    //     showPage.style.display = modeDisplay
-    //     hidePage.style.display = "none"
+    // Actualize localStorage
+    localStorage.setItem("pageWIP", pageToShow);
 
+}
 
 export function showPageContent(pageToShow: string, modeDisplay: string) {
     const showPage = document.querySelector<HTMLElement>(`#${pageToShow}`)
@@ -109,3 +104,15 @@ export function hidePageContent(pageToHide: string) {
     if (!hidePage) { return }
     hidePage.style.display = "none"
 }
+
+
+// Function to load the page saved in localStorage on startup
+function loadSavedPage() {
+    const savedPage = localStorage.getItem("pageWIP");
+    if (savedPage) {
+        changePageContent(savedPage, 'block');
+    }
+}
+
+// Invoke loadSavedPage upon DOMContentLoaded
+document.addEventListener("DOMContentLoaded", loadSavedPage);
