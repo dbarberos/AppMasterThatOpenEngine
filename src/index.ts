@@ -5,7 +5,7 @@ import { showModal, closeModal, toggleModal, changePageContent, PageChangeEvent,
 import "./classes/HTMLUtilities.ts";
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp"
-import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList } from "./classes/ToDoManager"
+import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList, searchTodoIssues, navigateSearchResults, selectCurrentSearchResult, setupProjectDetailsSearch } from "./classes/ToDoManager"
 
 import { setUpToDoBoard, } from "./classes/DragAndDropManager";
 import "./classes/DragAndDropManager.ts";
@@ -726,6 +726,9 @@ btnProjectDetailsAside?.addEventListener("click", (e) => {
     localStorage.setItem("pageWIP", "project-details")
     updateAsideButtonsState()
 
+    //Set the funcionality of search between todoIssues
+    setupProjectDetailsSearch()
+
 
     const storedProjectId = localStorage.getItem("selectedProjectId");
     const projectManager = ProjectsManager.getInstance()
@@ -736,6 +739,8 @@ btnProjectDetailsAside?.addEventListener("click", (e) => {
     if (storedProjectId && selectedProject) {
         ProjectsManager.setDetailsPage(selectedProject)
     }
+
+
 
 })
 

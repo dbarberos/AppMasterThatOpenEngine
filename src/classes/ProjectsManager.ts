@@ -4,7 +4,7 @@ import { showModal, closeModal, toggleModal, closeModalProject , changePageConte
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
-import { renderToDoIssueListInsideProject } from "./ToDoManager"
+import { renderToDoIssueListInsideProject, setupProjectDetailsSearch } from "./ToDoManager"
 
 export class ProjectsManager {
     list: Project[] = []
@@ -80,11 +80,16 @@ export class ProjectsManager {
                             newProject.ui.addEventListener("click", () => {
                                 changePageContent("project-details", "flex")
 
+                                //Set the funcionality of search between todoIssues
+                                setupProjectDetailsSearch()
+
                                 // Set the localStorage value for pageWIP to "project-details"
                                 localStorage.setItem("pageWIP", "project-details")
 
                                 ProjectsManager.setDetailsPage(newProject)
                                 console.log(" details pages set in a new window")
+                                
+
                                 localStorage.setItem("selectedProjectId", newProject.id)
                                 updateAsideButtonsState()
                             })
@@ -317,6 +322,9 @@ export class ProjectsManager {
                                     newProject.ui.addEventListener("click", () => {
                                         changePageContent("project-details", "flex")
 
+                                        //Set the funcionality of search between todoIssues
+                                        setupProjectDetailsSearch()
+
                                         // Set the localStorage value for pageWIP to "project-details"
                                         localStorage.setItem("pageWIP", "project-details")
 
@@ -361,6 +369,9 @@ export class ProjectsManager {
             project.ui.addEventListener("click", () => {
                 ProjectsManager.setDetailsPage(project)
                 changePageContent("project-details", "flex")
+
+                //Set the funcionality of search between todoIssues
+                setupProjectDetailsSearch()
 
                 // Set the localStorage value for pageWIP to "project-details"
                 localStorage.setItem("pageWIP", "project-details")                
@@ -445,7 +456,15 @@ export class ProjectsManager {
 
         //SetUp the selection intput of existing projects showing the stored inside the local storage selectedProjectId
         console.log("setUpSelectionProject", project.id)
-        ProjectsManager.setUpSelectionProject("projectSelectedProjectDetailPage",project.id)
+        ProjectsManager.setUpSelectionProject("projectSelectedProjectDetailPage", project.id)
+        
+        //Setup the todo-header column with the name of the project
+        const todoHeader = document.querySelector("#todo-project-header-name") as HTMLElement
+
+        if (todoHeader) {
+            todoHeader.textContent = ""
+            todoHeader.textContent = project.name
+        }
     
     
     }
@@ -680,6 +699,10 @@ export class ProjectsManager {
                 // Attach the click listener 
                 projectUiElement.addEventListener("click", () => {
                     changePageContent("project-details", "flex");
+
+                    //Set the funcionality of search between todoIssues
+                    setupProjectDetailsSearch()
+
                     ProjectsManager.setDetailsPage(project);
                     console.log("Details page set in a new window");
                     localStorage.setItem("selectedProjectId", project.id)

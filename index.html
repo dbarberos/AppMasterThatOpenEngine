@@ -311,8 +311,20 @@
                     <path d="M0 0h24v24H0V0z" fill="none" />
                     <path
                         d="M17.59 3.59c-.38-.38-.89-.59-1.42-.59H5c-1.11 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7.83c0-.53-.21-1.04-.59-1.41l-2.82-2.83zM12 19c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm1-10H7c-1.1 0-2-.9-2-2s.9-2 2-2h6c1.1 0 2 .9 2 2s-.9 2-2 2z" />
-                    </svg>
                 </symbol>
+                <symbol id="arrow-upward" viewBox="0 0 24 24" fill="var(--color-fontbase)">
+                    <path d="M0 0h24v24H0V0z" fill="none"/>
+                    <path
+                        d="M13 19V7.83l4.88 4.88c.39.39 1.03.39 1.42 0 .39-.39.39-1.02 0-1.41l-6.59-6.59c-.39-.39-1.02-.39-1.41 0l-6.6 6.58c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0L11 7.83V19c0 .55.45 1 1 1s1-.45 1-1z"/>
+                </symbol>
+                <symbol id="arrow-downward" viewBox="0 0 24 24" fill="var(--color-fontbase)">
+                    <path d="M0 0h24v24H0V0z" fill="none"/>
+                    <path
+                        d="M11 5v11.17l-4.88-4.88c-.39-.39-1.03-.39-1.42 0-.39.39-.39 1.02 0 1.41l6.59 6.59c.39.39 1.02.39 1.41 0l6.59-6.59c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0L13 16.17V5c0-.55-.45-1-1-1s-1 .45-1 1z"/>
+                </symbol>
+
+
+
     
             </svg>
 
@@ -547,7 +559,7 @@
                                         <div class="todo-footer">                                                
                                             <p data-form-todo-value="todoProject" name="todoProject">Project: <span id="todo-project-name"></span></p>
                                             <p data-form-todo-value="createdDate" name="createdDate">Creation date: <span id="todo-creation-date"></span></p>
-                                            <p data-form-todo-value="todoUserOrigin" name="todoUserOrigin">Originatoer: <span id="todo-created-by"></span></p>
+                                            <p data-form-todo-value="todoUserOrigin" name="todoUserOrigin">Originator: <span id="todo-created-by"></span></p>
                                         </div>
                                     </div>                                        
                                 </div>
@@ -653,7 +665,7 @@
                             <abbr title="Acronym of the project" style="font-size: 20px; background-color: #f08080; padding: 15px; border-radius: 100%; aspect-ratio: 1; color: #343537; display: flex; align-items: center;" data-project-info="acronym">EP</abbr>
                             <button id="edit-project-details" class="">Edit</button>
                         </div>
-                        <div style="padding: 0 30px;">
+                        <div style="padding: 0 30px; word-wrap: break-word;overflow-wrap: break-word; word-break: break-all; max-width: 95%; margin-right: 15px; overflow: auto;scrollbar-width: none;height: 100%;">
                             <h5 data-project-info="name">Example Project</h5>
                             <p data-project-info="description" >This is A Big Building</p>
                         </div>
@@ -685,32 +697,50 @@
                         </div>
                     </div>
                     <div class="dashboard-card todo" style="flex-basis: 0; height:80%;overflow-y: hidden ;">
-                        <div style="padding: 10px 7px; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+                        <div style="padding: 10px 7px; display: flex; flex-direction: column; row-gap: 20px;">
 
-                            <div style="display: flex; align-items: center;  column-gap: 5px;flex-wrap: wrap">
-                                <button class="todo-button">                                    
-                                    <svg class="todo-icon" role="img" aria-label="edit" width="32" height="40">
-                                        <use href="#arrowleft"></use>
-                                    </svg>
-                                </button>
-                                <h5>To-Do</h5>
-                                <button class="todo-button">
-                                    <svg class="todo-icon" role="img" aria-label="edit" width="32" height="40">
-                                        <use href="#arrowright"></use>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div style="display: flex; align-items: center;  column-gap: 15px;">
-                                <div style="display: flex; align-items: center;column-gap: 15px;">
-                                    <span class="material-icons-round">search</span>
-                                    <input type="search" placeholder="Search To-Do by name">
+                            <div style="display: flex;  justify-content: space-between; align-items: center;">
+                                <div style="display: flex; column-gap: 5px;flex-wrap: wrap;padding-left:15px;column-gap: 10px; align-items: baseline;">
+                                    <!-- <button class="todo-button">                                    
+                                        <svg class="todo-icon" role="img" aria-label="arrowleft" width="32" height="40">
+                                            <use href="#arrowleft"></use>
+                                        </svg>
+                                    </button> -->
+                                    <h5 >To-Do List :</h5>
+                                    <h4 id="todo-project-header-name" style="word-wrap: break-word;overflow-wrap: break-word; word-break: break-all; max-width: 100%;margin-right: 15px;"></h4>
+                                    <!-- <button class="todo-button">
+                                        <svg class="todo-icon" role="img" aria-label="arrowright" width="32" height="40">
+                                            <use href="#arrowright"></use>
+                                        </svg>
+                                    </button> -->
                                 </div>
                                 <div>
                                     <button id="new-todo-issue-btn"
                                         style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
-                                        <span class="material-icons-round">add</span>                                        
+                                        <span class="material-icons-round">add</span>
                                     </button>
                                 </div>
+                        </div>
+                        <div style="display: flex; align-items: center;  column-gap: 15px;justify-content: space-between;">
+                            <div style="display: flex; align-items: center;column-gap: 15px;">
+                                <span class="material-icons-round">search</span>
+                                <input  id="todo-search-in-Project-Details" type="search" placeholder="Search To-Do by name">
+                            </div>
+                            <div style="display: flex; flex-direction: row; align-items: center; column-gap: 5px;">
+                                <div>Counter
+                                </div>
+                                <button class="todo-icon-plain" id="btn-todo-arrowup">
+                                    <svg class="todo-icon" role="img" aria-label="arrow-upward" width="24" height="24">
+                                        <use href="#arrow-upward"></use>
+                                    </svg>
+                                </button> 
+                                <button class="todo-icon-plain" id="btn-todo-arrowdown">
+                                    <svg class="todo-icon" role="img" aria-label="arrow-downward" width="24" height="24">
+                                        <use href="#arrow-downward"></use>
+                                    </svg>
+                                </button>
+                            </div>
+                                
                             </div>
                         </div>
                         <div id="details-page-todo-maincontainer">

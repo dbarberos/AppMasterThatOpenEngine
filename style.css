@@ -506,8 +506,8 @@ h5 {
     align-items: center;
     justify-content: center;
     position: fixed;
-    bottom: 30px;
-    left: 20px;
+    bottom: 20px;
+    right: 20px;
     
 }
 #theme-switch svg {
@@ -1768,7 +1768,7 @@ fieldset:after {
     & p {
         font-size: var(--font-base); 
         text-overflow: ellipsis;
-        white-space: nowrap;
+        /* white-space: nowrap; */
         overflow: hidden;
         
     };
@@ -2151,6 +2151,21 @@ progress::-moz-progress-bar {
     outline: none;
 }
 
+
+
+.todo-item.selected {
+    background-color: var(--color-selected, rgba(0, 123, 255, 0.1));
+    border-radius: 4px;
+}
+
+.todo-counter {
+    color: var(--color-fontbase-dark);
+    font-size: 0.9em;
+    margin-left: 8px;
+}
+
+
+
 #details-page-todo-list {
     background-color:var(--color-bg) ;
     margin-left: 10px;
@@ -2375,6 +2390,67 @@ progress::-moz-progress-bar {
         color: none;
         box-shadow: none;
         background-color: var(--primary-200);        
+        border-radius: 100%;
+        aspect-ratio: 1;
+    }
+
+    &:active {
+        color: none;
+        background-color: none;
+        border-radius: 100px;
+    }
+}
+.todo-icon-plain {
+    /* box-shadow: none; */
+    height: fit-content;
+    width: fit-content;
+    background-color: inherit;
+    z-index: 1;
+    color: var(--color-fontbase-dark);
+    border: 2px solid transparent;
+    transition: all 0.1s ease-in-out;
+    user-select: none;
+    box-shadow: none;
+    border-radius: 30px;
+    aspect-ratio: 1;
+    padding: 0;
+
+
+
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    column-gap: 0px;
+
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+    overflow: hidden;
+
+    & :hover {
+        width: fit-content;
+        border-radius: 0px;
+    }
+
+
+
+    & svg {
+        box-shadow: none;
+        background-color: inherit;
+        color: var(--color-fontbase-dark);
+        fill: var(--color-fontbase);
+    }
+
+    & svg:hover {
+        fill: var(--primary);
+        color: var(--primary);
+        width: fit-content;
+        border-radius: 0px;
+    }
+
+    &svg:active {
+        color: none;
+        box-shadow: none;
+        background-color: var(--primary-200);
         border-radius: 100%;
         aspect-ratio: 1;
     }

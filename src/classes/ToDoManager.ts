@@ -1587,3 +1587,128 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
     }
 }
 
+
+
+
+// Search funcionality for TodoIssues inside todoList
+
+let filteredTodos: ToDoIssue[] = [];
+let currentSearchIndex: number = -1;
+
+
+export function searchTodoIssues(searchText: string): void {
+    // Obtener el proyecto activo
+    const selectedProjectId = localStorage.getItem("selectedProjectId");
+    if (!selectedProjectId) return;
+
+    const projectManager = ProjectsManager.getInstance();
+    const activeProject = projectManager.getProject(selectedProjectId);
+    if (!activeProject) return;
+
+    const searchLower = searchText.toLowerCase();
+
+    // Filtrar por titulo
+    filteredTodos = activeProject.todoList.filter(todo =>
+        todo.title.toLowerCase().includes(searchLower) ||
+        todo.description.toLowerCase().includes(searchLower) ||
+        todo.tags.some(tag => tag.toLowerCase().includes(searchLower)) ||
+        todo.assignedUsers.some(user => user.toLowerCase().includes(searchLower)) ||
+        ToDoIssue.getStatusColumnText(todo.statusColumn).toLowerCase().includes(searchLower)
+    );
+
+    currentSearchIndex = -1;
+    updateTodoSearchResults();
+}
+
+
+function updateTodoSearchResults(): void {
+    const todoListContainer = document.getElementById('details-page-todo-list');
+    if (!todoListContainer) return;
+
+    // Limpiar el contenedor
+    todoListContainer.innerHTML = '';
+
+    // Mostrar los resultados filtrados
+    filteredTodos.forEach((todo, index) => {
+        const todoElement = todo.ui.cloneNode(true) as HTMLElement;
+        if (index === currentSearchIndex) {
+            todoElement.classList.add('selected');
+            todoElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Recrear el event listener para el todo
+        todoElement.addEventListener('click', () => {
+            showPageContent("todo-details", "flex");
+            setDetailsIssuePage(todo);
+        });
+
+        todoListContainer.appendChild(todoElement);
+    });
+
+    // Actualizar contador de resultados
+    const counterElement = document.querySelector('#project-details .todo-counter') as HTMLElement;
+    if (counterElement) {
+        counterElement.textContent = `${filteredTodos.length} ${filteredTodos.length === 1 ? 'tarea encontrada' : 'tareas encontradas'
+            }`;
+    }
+}
+
+export function navigateSearchResults(direction: 'up' | 'down'): void {
+    if (filteredTodos.length === 0) return;
+
+    if (direction === 'up') {
+        currentSearchIndex = currentSearchIndex > 0 ? currentSearchIndex - 1 : filteredTodos.length - 1;
+    } else {
+        currentSearchIndex = currentSearchIndex < filteredTodos.length - 1 ? currentSearchIndex + 1 : 0;
+    }
+
+    updateTodoSearchResults();
+}
+
+export function selectCurrentSearchResult(): void {
+    if (currentSearchIndex >= 0 && currentSearchIndex < filteredTodos.length) {
+        const selectedTodo = filteredTodos[currentSearchIndex];
+        showPageContent("todo-details", "flex");
+        setDetailsIssuePage(selectedTodo);
+    }
+}
+
+// Función para inicializar los eventos de búsqueda
+function initializeSearchEvents() {
+    const searchInput = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchTodoIssues((e.target as HTMLInputElement).value);
+        });
+    }
+}
+
+// Función para limpiar el input de búsqueda
+function clearSearchInput() {
+    const searchInput = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
+    if (searchInput) {
+        searchInput.value = '';
+    }
+}
+
+// Exportar la función para poder llamarla desde donde se maneja el cambio de sección
+export function setupProjectDetailsSearch() {
+    const searchInput = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
+
+    if (searchInput) {
+        // Limpiar el input
+        searchInput.value = '';
+
+        // Remover listener anterior si existe
+        const newSearchInput = searchInput.cloneNode(true) as HTMLInputElement;
+        searchInput.parentNode?.replaceChild(newSearchInput, searchInput);
+
+        // Añadir nuevo listener
+        newSearchInput.addEventListener('input', (e) => {
+            searchTodoIssues((e.target as HTMLInputElement).value);
+        });
+    }
+}
+
+
