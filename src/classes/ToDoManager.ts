@@ -976,6 +976,8 @@ export function closeToDoIssueDetailPage () {
         //Reload the page instead of just close de detail page because to update de todoIssue changed data
         // hidePageContent("todo-details")
         changePageContent("project-details", "flex")
+        clearSearchAndResetList()
+
 
     } else if (pageWIP === "todo-page") {
         changePageContent("todo-page", "flex")
@@ -1646,10 +1648,20 @@ function updateTodoSearchResults(): void {
     });
 
     // Actualizar contador de resultados
-    const counterElement = document.querySelector('#project-details .todo-counter') as HTMLElement;
+    const counterElement = document.getElementById('todolist-search-counter') as HTMLElement;
     if (counterElement) {
-        counterElement.textContent = `${filteredTodos.length} ${filteredTodos.length === 1 ? 'tarea encontrada' : 'tareas encontradas'
-            }`;
+        // Obtener el número total de todos del proyecto actual
+        const selectedProjectId = localStorage.getItem("selectedProjectId");
+        const projectManager = ProjectsManager.getInstance();
+        const activeProject = projectManager.getProject(selectedProjectId);
+        const totalTodos = activeProject ? activeProject.todoList.length : 0;
+
+        // Construir el mensaje con ambos números
+        if (filteredTodos.length === 0 && totalTodos > 0) {
+            counterElement.textContent = `${totalTodos} ${totalTodos === 1 ? 'Task' : 'Tasks'} in total`;
+        } else {
+            counterElement.textContent = `${filteredTodos.length} ${filteredTodos.length === 1 ? 'Task' : 'Tasks '} of ${totalTodos}`;
+        }
     }
 }
 
@@ -1670,6 +1682,7 @@ export function selectCurrentSearchResult(): void {
         const selectedTodo = filteredTodos[currentSearchIndex];
         showPageContent("todo-details", "flex");
         setDetailsIssuePage(selectedTodo);
+        clearSearchAndResetList();
     }
 }
 
@@ -1684,17 +1697,49 @@ function initializeSearchEvents() {
     }
 }
 
-// Función para limpiar el input de búsqueda
-function clearSearchInput() {
+function resetSearchResults() {
+    filteredTodos = [];
+    currentSearchIndex = -1;
+    updateTodoSearchResults();
+}
+
+// Nueva función para reinicializar el estado de búsqueda
+function resetSearchState() {
+    filteredTodos = [];
+    currentSearchIndex = -1;
+
+    // Actualizar solo el contador, mostrando el total de tareas
+    const counterElement = document.getElementById('todolist-search-counter') as HTMLElement;
+    if (counterElement) {
+        const selectedProjectId = localStorage.getItem("selectedProjectId");
+        const projectManager = ProjectsManager.getInstance();
+        const activeProject = projectManager.getProject(selectedProjectId);
+        const totalTodos = activeProject ? activeProject.todoList.length : 0;
+        counterElement.textContent = `${totalTodos} ${totalTodos === 1 ? 'Task' : 'Tasks'} in total`;
+    }
+}
+
+
+
+// Función para limpiar el input de búsqueda y restablecer la lista
+function clearSearchAndResetList() {
     const searchInput = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
     if (searchInput) {
         searchInput.value = '';
     }
+    searchTodoIssues('');
 }
 
 // Exportar la función para poder llamarla desde donde se maneja el cambio de sección
 export function setupProjectDetailsSearch() {
+
+    // Reinicializar solo el estado de búsqueda
+    resetSearchState();
+
     const searchInput = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
+    const btnArrowUp = document.getElementById('btn-todo-arrowup');
+    const btnArrowDown = document.getElementById('btn-todo-arrowdown');
+
 
     if (searchInput) {
         // Limpiar el input
@@ -1704,9 +1749,50 @@ export function setupProjectDetailsSearch() {
         const newSearchInput = searchInput.cloneNode(true) as HTMLInputElement;
         searchInput.parentNode?.replaceChild(newSearchInput, searchInput);
 
-        // Añadir nuevo listener
+        // Añadir nuevo listener para la busqueda
         newSearchInput.addEventListener('input', (e) => {
             searchTodoIssues((e.target as HTMLInputElement).value);
+        });
+
+        // Añadir listener para teclas de navegación
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (newSearchInput.value.trim() === '') return; // Solo si hay texto en la búsqueda
+
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateSearchResults('up');
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                navigateSearchResults('down');
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                selectCurrentSearchResult();
+                
+            }
+        });
+        // Añadir listeners para los botones de navegación
+        if (btnArrowUp) {
+            btnArrowUp.addEventListener('click', () => {
+                if (newSearchInput.value.trim() === '') return;
+                navigateSearchResults('up');
+            });
+        }
+
+        if (btnArrowDown) {
+            btnArrowDown.addEventListener('click', () => {
+                if (newSearchInput.value.trim() === '') return;
+                navigateSearchResults('down');
+            });
+        }
+    }
+    // Añadir event listener para clicks en todo issues
+    const todoListContainer = document.getElementById('details-page-todo-list');
+    if (todoListContainer) {
+        todoListContainer.addEventListener('click', (e) => {
+            const todoItem = (e.target as HTMLElement).closest('.todo-item');
+            if (todoItem) {
+                clearSearchAndResetList();
+            }
         });
     }
 }
