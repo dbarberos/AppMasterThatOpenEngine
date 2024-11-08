@@ -330,7 +330,7 @@
 
             <dialog id="modal-list-of-projects-json" >
                 <div class="list-of-projects-json">
-                    <header id="modal-header-title"  style="width: 100%; display=flex; flex-direction: row; justify-content: space-between; align-items: start; padding: 0; align-items: center;">
+                    <header id="modal-header-title"  style="width: 100%; display:flex; flex-direction: row; justify-content: space-between; align-items: start; padding: 0; align-items: center;">
                         <h4 style="margin-left: 25px;">Select Items to Import/Export</h4>
                         <div style="display: flex; flex-direction: column; row-gap: 10px ;">
                             <button id="selectAllBtn" class="buttonB"></button>
@@ -1885,7 +1885,7 @@
             </div>
         </section>
 
-        <section class="page todo-page" id="todo-page" data-page style="display: ; height:100vh">
+        <section class="page todo-page" id="todo-page" data-page style="height:100vh; display: ">
             <header style="display: flex; align-items: center; align-content: space-between; flex-wrap: wrap; gap:20px; user-select: none;">
                 <div style="display: flex;column-gap: 20px">
                     <h2 style=" display:flex; align-items: center; column-gap: 20px;">To-Do Board
@@ -1902,33 +1902,38 @@
                     </div>
                 </div>
 
-                <div style="display:flex; align-items: center; column-gap: 15px; ">
-                    <!-- <div>
-                        <button id="export-projects-JSON-btn"
-                            style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
-                            <span class="material-icons-round">file_upload</span>
-                        </button>
+                <div style="display:flex; align-items: flex-start; column-gap: 15px; column-gap: 50px;">
+                    <div style="display: flex; align-items: center;  column-gap: 20px;justify-content: flex-end;">
+                        <div style="display: flex; align-items: center;column-gap: 15px;">
+                            <span class="material-icons-round">search</span>
+                            <input  id="todo-search-in-Todo-Page" type="search" placeholder="Search inside To-Do">
+                        </div>
+                        <div style="display: flex; flex-direction: row; align-items: center; column-gap: 5px;">
+                            <div id="todolist-search-counter-ToDoPage">Counter
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <button id="import-projects-JSON-btn"
-                            style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
-                            <span class="material-icons-round">file_download</span>
+                    <div style="display: flex; flex-direction:row; column-gap: 10px; align-items: center;">
+                        <button id="new-todo-issue-btn2" style="border-radius: var(--br-circle);aspect-ratio: 1; padding:0; display: flex; justify-content: center;"><span class="material-icons-round">add</span></button>
+                        <picture>
+                            <source media="(min-width: )" srcset="">
+                            <img src="" alt="">
+                        </picture>
+                        
+                        <button class="trash-drop-btn" id="trash-drop-btn" >
+                            <svg class="todo-task-move" role="img" aria-label="edit" width="32" height="40">
+                                <use href="#trash"></use>
+                            </svg>For delete drop here
                         </button>
-                    </div> -->
-                    <button class="trash-drop-btn" id="trash-drop-btn" >
-                        <svg class="todo-task-move" role="img" aria-label="edit" width="32" height="40">
-                            <use href="#trash"></use>
-                        </svg>For delete drop here
-                    </button>
-            
-                    <button id="new-todo-issue-btn2"><span class="material-icons-round">add</span>New To-Do Issue</button><picture>
-                        <source media="(min-width: )" srcset="">
-                        <img src="" alt="">
-                    </picture>
+                
+                        
+
+                    </div>
                 </div>
+                
             </header>
             <div id="todo-content" style="height: 90%">
-                <div id="details-page-todo-maincontainer" class="todo-column" data-column-id="wip">
+                <div id="details-page-todo-maincontainer" class="todo-column" data-column-id="backlog">
                     <div id="details-page-todo-secondcontainer"  >
                         <div class="todo-column-head">
                             <h4>Task Ready</h4>
@@ -2175,7 +2180,7 @@
             </div>
         </section>
 
-        <section class="half-page" id="todo-details" data-page style="display: flex">
+        <section class="half-page" id="todo-details" data-page style="display: ">
             <div class="sliding-panel-todoIssue open-panel ">
                 <div>
                     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">

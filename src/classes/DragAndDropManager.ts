@@ -5,7 +5,8 @@ import { showModal, closeModal, toggleModal, closeModalProject, changePageConten
 
 import dragula from 'dragula';
 
-import { renderToDoIssueListInsideProject, renderToDoIssueList, getProjectByToDoIssueId, setDetailsIssuePage, deleteToDoIssue } from "./ToDoManager";
+import { renderToDoIssueListInsideProject, renderToDoIssueList, getProjectByToDoIssueId, setDetailsIssuePage, deleteToDoIssue, searchTodoIssues, clearSearchAndResetList, updateTodoCounter, resetSearchState, } from "./ToDoManager";
+
 import { ToDoIssue, IToDoIssue } from "./ToDoIssue"
 import { MessagePopUp } from "./MessagePopUp"
 
@@ -22,9 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const projectManager = ProjectsManager.getInstance();
             const projectsList = projectManager.list;
             const valueInsideSelectedProject = projectsList.find((project) => project.id === storedProjectId)
-            if (valueInsideSelectedProject) {
-                // const selectProjectForToDoBoard = document.getElementById("projectSelectedToDoBoard") as HTMLSelectElement
-                // const selectProjectForUsersPage = document.getElementById("projectSelectedUsersPage") as HTMLSelectElement
+            if (valueInsideSelectedProject) {                
                 selectProjectForToDoBoard.value = storedProjectId;
                 selectProjectForUsersPage.value = storedProjectId
                 console.log("Project Recover:", storedProjectId)
@@ -43,8 +42,7 @@ export function setUpToDoBoard(selectedProjectId?) {
 
     const selectProjectForToDoBoard = document.getElementById("projectSelectedToDoBoard") as HTMLSelectElement
 
-    setupProjectSelect(projectsList, selectedProjectId, )
-    
+    setupProjectSelect(projectsList, selectedProjectId, )    
     
     //*** Get the list of todoIssue from the project an organize it ***
     // Get the stored project ID and project from local storage
@@ -53,9 +51,8 @@ export function setUpToDoBoard(selectedProjectId?) {
         console.log("Organizing ToDo issues");
         organizeToDoIssuesByStatusColumns(storedProjectId)
         console.log("ToDo issues organized, initializing drag and drop")
-        initializeDragAndDrop();// Inicializar drag and drop después de organizar
+        initializeDragAndDrop();// Initialize drag and drop after organizing
     }
-
 }
 
 
@@ -106,6 +103,16 @@ function setupProjectSelect(projectsList: Project[], selectedProjectId?: string)
     select.addEventListener("change", () => {
         const changedProjectId = select.value
 
+        // Reset the number of task in the counter of todo Issues 
+        const counterElementTodoPage = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement
+        
+        if (counterElementTodoPage) {
+            resetSearchState(counterElementTodoPage)
+        }        
+
+        //Clean the search input
+        clearSearchAndResetList()
+
         //Save the Id of the selected project in the local storage
         localStorage.setItem("selectedProjectId", changedProjectId)
         updateAsideButtonsState()
@@ -119,19 +126,18 @@ function setupProjectSelect(projectsList: Project[], selectedProjectId?: string)
         //Get the list of todoIssue from the project an organize it
         console.log("Organizing ToDo issues");
         organizeToDoIssuesByStatusColumns(changedProjectId)
-        //Render the columns of Issues
+
+
+                //Render the columns of Issues
         console.log("ToDo issues organized, initializing drag and drop")
         initializeDragAndDrop();
     })
 }
 
 
-
-
-
 //Create diferents arrays of todoIssues according to the statusColum value
 
-function organizeToDoIssuesByStatusColumns(projectId) {
+export function organizeToDoIssuesByStatusColumns(projectId) {
     const projectManager = ProjectsManager.getInstance();
     const project = projectManager.getProject(projectId);
     
@@ -530,7 +536,6 @@ function updateTodoVisuals(todoElement: HTMLElement, todo: IToDoIssue) {
     }
 }
 
-
 // Función auxiliar para verificar el estado actual del tablero
 function logBoardState() {
     const columns = document.querySelectorAll('.todo-column-list');
@@ -546,3 +551,112 @@ function logBoardState() {
 
 
 
+// Search funcionality for TodoIssues inside todo-page
+
+const searchToDoPageInput = document.getElementById('todo-search-in-Todo-Page') as HTMLInputElement;
+if (searchToDoPageInput) {
+    searchToDoPageInput.addEventListener('input', (e) => {
+        const searchText = (e.target as HTMLInputElement).value.trim();
+        setupTodoPageSearch(searchText);
+    });
+}
+
+// Function to configure the search in the ToDo page
+
+export function setupTodoPageSearch(searchText: string) {
+
+    // Reinitialize only the search state
+    const counterElement = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement
+    if (counterElement) {
+        resetSearchState(counterElement)
+    }
+
+    
+    const projectManager = ProjectsManager.getInstance();
+    const activeProjectId = localStorage.getItem("selectedProjectId");
+    const project = projectManager.getProject(activeProjectId || '');
+    if (project) {           
+
+        if (searchText) {
+            searchTodoIssues(searchText);
+        } else {
+            // If there is no text, reset the task list
+            console.log("Restored all ToDo issues")
+            organizeToDoIssuesByStatusColumns(activeProjectId); // Call with an empty text to show all ToDo Issues                
+            
+        }
+    }  
+
+
+    // Add event listener for clicks on todo issues
+    const todoListContainer = document.getElementById('todo-content'); 
+    if (todoListContainer) {
+        todoListContainer.addEventListener('click', (e) => {
+            const todoItem = (e.target as HTMLElement).closest('.todo-item');
+            if (todoItem) {
+                clearSearchAndResetList();
+            }
+        });
+    }
+}
+
+
+export function organizeFilteredToDoIssuesByStatusColumns(filteredTodos: IToDoIssue[]) {
+    // Clear previous task columns
+    const columns = document.querySelectorAll('.todo-column-list');
+    columns.forEach((column) => {
+        column.innerHTML = "";
+    });
+
+    // Organize ToDo Issues filtered by their status
+    // Create an object to store the arrays for each status column
+    const statusColumns = {}
+    // Iterate over the todoList and group them by status column
+    filteredTodos.forEach((toDoIssue) => {
+        // Check if statusColumn is null, undefined, or empty
+        const status = toDoIssue.statusColumn === null ? "notassigned" : toDoIssue.statusColumn 
+        if (status) {
+            const columnId = `todo-column-${status.toLowerCase()}`;
+            const column = document.getElementById(columnId);
+
+            // If the array for the status column doesn't exist, create it
+            if (!statusColumns[status]) {
+                statusColumns[status] = [];
+            }
+
+            if (column) {
+                renderToDoIssueListInsideProject(toDoIssue);
+                if (toDoIssue.ui instanceof HTMLElement) {
+                    column.appendChild(toDoIssue.ui);
+                }
+            }
+        }
+    });
+    // Update result counter after organizing
+    const counterElement = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement;
+    if (counterElement) {
+        updateTodoCounter(filteredTodos, counterElement)
+    }
+}
+
+
+// Function to update the displayed task list
+function updateTodoSearchResults(filteredTodos: IToDoIssue[]) {
+    const todoListContainer = document.getElementById('todo-column-backlog'); 
+    if (!todoListContainer) return;
+
+    // Clear current container
+    todoListContainer.innerHTML = '';
+
+    // Render filtered ToDo Issues
+    filteredTodos.forEach(todo => {
+        renderToDoIssueListInsideProject(todo);
+        todoListContainer.appendChild(todo.ui);
+    });
+
+    // Update results counter
+    const counterElement = document.getElementById('todolist-search-counter') as HTMLElement;
+    if (counterElement) {
+        counterElement.textContent = `${filteredTodos.length} ${filteredTodos.length === 1 ? 'Task' : 'Tasks'} found`;
+    }
+}

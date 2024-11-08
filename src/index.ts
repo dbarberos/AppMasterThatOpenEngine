@@ -5,9 +5,9 @@ import { showModal, closeModal, toggleModal, changePageContent, PageChangeEvent,
 import "./classes/HTMLUtilities.ts";
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp"
-import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList, searchTodoIssues, navigateSearchResults, selectCurrentSearchResult, setupProjectDetailsSearch } from "./classes/ToDoManager"
+import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList, searchTodoIssues, navigateSearchResults, selectCurrentSearchResult, setupProjectDetailsSearch, resetSearchState } from "./classes/ToDoManager"
 
-import { setUpToDoBoard, } from "./classes/DragAndDropManager";
+import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManager";
 import "./classes/DragAndDropManager.ts";
 import { setUpUserPage } from "./classes/UsersManager.ts";
 
@@ -824,6 +824,8 @@ if (btnToDoIssueBoard) {
     btnToDoIssueBoard?.addEventListener("click", async (e) => {
         e.preventDefault()
         const selectedProjectId = localStorage.getItem("selectedProjectId")
+        const counterElement = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement
+
         if (selectedProjectId) {
             changePageContent("todo-page", "block");
             // Set the localStorage value for pageWIP to "todo-page"
@@ -831,8 +833,11 @@ if (btnToDoIssueBoard) {
             updateAsideButtonsState()
 
             await setUpToDoBoard(selectedProjectId);
+            resetSearchState(counterElement)
+            
         } else {
             await setUpToDoBoard()
+            resetSearchState(counterElement)
         }
     })
 }

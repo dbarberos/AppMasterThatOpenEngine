@@ -153,13 +153,6 @@
     --input-background: var(--color-bg1);
     --input-border: var(--background-200);
     --input-shadow: rgba(0, 0, 0, 0.2);
-
-    
-
-
-
-
-
 }
 
 /* Notification styling */
@@ -346,46 +339,35 @@ left: 5px;
 }
 
 .light-mode {
-    /* Colores principales */
-    /* --primary: #2B4C7E;
-    --primary-l00: #E4E8EF;
-    --primary-200: #506E95;
-    --primary-300: #1E3A5F;
-    --primary-400: #3A5D8F; */
+    
 
-    /* Colores secundarios */
-    /* --secundary: #1E88E5;
-    --secundary-100: #E3F2FD;
-    --secundary-200: #64B5F6;
-    --secundary-300: #90CAF9; */
-
-    /* Colores de fondo */
+    /* backgroun colors */
     --background: #ebf0f7;
     --background-l00: #F5F7FA;
     --background-200: #E4E8EF;
     --background-300: #D0D8E4;
 
-    /* Colores de popup */
+    /* Popup colors */
     --popup-success: #43A047;
     --popup-error: #E53935;
     --popup-warning: #FFA000;
     --popup-update: #039BE5;
     --popup-info: #445668;
 
-    /* Colores de texto y utilidad */
+    /* Text and utility colors */
     --color-fontbase: #4f5a66; /*#394b5e*/
     --color-fontbase-dark: #a4a7aa; /*#8e9092*/
     --color-grey-light: #D0D8E4;
     --color-grey: #607D8B;
 
-    /* Colores de fondo y sombras */
+    /* background and shadows colors */
     --color-bg: #E4E8EF;
     --color-bg1: #D0D8E4;
     --color-bg2: #B0BEC5;
     --color-shadow: #e0e1e4;
     --color-light: #b4bccc;
 
-    /* Variables específicas para light mode */
+    /* Specific variables for light mode */
     --color-border: #CFD8DC;
     --color-hover: #EEF2F6;
     --color-active: #E4E8EF;
@@ -395,64 +377,17 @@ left: 5px;
 
     /* ToDo Issue colors */
     
-        --color-backlog: #a155e9;
-        --color-wip: #fba63c;
-        --color-qa: #e677a1;
-        --color-completed: #66d8e7;
-        --color-notassigned: #ccc;
+    --color-backlog: #a155e9;
+    --color-wip: #fba63c;
+    --color-qa: #e677a1;
+    --color-completed: #66d8e7;
+    --color-notassigned: #ccc;
 
-        /* ToDo Details Panel */
-        
-            --color-tododetails-bg: rgba(231, 230, 230, 0.65);
+    /* ToDo Details Panel */
+    
+    --color-tododetails-bg: rgba(231, 230, 230, 0.65);
 }
 
-
-
-
-
-/* 
-.light-mode {
-    --primary: #87ceeb;
-    --primary-l00: #add8e6;
-    --primary-200: #6495ed;
-    --primary-300: #4682b4;
-    --primary-400: #34a8ff;
-    --secundary: #8bc34a;
-    --secundary-100: #c6e2b5;
-    --secundary-200: #f7dc6f;
-    --secundary-300: #fff59d;
-    --background: #f7f7f7; 
-    --background-l00: #ffffff;
-    --background-200: #e5e5e5;
-    --background-300: #d3d3d3;
-    --color-grey-light: #FFFFFF;
-    --color-grey: #c7c5b8;
-    --color-athens-gray: #f2f2f2;
-    --color-ebony-clay: #455a64;
-    --color-river-bed: #73879b;
-    --color-royal-blue: #87ceeb;
-    --color-pale-sky: #b2b8cf;
-    --color-scandal: #c9f7f5;
-    --colro-eden: #34c759;
-    --color-mischka: #e5e5ea;
-    --color-lemon-chiffon: #fff2cc;
-    --color-korma: #ffc107;
-    --color-pippin: #ffe4e1;
-    --color-old-brick: #ffc080;
-    --color-athens-gray1: #f7f7f7;
-    --color-fontbase: #808b9f;
-    --color-fontbase-dark: #5f6777;
-
-    --color-bg:linear-gradient(275deg, #c8cacf 15%, #EBECF0 95%);
-    --color-bg1: #c6c7ca;
-    --color-bg2: rgb(164, 165, 167);
-
-    --color-shadow: #BABECC;
-    --color-light: #FFF;
-
-
-    --color-bg: #ebf0f7; 
-} */
 
 
 * {
@@ -468,7 +403,6 @@ body {
     grid-template-columns: 300px 1fr;
     grid-template-areas: "sidebar content";
     min-height: 100vh;    
-    background-color: var(--color-bg1);
     color: var(--color-fontbase);
     background: var(--color-bg1);
         /* fallback for old browsers */
@@ -889,7 +823,7 @@ button:active {
     bottom: 80px;
     right: 0px;
 
-    /* Estilos para el último elemento hijo */
+    /* Styles for the last child element */
 }
 
 .open-sidebar-btn, .close-sidebar-btn {
@@ -952,14 +886,6 @@ body:has(#sidebar-active:checked) #navigation-bar li::before {
     
 }
 
-/* #navigation-bar li {
-list-style-type: none;
-padding: 15px;
-border-radius: 10px;
-font-size: var(--font-lg);
-cursor: pointer;
-background-color: var(--primary);
-} */
 
 #navigation-bar li .material-icons-round {
     font-size: var(--font-icon-m);
@@ -1163,13 +1089,7 @@ form .input-list {
         gap: 10px;
         align-items: start;
     }
-
-
-
-
 }
-
-
 
 #todo-title svg {
     position: absolute;
@@ -1500,8 +1420,6 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
         background: var(--primary-200);
         border-radius: 10px;
     }
-
-
 }
 
 
@@ -1606,35 +1524,6 @@ span:hover {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #buttonEndRight {
     padding: 20px;
     display: flex;
@@ -1669,7 +1558,7 @@ span:hover {
     
     }
 
-/*es la tapa del checkmark  */
+/*This is the checkmark cover  */
 .checkmark {
     cursor: pointer;
     display: flex;
@@ -1689,7 +1578,6 @@ span:hover {
         -5px -5px 10px 2.5px var(--color-light),
         -1px -1px 4px 2px var(--color-light);
     
-         
     transition: all 0.3s ease-in-out;
     user-select:none;
     appearance: none;
@@ -1837,13 +1725,9 @@ progress::-webkit-progress-value {
 progress::-moz-progress-bar {
     background-color: #009688;
         border-radius: var(--br-9xs);
-
 }
 
-
-
 /* To-do list page */
-
 
 .todo-item {    
     
@@ -1861,8 +1745,7 @@ progress::-moz-progress-bar {
     grid-template-areas: "color content";
     border-radius: 10px;
     min-width: 250px;
-    scroll-snap-align: start;
-    
+    scroll-snap-align: start;    
 }
 
 .todo-button {
@@ -1925,11 +1808,9 @@ progress::-moz-progress-bar {
         cursor: grabbing;
         background-color: var(--primary-200);
         border-radius: 100%;
-        aspect-ratio: 1;
-        
+        aspect-ratio: 1;        
     }
 }
-
 
 .todo-item:hover {
     
@@ -2038,13 +1919,8 @@ progress::-moz-progress-bar {
     padding:0  clamp(75px, 100px, 100px);
     column-gap: 20px;
     
-
+    border-radius: 20px;   
     
-    border-radius: 20px;
-    
-    /* border: 4px solid var(--color-bg);
-    box-shadow: 5px 5px 20px var(--color-shadow) inset,
-        -25px -25px 50px var(--color-light) inset; */
     user-select: none;
 
     margin: 0 30px 35px 35px;
@@ -2076,8 +1952,8 @@ progress::-moz-progress-bar {
         z-index: 100;
         backdrop-filter: blur(8px) saturate(200%);
         -webkit-backdrop-filter: blur(12px) saturate(200%);
-        background-color: rgba(50, 50, 50, 0.55);
-        background: var(--color-bg1);     
+        /* background-color: rgba(50, 50, 50, 0.55);
+        background: var(--color-bg1);      */
             /* pweor */
     }
 
@@ -2278,7 +2154,6 @@ progress::-moz-progress-bar {
     
 }
 
-
 .todo-detail-datafiled-title {
     display: flex;
     margin-top: 25px;
@@ -2345,7 +2220,6 @@ progress::-moz-progress-bar {
         column-gap: 15px;
         justify-content:center;
         align-items:center;
-
     }
 
 
@@ -2695,7 +2569,6 @@ progress::-moz-progress-bar {
         &  > :nth-child(2) {
             margin-right: 75px;
         }
-
     }
 }
 
@@ -2733,7 +2606,6 @@ progress::-moz-progress-bar {
         grid-row-gap: var(--gap-xl);
         padding: 30px 0;
         margin-top: -60px;
-
     }
 
 
@@ -2751,7 +2623,6 @@ progress::-moz-progress-bar {
         justify-content: space-between;
         max-width: 400px;
 
-
         &> :first-child {
             font-size: var(--font-sm);
             color: var(--color-grey);
@@ -2761,13 +2632,11 @@ progress::-moz-progress-bar {
         &> :nth-child(2) {
             margin-right: 75px;
         }
-
     }
 
     & span:hover {
         color: var(--secundary-200);
     }
-
 }
 
 .users-checkbox {
@@ -3265,24 +3134,12 @@ button  .btn-popup{
     height: 50px;
 }
 .drag-over {
-    /* Cambios en el fondo */
+    
     background-color: var(--color-error-darker) !important;
-
-    /* Efecto de brillo o resplandor */
     box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
-
-
-    /* Borde pulsante */
     border: 2px dashed var(--color-error-light) !important;
-
-    /* Transición suave para todos los cambios */
     transition: all 0.3s ease;
-
-    /* Cambio en la opacidad */
     opacity: 0.9;
-
-    /* Efecto de cursor */
     cursor: grabbing;
-
 }
 

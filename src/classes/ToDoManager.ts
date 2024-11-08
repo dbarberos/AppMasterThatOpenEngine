@@ -6,7 +6,7 @@ import { sanitizeHtml } from "./HTMLUtilities"
 
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from "uuid"
-import { setUpToDoBoard } from "./DragAndDropManager";
+import { organizeFilteredToDoIssuesByStatusColumns, setUpToDoBoard, organizeToDoIssuesByStatusColumns } from "./DragAndDropManager";
 
 
 export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IToDoIssue): ToDoIssue | undefined {
@@ -976,12 +976,12 @@ export function closeToDoIssueDetailPage () {
         //Reload the page instead of just close de detail page because to update de todoIssue changed data
         // hidePageContent("todo-details")
         changePageContent("project-details", "flex")
-        clearSearchAndResetList()
-
-
-    } else if (pageWIP === "todo-page") {
+        
+    } if (pageWIP === "todo-page") {
         changePageContent("todo-page", "flex")
     }
+
+    clearSearchAndResetList()
 
     //Return the checkbox for managing the width of the sidebar to its original state before showing the todo-Details page
     const sidebarActiveCheckbox = document.getElementById("sidebar-active") as HTMLInputElement
@@ -1571,8 +1571,7 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
             const newUiToDoIssueElement = updateToDoIssueUi(toDoIssue)
             console.log("newUiToDoIssueElement:", newUiToDoIssueElement)
             const todoIssueOriginal = todoList[todoIssueIndex]
-            todoIssueOriginal.ui = newUiToDoIssueElement
-            
+            todoIssueOriginal.ui = newUiToDoIssueElement            
         }
         // Update the rendered list of Ui List inside the project detail page
         const pageWIP = localStorage.getItem("pageWIP")
@@ -1583,9 +1582,6 @@ function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, orig
             renderToDoIssueList(project.todoList)
             setUpToDoBoard(project.todoList)
         }
-
-
-        
     }
 }
 
@@ -1599,7 +1595,7 @@ let currentSearchIndex: number = -1;
 
 
 export function searchTodoIssues(searchText: string): void {
-    // Obtener el proyecto activo
+    // Get active project
     const selectedProjectId = localStorage.getItem("selectedProjectId");
     if (!selectedProjectId) return;
 
@@ -1609,7 +1605,7 @@ export function searchTodoIssues(searchText: string): void {
 
     const searchLower = searchText.toLowerCase();
 
-    // Filtrar por titulo
+    // Filter by title/description/tags/assignedUsers/statusColumn
     filteredTodos = activeProject.todoList.filter(todo =>
         todo.title.toLowerCase().includes(searchLower) ||
         todo.description.toLowerCase().includes(searchLower) ||
@@ -1618,8 +1614,25 @@ export function searchTodoIssues(searchText: string): void {
         ToDoIssue.getStatusColumnText(todo.statusColumn).toLowerCase().includes(searchLower)
     );
 
-    currentSearchIndex = -1;
-    updateTodoSearchResults();
+
+    const currentPage = localStorage.getItem("pageWIP");
+
+    if (currentPage === "project-details") {
+        currentSearchIndex = -1;
+        updateTodoSearchResults();
+    } else if (currentPage === "todo-page") {
+        if (filteredTodos.length > 0) {
+            organizeFilteredToDoIssuesByStatusColumns(filteredTodos);
+        } else {
+            // If no results, restore all ToDo Issues
+            const columns = document.querySelectorAll('.todo-column-list');
+            columns.forEach(column => {
+                column.innerHTML = ''; // Clear all column items
+            });
+          
+        }
+    }
+        
 }
 
 
@@ -1627,10 +1640,10 @@ function updateTodoSearchResults(): void {
     const todoListContainer = document.getElementById('details-page-todo-list');
     if (!todoListContainer) return;
 
-    // Limpiar el contenedor
+    // Clear the container
     todoListContainer.innerHTML = '';
 
-    // Mostrar los resultados filtrados
+    // Show filtered results
     filteredTodos.forEach((todo, index) => {
         const todoElement = todo.ui.cloneNode(true) as HTMLElement;
         if (index === currentSearchIndex) {
@@ -1638,7 +1651,7 @@ function updateTodoSearchResults(): void {
             todoElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        // Recrear el event listener para el todo
+        // Recreate the event listener for the todo
         todoElement.addEventListener('click', () => {
             showPageContent("todo-details", "flex");
             setDetailsIssuePage(todo);
@@ -1647,21 +1660,34 @@ function updateTodoSearchResults(): void {
         todoListContainer.appendChild(todoElement);
     });
 
-    // Actualizar contador de resultados
+    // Update results counter
     const counterElement = document.getElementById('todolist-search-counter') as HTMLElement;
     if (counterElement) {
-        // Obtener el número total de todos del proyecto actual
-        const selectedProjectId = localStorage.getItem("selectedProjectId");
-        const projectManager = ProjectsManager.getInstance();
-        const activeProject = projectManager.getProject(selectedProjectId);
-        const totalTodos = activeProject ? activeProject.todoList.length : 0;
+        updateTodoCounter(filteredTodos, counterElement )
+        
+    }
+}
 
-        // Construir el mensaje con ambos números
-        if (filteredTodos.length === 0 && totalTodos > 0) {
-            counterElement.textContent = `${totalTodos} ${totalTodos === 1 ? 'Task' : 'Tasks'} in total`;
-        } else {
-            counterElement.textContent = `${filteredTodos.length} ${filteredTodos.length === 1 ? 'Task' : 'Tasks '} of ${totalTodos}`;
-        }
+
+export function updateTodoCounter(filteredTodos: IToDoIssue[], counterElement: HTMLElement) {
+    // Get the total number of todos for the current project
+    const selectedProjectId = localStorage.getItem("selectedProjectId");
+    
+    // Check that selectedProjectId is not null
+    if (!selectedProjectId) {
+        throw new Error("No project selected")
+        
+    }
+
+    const projectManager = ProjectsManager.getInstance();
+    const activeProject = projectManager.getProject(selectedProjectId);
+    const totalTodos = activeProject ? activeProject.todoList.length : 0;
+
+    // Build the message with both numbers
+    if (filteredTodos.length === 0 && totalTodos > 0) {
+        counterElement.textContent = `${totalTodos} ${totalTodos === 1 ? 'Task' : 'Tasks'} in total`;
+    } else {
+        counterElement.textContent = `${filteredTodos.length} ${filteredTodos.length === 1 ? 'Task' : 'Tasks'} of ${totalTodos}`;
     }
 }
 
@@ -1686,32 +1712,16 @@ export function selectCurrentSearchResult(): void {
     }
 }
 
-// Función para inicializar los eventos de búsqueda
-function initializeSearchEvents() {
-    const searchInput = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
 
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            searchTodoIssues((e.target as HTMLInputElement).value);
-        });
-    }
-}
-
-function resetSearchResults() {
-    filteredTodos = [];
-    currentSearchIndex = -1;
-    updateTodoSearchResults();
-}
-
-// Nueva función para reinicializar el estado de búsqueda
-function resetSearchState() {
+// New function to reinitialize the search state
+export function resetSearchState(counterElement: HTMLElement) {
     filteredTodos = [];
     currentSearchIndex = -1;
 
-    // Actualizar solo el contador, mostrando el total de tareas
-    const counterElement = document.getElementById('todolist-search-counter') as HTMLElement;
-    if (counterElement) {
-        const selectedProjectId = localStorage.getItem("selectedProjectId");
+    // Update only the counter, showing the total number of tasks
+    
+    const selectedProjectId = localStorage.getItem("selectedProjectId");
+    if (selectedProjectId) {
         const projectManager = ProjectsManager.getInstance();
         const activeProject = projectManager.getProject(selectedProjectId);
         const totalTodos = activeProject ? activeProject.todoList.length : 0;
@@ -1719,22 +1729,27 @@ function resetSearchState() {
     }
 }
 
-
-
-// Función para limpiar el input de búsqueda y restablecer la lista
-function clearSearchAndResetList() {
-    const searchInput = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
-    if (searchInput) {
-        searchInput.value = '';
+// Function to clear the search input and reset the list
+export function clearSearchAndResetList() {
+    const searchInputDetailsPage = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
+    const searchInputToDoPage = document.getElementById('todo-search-in-Todo-Page') as HTMLInputElement;
+    if (searchInputDetailsPage) {
+        searchInputDetailsPage.value = '';
+    }
+    if (searchInputToDoPage) {
+        searchInputToDoPage.value = '';
     }
     searchTodoIssues('');
 }
 
-// Exportar la función para poder llamarla desde donde se maneja el cambio de sección
+// Export the function to be able to call it from the aside button to open ProjectDetails
 export function setupProjectDetailsSearch() {
 
-    // Reinicializar solo el estado de búsqueda
-    resetSearchState();
+    // Reinitialize only the search state
+    const counterElement = document.getElementById('todolist-search-counter') as HTMLElement
+    if (counterElement) {
+        resetSearchState(counterElement);
+    }
 
     const searchInput = document.getElementById('todo-search-in-Project-Details') as HTMLInputElement;
     const btnArrowUp = document.getElementById('btn-todo-arrowup');
@@ -1742,21 +1757,21 @@ export function setupProjectDetailsSearch() {
 
 
     if (searchInput) {
-        // Limpiar el input
+        // Clear the input
         searchInput.value = '';
 
-        // Remover listener anterior si existe
+        // Remove previous listener if it exists
         const newSearchInput = searchInput.cloneNode(true) as HTMLInputElement;
         searchInput.parentNode?.replaceChild(newSearchInput, searchInput);
 
-        // Añadir nuevo listener para la busqueda
+        // Add new listener for the search
         newSearchInput.addEventListener('input', (e) => {
             searchTodoIssues((e.target as HTMLInputElement).value);
         });
 
-        // Añadir listener para teclas de navegación
+        // Add listener for navigation keys
         document.addEventListener('keydown', (e: KeyboardEvent) => {
-            if (newSearchInput.value.trim() === '') return; // Solo si hay texto en la búsqueda
+            if (newSearchInput.value.trim() === '') return; // Only if there is text in the search
 
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -1770,7 +1785,7 @@ export function setupProjectDetailsSearch() {
                 
             }
         });
-        // Añadir listeners para los botones de navegación
+        // Add listeners for navigation buttons
         if (btnArrowUp) {
             btnArrowUp.addEventListener('click', () => {
                 if (newSearchInput.value.trim() === '') return;
@@ -1785,7 +1800,7 @@ export function setupProjectDetailsSearch() {
             });
         }
     }
-    // Añadir event listener para clicks en todo issues
+    // Add event listener for clicks on all issues
     const todoListContainer = document.getElementById('details-page-todo-list');
     if (todoListContainer) {
         todoListContainer.addEventListener('click', (e) => {

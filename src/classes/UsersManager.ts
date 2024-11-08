@@ -72,7 +72,7 @@ function setupProjectSelectUsersPage(projectsList: Project[], selectedProjectId?
         updateAsideButtonsState()
 
 
-        // Ahora puedes utilizar la variable selectedProjectIdse actualiza usando la función setUpToDoBoard 
+        // Now you can use the selectedProjectId variable, it is updated using the setUpToDoBoard function
         console.log("selectedProjectId", changedProjectId)
     })
 }

@@ -4,7 +4,7 @@ import { showModal, closeModal, toggleModal, closeModalProject , changePageConte
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
-import { renderToDoIssueListInsideProject, setupProjectDetailsSearch } from "./ToDoManager"
+import { clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState, setupProjectDetailsSearch } from "./ToDoManager"
 
 export class ProjectsManager {
     list: Project[] = []
@@ -85,12 +85,11 @@ export class ProjectsManager {
 
                                 // Set the localStorage value for pageWIP to "project-details"
                                 localStorage.setItem("pageWIP", "project-details")
+                                localStorage.setItem("selectedProjectId", newProject.id)
 
                                 ProjectsManager.setDetailsPage(newProject)
                                 console.log(" details pages set in a new window")
                                 
-
-                                localStorage.setItem("selectedProjectId", newProject.id)
                                 updateAsideButtonsState()
                             })
                             // 4. Add the new project to the list and UI
@@ -327,10 +326,11 @@ export class ProjectsManager {
 
                                         // Set the localStorage value for pageWIP to "project-details"
                                         localStorage.setItem("pageWIP", "project-details")
+                                        localStorage.setItem("selectedProjectId", newProject.id)
 
                                         ProjectsManager.setDetailsPage(newProject);
                                         console.log("Details page set in a new window");
-                                        localStorage.setItem("selectedProjectId", newProject.id)
+                                        
                                         updateAsideButtonsState()
                                     });
 
@@ -367,6 +367,8 @@ export class ProjectsManager {
             })
             
             project.ui.addEventListener("click", () => {
+                localStorage.setItem("selectedProjectId", project.id)
+
                 ProjectsManager.setDetailsPage(project)
                 changePageContent("project-details", "flex")
 
@@ -376,7 +378,7 @@ export class ProjectsManager {
                 // Set the localStorage value for pageWIP to "project-details"
                 localStorage.setItem("pageWIP", "project-details")                
                 console.log("Details pages set in a new window");
-                localStorage.setItem("selectedProjectId", project.id)
+                
                 updateAsideButtonsState()
             
             })
@@ -393,6 +395,14 @@ export class ProjectsManager {
     static setDetailsPage(project: Project) {
         const detailPage = document.getElementById("project-details")
         if (!detailPage) { return }
+
+
+        //Set up counter of the search input in the todo-list
+        const counterElement = document.getElementById('todolist-search-counter') as HTMLElement
+        if (counterElement) {
+            resetSearchState(counterElement);
+        }
+
         
         for (const key in project) {
             const dataElement = detailPage.querySelectorAll(`[data-project-info="${key}"]`)
@@ -465,7 +475,7 @@ export class ProjectsManager {
             todoHeader.textContent = ""
             todoHeader.textContent = project.name
         }
-    
+        
     
     }
 
@@ -498,21 +508,28 @@ export class ProjectsManager {
 
                 // Select the project corresponding to the stored project ID
                 
-                selectionProjectForProjectDetailPage.value = projectIdSelected              
-                
+                selectionProjectForProjectDetailPage.value = projectIdSelected
             })
-
         }
 
         //Listen when the user change the Project inside the ToDo Board
         selectionProjectForProjectDetailPage.addEventListener("change", () => {
             const changedProjectId = selectionProjectForProjectDetailPage.value
 
+            // Reset the number of task in the counter of todo Issues 
+            const counterElementProjectDetails = document.getElementById('todolist-search-counter') as HTMLElement
+            if (counterElementProjectDetails) {
+                resetSearchState(counterElementProjectDetails)
+            }
+
+            //Clean the search input
+            clearSearchAndResetList()
+
             //Save the Id of the selected project in the local storage
             localStorage.setItem("selectedProjectId", changedProjectId)
             updateAsideButtonsState()
 
-            // Ahora puedes utilizar la variable selectedProjectId, se actualiza usando la función setUpToDoBoard 
+            // Now you can use the selectedProjectId variable, it is updated using the setUpToDoBoard function
             console.log("selectedProjectId", changedProjectId)
 
             // Recover the project with this ID
@@ -599,7 +616,6 @@ export class ProjectsManager {
             throw new Error("Project UI element not found for update!")
         }
     }
-    
 
     populateProjectDetailsForm(project: Project) {
         const projectDetailsForm = document.getElementById("new-project-form")
@@ -702,10 +718,11 @@ export class ProjectsManager {
 
                     //Set the funcionality of search between todoIssues
                     setupProjectDetailsSearch()
+                    localStorage.setItem("selectedProjectId", project.id)
 
                     ProjectsManager.setDetailsPage(project);
                     console.log("Details page set in a new window");
-                    localStorage.setItem("selectedProjectId", project.id)
+                    
                     updateAsideButtonsState()
                 });
 
