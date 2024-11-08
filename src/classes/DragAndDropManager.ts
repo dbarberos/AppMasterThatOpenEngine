@@ -351,6 +351,12 @@ function handleTodoDelete(el: Element) {
 
                         // Update the board UI
                         setUpToDoBoard(projectId);
+
+                        // Reset the counter after deletion
+                        const counterElement = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement;
+                        if (counterElement) {
+                            resetSearchState(counterElement);
+                        }
                     }
                 }
                 popupDeleteToDoIssueConfirmation.closeMessageModal();
