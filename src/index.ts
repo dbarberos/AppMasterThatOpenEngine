@@ -10,8 +10,7 @@ import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueD
 import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManager";
 import "./classes/DragAndDropManager.ts";
 import { setUpUserPage } from "./classes/UsersManager.ts";
-
-
+import "./classes/VisorModelManager.ts";
 
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 ProjectsManager.setContainer(projectListUI)
@@ -237,8 +236,10 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
                                         <tr>
                                             <td style="border-bottom: 1px solid #ccc;"><b>${key}</b></td>
                                             <td style="border-bottom: 1px solid #ccc; line-height: 1.5; border-spacing 0 10px;">
-                                                From: <i>${changesInProject[key][0]}</i><br>
-                                                To: <i style="color: var(--popup-warning);">${changesInProject[key][1]}</i>
+                                                <div style="width: 95%; word-break: break-all; overflow: auto; scrollbar-width: none;">
+                                                    From: <i>${changesInProject[key][0]}</i><br>
+                                                    To: <i style="color: var(--popup-warning);">${changesInProject[key][1]}</i>
+                                                </div
                                             </td>
                                         </tr>
                                     `
