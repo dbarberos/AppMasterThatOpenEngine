@@ -1,10 +1,11 @@
-import { updateAsideButtonsState } from "../index.ts"
 import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from "./Project"
 import { showModal, closeModal, toggleModal, closeModalProject , changePageContent} from "./UiManager"
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
 import { clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState, setupProjectDetailsSearch } from "./ToDoManager"
+
+import { updateAsideButtonsState } from "./HTMLUtilities.ts"
 
 export class ProjectsManager {
     list: Project[] = []
@@ -353,7 +354,7 @@ export class ProjectsManager {
                 }
                 popupDuplicateProject.showNotificationMessage(buttonCallbacks);
             })
-         
+        
         } else {
             // No duplicate, create the project
             const project = new Project(data)

@@ -2,6 +2,9 @@ import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import { GUI } from "three/examples/jsm/libs/lil-gui.module.min"
 
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js"
+import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js"
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 //*** ThreeJS viewer ***
 
 //Set the scene
@@ -49,9 +52,19 @@ const cubeMesh = new THREE.Mesh(boxGeometry, material)
 const ambientLight = new THREE.AmbientLight()
 ambientLight.intensity = 0.4
 const directionalLight = new THREE.DirectionalLight()
+const spotLight = new THREE.SpotLight(0xffffff, 500);
+spotLight.angle = Math.PI / 5;
+spotLight.penumbra = 0.2;
+spotLight.position.set(2, 3, 3);
+spotLight.castShadow = true;
+spotLight.shadow.camera.near = 3;
+spotLight.shadow.camera.far = 50;
+spotLight.shadow.mapSize.width = 1024;
+spotLight.shadow.mapSize.height = 1024;
+
 
 // *** Add the light and other objects to the scene ***
-scene.add(ambientLight, directionalLight, cubeMesh)
+scene.add(ambientLight, directionalLight, spotLight)
 
 
 function resizeViewer() {
@@ -95,24 +108,42 @@ window.addEventListener("resize", () => {
     requestAnimationFrame(debouncedResize);
 });
 
+// Load a objectS instead showing the cube
+// const mtlLoader = new MTLLoader();
+// mtlLoader.load("../../assets/Gear/Gear1.mtl", (materials) => {
+//     materials.preload(); // Prepara los materiales para su uso
+
+//     // Cargar el modelo OBJ después de que los materiales estén listos
+//     const objLoader = new OBJLoader();
+//     objLoader.setMaterials(materials); // Asigna los materiales al cargador OBJ
+//     objLoader.load("../../assets/Gear/Gear1.obj", (object) => {
+//         scene.add(object); // Agrega el objeto a la escena
+//     });
+// });
+
+
+
 //Add "Helpers"
 const axesHelper = new THREE.AxesHelper(5)
-const gridHelper = new THREE.GridHelper(10, 10, "#808080", "#d1cdcd" )
+const gridHelper = new THREE.GridHelper(200, 100, "#808080", "#d1cdcd" )
 gridHelper.material.transparent = true
 gridHelper.material.opacity = 0.4
 const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
+const spotLightHelper = new THREE.SpotLightHelper(spotLight, "yellow");
 
-scene.add(axesHelper, gridHelper, directionalLightHelper)
 
-renderScene()
+scene.add(axesHelper, gridHelper, directionalLightHelper,spotLightHelper)
+
+// renderScene()
 
 // *** Add the GUI ***
 // Generate the folders
 const gui = new GUI({ autoplace: false }) //Turn off automatic placement.
 gui.domElement.style.display = 'none'; // Hide the GUI Control initialy
 
-const cubeControls = gui.addFolder('Cube')
-const lightControls = gui.addFolder('Light')
+const meshControls = gui.addFolder('Model')
+const lightControlsDirectional = gui.addFolder('Light directional')
+const lightControlsSpot = gui.addFolder('Light spot')
 
 //Show and Hide GUI Controls
 let guiVisibility = false;
@@ -146,23 +177,48 @@ gui.domElement.addEventListener('mouseleave', () => {
 })
 
 
-cubeControls.add(cubeMesh.position, "x", -10, 10, 0.1)
-cubeControls.add(cubeMesh.position, "y", -10, 10, 0.1)
-cubeControls.add(cubeMesh.position, "z", -10, 10, 0.1)
-cubeControls.add(cubeMesh, "visible")
-cubeControls.addColor(cubeMesh.material, "color")
-lightControls.add(directionalLight.position, "x", -20, 20, 1)
-lightControls.add(directionalLight.position, "y", -20, 20, 1)
-lightControls.add(directionalLight.position, "z", -20, 20, 1)
-lightControls.add(directionalLight, "intensity", 0, 1, 0.01)
-lightControls.addColor(directionalLight, "color")
+// cubeControls.add(cubeMesh.position, "x", -10, 10, 0.1)
+// cubeControls.add(cubeMesh.position, "y", -10, 10, 0.1)
+// cubeControls.add(cubeMesh.position, "z", -10, 10, 0.1)
+// cubeControls.add(cubeMesh, "visible")
+// cubeControls.addColor(cubeMesh.material, "color")
+lightControlsDirectional.add(directionalLight.position, "x", -20, 20, 1)
+lightControlsDirectional.add(directionalLight.position, "y", -20, 20, 1)
+lightControlsDirectional.add(directionalLight.position, "z", -20, 20, 1)
+lightControlsDirectional.add(directionalLight, "intensity", 0, 1, 0.01)
+lightControlsDirectional.addColor(directionalLight, "color")
 directionalLightHelper.visible = false
-lightControls.add(directionalLightHelper, "visible")
+lightControlsDirectional.add(directionalLightHelper, "visible")
 
+lightControlsSpot.add(spotLight.position, "x", -20, 20, 1)
+lightControlsSpot.add(spotLight.position, "y", -20, 20, 1)
+lightControlsSpot.add(spotLight.position, "z", -20, 20, 1)
+lightControlsSpot.add(spotLight, "intensity", 0, 1, 0.01)
+lightControlsSpot.add(spotLight, "angle", 0, Math.PI / 5, 0.01)
+lightControlsSpot.add(spotLight, "penumbra", 0, 1, 0.01)
+lightControlsSpot.addColor(spotLight, "color")
+spotLightHelper.visible = true
+lightControlsSpot.add(spotLightHelper, "visible")
 
+const gltfLoader = new GLTFLoader();
 
+gltfLoader.load("../../assets/models/scene.gltf", (gltfobject) => {
+    console.log("Loaded GLTF object:", gltfobject);
 
+    // loaded GLTF object to control
+    const loadedMesh = gltfobject.scene.children[0]; // Adjust this index based on your model structure
+    scene.add(gltfobject.scene);
 
+    // Update GUI controls to manipulate the loaded GLTF mesh
+    meshControls.add(loadedMesh.position, "x", -100, 100, 0.5);
+    meshControls.add(loadedMesh.position, "y", -100, 100, 0.5);
+    meshControls.add(loadedMesh.position, "z", -100, 100, 0.5);
+    meshControls.add(loadedMesh, "visible");
 
+}, undefined, (error) => {
+    console.error("An error occurred while loading the GLTF model:", error);
+});
+
+renderScene()
 
 

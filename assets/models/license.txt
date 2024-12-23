@@ -1,0 +1,11 @@
+Model Information:
+* title:	Modern Building 11
+* source:	https://sketchfab.com/3d-models/modern-building-11-2269623478a64124b059d5227be12ae2
+* author:	Konstantin Chemelev (https://sketchfab.com/burunduk)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Modern Building 11" (https://sketchfab.com/3d-models/modern-building-11-2269623478a64124b059d5227be12ae2) by Konstantin Chemelev (https://sketchfab.com/burunduk) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
