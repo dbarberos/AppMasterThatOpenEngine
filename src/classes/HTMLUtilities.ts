@@ -1,5 +1,7 @@
 import { MessagePopUp } from "./MessagePopUp"
 import { showModal, closeModal, toggleModal, closeModalProject, changePageContent, showPageContent, hidePageContent } from "./UiManager"
+import { ProjectsManager } from "./ProjectsManager";
+
 
 export function toUpperCase(input: HTMLInputElement) {
     input.value = input.value.toUpperCase();
@@ -239,3 +241,74 @@ function initializeTabs() {
 
 // Call the function to initialize tabs when the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", initializeTabs);
+
+
+// Function to manage the aside button. Related to the project loaded and other conditions
+export function updateAsideButtonsState() {
+    const btnProjectPage = document.querySelector("#asideBtnProjects") as HTMLButtonElement;
+    const btnProjectDetails = document.querySelector("#asideBtnProjectDetails") as HTMLButtonElement;
+    const btnToDoBoards = document.querySelector("#asideBtnToDoBoards") as HTMLButtonElement;
+    const btnUsersBoards = document.querySelector("#asideBtnUsers") as HTMLButtonElement;
+    const projectSelectedUsersPage = document.querySelector("#projectSelectedUsersPage") as HTMLSelectElement;
+
+    const selectedProjectId = localStorage.getItem("selectedProjectId");
+    const currentPage = localStorage.getItem("pageWIP");
+
+    // Obtain the list of projects using ProjectManager singleton pattern
+    const projectManager = ProjectsManager.getInstance();
+    const projects = projectManager.list;
+
+    if (btnProjectPage && btnProjectDetails && btnToDoBoards && btnUsersBoards) {
+        
+        // First, enable all buttons.
+        btnProjectPage.disabled = false;
+        btnProjectDetails.disabled = false;
+        btnToDoBoards.disabled = false;
+        btnUsersBoards.disabled = false;
+        // Remove the disabled classes
+        btnProjectPage.classList.remove('disabled-button');
+        btnProjectDetails.classList.remove('disabled-button');
+        btnToDoBoards.classList.remove('disabled-button');
+        btnUsersBoards.classList.remove('disabled-button');
+        // Disable buttons according to the current page
+        switch (currentPage) {
+            case "project-page":
+                btnProjectPage.disabled = true;
+                btnProjectPage.classList.add('disabled-button');
+                break;
+            case "project-details":
+                btnProjectDetails.disabled = true;
+                btnProjectDetails.classList.add('disabled-button');
+                break;
+            case "todo-page":
+                btnToDoBoards.disabled = true;
+                btnToDoBoards.classList.add('disabled-button');
+                break;
+            case "users-page":
+                btnUsersBoards.disabled = true;
+                btnUsersBoards.classList.add('disabled-button');
+                break;
+        }
+        if (!selectedProjectId) {
+            // No project selected, disable buttons
+            btnProjectDetails.disabled = true;
+            btnToDoBoards.disabled = true;
+            //Add CSS class to visually show they are disabled
+            btnProjectDetails.classList.add('disabled-button');
+            btnToDoBoards.classList.add('disabled-button');
+        }
+    }
+    // Manage the selection state of the projectSelectedUsersPage
+    if (projectSelectedUsersPage) {
+        const shouldBeDisabled = !selectedProjectId && projects.length === 1 && projects[0].id === "default-project";
+
+        if (shouldBeDisabled) {
+            projectSelectedUsersPage.disabled = true;
+            projectSelectedUsersPage.classList.add('disabled-select');
+        } else {
+            projectSelectedUsersPage.disabled = false;
+            projectSelectedUsersPage.classList.remove('disabled-select');
+        }
+
+    }
+}

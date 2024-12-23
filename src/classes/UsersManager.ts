@@ -1,13 +1,14 @@
-import { updateAsideButtonsState } from "../index.ts"
+// import { updateAsideButtonsState } from "../index.tsx"
 import { ProjectsManager } from "./ProjectsManager";
 import { Project } from "./Project"
 import { showModal, closeModal, toggleModal, closeModalProject, changePageContent, showPageContent, hidePageContent } from "./UiManager"
-
+import { updateAsideButtonsState } from "./HTMLUtilities.ts";
 
 import { renderToDoIssueListInsideProject, renderToDoIssueList, getProjectByToDoIssueId, setDetailsIssuePage, deleteToDoIssue } from "./ToDoManager";
 import { ToDoIssue, IToDoIssue } from "./ToDoIssue"
 import { MessagePopUp } from "./MessagePopUp"
 import { setupProjectSelect } from "./DragAndDropManager.ts";
+
 
 
 

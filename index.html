@@ -10,7 +10,8 @@
 </head>
 
 <body class="">
-    <aside id="sidebar">
+    <div id="app"></div>
+    <!-- <aside id="sidebar">
         <div class="sidebar-organization">
             <img id="company-logo" src="./assets/company-logo.svg" alt="Construction company" title="company-logo">
             <ul id="navigation-bar">
@@ -62,11 +63,9 @@
                 </div>
             </div>
             
-       
-
         </div>
 
-    </aside>
+    </aside> -->
     
     
     <main id="content">
@@ -588,12 +587,12 @@
                 <h2 style="display: flex; align-items: center; column-gap: 20px">Projects<span class="material-icons-round" style="padding: 10px;">location_city</span></h2>
                 <div style="display:flex; align-items: center; column-gap: 5px; " > 
                     <div>
-                        <button id="export-projects-JSON-btn" style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
+                        <button title="Export project/s" id="export-projects-JSON-btn" style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
                             <span class="material-icons-round">file_upload</span>
                         </button>
                     </div>
                     <div>
-                        <button id="import-projects-JSON-btn" style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
+                        <button title="Import project/s" id="import-projects-JSON-btn" style="border-radius: var(--br-circle); aspect-ratio: 1 ; padding: 0; display:flex; justify-content: center;">
                             <span class="material-icons-round">file_download</span>
                         </button>
                     </div>
@@ -634,7 +633,7 @@
             </div>
         </section>
 
-
+        
         <section class="page" id="project-details" data-page style="display: ">
             <header style="display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap:20px; column-gap: 100px; user-select: none;" >
                 <div style="display: flex;column-gap: 20px">
@@ -649,9 +648,6 @@
                         </select>
                     </div>
                 </div>
-
-
-
 
                 <div>
                     <h2 data-project-info="name">Hospital Center</h2>
@@ -787,6 +783,12 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <div id="viewer-container-father"  >
+                    <!-- <div id="gui-container" style="position: relative; width: 300px; height: 400px;">
+                    </div> -->
+                    <div  id="viewer-container" class="viewer3d-board">
                     </div>
                 </div>
             </div>
@@ -1920,7 +1922,7 @@
                             <img src="" alt="">
                         </picture>
                         
-                        <button class="trash-drop-btn" id="trash-drop-btn" >
+                        <button title="Delete To-Do" class="trash-drop-btn" id="trash-drop-btn" >
                             <svg class="todo-task-move" role="img" aria-label="edit" width="32" height="40">
                                 <use href="#trash"></use>
                             </svg>For delete drop here
@@ -2207,7 +2209,7 @@
                             
                         </div>
                         <div style="display: flex; flex-direction: row; column-gap: 10px; align-items:center">
-                            <button class="todo-icon-edit" id="delete-todoIssue-btn"
+                            <button title="Delete To-Do" class="todo-icon-edit" id="delete-todoIssue-btn"
                                 style="display:flex;border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center">
                                 <svg class="todo-icon-edit" role="img" aria-label="trash" width="30" height="30" >
                                     <use href="#trash"></use>
@@ -2427,6 +2429,6 @@
 
 
     </main>
-    <script type="module" src="./src/index.ts" defer></script>
+    <script type="module" src="./src/index.tsx" defer></script>
 </body>
 </html>
