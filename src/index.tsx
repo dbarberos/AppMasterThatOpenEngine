@@ -1,13 +1,14 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { Sidebar } from './react-components/Sidebar.tsx';
+import { Sidebar, ProjectsPage } from './react-components';
+import { ProjectsManagerProvider } from './react-components/ProjectsManagerContext';
 
 
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project.ts";
 import { IToDoIssue, ToDoIssue } from "./classes/ToDoIssue.ts"
 import { ProjectsManager } from "./classes/ProjectsManager.ts";
 import { showModal, closeModal, toggleModal, changePageContent, PageChangeEvent, PageShowEvent, PageHideEvent } from "./classes/UiManager.ts";
-import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
+//import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp.ts"
 import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList, searchTodoIssues, navigateSearchResults, selectCurrentSearchResult, setupProjectDetailsSearch, resetSearchState } from "./classes/ToDoManager.ts"
@@ -21,14 +22,22 @@ import "./classes/VisorModelManager.ts";
 const rootElement = document.getElementById('app') as HTMLElement;
 const appRoot = ReactDOM.createRoot(rootElement)
 appRoot.render(
-    <Sidebar />
+    
+    <ProjectsManagerProvider>
+        
+        <>
+            <Sidebar />
+            <ProjectsPage />
+        </>
+        </ProjectsManagerProvider>
+        
 );
 
-
+/* CALLING THE SINGLETON PATTERN
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 ProjectsManager.setContainer(projectListUI)
 const projectManager = ProjectsManager.getInstance()
-
+*/
 
 
 //Set the initial view of the APP with the projects page, hidding the rest of sections
@@ -39,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 });
-
+/* Create a new project from the button
 // Create a new project from de button
 const newProjectBtn = document.getElementById("new-project-btn")
 if (newProjectBtn) {
@@ -82,7 +91,7 @@ if (newProjectBtn) {
         if (discardButton) {
             discardButton.textContent = "Cancel";
         }
-        //Remove the delete project button from the modal in case previously we updated a prject
+        //Remove the delete project button from the modal in case previously we updated a project
         const parentDeleteBtn = document.getElementById("titleModalNewProject")
         if (parentDeleteBtn) {
             const deleteButton = document.getElementById("delete-project-btn")
@@ -96,8 +105,9 @@ if (newProjectBtn) {
 } else {
     console.warn("New project button was not found")
 }
+*/
 
-
+/* Obtaining data project from the form via giving an id to the form and using FormData
 //Obtaining data project from the form via giving an id to the form and using FormData
 const projectForm = document.getElementById("new-project-form")
 const cancelForm: Element | null = document.getElementById("cancel-project-btn");
@@ -367,8 +377,8 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
     }
     
 }
-
-
+*/
+/* Export and import projects to a JSON
 // Export projects to a JSON
 document.addEventListener("DOMContentLoaded", () => {
     const exportProjectsBtn = document.getElementById("export-projects-JSON-btn")
@@ -392,6 +402,8 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("The import button was not found. Check the ID!")
     }
 })
+*/
+
     
 //Main button of project(aside) return to the projects list
 const btnMainProjects = document.querySelector("#asideBtnProjects")

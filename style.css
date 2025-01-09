@@ -398,7 +398,7 @@ left: 5px;
 
 }
 
-body {
+#app {
     display: grid;
     grid-template-columns: 300px 1fr;
     grid-template-areas: "sidebar content";
@@ -855,32 +855,32 @@ button:active {
     fill: var(--color-fontbase);
 }
 
-body:has(#sidebar-active:checked) {
+#app:has(#sidebar-active:checked) {
     grid-template-columns: 130px 1fr;
     
 }
 
-body:has(#sidebar-active:checked) #navigation-bar li span.material-icons-round {
+#app:has(#sidebar-active:checked) #navigation-bar li span.material-icons-round {
             /* No changes in the icon style */
 }
-body:has(#sidebar-active:checked) .close-sidebar-btn > svg{
+#app:has(#sidebar-active:checked) .close-sidebar-btn > svg{
     display: none;
     /* No changes in the icon style */
 }
-body:not(:has(#sidebar-active:checked)) .open-sidebar-btn > svg{
+#app:not(:has(#sidebar-active:checked)) .open-sidebar-btn > svg{
     display: none;
     /* No changes in the icon style */
 }
 
 
-body:has(#sidebar-active:checked) #navigation-bar li {
+#app:has(#sidebar-active:checked) #navigation-bar li {
     font-size: 0;
     column-gap: 0px;
     
     /* padding-inline-start: 0px; */
 }
 
-body:has(#sidebar-active:checked) #navigation-bar li::before {
+#app:has(#sidebar-active:checked) #navigation-bar li::before {
     content: attr(data-text);
     font-size: var(--font-base);
     
@@ -1231,8 +1231,8 @@ input[type="text"], textarea, select, input[type="date"], input[type="search"], 
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    appearance: none;
-        -webkit-appearance: none;
+    #appearance: none;
+        -webkit-#appearance: none;
 }
 
 input[type="text"]:focus, textarea:focus, select:focus, input[type="date"]:focus, input[type="search"], input[type="number"]:focus {
@@ -1248,7 +1248,7 @@ input[type="text"]:focus, textarea:focus, select:focus, input[type="date"]:focus
 }
 
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
+    -webkit-#appearance: none;
     margin: 0;
 }
 
@@ -1580,8 +1580,8 @@ span:hover {
     
     transition: all 0.3s ease-in-out;
     user-select:none;
-    appearance: none;
-        -webkit-appearance: none;
+    #appearance: none;
+        -webkit-#appearance: none;
 
 }
 .radio .checkmark:after {
@@ -1686,8 +1686,8 @@ fieldset:after {
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    appearance: none;
-    -webkit-appearance: none;
+    #appearance: none;
+    -webkit-#appearance: none;
 }
 
 
@@ -3024,7 +3024,7 @@ button  .btn-popup{
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-    overflow: visible; /*swapping by padding if problems with text overflow: visible*/
+    overflow: visible; /*sw#apping by padding if problems with text overflow: visible*/
     row-gap: 30px;
     column-gap: var(--gap-lg); 
     user-select: none;
@@ -3189,8 +3189,8 @@ button  .btn-popup{
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    appearance: none;
-    -webkit-appearance: none;
+    #appearance: none;
+    -webkit-#appearance: none;
 }
 
 .lil-gui {

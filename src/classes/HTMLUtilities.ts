@@ -2,6 +2,8 @@ import { MessagePopUp } from "./MessagePopUp"
 import { showModal, closeModal, toggleModal, closeModalProject, changePageContent, showPageContent, hidePageContent } from "./UiManager"
 import { ProjectsManager } from "./ProjectsManager";
 
+import { useProjectsManager } from '../react-components/ProjectsManagerContext'
+
 
 export function toUpperCase(input: HTMLInputElement) {
     input.value = input.value.toUpperCase();
@@ -254,9 +256,14 @@ export function updateAsideButtonsState() {
     const selectedProjectId = localStorage.getItem("selectedProjectId");
     const currentPage = localStorage.getItem("pageWIP");
 
+    
     // Obtain the list of projects using ProjectManager singleton pattern
-    const projectManager = ProjectsManager.getInstance();
-    const projects = projectManager.list;
+    //const projectManager = ProjectsManager.getInstance();
+    
+    // Obtain the list of projects from the reactContext component
+    const projectsManager = useProjectsManager();
+    const projects = projectsManager.list;
+    
 
     if (btnProjectPage && btnProjectDetails && btnToDoBoards && btnUsersBoards) {
         

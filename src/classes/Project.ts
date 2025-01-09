@@ -1,10 +1,9 @@
 import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue } from "./ToDoIssue"
-import { renderToDoIsuueListInsideProject } from "./ToDoManager";
+
 
 export type ProjectStatus = "Pending" | "Active" | "Finished"
 export type UserRole = "Architect" | "Engineer" | "Developer"
-export type BusinessUnit = "Edification" | "Civil" | "Transport" | "Bridge" | "Other"
 
 export interface IProject {
     name: string
@@ -16,6 +15,7 @@ export interface IProject {
     finishDate: Date
     cost: Number
     todoList: IToDoIssue[] 
+    
 
 }
 // const dummyProject: IProject = {
@@ -44,16 +44,17 @@ export class Project implements IProject {
     // To satisfy IProject
     name: string
     acronym: string
-    businessUnit: "Edification" | "Civil" | "Transport" | "Bridge" | "Other"
+    businessUnit: BusinessUnit
     description: string
     status: "Pending" | "Active" | "Finished"
     userRole: "Architect" | "Engineer" | "Developer"
     finishDate: Date
     cost: number = 0
     
+    
     // Class internals
     id: string
-    ui: HTMLDivElement    
+    //ui: HTMLDivElement    
     progress: number = 0
     backgroundColorAcronym: string
     todoList: IToDoIssue[] = []
@@ -65,7 +66,7 @@ export class Project implements IProject {
         for (const key in data) {  
             
             if (key === "businessUnit") {
-                this[key] = BusinessUnit[data[key] as keyof typeof BusinessUnit]
+                this[key] = data[key] as BusinessUnit
             } else if (key === "finishDate") {
                 this.finishDate = new Date(data.finishDate)
             } else {
@@ -84,9 +85,12 @@ export class Project implements IProject {
 
 
 
-
+        /* Handle Project.ui
         // Handle Project.ui
         this.setUi();
+        */
+        
+
         if (!this.id) { this.id = uuidv4() } //In order to not change the ID when we import projects from JSON file
         console.log(data);
 
@@ -103,6 +107,7 @@ export class Project implements IProject {
         // })
     }
 
+    calculateBackgroundColorAcronym
     static calculateBackgroundColorAcronym(businessUnit: BusinessUnit): string {
         switch (businessUnit) {
             case "Edification":
@@ -120,6 +125,8 @@ export class Project implements IProject {
         }
     }
     
+    
+    /* setUi() 
     setUi() {
         if (this.ui && this.ui instanceof HTMLElement) {return}
         this.ui = document.createElement("div")
@@ -159,5 +166,6 @@ export class Project implements IProject {
             </div>
                     `
     }
+    */
 
 }

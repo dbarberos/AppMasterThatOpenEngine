@@ -7,15 +7,21 @@ import { clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchS
 
 import { updateAsideButtonsState } from "./HTMLUtilities.ts"
 
+import { useProjectsManager } from '../react-components/ProjectsManagerContext'
+
 export class ProjectsManager {
     list: Project[] = []
-    ui: HTMLElement
+    //ui: HTMLElement
+    onProjectCreated = (project: Project) => { }
+    onProjectDeleted = () => { }
+
     defaultProjectCreated: boolean = false
 
+    /* SINGLETON PATTERN ProjectManager
     //Applying the singleton design pattern to the ProjectsManager class. This ensures that only one instance of ProjectsManager exists throughout the application, providing a global access point to its functionality.
 
-    private static instance: ProjectsManager
-    private static container: HTMLElement | null = null
+    static instance: ProjectsManager
+    static container: HTMLElement | null = null
 
     public static setContainer(container: HTMLElement) {
         ProjectsManager.container = container
@@ -31,11 +37,12 @@ export class ProjectsManager {
         return ProjectsManager.instance
     }
     //above finished the singleton pattern
-    
-    private constructor(container: HTMLElement) {
-        this.ui = container
+    */
+
+    constructor() {
+        
         this.defaultProjectCreated = false
-        this.createDefaultProject()
+        //this.createDefaultProject()
     }
     
     newProject(data: IProject): Project | undefined {
@@ -78,6 +85,8 @@ export class ProjectsManager {
 
                             // 3. Create a new project with the imported data
                             const newProject = new Project(data);
+
+                            /* ATTACH THE EVENT LISTENER HERE
                             newProject.ui.addEventListener("click", () => {
                                 changePageContent("project-details", "flex")
 
@@ -93,11 +102,15 @@ export class ProjectsManager {
                                 
                                 updateAsideButtonsState()
                             })
+                            */
+
+
                             // 4. Add the new project to the list and UI
                             this.list.push(newProject);
+                            this.onProjectCreated(newProject);
                             console.log("Added new project to the List of names")
-                            this.ui.append(newProject.ui)
-                            console.log("Added new project to the UI")
+                            // this.ui.append(newProject.ui)
+                            //console.log("Added new project to the UI")
                             
                             // 5. Resolve with the newly created project
                             resolve(newProject);
@@ -318,7 +331,7 @@ export class ProjectsManager {
                                     // Create the new project and resolve the Promise
                                     const newProject = new Project(data);
 
-                                    // ATTACH THE EVENT LISTENER HERE
+                                    /*// ATTACH THE EVENT LISTENER HERE
                                     newProject.ui.addEventListener("click", () => {
                                         changePageContent("project-details", "flex")
 
@@ -334,9 +347,11 @@ export class ProjectsManager {
                                         
                                         updateAsideButtonsState()
                                     });
+                                    */
 
                                     this.list.push(newProject)
-                                    this.ui.append(newProject.ui)
+                                    // this.ui.append(newProject.ui)
+                                    this.onProjectCreated(newProject)
                                     resolve(newProject)
 
                                     // Close the dialog
@@ -364,9 +379,10 @@ export class ProjectsManager {
                 renderToDoIssueListInsideProject(toDoIssue)
                 
                 //Set the projectId in the dataset
-                toDoIssue.ui.dataset.projectId = project.id
+                //toDoIssue.ui.dataset.projectId = project.id
             })
-            
+
+            /*// ATTACH THE EVENT LISTENER HERE
             project.ui.addEventListener("click", () => {
                 localStorage.setItem("selectedProjectId", project.id)
 
@@ -383,16 +399,20 @@ export class ProjectsManager {
                 updateAsideButtonsState()
             
             })
+            */
+            
             console.log(project.todoList)
 
-            this.ui.append(project.ui)
+            // this.ui.append(project.ui)
             this.list.push(project)
             this.removeDefaultProject();
+            this.onProjectCreated(project)
             return project
         }
 
     }
     
+    /* //setDetailsPage function
     static setDetailsPage(project: Project) {
         const detailPage = document.getElementById("project-details")
         if (!detailPage) { return }
@@ -479,14 +499,14 @@ export class ProjectsManager {
         
     
     }
-
-
+*/
 
 
     static setUpSelectionProject(idElementSelection?, projectIdSelected?) {
         // Get the project list
-        const projectManager = ProjectsManager.getInstance()
-        const projectsList = projectManager.list
+        //const projectManager = ProjectsManager.getInstance()
+        const projectsManager = useProjectsManager();
+        const projectsList = projectsManager.list
         const selectionProjectForProjectDetailPage = document.getElementById(idElementSelection) as HTMLSelectElement
 
         if (selectionProjectForProjectDetailPage) {
@@ -753,7 +773,6 @@ export class ProjectsManager {
         
         const defaultProject = new Project(defaultData)
         defaultProject.ui.classList.add("default-project") //making the default special for easy removing 
-        this.ui.append(defaultProject.ui)
         this.list.push(defaultProject)
         this.defaultProjectCreated = true
     }
@@ -765,7 +784,7 @@ export class ProjectsManager {
             if (defaultProjectUI) {
                 this.ui.removeChild(defaultProjectUI);
             }
-            this.list = this.list.filter(project => project.ui !== defaultProjectUI)
+            // this.list = this.list.filter(project => project.ui !== defaultProjectUI)
             this.defaultProjectCreated = false;
         }
     }
@@ -803,11 +822,12 @@ export class ProjectsManager {
     deleteProject(id: string) {
         const project = this.getProject(id)
         if (!project) { return }
-        project.ui.remove()
+        //project.ui.remove()
         const remain = this.list.filter((project) => {
             return project.id !== id
         })
         this.list = remain
+        this.onProjectDeleted()
     }
 
         
