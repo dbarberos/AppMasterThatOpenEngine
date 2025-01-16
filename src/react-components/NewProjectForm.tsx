@@ -10,12 +10,12 @@ import { MessagePopUp } from '../classes/MessagePopUp';
 
 interface NewProjectFormProps {
     onClose: () => void;
-
+    projectsManager: ProjectsManager;
 }
 
 
-export function NewProjectForm({ onClose }: NewProjectFormProps) {
-    const projectsManager = useProjectsManager(); // Access projectsManager
+export function NewProjectForm({ onClose, projectsManager }: NewProjectFormProps) {
+    //const projectsManager = useProjectsManager(); // Access projectsManager
 
     const handleClose = () => {
         onClose();
@@ -292,157 +292,162 @@ export function NewProjectForm({ onClose }: NewProjectFormProps) {
             if (projectDatasetAttributeIdInForm) {
                 projectDatasetAttributeIdInForm.dataset.projectId = ""
             }
-        toggleModal("new-project-modal");
+        //toggleModal("new-project-modal");
         onClose() // Close the form after the accept button is clicked
     }
     
 
     return (
-        <dialog id="new-project-modal" open>
-            <form onSubmit={(e) => { handleNewProjectFormSubmit(e) }} id="new-project-form" action="" name="new-project-form" method="post" > 
-                <h2
-                    style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center"
-                    }}
-                >
-                    <div id="modal-project-title">New Project</div>
-                    <div id="titleModalNewProject" />
-                </h2>
-                <div className="input-list">
-                    <div className="form-field-container">
-                        <label>
-                            <span className="material-icons-round">apartment</span>Name
-                        </label>
-                        <input
-                            data-form-value="name"
-                            name="name"
-                            type="text"
-                            size={30}
-                            placeholder="What´s the name of your project"
-                            required={true}
-                            minLength={5}
-                            title="Please enter at least 5 characters"
-                            autoComplete="off"
-                        />
-                        <details>
-                            <summary>Tip</summary>
-                            <p>Give it a short name</p>
-                        </details>
-                    </div>
-                    <div className="form-field-container">
-                        <label>
-                            <span className="material-icons-round">text_fields</span>Acronym
-                        </label>
-                        <input
-                            data-form-value="acronym"
-                            name="acronym"
-                            type="text"
-                            size={30}
-                            placeholder="Enter a brief acronym for the project"
-                            required={true}
-                            maxLength={5}
-                            data-uppercase="acronym"
-                            title="Please do not enter more than 5 characters"
-                            autoComplete=""
-                        />
-                        <details>
-                            <summary>Tip</summary>
-                            <p>No more than five characters</p>
-                        </details>
-                    </div>
-                    <div className="form-field-container">
-                        <label>
-                            <span className="material-icons-round">article</span>Decription
-                        </label>
-                        <textarea
-                            data-form-value="description"
-                            name="description"
-                            id=""
-                            cols={50}
-                            rows={5}
-                            placeholder="Give your project a nice description! So people is jealous about it"
-                            defaultValue={""}
-                        />
-                    </div>
-                    <div className="form-field-container">
-                        <label>
-                            <span className="material-icons-round">engineering</span>Business Unit
-                        </label>
-                        <select data-form-value="businessUnit" name="businessUnit">
-                            <option value="Edification">Edification</option>
-                            <option value="Civil">Civil</option>
-                            <option value="Transport">Transport</option>
-                            <option value="Bridge">Bridge</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div className="form-field-container">
-                        <label>
-                            <span className="material-icons-round"></span>Rol
-                        </label>
-                        <select data-form-value="userRole" name="userRole">
-                            <option>Architect</option>
-                            <option>Engineer</option>
-                            <option>Developer</option>
-                        </select>
-                    </div>
-                    <div className="form-field-container">
-                        <label>
-                            <span className="material-icons-round">not_listed_location</span>
-                            Status
-                        </label>
-                        <select data-form-value="status" name="status">
-                            <option>Pending</option>
-                            <option>Active</option>
-                            <option>Finished</option>
-                        </select>
-                    </div>
-                    <div className="form-field-container">
-                        <label>
-                            <span className="material-icons-round">paid</span>Cost
-                        </label>
-                        <input
-                            data-form-value="cost"
-                            name="cost"
-                            type="number"
-                            size={30}
-                            placeholder="Enter the budget for the project"
-                            inputMode="numeric"
-                            title="Please enter only numbers"
-                            autoComplete="off"
-                        />
-                        <details>
-                            <summary>Tip</summary>
-                            <p>Only allow numbers</p>
-                        </details>
-                    </div>
-                    <div className="form-field-container">
-                        <label>
-                            <span className="material-icons-round">calendar_month</span>Finish
-                            Date
-                        </label>
-                        <input
-                            data-form-value="finishDate"
-                            name="finishDate"
-                            type="date"
-                            id="finisProjecthDate"
-                            placeholder="Enter a Finish date for the project"
-                        />
-                    </div>
-                </div>
-                <div id="buttonEndRight">
-                    <button id="cancel-project-btn" type="button" className="buttonC" onClick={onCloseNewProjectForm}>
-                        Cancel
-                    </button>
-                    <button id="accept-project-btn" type="submit" className="buttonB">
-                        Accept
-                    </button>
-                </div>
-            </form>
-        </dialog>
+        <div className="dialog-container">
+            <div className="custom-backdrop">
+                <dialog id="new-project-modal" open>
+                    <form onSubmit={(e) => { handleNewProjectFormSubmit(e) }} id="new-project-form" action="" name="new-project-form" method="post" > 
+                        <h2
+                            style={{
+                                display: "flex",
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center"
+                            }}
+                        >
+                            <div id="modal-project-title">New Project</div>
+                            <div id="titleModalNewProject" />
+                        </h2>
+                        <div className="input-list">
+                            <div className="form-field-container">
+                                <label>
+                                    <span className="material-icons-round">apartment</span>Name
+                                </label>
+                                <input
+                                    data-form-value="name"
+                                    name="name"
+                                    type="text"
+                                    size={30}
+                                    placeholder="What´s the name of your project"
+                                    required={true}
+                                    minLength={5}
+                                    title="Please enter at least 5 characters"
+                                    autoComplete="off"
+                                />
+                                <details>
+                                    <summary>Tip</summary>
+                                    <p>Give it a short name</p>
+                                </details>
+                            </div>
+                            <div className="form-field-container">
+                                <label>
+                                    <span className="material-icons-round">text_fields</span>Acronym
+                                </label>
+                                <input
+                                    data-form-value="acronym"
+                                    name="acronym"
+                                    type="text"
+                                    size={30}
+                                    placeholder="Enter a brief acronym for the project"
+                                    required={true}
+                                    maxLength={5}
+                                    data-uppercase="acronym"
+                                    title="Please do not enter more than 5 characters"
+                                    autoComplete=""
+                                />
+                                <details>
+                                    <summary>Tip</summary>
+                                    <p>No more than five characters</p>
+                                </details>
+                            </div>
+                            <div className="form-field-container">
+                                <label>
+                                    <span className="material-icons-round">article</span>Decription
+                                </label>
+                                <textarea
+                                    data-form-value="description"
+                                    name="description"
+                                    id=""
+                                    cols={50}
+                                    rows={5}
+                                    placeholder="Give your project a nice description! So people is jealous about it"
+                                    defaultValue={""}
+                                />
+                            </div>
+                            <div className="form-field-container">
+                                <label>
+                                    <span className="material-icons-round">engineering</span>Business Unit
+                                </label>
+                                <select data-form-value="businessUnit" name="businessUnit">
+                                    <option value="Edification">Edification</option>
+                                    <option value="Civil">Civil</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Bridge">Bridge</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div className="form-field-container">
+                                <label>
+                                    <span className="material-icons-round"></span>Rol
+                                </label>
+                                <select data-form-value="userRole" name="userRole">
+                                    <option>Architect</option>
+                                    <option>Engineer</option>
+                                    <option>Developer</option>
+                                </select>
+                            </div>
+                            <div className="form-field-container">
+                                <label>
+                                    <span className="material-icons-round">not_listed_location</span>
+                                    Status
+                                </label>
+                                <select data-form-value="status" name="status">
+                                    <option>Pending</option>
+                                    <option>Active</option>
+                                    <option>Finished</option>
+                                </select>
+                            </div>
+                            <div className="form-field-container">
+                                <label>
+                                    <span className="material-icons-round">paid</span>Cost
+                                </label>
+                                <input
+                                    data-form-value="cost"
+                                    name="cost"
+                                    type="number"
+                                    size={30}
+                                    placeholder="Enter the budget for the project"
+                                    inputMode="numeric"
+                                    title="Please enter only numbers"
+                                    autoComplete="off"
+                                />
+                                <details>
+                                    <summary>Tip</summary>
+                                    <p>Only allow numbers</p>
+                                </details>
+                            </div>
+                            <div className="form-field-container">
+                                <label>
+                                    <span className="material-icons-round">calendar_month</span>Finish
+                                    Date
+                                </label>
+                                <input
+                                    data-form-value="finishDate"
+                                    name="finishDate"
+                                    type="date"
+                                    id="finisProjecthDate"
+                                    placeholder="Enter a Finish date for the project"
+                                />
+                            </div>
+                        </div>
+                        <div id="buttonEndRight">
+                            <button id="cancel-project-btn" type="button" className="buttonC" onClick={onCloseNewProjectForm}>
+                                Cancel
+                            </button>
+                            <button id="accept-project-btn" type="submit" className="buttonB">
+                                Accept
+                            </button>
+                        </div>
+                    </form>
+                </dialog>
+            </div>
+        </div >
+            
     )
 }
 

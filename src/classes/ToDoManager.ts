@@ -9,7 +9,13 @@ import { v4 as uuidv4 } from "uuid"
 import { organizeFilteredToDoIssuesByStatusColumns, setUpToDoBoard, organizeToDoIssuesByStatusColumns } from "./DragAndDropManager";
 
 
-export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IToDoIssue): ToDoIssue | undefined {
+// export function onTodoIssueCreated (toDoIssue: ToDoIssue) => { }
+// export function onTodoIssueUpdated = (toDoIssue: ToDoIssue) => { }
+// export function onTodoIssueDeleted = (toDoIssue: ToDoIssue) => { }
+
+
+export function newToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue /*onUpdateToDoList: (newToDoList: IToDoIssue[]) => void*/) {
+    // Check if the issue already exists
     const toDoTitles = toDoList.map((toDoIssue) => {
         return toDoIssue.title
     })
@@ -348,24 +354,34 @@ export function newToDoIssue(projectId: string, toDoList: IToDoIssue[], data: IT
     } else {
         // No duplicate, create the issue
         const toDoIssue = new ToDoIssue(data)
-        toDoIssue.ui.addEventListener("click", () => {
+        //toDoList.push(toDoIssue)
+        return toDoIssue
+
+        /* EVENT LISTENER FOR THE TO-DO ISSUE CARD
+        //toDoIssue.ui.addEventListener("click", () => {
             showPageContent("todo-details", "flex")//this should show the banner with the data of only one ISSUE not de board
             setDetailsIssuePage(toDoIssue) //for the new windows (todo-detalis)where the data of the todo issue is shown. From that place is where you can edit the content of the todoIssue
             console.log("Details pags set in a new window");
 
-        })
+        //})
+
+        */
         
         const storedPageWIP = localStorage.getItem("pageWIP")
         if (storedPageWIP === "todo-page") {
             setIssueInsideToDoPage(toDoIssue)
             toDoList.push(toDoIssue)
+            //onUpdateToDoList([...toDoList]);
             return toDoIssue
 
         } else {
             setIssueInsideDetailsProjectPage(toDoIssue)
             toDoList.push(toDoIssue)
+            //onUpdateToDoList([...toDoList]);
             return toDoIssue
         }
+
+        
     }
 }
 
@@ -857,7 +873,7 @@ export function getProjectByToDoIssueId(toDoIssueId: string): Project | undefine
 }
 
 
-
+/*store tags for the To-DO Input element
 //  Introduce and store tags for the To-DO Input element
 
 handleTagsInput("todo-tags-input", "todo-tags-list");
@@ -933,6 +949,7 @@ function handleTagsInput(tagsInputId, tagsListId) {
         })
     }
 }
+*/
 
 
 //close de detail To-Do page when the cross button us clicked

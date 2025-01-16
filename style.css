@@ -779,6 +779,10 @@ button:active {
     flex-direction: column;
     row-gap: 15px;
     margin-right:-25px;
+    & a {  /* Because of the React Router.link style*/
+        color: var(--color-fontbase);
+        text-decoration: none;
+    }
 }
 
 .nav-button {
@@ -923,6 +927,11 @@ header {
     box-shadow: 5px 5px 20px var(--color-shadow) inset,
             -10px -10px 30px var(--color-light) inset;
     user-select: none;
+
+    & a { /* Because of the React Router.link style */
+        text-decoration: none;
+        color: var(--color-fontbase)
+    }
 }
 
 #project-list .project-card {
@@ -980,17 +989,22 @@ width: 100%;
 /* Dialog Styles */
 
 dialog {
+    display: flex;
+    align-items: center;
+    height: 100%;
+
     background-color: transparent;
     border: none;
     margin: auto;
-    transition: scale 0.2s ease;
+    transition: scale 0.15s ease;
       /* display 0.2s ease allow-discrete; */
     scale: 1;
     overflow-x: hidden;
+    z-index: 2;
 
     &[open] {
         scale: 1;
-        transition: scale 0.2s ease-in-out;
+        transition: scale 0.15s ease-in-out;
         overflow-x: hidden;
 
         @starting-style {
@@ -1021,6 +1035,40 @@ dialog[open]:not(:first-of-type) {
     /* Shift each subsequent dialog down by 150px/100px */
 }
 
+.dialog-container {
+    position: fixed;
+    /* or fixed , depending on your layout */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    /* Higher than other content, but lower than the dialog */
+}
+
+.custom-backdrop {
+    position: relative;
+    /* to cover dialog-container */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 2, 2, 0.24);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(2.5px);
+    -webkit-backdrop-filter: blur(2.5px);
+    z-index: 1;
+    /* below dialog */
+}
+
+
+
+
+
 
 /* From Styles */
 form {
@@ -1032,6 +1080,7 @@ form {
     color: var(--color-fontbase);
     padding: 10px;
     box-sizing: border-box; 
+       
 }
 
 form h2{
@@ -1260,7 +1309,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list {
+#todo-tags-list,
+#todo-assignedUsers-list {
     position: absolute; 
     top: 100%;
     left: 0;
@@ -1270,12 +1320,13 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     display: block;
     list-style: none;
     /* height: 80%; */
+    min-height: 50px;
 
     scrollbar-width: fit;
     scrollbar-color: transparent;
 
     flex-grow: 1;
-    overflow-y: scroll;
+    overflow-y: auto; /*scroll;*/
     background-color: transparent;
     scrollbar-gutter: stable;
     scroll-snap-type: mandatory;
@@ -1337,7 +1388,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list:hover {
+#todo-tags-list:hover,
+#todo-assignedUsers-list:hover
+ {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
 
@@ -1351,7 +1404,10 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 
 
 
-#todo-tags-list li,span{
+#todo-tags-list li,
+#todo-tags-list span,
+#todo-assignedUsers-list li,
+#todo-assignedUsers-list span{
     /* scroll-snap-align: start; */
     display: inline-block;
     margin: 5px;
@@ -1359,12 +1415,15 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     gap: 0.25rem 1 rem;
 }
 
-#todo-tags-list li:hover,span:hover {
+#todo-tags-list li:hover,
+#todo-tags-listspan:hover,
+#todo-assignedUsers-list li:hover,
+#todo-assignedUsers-list span:hover {
     background-color: var(--primary-200);
 }
 
 .todo-form-field-container {
-    max-height: 150px;
+    max-height: 60px;
     scrollbar-width: fit;
     scrollbar-color: transparent;
 
@@ -1423,7 +1482,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list-details-page {
+#todo-tags-list-details-page,
+#todo-assignedUsers-list-details-page {
     position: absolute;
     top: 100%;
     left: 0;
@@ -1500,7 +1560,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list-details-page:hover {
+#todo-tags-list-details-page:hover
+#todo-assignedUsers-list-details-page:hover {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
 
@@ -1510,7 +1571,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 #todo-tags-list-details-page li,
-span {
+#todo-tags-list-details-page span,
+#todo-assignedUsers-list-details-page li,
+#todo-assignedUsers-list-details-page span {
     /* scroll-snap-align: start; */
     display: inline-block;
     margin: 5px;
@@ -1519,7 +1582,9 @@ span {
 }
 
 #todo-tags-list-details-page li:hover,
-span:hover {
+#todo-tags-list-details-page span:hover,
+#todo-assignedUsers-list-details-page li:hover,
+#todo-assignedUsers-list-details-page span:hover {
     background-color: var(--primary-200);
 }
 
@@ -1745,7 +1810,8 @@ progress::-moz-progress-bar {
     grid-template-areas: "color content";
     border-radius: 10px;
     min-width: 250px;
-    scroll-snap-align: start;    
+    scroll-snap-align: start;
+
 }
 
 .todo-button {
@@ -2047,6 +2113,11 @@ progress::-moz-progress-bar {
     background-color:var(--color-bg) ;
     margin-left: 10px;
     margin-top: 20px;
+
+    & a {
+        text-decoration: none;
+        color: var(--color-fontbase);
+    }   
     
 }
 
@@ -2712,6 +2783,7 @@ progress::-moz-progress-bar {
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
+    height: fit-content;
 }
 
 .message-popup, 

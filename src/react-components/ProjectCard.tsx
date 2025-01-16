@@ -13,7 +13,6 @@ interface Props {
 export function ProjectCard(props: Props) {
 
 
-
     return (
         <div className="project-card" data-projectid="00000">
             <div className="card-header">

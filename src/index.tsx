@@ -1,7 +1,8 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { Sidebar, ProjectsPage } from './react-components';
-import { ProjectsManagerProvider } from './react-components/ProjectsManagerContext';
+import * as Router from 'react-router-dom';
+import { Sidebar, ProjectsPage, ProjectDetailsPage } from './react-components';
+//import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
 
 
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project.ts";
@@ -16,22 +17,46 @@ import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueD
 import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManager.ts";
 import "./classes/DragAndDropManager.ts";
 import { setUpUserPage } from "./classes/UsersManager.ts";
-import "./classes/VisorModelManager.ts";
+//import "./classes/VisorModelManager.ts";
 
+const projectsManager = new ProjectsManager();
+
+const App = () => {
+    const [projects, setProjects] = React.useState(projectsManager.list);
+
+
+    const handleProjectUpdate = (updatedProject) => {
+        projectsManager.updateReactProjects(updatedProject); // Update the project in projectsManager
+        setProjects([...projectsManager.list]); // Update the state to trigger re-render
+    };
+
+    return (
+        //<ProjectsManagerProvider>        
+        <>
+            <Router.BrowserRouter>
+                <Sidebar />
+                <Router.Routes>
+                    <Router.Route path="/" element={<ProjectsPage  projectsManager={projectsManager} />} />
+                    <Router.Route path="/project/:id" element={<ProjectDetailsPage projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
+                </Router.Routes>
+                
+            </Router.BrowserRouter>
+            
+        </>
+    //</ProjectsManagerProvider>
+        
+    )
+}
 
 const rootElement = document.getElementById('app') as HTMLElement;
 const appRoot = ReactDOM.createRoot(rootElement)
-appRoot.render(
-    
-    <ProjectsManagerProvider>
-        
-        <>
-            <Sidebar />
-            <ProjectsPage />
-        </>
-        </ProjectsManagerProvider>
-        
-);
+appRoot.render( <App /> )
+
+
+
+
+
+
 
 /* CALLING THE SINGLETON PATTERN
 const projectListUI = document.getElementById("project-list") as HTMLElement 
@@ -39,7 +64,7 @@ ProjectsManager.setContainer(projectListUI)
 const projectManager = ProjectsManager.getInstance()
 */
 
-
+/*SET iNitial view of the APP
 //Set the initial view of the APP with the projects page, hidding the rest of sections
 document.addEventListener('DOMContentLoaded', () => {
     changePageContent('project-page', 'block'); 
@@ -48,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 });
+
+*/
 /* Create a new project from the button
 // Create a new project from de button
 const newProjectBtn = document.getElementById("new-project-btn")
@@ -404,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
 })
 */
 
-    
+/* Main button of project(aside) return to the projects list
 //Main button of project(aside) return to the projects list
 const btnMainProjects = document.querySelector("#asideBtnProjects")
 btnMainProjects?.addEventListener("click", (e) => {
@@ -415,6 +442,7 @@ btnMainProjects?.addEventListener("click", (e) => {
     updateAsideButtonsState()
 
 })
+*/
 
 //Button for editing Project Details.
 const btnEditProjectDetails = document.querySelector("#edit-project-details")
@@ -803,7 +831,7 @@ if (btnToDoIssueBoard) {
 }
 
 
-
+/* Diferents Buttons inside the To-Do Board for create a new ToDoIssue
 
 // Create a new todo from 2 buttons (in Details page)
 const newToDoIssueBtn1 = document.querySelector("#new-todo-issue-btn");
@@ -822,9 +850,10 @@ if (newToDoIssueBtn2) {
         createNewToDoIssue(newToDoIssueBtn2);
     });
 }
+*/
 
-
-// Function in charge of the creaation of a new ToDoIssue
+/*Create a new todo from the button (in Details page)
+// Function in charge of the creation of a new ToDoIssue
 function createNewToDoIssue(btnNewToDoIssue) {
     console.log("Button Clicked to create new To-Do Issue")
     console.log("Button Clicked")
@@ -913,7 +942,9 @@ function createNewToDoIssue(btnNewToDoIssue) {
 
 }
 
+*/
 
+/*Obtaining data from the form via giving an id to the form and using FormToDoData
 
 //Obtaining data from the form via giving an id to the form and using FormToDoData
 // const toDoIssueForm = document.getElementById("new-todo-form")
@@ -1077,8 +1108,8 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
         console.log("The cancel Button was not found")
     }
 
-    }
-    
+}
+*/
 
 //Main button of Users(aside) open the Users board
 const btnUsersBoard = document.querySelector("#asideBtnUsers")

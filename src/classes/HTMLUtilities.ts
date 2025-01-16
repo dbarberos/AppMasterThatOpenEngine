@@ -47,7 +47,7 @@ export function getActualDate () {
 
 
 
-
+/*
 //Set the minimum date for de todo Issue Form as de date of tomorrow
 const today = new Date();
 const tomorrow = new Date(today);
@@ -67,7 +67,7 @@ if (dueDateElement && dueDateDetailsInputElement) {
 } else {
     console.error("One or both of the elements with IDs 'todo-dueDate' and 'todo-dueDate-details-input' do not exist.")
 }
-
+*/
 
 
 //Sanitization of the ToDo Textarea Issue with JavaScript

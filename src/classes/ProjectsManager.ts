@@ -374,13 +374,13 @@ export class ProjectsManager {
             // No duplicate, create the project
             const project = new Project(data)
             // *** Create and populate UI for ToDoIssues when a new project is created ***
-            project.todoList.forEach((toDoIssue) => {
+            //project.todoList.forEach((toDoIssue) => {
                 //Create the UI element
-                renderToDoIssueListInsideProject(toDoIssue)
+                //renderToDoIssueListInsideProject(toDoIssue) ////////
                 
                 //Set the projectId in the dataset
                 //toDoIssue.ui.dataset.projectId = project.id
-            })
+            //})
 
             /*// ATTACH THE EVENT LISTENER HERE
             project.ui.addEventListener("click", () => {
@@ -565,6 +565,30 @@ export class ProjectsManager {
         })
         
     }
+
+    updateReactProjects ( dataToUpdate: Project) {
+        const projectIndex = this.list.findIndex(p => p.id === dataToUpdate.id)
+        
+        if (projectIndex !== -1) {
+            //Preserve the original ID
+            dataToUpdate.id = this.list[projectIndex].id
+
+            // Update the Project Data in the Array.
+            this.list[projectIndex] = {
+                ...this.list[projectIndex], // Keep existing properties
+                ...dataToUpdate // Update with new values
+            }
+
+            //ProjectsManager.setDetailsPage(this.list[projectIndex])
+            return this.list[projectIndex]
+            // return true; // Indicate successful update
+
+        } else {
+            console.error("Project not found in the list!")
+            return false
+        }
+    }
+
 
     updateProject (projectId: string, dataToUpdate: Project) {
         const projectIndex = this.list.findIndex(p => p.id === projectId)

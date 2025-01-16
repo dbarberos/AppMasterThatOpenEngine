@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { useState } from 'react';
+import * as Router from 'react-router-dom';
+
 import { useProjectsManager,NewProjectForm, ProjectCard } from './index.tsx';
 
 //import NewProjectForm from './NewProjectForm.tsx';
@@ -12,32 +13,35 @@ import { showModal,closeModal, toggleModal, } from "../classes/UiManager.ts"
 import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 
-
-
-
-
-export function ProjectsPage() {
-    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = useState(false)
-
-    const projectsManager = useProjectsManager(); // Access projectsManager
-    //const [projectsManager] = React.useState(new ProjectsManager())
-    const [projects, setProjects] = React.useState<Project[]>(projectsManager.list)
+interface Props {
+    projectsManager: ProjectsManager
     
-    projectsManager.onProjectCreated = () => { setProjects([...projectsManager.list]) }
-    projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
+}
+
+export function ProjectsPage( props : Props) {
+    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
+
+    //const projectsManager = useProjectsManager(); // Access projectsManager
+    //const [projectsManager] = React.useState(new ProjectsManager())
+    const [projects, setProjects] = React.useState<Project[]>(props.projectsManager.list)
+    
+    props.projectsManager.onProjectCreated = () => { setProjects([...props.projectsManager.list]) }
+    props.projectsManager.onProjectDeleted = () => { setProjects([...props.projectsManager.list]) }
 
 
     const projectCardsList = projects.map((project) => {
         return (
-            <ProjectCard
-                key={project.id}
-                project={project}
-            />
+            <Router.Link to={`/project/${project.id}`} key={project.id}>
+                <ProjectCard
+                    project={project} 
+                />
+            </Router.Link>
+            
         );
     });
     
 
-    React.useEffect(() => { 
+    React.useEffect(() => {
         console.log("Projects state update", projects)
     }, [projects])
 
@@ -76,7 +80,7 @@ export function ProjectsPage() {
         const submitButton = document.getElementById("accept-project-btn");
         if (submitButton) {
             submitButton.textContent = "Accept"
-            submitButton.dataset.projectId= ""
+            submitButton.dataset.projectId = ""
         }
 
         const discardButton = document.getElementById("cancel-project-btn");
@@ -109,26 +113,27 @@ export function ProjectsPage() {
     const handleExportProjectsBtnClick = () => {
         const exportProjectsBtn = document.getElementById("export-projects-JSON-btn")
         if (exportProjectsBtn) {
-                projectsManager.exprtToJSON()
+            props.projectsManager.exprtToJSON()
         } else {
-        console.log("The export button was not found. Check the ID!")
+            console.log("The export button was not found. Check the ID!")
         }
     };
 
     const handleImportProjectsBtnClick = () => {
         const importProjectsBtn = document.getElementById("import-projects-JSON-btn")
         if (importProjectsBtn) {
-                projectsManager.imprtFromJSON()
+            props.projectsManager.imprtFromJSON()
         } else {
-        console.log("The import button was not found. Check the ID!")
+            console.log("The import button was not found. Check the ID!")
         }
     };
 
     const newProjectForm = isNewProjectFormOpen ? (
-        <NewProjectForm onClose={handleCloseForm} />
+        <NewProjectForm onClose={handleCloseForm} projectsManager={props.projectsManager} />
     ) : null;
 
     
+
 
 
 
