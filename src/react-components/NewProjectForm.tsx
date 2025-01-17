@@ -197,6 +197,13 @@ export function NewProjectForm({ onClose, projectsManager }: NewProjectFormProps
 
 
                                 // Create and show the MessagePopUp and show the message above
+
+
+
+
+
+
+                                
                                 const updateConfirmationPopup = new MessagePopUp(
                                     document.body,
                                     "info",

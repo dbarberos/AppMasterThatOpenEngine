@@ -8,4 +8,5 @@ export * from './ProjectDetailsCard';
 export * from './ProjectDetailsToDoList';
 export * from './ToDoDetailsCard';
 export * from './NewToDoIssueForm';
+export * from './MessagePopUp';
 

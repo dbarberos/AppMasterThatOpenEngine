@@ -2777,7 +2777,7 @@ progress::-moz-progress-bar {
 .popup-update,
 .popup-info,
 .popup-default {
-    width: clamp(200px, 50em, 900px);
+    width: clamp(700px, 50em, 900px);
     min-width: 700px;
     transition: transform 0.15s ease-out;
     -webkit-user-select: none;
@@ -2787,10 +2787,10 @@ progress::-moz-progress-bar {
 }
 
 .message-popup, 
-.message-content, 
-.message-btns {
+.message-content {
     display: flex;
     flex-direction: row;
+    /* width: 100%; */
     }
 
 .message-popup,
@@ -2804,6 +2804,8 @@ progress::-moz-progress-bar {
     border-radius: 0.75em;
     height: auto;
     overflow: hidden;
+    width: 100%;
+    cursor: default;
     }
 
 .message-content {
@@ -2814,7 +2816,7 @@ progress::-moz-progress-bar {
 
 .message-icon {
     flex-shrink: 0; 
-    margin: auto;
+    /* margin: auto; */
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -2880,7 +2882,8 @@ progress::-moz-progress-bar {
     min-width: 4em;
     height: 100%;
     flex-shrink: 0;
-
+    z-index: 1;
+    cursor:pointer;
 }
 
 .message-btn {
@@ -2895,6 +2898,7 @@ progress::-moz-progress-bar {
     flex-wrap: nowrap;
     min-width: 100px;
     z-index: 999;
+    cursor: pointer;
 }
 
 .message-btn:hover {
@@ -2912,7 +2916,7 @@ progress::-moz-progress-bar {
     display: inline-block;
     margin: auto;
     text-shadow: none;
-    color: inherit;
+    /* color: inherit; */
 }
 
 .message-btn:first-of-type {
@@ -2978,7 +2982,7 @@ progress::-moz-progress-bar {
     color: var(--color-grey-light);
     text-decoration: none;
     font-size: var(--font-lg);
-    transition: 0.3s;
+    transition: 0.15s;
     background-color: inherit;
     box-shadow:none;
 }
@@ -2994,7 +2998,7 @@ progress::-moz-progress-bar {
     width: calc(100% + 2px);
     height: calc(100% + 4px);
     background-color: inherit;
-    transition: 0.3s ease-out;
+    transition: 0.15s ease-out;
     transform: translateX(0);
     transform: scaleX(1);
     z-index: 2;
@@ -3010,14 +3014,14 @@ progress::-moz-progress-bar {
     width: 2px;
     height: calc(100% + 4px);
     background-color: inherit;
-    transition: 0.2s ease-out;
+    transition: 0.15s ease-out;
     transform: scaleY(1);
     z-index: 2;
 }
     
 
 .btn-popup:hover::before {
-    animation: moveClipPath 0.3s ease-out forwards;
+    animation: moveClipPath 0.15s ease-out forwards;
 }
 
 @keyframes moveClipPath {
@@ -3032,7 +3036,7 @@ progress::-moz-progress-bar {
 .btn-popup:hover::after {
     width: 100%;
     transform: scaleY(0);
-    transition-delay: 0.30s;
+    transition-delay: 0.15s;
     box-shadow: none;
 }
 

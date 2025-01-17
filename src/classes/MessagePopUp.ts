@@ -126,7 +126,7 @@ export class MessagePopUp {
             let buttonsHTML = "";
             if (this.actions && this.actions.length > 0) { // Check if actions is defined and not empty
                 this.actions.forEach(action => {
-                    buttonsHTML += `<button style="all=initial" class="message-btn" data-action="${action}"><span class="message-btn-text">${action}</span></button>`;
+                    buttonsHTML += `<button style="" class="message-btn" data-action="${action}"><span class="message-btn-text">${action}</span></button>`;
                 });
             } else {
                 // Handle the case where actions is undefined or empty

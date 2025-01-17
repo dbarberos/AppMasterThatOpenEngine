@@ -1,10 +1,13 @@
 import * as React from 'react';
-import { useState } from 'react'; 
+
+
+import { MessagePopUp } from '../react-components';
+
 
 import { Project } from '../classes/Project';
 import { IToDoIssue, ToDoIssue } from '../classes/ToDoIssue';
 import { newToDoIssue } from '../classes/ToDoManager';
-import { MessagePopUp } from '../classes/MessagePopUp';
+
 
 interface NewToDoIssueFormProps {
     onClose: () => void;
@@ -14,11 +17,43 @@ interface NewToDoIssueFormProps {
 }
 
 
-
 export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDoIssueFormProps) {
 
-    const [tags, setTags] = useState<string[]>([]); 
-    const [assignedUsers, setAssignedUsers] = useState<string[]>([]); 
+    const [tags, setTags] = React.useState<string[]>([]); 
+    const [assignedUsers, setAssignedUsers] = React.useState<string[]>([]);
+    const [showMessagePopUp, setShowMessagePopUp] = React.useState<React.ReactElement | null>(null);
+
+
+
+
+    const handleMessagePopUp = (options: {
+        type: 'error' | 'warning' | 'info' | 'success' | 'update' | 'message' | 'clock' | 'arrowup';
+        title: string;
+        message: string;
+        actions?: string[]; //The interrogation symbol make actions optional
+        messageHeight?: string;
+        callbacks?: Record<string, () => void>;  // Callbacks for actions
+
+    }) => {
+        setShowMessagePopUp( // Set the React element to the state
+            <MessagePopUp
+            type={options.type}
+            title={options.title}
+            message={options.message}
+            actions={options.actions || []}
+                messageHeight={options.messageHeight || "200"}
+                onActionClick={(action) => {
+                    options.callbacks?.[action]?.(); //Call the appropriate callback
+                    setShowMessagePopUp(null); //Close the message after action
+                }}
+            onClose={() => setShowMessagePopUp(null)} // Close the dialog if no actions or just closed
+            />            
+        );
+    }
+
+
+
+
 
     const handleNewToDoIssueFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -68,32 +103,8 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                     dueDateToDoForm = new Date("2025-12-31"); // Create a new Date object for today
                 }
                 console.log("dueDateToDoFormString",dueDateToDoFormString)
-                 
                 
-                /* tag and assigned users
-
-                // Get the tags from the tagsList element
-                const tagsListElement = document.getElementById('todo-tags-list');
-                const tags: string[] = [];
-                if (tagsListElement) {
-                    const tagElements = tagsListElement.querySelectorAll('li');
-                    tagElements.forEach(tagElement => {
-                        tags.push(tagElement.textContent || '');
-                    });
-                }
-                console.log("tags",tags)
-                // Get the AssignedUsers from the assignedUsersList element
-                const assignedUsersListElement = document.getElementById('todo-assignedUsers-list');
-                const assignedUsers: string[] = [];
-                if (assignedUsersListElement) {
-                    const assignedUsersElements = assignedUsersListElement.querySelectorAll('li');
-                    assignedUsersElements.forEach(assignedUserElement => {
-                        assignedUsers.push(assignedUserElement.textContent || '');
-                    });
-                }
-                console.log("assignedUsers", assignedUsers)
-                */
-
+                
                 // Get the current Date as the Created Date
                 const currentDate = new Date();
                 //Get the value of the statusColumn and assign a default value if necessary.
@@ -118,7 +129,7 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                         const newToDo = newToDoIssue(toDoListInProject, toDoIssueDetails)
                         //const newToDoList = [...toDoListInProject, newToDo]
                         onUpdateToDoList(newToDo)
-                          
+                    
                     
                         onCloseNewToDoIssueForm(e)
                         //toDoIssueForm.reset()
@@ -177,6 +188,10 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
     }
 
 
+
+
+
+
     const onCloseNewToDoIssueForm = (e: React.FormEvent) => {
         const toDoIssueForm = document.getElementById("new-todo-form") as HTMLFormElement
         e.preventDefault()
@@ -192,6 +207,10 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
         onClose() // Close the form after the accept button is clicked
     }
 
+
+
+
+
     
 
     const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -205,7 +224,20 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                 const tagExist = tags.some(tag => tag.toLowerCase() === tagText.toLowerCase());
 
                 if (tagExist) {
-                    // Tag already exists, show error message                    
+                    // Tag already exists, show error message
+                    handleMessagePopUp({
+                        type: "warning",
+                        title: "Duplicated Tag",
+                        message: `The tag "${tagText}" already exists.`,
+                        actions: ["Got it"],
+                        callbacks: {
+                            "Got it": () => {
+                                setShowMessagePopUp(null);
+                            }
+                        }
+                    })
+
+                    /* OLD CODE
                     const existTagPopup = new MessagePopUp(
                     document.body,
                             "warning",
@@ -220,7 +252,8 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                         }
                     }
                     existTagPopup.showNotificationMessage(buttonCallbacks);
-                
+                    */
+                    
                 } else {
                     // Tag is new, add it to the list
                     setTags(prevTags => [...prevTags, tagText]);
@@ -237,6 +270,11 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
     };
 
 
+
+
+
+
+
     const handleAssignedUsersInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
         const inputValue = (e.target as HTMLInputElement).value.trim()
         if (e.key === "Enter" && inputValue) {
@@ -248,7 +286,21 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                 const assignedUserExist = assignedUsers.some(assignedUsers => assignedUsers.toLowerCase() === assignedUsersText.toLowerCase());
 
                 if (assignedUserExist) {
-                    // Tag already exists, show error message                    
+                    // AssignedUser already exists, show error message
+                    handleMessagePopUp({
+                        type: "warning",
+                        title: "Duplicated assigned user",
+                        message: `User ${assignedUsersText} already exists in the assigned users list.`,
+                        actions: ["Got it"],
+                        callbacks: {
+                            "Got it": () => {
+                                setShowMessagePopUp(null);
+                            }
+                        },
+                    })
+                    
+                    
+                    /*OLD CODE
                     const existAssignedUserPopup = new MessagePopUp(
                         document.body,
                         "warning",
@@ -264,7 +316,7 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                         }
                     }
                     existAssignedUserPopup.showNotificationMessage(buttonCallbacks);
-                
+                */
                 } else {
                     // Tag is new, add it to the list
                     setAssignedUsers(prevAssignedUsers => [...prevAssignedUsers, assignedUsersText]);
@@ -276,9 +328,15 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
     }
 
 
+
+
     const removeAssignedUsers = (assignedUserToRemove: string) => {
         setAssignedUsers(prevAssignedUsers => prevAssignedUsers.filter(assignedUsers => assignedUsers !== assignedUserToRemove));
     };
+
+
+
+
 
 
 
@@ -325,7 +383,8 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                                 display: "flex",
                                 flexDirection: "column",
                                 gap: 10,
-                                padding: 20
+                                    padding: 20,
+                                height: "95%"
                                 }}
                             >
                                 <legend>Issue notes and comments</legend>
@@ -345,7 +404,7 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                                 style={{
                                     display: "flex",
                                     flexDirection: "column",
-                                    height: "120px"
+                                    height: "90px"
                                 }}
                                 >
                                     <div className="todo-tags-input">
@@ -399,9 +458,9 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                                     
                                 </div>
                             </fieldset>
-                            <fieldset style={{ border: "none" }} className="data-optional">
+                            <fieldset style={{ border: "none", height: "100%" }} className="data-optional">
                                 <legend>Issue details:</legend>
-                                <div style={{ display: "flex", flexDirection: "column", rowGap: 20 }}>
+                                <div style={{ display: "flex", flexDirection: "column", rowGap: 20, height: "100%", justifyContent: "space-Between" }}>
                                     <div className="form-field-container">
                                         <div className="form-field-container">
                                             {/* Funcionalidad: Allow the user to select the column where the task will be located..
@@ -482,7 +541,7 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                                             <label>
                                                 <span className="material-icons-round">article</span>Issue data
                                             </label>
-                                            <div className="todo-footer">
+                                            <div className="todo-footer" style={{ rowGap: "10px", width: "100%", display: "flex", flexDirection: "column" }}>
                                                 <p data-form-todo-value="todoProject">
                                                 Project: <span id="todo-project-name" >{project.name}</span>
                                                 </p>
@@ -510,8 +569,8 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                     </form>
                 </dialog>
             </div>
+            {showMessagePopUp}
         </div >
-
 
     )
 }
