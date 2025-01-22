@@ -1,14 +1,40 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 
+import { NewProjectForm } from '../react-components';
+
+
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { Project } from '../classes/Project';
 
 interface Props {   
-    project: Project
+    project: Project,
+    onUpdatedProject: (updatedProject: Project) => void
 }
 
-export function ProjectDetailsCard(props: Props) {
+export function ProjectDetailsCard({ project, onUpdatedProject }:Props) {
+
+    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)   
+
+    const handleCloseForm = () => {
+        // Cierra el formulario
+        setIsNewProjectFormOpen(false);
+    };
+
+
+
+    const onEditProjectDetailsClick = () => {
+        setIsNewProjectFormOpen(true)
+    }
+
+
+    const handleUpdatedProject = (updatedProject: Project) => {
+            onUpdatedProject(updatedProject)
+        }
+
+    const updateProjectDetailsForm = isNewProjectFormOpen ? (
+        <NewProjectForm onClose={handleCloseForm} updateProject={project} onUpdatedProject={handleUpdatedProject } />
+    ) : null
 
 
     return (
@@ -39,9 +65,12 @@ export function ProjectDetailsCard(props: Props) {
                 }}
                 data-project-info="acronym"
             >
-                {props.project.acronym}
+                {project.acronym}
             </abbr>
-            <button id="edit-project-details" className="">
+                <button
+                    id="edit-project-details"
+                    className=""
+                    onClick={onEditProjectDetailsClick}>
                 Edit
             </button>
             </div>
@@ -58,8 +87,8 @@ export function ProjectDetailsCard(props: Props) {
                 height: "100%"
             }}
             >
-            <h5 data-project-info="name">{props.project.name}</h5>
-            <p data-project-info="description">{props.project.description}</p>
+            <h5 data-project-info="name">{project.name}</h5>
+            <p data-project-info="description">{project.description}</p>
             </div>
             <div
             style={{
@@ -79,7 +108,7 @@ export function ProjectDetailsCard(props: Props) {
                 >
                 Business Unit
                 </p>
-                <p data-project-info="businessUnit">{props.project.businessUnit}</p>
+                <p data-project-info="businessUnit">{project.businessUnit}</p>
             </div>
             <div>
                 <p
@@ -91,7 +120,7 @@ export function ProjectDetailsCard(props: Props) {
                 >
                 Status
                 </p>
-                <p data-project-info="status">{props.project.status}</p>
+                <p data-project-info="status">{project.status}</p>
             </div>
             <div>
                 <p
@@ -103,7 +132,7 @@ export function ProjectDetailsCard(props: Props) {
                 >
                 Cost
                 </p>
-                <p data-project-info="cost">$ {props.project.cost}</p>
+                <p data-project-info="cost">$ {project.cost}</p>
             </div>
             <div>
                 <p
@@ -115,7 +144,7 @@ export function ProjectDetailsCard(props: Props) {
                 >
                 Role
                 </p>
-                <p data-project-info="userRole">{props.project.userRole}</p>
+                <p data-project-info="userRole">{project.userRole}</p>
             </div>
             <div>
                 <p
@@ -127,7 +156,7 @@ export function ProjectDetailsCard(props: Props) {
                 >
                 Finish Date
                 </p>
-                <p data-project-info="finishDate">{props.project.finishDate.toISOString().split('T')[0]}</p>
+                <p data-project-info="finishDate">{project.finishDate.toISOString().split('T')[0]}</p>
             </div>
             </div>
             <div>
@@ -141,8 +170,9 @@ export function ProjectDetailsCard(props: Props) {
             >
                 Progress
             </p>
-            <progress value={Math.max(0, Math.min(props.project.progress || 0, 100))} max={100} />
+            <progress value={Math.max(0, Math.min(project.progress || 0, 100))} max={100} />
             </div>
+            {updateProjectDetailsForm}
         </div> 
 )
 }

@@ -27,7 +27,14 @@ const App = () => {
 
     const handleProjectUpdate = (updatedProject) => {
         projectsManager.updateReactProjects(updatedProject); // Update the project in projectsManager
-        setProjects([...projectsManager.list]); // Update the state to trigger re-render
+        // setProjects((prevProjects) =>
+        //     prevProjects.map((proj) =>
+        //         proj.id === updatedProject.id ? updatedProject : proj
+        //     )
+        // ); // Update the state to trigger re-render
+    
+        setProjects([...projectsManager.list]);
+        
     };
 
     return (
@@ -36,7 +43,7 @@ const App = () => {
             <Router.BrowserRouter>
                 <Sidebar />
                 <Router.Routes>
-                    <Router.Route path="/" element={<ProjectsPage  projectsManager={projectsManager} />} />
+                    <Router.Route path="/" element={<ProjectsPage  projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
                     <Router.Route path="/project/:id" element={<ProjectDetailsPage projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
                 </Router.Routes>
                 
@@ -444,6 +451,7 @@ btnMainProjects?.addEventListener("click", (e) => {
 })
 */
 
+/*Button for editing Project Details.
 //Button for editing Project Details.
 const btnEditProjectDetails = document.querySelector("#edit-project-details")
 if (btnEditProjectDetails) {
@@ -573,6 +581,7 @@ if (btnEditProjectDetails) {
 } else {
     console.warn("Edit project button was not found")
 }
+*/
 
 function handleTitleClick(event: Event) {
         //Event Delegation: The handleModalClick function now handles clicks on the modal.It uses targetElement.closest('#delete-project-btn-svg') to check if the click originated from the "Delete Project" button or any of its parent elements.

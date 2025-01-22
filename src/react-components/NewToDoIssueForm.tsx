@@ -35,20 +35,22 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
         callbacks?: Record<string, () => void>;  // Callbacks for actions
 
     }) => {
+        
         setShowMessagePopUp( // Set the React element to the state
             <MessagePopUp
             type={options.type}
             title={options.title}
             message={options.message}
             actions={options.actions || []}
-                messageHeight={options.messageHeight || "200"}
-                onActionClick={(action) => {
-                    options.callbacks?.[action]?.(); //Call the appropriate callback
-                    setShowMessagePopUp(null); //Close the message after action
-                }}
+            messageHeight={options.messageHeight || "200"}
+            onActionClick={(action) => {
+                options.callbacks?.[action]?.(); //Call the appropriate callback
+                setShowMessagePopUp(null); //Close the message after action
+            }}
             onClose={() => setShowMessagePopUp(null)} // Close the dialog if no actions or just closed
-            />            
+            />
         );
+        
     }
 
 

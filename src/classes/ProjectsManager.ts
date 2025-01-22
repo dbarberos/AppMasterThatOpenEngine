@@ -10,6 +10,7 @@ import { updateAsideButtonsState } from "./HTMLUtilities.ts"
 import { useProjectsManager } from '../react-components/ProjectsManagerContext'
 
 export class ProjectsManager {
+    
     list: Project[] = []
     //ui: HTMLElement
     onProjectCreated = (project: Project) => { }
@@ -566,6 +567,8 @@ export class ProjectsManager {
         
     }
 
+    /* USED INSIDE INDEX.TSX */
+
     updateReactProjects ( dataToUpdate: Project) {
         const projectIndex = this.list.findIndex(p => p.id === dataToUpdate.id)
         
@@ -573,15 +576,33 @@ export class ProjectsManager {
             //Preserve the original ID
             dataToUpdate.id = this.list[projectIndex].id
 
-            // Update the Project Data in the Array.
-            this.list[projectIndex] = {
+            //CDreate a new list with the updated project
+            const updatedProjectsList = this.list.map((project, index) => 
+                index === projectIndex ? new Project({
+                    ...project, // Keep existing properties
+                    ...dataToUpdate // Add new properties
+                }) : project
+            );
+            //Update the list reference
+                this.list = updatedProjectsList
+
+            //Return the entire updated list of projects
+            return updatedProjectsList
+                
+                    
+        
+            
+          /*  
+            Update the Project Data in the Array.
+            this.list[projectIndex] = new Project({
                 ...this.list[projectIndex], // Keep existing properties
                 ...dataToUpdate // Update with new values
-            }
+            })
 
             //ProjectsManager.setDetailsPage(this.list[projectIndex])
-            return this.list[projectIndex]
-            // return true; // Indicate successful update
+            return this.list
+        // return true; // Indicate successful update
+        */
 
         } else {
             console.error("Project not found in the list!")
@@ -662,7 +683,9 @@ export class ProjectsManager {
         }
     }
 
-    populateProjectDetailsForm(project: Project) {
+    
+/*  *** USED INSIDE NewProjectForm *** */
+    static populateProjectDetailsForm(project: Project) {
         const projectDetailsForm = document.getElementById("new-project-form")
         if (!projectDetailsForm) { return }
 
@@ -678,7 +701,7 @@ export class ProjectsManager {
                     // const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
 
                     inputField.forEach(element => {
-                        (element as HTMLElement).value = formattedDate
+                        (element as HTMLInputElement).value = formattedDate
                         console.log(`${project[key]}`);
                         
                     })
@@ -699,30 +722,30 @@ export class ProjectsManager {
                                 }
                             }
                         }
-                        console.log(`${project[key]}`);
-                    })                    
+                    })
                 }
             }
         }
-        
     }
+        
 
-    getChangedProjectDataForUpdate(projectOrigin: Project, projectToUpdate: IProject) {
+/*  *** getChangedProjectDataForUpdate INSIDE NewProjectForm *** 
+    static getChangedProjectDataForUpdate(projectOrigin: Project, projectToUpdate: IProject) {
                 
         //Create a object to hold the key - value pairs of changed data between projectOrigin and projectToUpdate:
         const changedData: { [key: string]: [string, string] } = {};
 
         for (const key in projectOrigin) {
 
-            // Exclude the 'ui' property from comparison
-            if (key === "ui") {
-                continue
-            } else if (key === "backgroundColorAcronym") {
+            // Exclude the 'backgroudcolorAcronym' property from comparison
+             if (key === "backgroundColorAcronym") {
                 continue
             }
 
             const currentProjectValue = projectOrigin[key];
             const valueToUpdate = projectToUpdate[key];
+
+            console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Debugging line
 
             // Compare and store the difference (handling dates appropriately)
             if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
@@ -738,9 +761,12 @@ export class ProjectsManager {
                 changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
             }
         }
+        console.log("Changed Data:", changedData); // Debugging line
         return changedData
 
     }
+*/
+
 
     renderProjectList(): void {
         const projectListUiElements = document.getElementById('project-list');
@@ -812,6 +838,9 @@ export class ProjectsManager {
             this.defaultProjectCreated = false;
         }
     }
+
+    /* USED INSIDE ProjectDetailsPage */
+    
     
     getProject(id: string) {
         const project = this.list.find((project) => {

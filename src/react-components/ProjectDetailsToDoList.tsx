@@ -3,11 +3,12 @@ import * as Router from 'react-router-dom';
 
 import { ToDoDetailsCard, NewToDoIssueForm } from '../react-components';
 
-import { ProjectsManager } from '../classes/ProjectsManager';
+
 import { Project } from '../classes/Project';
 import { ToDoIssue, IToDoIssue } from '../classes/ToDoIssue';
+//import { ProjectsManager } from '../classes/ProjectsManager';
 //import { ToDoManager } from '../classes/ToDoManager';
-import { showModal } from '../classes/UiManager';
+//import { showModal } from '../classes/UiManager';
 
 
 

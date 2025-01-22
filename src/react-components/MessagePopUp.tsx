@@ -1,9 +1,10 @@
 import * as React from 'react';
 
+
 interface MessagePopUpProps {
     type: 'error' | 'warning' | 'info' | 'success' | 'update' | 'message' | 'clock' | 'arrowup';
     title: string;
-    message: string;
+    message: string | React.ReactNode;
     actions?: string[]; //The interrogation symbol make actions optional
     messageHeight?: string;
     onActionClick?: (action: string) => void;
@@ -30,6 +31,9 @@ export const MessagePopUp: React.FC<MessagePopUpProps> = ({ type, title, message
             dialogRef.current.addEventListener('keydown', handleKeyDown);
 
             return () => {
+                if (dialogRef.current?.open) {
+                    dialogRef.current.close();
+                }
                 dialogRef.current?.removeEventListener('keydown', handleKeyDown);
             };
         }
@@ -61,10 +65,39 @@ export const MessagePopUp: React.FC<MessagePopUpProps> = ({ type, title, message
     };
     const icon = getIcon();
     const nameClass = `popup-${type}`
+
+
+
+const renderButtons = () => {
+        // Si no hay acciones, mostrar botón de cierre por defecto
+        if (actions.length === 0) {
+            return (
+                <button key="close" className="message-btn" onClick={handleClose}>
+                    <span className="message-btn-text">Close</span>
+                </button>
+            );
+        }
+
+        // Renderizar botones de acciones
+        return actions.map((action) => (
+            <button 
+                key={action} 
+                className="message-btn" 
+                onClick={() => {
+                    console.log(`Botón ${action} clickeado`);
+                    handleActionClick(action);
+                }}
+            >
+                <span className="message-btn-text">{action}</span>
+            </button>
+        ));
+    };
+
         
     if (!isOpen) {
         return null; // Don't render anything if closed
     }
+    
 
 
     return (
@@ -78,18 +111,10 @@ export const MessagePopUp: React.FC<MessagePopUpProps> = ({ type, title, message
                     </div>
                     <div className="message_text" id="message-popup-text" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', rowGap: 'var(--gap-5xs)' }}>
                         <h5 className="message-text-title">{title}</h5>
-                        <p className="message-text-message">{message}</p>
+                        <div className="message-text-message">{message}</div>
                     </div>
                     <div className="message-btns">
-                        {actions.map((action) => (
-                            <button key={action} className="message-btn" onClick={() => handleActionClick(action)}>
-                                <span className="message-btn-text">{action}</span>
-                            </button>
-                        ))}
-                        {/* Fallback button for when "actions" is not provided */}
-                        {!actions && <button key="close" className="message-btn" onClick={handleClose}>
-                        <span className="message-btn-text">close</span>
-                        </button>}
+                        {renderButtons()}
                     </div>
                 </div>
             </div>

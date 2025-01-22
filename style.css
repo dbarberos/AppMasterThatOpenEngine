@@ -2791,6 +2791,7 @@ progress::-moz-progress-bar {
     display: flex;
     flex-direction: row;
     /* width: 100%; */
+    /* height: auto */
     }
 
 .message-popup,
@@ -2806,6 +2807,7 @@ progress::-moz-progress-bar {
     overflow: hidden;
     width: 100%;
     cursor: default;
+    z-index: 1000;
     }
 
 .message-content {

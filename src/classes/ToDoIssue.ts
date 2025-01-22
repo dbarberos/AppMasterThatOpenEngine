@@ -83,6 +83,7 @@ export class ToDoIssue implements IToDoIssue {
         }
     }
 
+    /*SET UI
     // setUi() {
     //     if (this.ui && this.ui instanceof HTMLElement) { return }
     //     this.ui = document.createElement("div")
@@ -134,6 +135,6 @@ export class ToDoIssue implements IToDoIssue {
     //         </div>
     //     `
     // }
-
+    */
 
 }

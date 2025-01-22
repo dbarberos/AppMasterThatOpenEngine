@@ -14,19 +14,20 @@ import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 
 interface Props {
-    projectsManager: ProjectsManager
+    projectsManager: ProjectsManager,
+    onProjectUpdate: (updatedProject: Project) => void
     
 }
 
-export function ProjectsPage( props : Props) {
+export function ProjectsPage({ projectsManager, onProjectUpdate } : Props) {
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
 
     //const projectsManager = useProjectsManager(); // Access projectsManager
     //const [projectsManager] = React.useState(new ProjectsManager())
-    const [projects, setProjects] = React.useState<Project[]>(props.projectsManager.list)
+    const [projects, setProjects] = React.useState<Project[]>(projectsManager.list)
     
-    props.projectsManager.onProjectCreated = () => { setProjects([...props.projectsManager.list]) }
-    props.projectsManager.onProjectDeleted = () => { setProjects([...props.projectsManager.list]) }
+    projectsManager.onProjectCreated = () => { setProjects([...projectsManager.list]) }
+    projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
 
 
     const projectCardsList = projects.map((project) => {
@@ -50,51 +51,9 @@ export function ProjectsPage( props : Props) {
     const onNewProjectClick = () => {
 
         setIsNewProjectFormOpen(true);
-        // showModal("new-project-modal") //**Old call to the Form**
 
-        const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
-        if (projectForm) {
 
-            // *** RESET THE FORM ***
-            // 1. Target specific input types
-            const inputsToReset = projectForm.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, select');
 
-            // 2. Loop through and reset each element
-            inputsToReset.forEach(element => {
-                (element as HTMLInputElement).value = ''; // Reset to empty string
-
-                // Additional handling for select elements:
-                if (element instanceof HTMLSelectElement) {
-                    element.selectedIndex = 0; // Reset to the first option
-                }
-            });
-        }
-
-        // Set Modal in case previously we updated a project
-        // Update Modal Title
-        const modalProjectTitle = document.getElementById("modal-project-title");
-        if (modalProjectTitle) {
-            modalProjectTitle.textContent = "New Project";
-        }
-        // Update Button Text and remove dataset -projectID from it
-        const submitButton = document.getElementById("accept-project-btn");
-        if (submitButton) {
-            submitButton.textContent = "Accept"
-            submitButton.dataset.projectId = ""
-        }
-
-        const discardButton = document.getElementById("cancel-project-btn");
-        if (discardButton) {
-            discardButton.textContent = "Cancel";
-        }
-        //Remove the delete project button from the modal in case previously we updated a project
-        const parentDeleteBtn = document.getElementById("titleModalNewProject")
-        if (parentDeleteBtn) {
-            const deleteButton = document.getElementById("delete-project-btn")
-            if (deleteButton) {
-                parentDeleteBtn.removeChild(deleteButton)
-            }
-        }
     }
 
     const handleCloseForm = () => {
@@ -113,7 +72,7 @@ export function ProjectsPage( props : Props) {
     const handleExportProjectsBtnClick = () => {
         const exportProjectsBtn = document.getElementById("export-projects-JSON-btn")
         if (exportProjectsBtn) {
-            props.projectsManager.exprtToJSON()
+            projectsManager.exprtToJSON()
         } else {
             console.log("The export button was not found. Check the ID!")
         }
@@ -122,18 +81,30 @@ export function ProjectsPage( props : Props) {
     const handleImportProjectsBtnClick = () => {
         const importProjectsBtn = document.getElementById("import-projects-JSON-btn")
         if (importProjectsBtn) {
-            props.projectsManager.imprtFromJSON()
+            projectsManager.imprtFromJSON()
         } else {
             console.log("The import button was not found. Check the ID!")
         }
     };
 
-    const newProjectForm = isNewProjectFormOpen ? (
-        <NewProjectForm onClose={handleCloseForm} projectsManager={props.projectsManager} />
-    ) : null;
-
+    const handleUpdatedProjectList = (updatedProject: Project) => {
+        const prevProjects = projectsManager.list
+        setProjects((prevProjects) =>
+                    prevProjects.map((project) => (project.id === updatedProject.id ? updatedProject : project))
+                );
+        onProjectUpdate(updatedProject)
+    }
     
 
+
+ 
+    const newProjectForm = isNewProjectFormOpen ? (
+        <NewProjectForm
+            onClose={handleCloseForm}
+            projectsManager={projectsManager}
+            onUpdatedProject={handleUpdatedProjectList}
+        />
+    ) : null;
 
 
 

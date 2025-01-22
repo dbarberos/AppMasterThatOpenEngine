@@ -33,6 +33,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
 
 
     const [projectState, setProjectState] = React.useState<Project | undefined>(project);
+    
 
     React.useEffect(() => {
         // Update projectState if project prop changes (e.g., after navigation)
@@ -75,14 +76,14 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
                 }}
             >
                 <div style={{ display: "flex", columnGap: 20 }}>
-                <h2 style={{ display: "flex", alignItems: "center", columnGap: 20 }}>
-                        {project.description} Project Details
-                    <span className="todo-task-move">
-                    <span className="material-icons-round" style={{ padding: 10 }}>
-                        home_work
-                    </span>
-                    </span>
-                </h2>
+                    <h2 style={{ display: "flex", alignItems: "center", columnGap: 20 }}>
+                        Project Details
+                        <span className="todo-task-move">
+                            <span className="material-icons-round" style={{ padding: 10 }}>
+                                home_work
+                            </span>
+                        </span>
+                    </h2>
                 <div style={{ display: "flex", alignItems: "center", columnGap: 10 }}>
                     <p>Swap project: </p>
                     <select
@@ -108,7 +109,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
             </header>
             <div className="main-page-content">
                 <div style={{ display: "flex", flexDirection: "column", rowGap: 40 }}>
-                    <ProjectDetailsCard project={project} />
+                    <ProjectDetailsCard project={project} onUpdatedProject={handleUpdatedProject} />
                     <ProjectDetailsToDoList project={projectState as Project} onUpdatedProject={handleUpdatedProject} />
                 </div>
                 <div id="viewer-container-father">
