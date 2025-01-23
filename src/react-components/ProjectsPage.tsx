@@ -1,6 +1,9 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 
+
+import { SearchProjectBox } from '../react-components';
+
 import { useProjectsManager,NewProjectForm, ProjectCard } from './index.tsx';
 
 //import NewProjectForm from './NewProjectForm.tsx';
@@ -107,6 +110,13 @@ export function ProjectsPage({ projectsManager, onProjectUpdate } : Props) {
     ) : null;
 
 
+    const onProjectSearch = (value: string) => {
+        setProjects(projectsManager.filterProjects(value))
+    }
+
+
+
+
 
     return (
         <section
@@ -120,7 +130,9 @@ export function ProjectsPage({ projectsManager, onProjectUpdate } : Props) {
                 Projects
                 <span className="material-icons-round" style={{ padding: 10 }}>
                     location_city
-                </span>
+                    </span>
+                    
+                    <SearchProjectBox onChange={(value) => onProjectSearch(value)} />
                 </h2>
                 <div style={{ display: "flex", alignItems: "center", columnGap: 5 }}>
                 <div>
@@ -158,8 +170,9 @@ export function ProjectsPage({ projectsManager, onProjectUpdate } : Props) {
                 </button>
                 </div>
             </header>
-            <div id="project-list">{projectCardsList}
-                {/*<div className="project-card" style={{ display: "" }}></div>*/}
+            <div id="project-list">
+                {projects.length > 0 ? projectCardsList : <p>No projects found</p>} 
+                
             </div>
             {/*  Render the form if  isNewProjectFormOpen = true  */}
             {newProjectForm}

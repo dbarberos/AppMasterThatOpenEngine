@@ -9,4 +9,5 @@ export * from './ProjectDetailsToDoList';
 export * from './ToDoDetailsCard';
 export * from './NewToDoIssueForm';
 export * from './MessagePopUp';
-
+export * from './SearchProjectBox';
+export * from './ThreeJSViewer';

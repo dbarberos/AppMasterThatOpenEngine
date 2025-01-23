@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
-import { ProjectDetailsCard, ProjectDetailsToDoList } from '../react-components';
+import { ProjectDetailsCard, ProjectDetailsToDoList, ThreeJSViewer } from '../react-components';
 
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { Project } from '../classes/Project';
@@ -112,11 +112,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
                     <ProjectDetailsCard project={project} onUpdatedProject={handleUpdatedProject} />
                     <ProjectDetailsToDoList project={projectState as Project} onUpdatedProject={handleUpdatedProject} />
                 </div>
-                <div id="viewer-container-father">
-                {/* <div id="gui-container" style="position: relative; width: 300px; height: 400px;">
-                        </div> */}
-                <div id="viewer-container" className="viewer3d-board"></div>
-                </div>
+                <ThreeJSViewer />                
             </div>
             </section>
  );

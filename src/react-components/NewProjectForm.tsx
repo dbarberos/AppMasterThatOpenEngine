@@ -436,35 +436,6 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
 
 
-
-
- /*
-
-    const createMessageContent = (changes: Record<string, [any, any]>) => {
-        let messageContent = `The following project details will be updated:<br><br>
-        <table style="width:100%; border-collapse: collapse;">
-            <tr>
-                <th style="border-bottom: 1px solid #ccc;">Property</th>
-                <th style="border-bottom: 1px solid #ccc;">Changes</th>
-            </tr>`;
-
-        for (const key in changes) {
-            messageContent += `
-            <tr>
-                <td style="border-bottom: 1px solid #ccc;"><b>${key}</b></td>
-                <td style="border-bottom: 1px solid #ccc;">
-                    From: <i>${changes[key][0]}</i><br>
-                    To: <i style="color: var(--popup-warning);">${changes[key][1]}</i>
-                </td>
-            </tr>`;
-        }
-        messageContent += `</table>`;
-        return messageContent;
-    };
-
-*/
-
-
     const getChangedProjectDataForUpdate = (existingProject: Project | null, updatedProject: Project): Record<string, [any, any]> => {
     const changedData: { [key: string]: [string, string] } = {};
 
