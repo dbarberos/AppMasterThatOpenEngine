@@ -398,7 +398,7 @@ left: 5px;
 
 }
 
-body {
+#app {
     display: grid;
     grid-template-columns: 300px 1fr;
     grid-template-areas: "sidebar content";
@@ -779,6 +779,10 @@ button:active {
     flex-direction: column;
     row-gap: 15px;
     margin-right:-25px;
+    & a {  /* Because of the React Router.link style*/
+        color: var(--color-fontbase);
+        text-decoration: none;
+    }
 }
 
 .nav-button {
@@ -855,32 +859,32 @@ button:active {
     fill: var(--color-fontbase);
 }
 
-body:has(#sidebar-active:checked) {
+#app:has(#sidebar-active:checked) {
     grid-template-columns: 130px 1fr;
     
 }
 
-body:has(#sidebar-active:checked) #navigation-bar li span.material-icons-round {
+#app:has(#sidebar-active:checked) #navigation-bar li span.material-icons-round {
             /* No changes in the icon style */
 }
-body:has(#sidebar-active:checked) .close-sidebar-btn > svg{
+#app:has(#sidebar-active:checked) .close-sidebar-btn > svg{
     display: none;
     /* No changes in the icon style */
 }
-body:not(:has(#sidebar-active:checked)) .open-sidebar-btn > svg{
+#app:not(:has(#sidebar-active:checked)) .open-sidebar-btn > svg{
     display: none;
     /* No changes in the icon style */
 }
 
 
-body:has(#sidebar-active:checked) #navigation-bar li {
+#app:has(#sidebar-active:checked) #navigation-bar li {
     font-size: 0;
     column-gap: 0px;
     
     /* padding-inline-start: 0px; */
 }
 
-body:has(#sidebar-active:checked) #navigation-bar li::before {
+#app:has(#sidebar-active:checked) #navigation-bar li::before {
     content: attr(data-text);
     font-size: var(--font-base);
     
@@ -923,6 +927,11 @@ header {
     box-shadow: 5px 5px 20px var(--color-shadow) inset,
             -10px -10px 30px var(--color-light) inset;
     user-select: none;
+
+    & a { /* Because of the React Router.link style */
+        text-decoration: none;
+        color: var(--color-fontbase)
+    }
 }
 
 #project-list .project-card {
@@ -980,17 +989,22 @@ width: 100%;
 /* Dialog Styles */
 
 dialog {
+    display: flex;
+    align-items: center;
+    height: 100%;
+
     background-color: transparent;
     border: none;
     margin: auto;
-    transition: scale 0.2s ease;
+    transition: scale 0.15s ease;
       /* display 0.2s ease allow-discrete; */
     scale: 1;
     overflow-x: hidden;
+    z-index: 2;
 
     &[open] {
         scale: 1;
-        transition: scale 0.2s ease-in-out;
+        transition: scale 0.15s ease-in-out;
         overflow-x: hidden;
 
         @starting-style {
@@ -1021,6 +1035,40 @@ dialog[open]:not(:first-of-type) {
     /* Shift each subsequent dialog down by 150px/100px */
 }
 
+.dialog-container {
+    position: fixed;
+    /* or fixed , depending on your layout */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    /* Higher than other content, but lower than the dialog */
+}
+
+.custom-backdrop {
+    position: relative;
+    /* to cover dialog-container */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 2, 2, 0.24);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(2.5px);
+    -webkit-backdrop-filter: blur(2.5px);
+    z-index: 1;
+    /* below dialog */
+}
+
+
+
+
+
 
 /* From Styles */
 form {
@@ -1032,6 +1080,7 @@ form {
     color: var(--color-fontbase);
     padding: 10px;
     box-sizing: border-box; 
+       
 }
 
 form h2{
@@ -1231,8 +1280,8 @@ input[type="text"], textarea, select, input[type="date"], input[type="search"], 
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    appearance: none;
-        -webkit-appearance: none;
+    #appearance: none;
+        -webkit-#appearance: none;
 }
 
 input[type="text"]:focus, textarea:focus, select:focus, input[type="date"]:focus, input[type="search"], input[type="number"]:focus {
@@ -1248,7 +1297,7 @@ input[type="text"]:focus, textarea:focus, select:focus, input[type="date"]:focus
 }
 
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
+    -webkit-#appearance: none;
     margin: 0;
 }
 
@@ -1260,7 +1309,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list {
+#todo-tags-list,
+#todo-assignedUsers-list {
     position: absolute; 
     top: 100%;
     left: 0;
@@ -1270,12 +1320,13 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     display: block;
     list-style: none;
     /* height: 80%; */
+    min-height: 50px;
 
     scrollbar-width: fit;
     scrollbar-color: transparent;
 
     flex-grow: 1;
-    overflow-y: scroll;
+    overflow-y: auto; /*scroll;*/
     background-color: transparent;
     scrollbar-gutter: stable;
     scroll-snap-type: mandatory;
@@ -1337,7 +1388,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list:hover {
+#todo-tags-list:hover,
+#todo-assignedUsers-list:hover
+ {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
 
@@ -1351,7 +1404,10 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 
 
 
-#todo-tags-list li,span{
+#todo-tags-list li,
+#todo-tags-list span,
+#todo-assignedUsers-list li,
+#todo-assignedUsers-list span{
     /* scroll-snap-align: start; */
     display: inline-block;
     margin: 5px;
@@ -1359,12 +1415,15 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     gap: 0.25rem 1 rem;
 }
 
-#todo-tags-list li:hover,span:hover {
+#todo-tags-list li:hover,
+#todo-tags-listspan:hover,
+#todo-assignedUsers-list li:hover,
+#todo-assignedUsers-list span:hover {
     background-color: var(--primary-200);
 }
 
 .todo-form-field-container {
-    max-height: 150px;
+    max-height: 60px;
     scrollbar-width: fit;
     scrollbar-color: transparent;
 
@@ -1423,7 +1482,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list-details-page {
+#todo-tags-list-details-page,
+#todo-assignedUsers-list-details-page {
     position: absolute;
     top: 100%;
     left: 0;
@@ -1500,7 +1560,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list-details-page:hover {
+#todo-tags-list-details-page:hover
+#todo-assignedUsers-list-details-page:hover {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
 
@@ -1510,7 +1571,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 #todo-tags-list-details-page li,
-span {
+#todo-tags-list-details-page span,
+#todo-assignedUsers-list-details-page li,
+#todo-assignedUsers-list-details-page span {
     /* scroll-snap-align: start; */
     display: inline-block;
     margin: 5px;
@@ -1519,7 +1582,9 @@ span {
 }
 
 #todo-tags-list-details-page li:hover,
-span:hover {
+#todo-tags-list-details-page span:hover,
+#todo-assignedUsers-list-details-page li:hover,
+#todo-assignedUsers-list-details-page span:hover {
     background-color: var(--primary-200);
 }
 
@@ -1580,8 +1645,8 @@ span:hover {
     
     transition: all 0.3s ease-in-out;
     user-select:none;
-    appearance: none;
-        -webkit-appearance: none;
+    #appearance: none;
+        -webkit-#appearance: none;
 
 }
 .radio .checkmark:after {
@@ -1686,8 +1751,8 @@ fieldset:after {
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    appearance: none;
-    -webkit-appearance: none;
+    #appearance: none;
+    -webkit-#appearance: none;
 }
 
 
@@ -1745,7 +1810,8 @@ progress::-moz-progress-bar {
     grid-template-areas: "color content";
     border-radius: 10px;
     min-width: 250px;
-    scroll-snap-align: start;    
+    scroll-snap-align: start;
+
 }
 
 .todo-button {
@@ -2047,6 +2113,11 @@ progress::-moz-progress-bar {
     background-color:var(--color-bg) ;
     margin-left: 10px;
     margin-top: 20px;
+
+    & a {
+        text-decoration: none;
+        color: var(--color-fontbase);
+    }   
     
 }
 
@@ -2706,19 +2777,21 @@ progress::-moz-progress-bar {
 .popup-update,
 .popup-info,
 .popup-default {
-    width: clamp(200px, 50em, 900px);
+    width: clamp(700px, 50em, 900px);
     min-width: 700px;
     transition: transform 0.15s ease-out;
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
+    height: fit-content;
 }
 
 .message-popup, 
-.message-content, 
-.message-btns {
+.message-content {
     display: flex;
     flex-direction: row;
+    /* width: 100%; */
+    /* height: auto */
     }
 
 .message-popup,
@@ -2732,6 +2805,9 @@ progress::-moz-progress-bar {
     border-radius: 0.75em;
     height: auto;
     overflow: hidden;
+    width: 100%;
+    cursor: default;
+    z-index: 1000;
     }
 
 .message-content {
@@ -2742,7 +2818,7 @@ progress::-moz-progress-bar {
 
 .message-icon {
     flex-shrink: 0; 
-    margin: auto;
+    /* margin: auto; */
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -2808,7 +2884,8 @@ progress::-moz-progress-bar {
     min-width: 4em;
     height: 100%;
     flex-shrink: 0;
-
+    z-index: 1;
+    cursor:pointer;
 }
 
 .message-btn {
@@ -2823,6 +2900,7 @@ progress::-moz-progress-bar {
     flex-wrap: nowrap;
     min-width: 100px;
     z-index: 999;
+    cursor: pointer;
 }
 
 .message-btn:hover {
@@ -2840,7 +2918,7 @@ progress::-moz-progress-bar {
     display: inline-block;
     margin: auto;
     text-shadow: none;
-    color: inherit;
+    /* color: inherit; */
 }
 
 .message-btn:first-of-type {
@@ -2906,7 +2984,7 @@ progress::-moz-progress-bar {
     color: var(--color-grey-light);
     text-decoration: none;
     font-size: var(--font-lg);
-    transition: 0.3s;
+    transition: 0.15s;
     background-color: inherit;
     box-shadow:none;
 }
@@ -2922,7 +3000,7 @@ progress::-moz-progress-bar {
     width: calc(100% + 2px);
     height: calc(100% + 4px);
     background-color: inherit;
-    transition: 0.3s ease-out;
+    transition: 0.15s ease-out;
     transform: translateX(0);
     transform: scaleX(1);
     z-index: 2;
@@ -2938,14 +3016,14 @@ progress::-moz-progress-bar {
     width: 2px;
     height: calc(100% + 4px);
     background-color: inherit;
-    transition: 0.2s ease-out;
+    transition: 0.15s ease-out;
     transform: scaleY(1);
     z-index: 2;
 }
     
 
 .btn-popup:hover::before {
-    animation: moveClipPath 0.3s ease-out forwards;
+    animation: moveClipPath 0.15s ease-out forwards;
 }
 
 @keyframes moveClipPath {
@@ -2960,7 +3038,7 @@ progress::-moz-progress-bar {
 .btn-popup:hover::after {
     width: 100%;
     transform: scaleY(0);
-    transition-delay: 0.30s;
+    transition-delay: 0.15s;
     box-shadow: none;
 }
 
@@ -3024,7 +3102,7 @@ button  .btn-popup{
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-    overflow: visible; /*swapping by padding if problems with text overflow: visible*/
+    overflow: visible; /*sw#apping by padding if problems with text overflow: visible*/
     row-gap: 30px;
     column-gap: var(--gap-lg); 
     user-select: none;
@@ -3189,8 +3267,8 @@ button  .btn-popup{
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    appearance: none;
-    -webkit-appearance: none;
+    #appearance: none;
+    -webkit-#appearance: none;
 }
 
 .lil-gui {

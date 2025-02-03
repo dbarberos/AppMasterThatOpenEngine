@@ -1,13 +1,15 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { Sidebar } from './react-components/Sidebar.tsx';
+import * as Router from 'react-router-dom';
+import { Sidebar, ProjectsPage, ProjectDetailsPage } from './react-components';
+//import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
 
 
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project.ts";
 import { IToDoIssue, ToDoIssue } from "./classes/ToDoIssue.ts"
 import { ProjectsManager } from "./classes/ProjectsManager.ts";
 import { showModal, closeModal, toggleModal, changePageContent, PageChangeEvent, PageShowEvent, PageHideEvent } from "./classes/UiManager.ts";
-import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
+//import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp.ts"
 import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList, searchTodoIssues, navigateSearchResults, selectCurrentSearchResult, setupProjectDetailsSearch, resetSearchState } from "./classes/ToDoManager.ts"
@@ -15,22 +17,61 @@ import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueD
 import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManager.ts";
 import "./classes/DragAndDropManager.ts";
 import { setUpUserPage } from "./classes/UsersManager.ts";
-import "./classes/VisorModelManager.ts";
+//import "./classes/VisorModelManager.ts";
 
+const projectsManager = new ProjectsManager();
+
+const App = () => {
+    const [projects, setProjects] = React.useState(projectsManager.list);
+
+
+    const handleProjectUpdate = (updatedProject) => {
+        projectsManager.updateReactProjects(updatedProject); // Update the project in projectsManager
+        // setProjects((prevProjects) =>
+        //     prevProjects.map((proj) =>
+        //         proj.id === updatedProject.id ? updatedProject : proj
+        //     )
+        // ); // Update the state to trigger re-render
+    
+        setProjects([...projectsManager.list]);
+        
+    };
+
+    return (
+        //<ProjectsManagerProvider>        
+        <>
+            <Router.BrowserRouter>
+                <Sidebar />
+                <Router.Routes>
+                    <Router.Route path="/" element={<ProjectsPage  projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
+                    <Router.Route path="/project/:id" element={<ProjectDetailsPage projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
+                </Router.Routes>
+                
+            </Router.BrowserRouter>
+            
+        </>
+    //</ProjectsManagerProvider>
+        
+    )
+}
 
 const rootElement = document.getElementById('app') as HTMLElement;
 const appRoot = ReactDOM.createRoot(rootElement)
-appRoot.render(
-    <Sidebar />
-);
+appRoot.render( <App /> )
 
 
+
+
+
+
+
+/* CALLING THE SINGLETON PATTERN
 const projectListUI = document.getElementById("project-list") as HTMLElement 
 ProjectsManager.setContainer(projectListUI)
 const projectManager = ProjectsManager.getInstance()
+*/
 
-
-
+/*SET iNitial view of the APP
 //Set the initial view of the APP with the projects page, hidding the rest of sections
 document.addEventListener('DOMContentLoaded', () => {
     changePageContent('project-page', 'block'); 
@@ -40,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+*/
+/* Create a new project from the button
 // Create a new project from de button
 const newProjectBtn = document.getElementById("new-project-btn")
 if (newProjectBtn) {
@@ -82,7 +125,7 @@ if (newProjectBtn) {
         if (discardButton) {
             discardButton.textContent = "Cancel";
         }
-        //Remove the delete project button from the modal in case previously we updated a prject
+        //Remove the delete project button from the modal in case previously we updated a project
         const parentDeleteBtn = document.getElementById("titleModalNewProject")
         if (parentDeleteBtn) {
             const deleteButton = document.getElementById("delete-project-btn")
@@ -96,8 +139,9 @@ if (newProjectBtn) {
 } else {
     console.warn("New project button was not found")
 }
+*/
 
-
+/* Obtaining data project from the form via giving an id to the form and using FormData
 //Obtaining data project from the form via giving an id to the form and using FormData
 const projectForm = document.getElementById("new-project-form")
 const cancelForm: Element | null = document.getElementById("cancel-project-btn");
@@ -367,8 +411,8 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
     }
     
 }
-
-
+*/
+/* Export and import projects to a JSON
 // Export projects to a JSON
 document.addEventListener("DOMContentLoaded", () => {
     const exportProjectsBtn = document.getElementById("export-projects-JSON-btn")
@@ -392,7 +436,9 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("The import button was not found. Check the ID!")
     }
 })
-    
+*/
+
+/* Main button of project(aside) return to the projects list
 //Main button of project(aside) return to the projects list
 const btnMainProjects = document.querySelector("#asideBtnProjects")
 btnMainProjects?.addEventListener("click", (e) => {
@@ -403,7 +449,9 @@ btnMainProjects?.addEventListener("click", (e) => {
     updateAsideButtonsState()
 
 })
+*/
 
+/*Button for editing Project Details.
 //Button for editing Project Details.
 const btnEditProjectDetails = document.querySelector("#edit-project-details")
 if (btnEditProjectDetails) {
@@ -533,6 +581,7 @@ if (btnEditProjectDetails) {
 } else {
     console.warn("Edit project button was not found")
 }
+*/
 
 function handleTitleClick(event: Event) {
         //Event Delegation: The handleModalClick function now handles clicks on the modal.It uses targetElement.closest('#delete-project-btn-svg') to check if the click originated from the "Delete Project" button or any of its parent elements.
@@ -791,7 +840,7 @@ if (btnToDoIssueBoard) {
 }
 
 
-
+/* Diferents Buttons inside the To-Do Board for create a new ToDoIssue
 
 // Create a new todo from 2 buttons (in Details page)
 const newToDoIssueBtn1 = document.querySelector("#new-todo-issue-btn");
@@ -810,9 +859,10 @@ if (newToDoIssueBtn2) {
         createNewToDoIssue(newToDoIssueBtn2);
     });
 }
+*/
 
-
-// Function in charge of the creaation of a new ToDoIssue
+/*Create a new todo from the button (in Details page)
+// Function in charge of the creation of a new ToDoIssue
 function createNewToDoIssue(btnNewToDoIssue) {
     console.log("Button Clicked to create new To-Do Issue")
     console.log("Button Clicked")
@@ -901,7 +951,9 @@ function createNewToDoIssue(btnNewToDoIssue) {
 
 }
 
+*/
 
+/*Obtaining data from the form via giving an id to the form and using FormToDoData
 
 //Obtaining data from the form via giving an id to the form and using FormToDoData
 // const toDoIssueForm = document.getElementById("new-todo-form")
@@ -1065,8 +1117,8 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
         console.log("The cancel Button was not found")
     }
 
-    }
-    
+}
+*/
 
 //Main button of Users(aside) open the Users board
 const btnUsersBoard = document.querySelector("#asideBtnUsers")

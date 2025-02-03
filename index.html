@@ -70,17 +70,12 @@
     
     <main id="content">
         <section id="modals">
-            <dialog id="new-project-modal" >
+            <!-- <dialog id="new-project-modal" >
                 <form id="new-project-form" action="" name="new-project-form" method="post" action="#">
                     <h2 style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
                         <div id="modal-project-title">New Project</div>
                         <div id="titleModalNewProject"></div>
-                        <!-- <button class="todo-icon-edit" id="delete-project1"
-                            style="border-radius: var(--br-circle); aspect-ratio: 1; padding: 0px; justify-content: center;">
-                            <svg class="todo-icon-edit" role="img" aria-label="trash" width="30" height="30">
-                                <use href="#trash"></use>
-                            </svg>
-                        </button> -->
+                        
                     </h2>
 
                     <div class="input-list">
@@ -127,18 +122,7 @@
                                 <option>Architect</option>
                                 <option>Engineer</option>
                                 <option>Developer</option>
-                            </select>
-                            <!-- <input name="userRole" type="text" list="rol">
-                            <datalist id="rol">
-                                <option value="Architect">Architect</option>
-                                <option value="Engineer">Engineer</option>
-                                <option value="Developer">Developer</option>
-                                <option value="Information Manager">Information Manager</option>
-                                <option value="Document Controller">Document Controller</option>
-                                <option value="Site Manager">Site Manager</option>
-                                <option value="MEP Engineer">MEP Engineer</option>
-                                <option value="Structural Engineer">Structural Engineer</option>
-                            </datalist> -->
+                            </select>                            
                         </div>
                         <div class="form-field-container">
                             <label><span class="material-icons-round">
@@ -178,7 +162,7 @@
                     </div>
 
                 </form>
-            </dialog>
+            </dialog> -->
             
             <!-- <dialog id="message-popup">
                 <div class="message-popup">
@@ -387,17 +371,7 @@
                                     <option value="MEP Engineer">MEP Engineer</option>
                                     <option value="Structural Engineer">Structural Engineer</option>
                                 </datalist>
-                                <!-- <select>
-                                    <option>Architect</option>
-                                    <option>Engineer</option>
-                                    <option>Developer</option>
-                                    <option>Information Manager</option>
-                                    <option>Document Controller</option>
-                                    <option>Site Manager</option>
-                                    <option>MEP Engineer</option>
-                                    <option>Structural Engineer</option>
-                                    <option selected>...Add New User Rol</option>
-                                </select> -->
+                                
                             </div>
                             <div class="form-field-user-container">
                                 <label><span class="material-icons-round">not_listed_location</span>Status</label>
@@ -463,12 +437,11 @@
                 </form>
             </dialog>
 
-            <dialog id="new-todo-card-modal" >
+            <!-- <dialog id="new-todo-card-modal" >
                 <form id="new-todo-form" action="" name="new-todo-form" method="post" action="/send/" class="todo-form" enctype="multipart/form-data">
                     <h2 id="modal-todoIssue-title">New To-Do Issue</h2>
 
-                    <h3  style="" id="todo-title">
-                        <!-- <label><span class="material-icons-round">edit</span></label> -->
+                    <h3  style="" id="todo-title">                        
                         <input data-form-todo-value="title" name="title" class="title-todo-card" type="text" size="30" placeholder="Please enter a title for the issue." required minlength="5">
                         <svg class="todo-icon" role="img" aria-label="edit" width="20" height="20">                            
                             <use href="#edit"></use>                            
@@ -509,8 +482,7 @@
 
                                     <div class="form-field-container">
 
-                                        <!-- Funcionalidad: Allow the user to select the column where the task will be located..
-                                        Implementación: U "We will use another dropdown menu (select) that will be populated with the column options. -->
+                                        
                                         <label><span class="material-icons-round">view_column</span>Stage</label>
                                         <select data-form-todo-value="statusColumn" name="statusColumn" id="todo-stage-column">
                                             <option value="notassigned"  disabled selected hidden>Select a stage</option>
@@ -518,8 +490,6 @@
                                             <option label="In progress" value="wip"></option>
                                             <option label="In review" value="qa"></option>
                                             <option label="Done" value="completed"></option>
-                                            
-                                            <!-- Aquí se cargarán las opciones de columna -->
                                         </select>
                                     </div>
 
@@ -534,15 +504,14 @@
                                     
                                     <div class="form-field-user-container">
 
-                                        <!-- Function: Allows user to select a regular user from "users-page".
-                                        Implementatión: We will use a dropdown menu (select) that will be populated with the available users. -->
+                                        
                                         <label><span class="material-icons-round">
                                                 person
                                             </span>Assignees</label>
                                         <input data-form-todo-value="assignedUsers" name="assignedUsers" type="text" list="assignees" style="width: 100%" placeholder="In Construction">
                                         <datalist id ="todo-assigned-user" >
                                             <option value=""></option>
-                                            <!-- this place for update the users from the "users-page" -->
+                                            
                                         </datalist>
                                     </div>
 
@@ -566,22 +535,17 @@
                                 <div id="buttonEndRight">
                                     <button id="cancel-todo-btn" type="button" class="buttonC">Cancel</button>
                                     <button id="accept-todo-btn" type="submit" class="buttonB">Accept</button>
-                                </div>            
-        
+                                </div>
                             </div>
-        
                         </fieldset>
-        
                     </div>
-        
-
                 </form>
-            </dialog>
+            </dialog> -->
 
 
         </section>
 
-        <section class="page" id="project-page" data-page style="display: ">
+        <!-- <section class="page" id="project-page" data-page style="display: ">
 
             <header>
                 <h2 style="display: flex; align-items: center; column-gap: 20px">Projects<span class="material-icons-round" style="padding: 10px;">location_city</span></h2>
@@ -631,10 +595,10 @@
                 </div>
 
             </div>
-        </section>
+        </section> -->
 
         
-        <section class="page" id="project-details" data-page style="display: ">
+        <!-- <section class="page" id="project-details" data-page style="display: ">
             <header style="display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap:20px; column-gap: 100px; user-select: none;" >
                 <div style="display: flex;column-gap: 20px">
                     <h2 style=" display:flex; align-items: center; column-gap: 20px;">Project Details
@@ -650,8 +614,7 @@
                 </div>
 
                 <div>
-                    <h2 data-project-info="name">Hospital Center</h2>
-                    <!-- <p style="color: var(--color-grey)"> Community hospital location city</p> -->
+                    <h2 data-project-info="name">Hospital Center</h2>                    
                 </div>
             </header>
             <div class="main-page-content">
@@ -696,19 +659,9 @@
                         <div style="padding: 10px 7px; display: flex; flex-direction: column; row-gap: 20px;">
 
                             <div style="display: flex;  justify-content: space-between; align-items: center;">
-                                <div style="display: flex; column-gap: 5px;flex-wrap: wrap;padding-left:15px;column-gap: 10px; align-items: baseline;">
-                                    <!-- <button class="todo-button">                                    
-                                        <svg class="todo-icon" role="img" aria-label="arrowleft" width="32" height="40">
-                                            <use href="#arrowleft"></use>
-                                        </svg>
-                                    </button> -->
+                                <div style="display: flex; column-gap: 5px;flex-wrap: wrap;padding-left:15px;column-gap: 10px; align-items: baseline;">                                    
                                     <h5 >To-Do List :</h5>
-                                    <h4 id="todo-project-header-name" style="word-wrap: break-word;overflow-wrap: break-word; word-break: break-all; max-width: 100%;margin-right: 15px;"></h4>
-                                    <!-- <button class="todo-button">
-                                        <svg class="todo-icon" role="img" aria-label="arrowright" width="32" height="40">
-                                            <use href="#arrowright"></use>
-                                        </svg>
-                                    </button> -->
+                                    <h4 id="todo-project-header-name" style="word-wrap: break-word;overflow-wrap: break-word; word-break: break-all; max-width: 100%;margin-right: 15px;"></h4>                                    
                                 </div>
                                 <div>
                                     <button id="new-todo-issue-btn"
@@ -785,15 +738,13 @@
                         </div>
                     </div>
                 </div>
-                <div id="viewer-container-father"  >
-                    <!-- <div id="gui-container" style="position: relative; width: 300px; height: 400px;">
-                    </div> -->
+                <div id="viewer-container-father"  >                    
                     <div  id="viewer-container" class="viewer3d-board">
                     </div>
                 </div>
             </div>
             
-        </section>
+        </section>  -->
 
         <section class="page" id="users-page" class="users-page" data-page style="display: ">
 
@@ -2182,7 +2133,7 @@
             </div>
         </section>
 
-        <section class="half-page" id="todo-details" data-page style="display: ">
+        <section class="half-page" id="todo-details" data-page style="display: none ">
             <div class="sliding-panel-todoIssue open-panel ">
                 <div>
                     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
