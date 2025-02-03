@@ -174,5 +174,5 @@ export function ProjectDetailsCard({ project, onUpdatedProject }:Props) {
             </div>
             {updateProjectDetailsForm}
         </div> 
-)
+    )
 }
