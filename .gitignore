@@ -28,3 +28,7 @@ dist-ssr1
 
 # IDE
 
+
+vite-env.d.ts
+env.d.ts
+node_modules/.vite/deps/_metadata.json

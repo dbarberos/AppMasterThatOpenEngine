@@ -61,7 +61,7 @@ export class Project implements IProject {
 
     
 
-    constructor(data: IProject) {
+    constructor(data: IProject, id:string = uuidv4()) {
         // const projectKeys = Object.keys(dummyProject)
         for (const key in data) {  
             
@@ -91,7 +91,7 @@ export class Project implements IProject {
         */
         
 
-        if (!this.id) { this.id = uuidv4() } //In order to not change the ID when we import projects from JSON file
+        if (!this.id) { this.id = id } //In order to not change the ID when we import projects from JSON file
         console.log(data);
 
         // lets create the ui for the list of todo ISssue if the proyect is imported. I mean exist todoIssue data but does not exist ui variable

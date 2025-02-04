@@ -1,5 +1,5 @@
 import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from "./Project"
-import { showModal, closeModal, toggleModal, closeModalProject , changePageContent} from "./UiManager"
+import { showModal, closeModal, toggleModal, closeModalProject, changePageContent } from "./UiManager"
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
@@ -10,13 +10,13 @@ import { updateAsideButtonsState } from "./HTMLUtilities.ts"
 import { useProjectsManager } from '../react-components/ProjectsManagerContext'
 
 export class ProjectsManager {
-    
+
     list: Project[] = []
     //ui: HTMLElement
     onProjectCreated = (project: Project) => { }
     onProjectDeleted = () => { }
 
-    defaultProjectCreated: boolean = false
+    //defaultProjectCreated: boolean = false
 
     /* SINGLETON PATTERN ProjectManager
     //Applying the singleton design pattern to the ProjectsManager class. This ensures that only one instance of ProjectsManager exists throughout the application, providing a global access point to its functionality.
@@ -40,12 +40,48 @@ export class ProjectsManager {
     //above finished the singleton pattern
     */
 
+    /*REMOVED CREATION OF DEFAULT PROJECT
     constructor() {
         
         this.defaultProjectCreated = false
         //this.createDefaultProject()
     }
+    */
     
+    newProjectFromDB(data: IProject, id?: string): Project | undefined {
+        const projectNames = this.list.map((project) => {
+            return project.name
+        })
+        
+        if (projectNames.includes(data.name)) {
+            // Find and remove the existing project from the ui & list since you are going to use it later
+            const existingProjectIndex = this.list.findIndex(project => project.name === data.name);
+            if (existingProjectIndex !== -1) {
+
+                // 1. Remove the existing project from the list
+                this.list = this.list.filter((project) => project.name !== data.name);
+
+                // 2. Create a new project with the imported data
+                const newProject = new Project(data, id);
+
+                // 3. Add the new project to the list
+                this.list.push(newProject);
+                this.onProjectCreated(newProject);
+
+            } else {
+                console.error("Project to overwrite not found in the list.")
+            }
+
+        } else {
+            const project = new Project(data, id)
+            this.list.push(project)
+            this.onProjectCreated(project)
+            return project
+        }
+    }
+    
+
+
     newProject(data: IProject): Project | undefined {
         const projectNames = this.list.map((project) => {
             return project.name
@@ -64,7 +100,7 @@ export class ProjectsManager {
                 <b><u>Rename:</b></u> Enter a new name for the imported project.`,
                     ["Overwrite", "Skip", "Rename"],
                 )
-                
+
                 // Define ALL your button callbacks for the messagePopUp created
                 const buttonCallbacks = {
                     "Overwrite": () => {
@@ -82,7 +118,7 @@ export class ProjectsManager {
                             // 2. Remove the existing project from the list
                             this.list = this.list.filter((project) => project.name !== data.name);
                             console.log("Removed the oLd Project name from the List of names");
-                            
+
 
                             // 3. Create a new project with the imported data
                             const newProject = new Project(data);
@@ -112,7 +148,7 @@ export class ProjectsManager {
                             console.log("Added new project to the List of names")
                             // this.ui.append(newProject.ui)
                             //console.log("Added new project to the UI")
-                            
+
                             // 5. Resolve with the newly created project
                             resolve(newProject);
 
@@ -142,7 +178,7 @@ export class ProjectsManager {
                         const box = document.createElement("div");
                         box.className = "message-content toast toast-popup-default";
                         renameDialog.appendChild(box);
-                        
+
                         const renameIcon = document.createElement("div");
                         renameIcon.className = "message-icon";
                         box.appendChild(renameIcon);
@@ -186,7 +222,7 @@ export class ProjectsManager {
                         boxInput.className = "message-text";
                         content.appendChild(boxInput);
 
-                        
+
                         const renameInputName = document.createElement("input");
                         renameInputName.className = "toast-input-text";
                         renameInputName.type = "text";
@@ -291,8 +327,8 @@ export class ProjectsManager {
                                 }
 
                                 // Validation: Check if the mame does not exist
-                                const existingProject = projectNames.find(existingName => existingName.toLowerCase() === newName.toLowerCase ())
-                                
+                                const existingProject = projectNames.find(existingName => existingName.toLowerCase() === newName.toLowerCase())
+
                                 if (existingProject) {
                                     // Name already exists, show error message
                                     const existProjectName = new MessagePopUp(
@@ -311,11 +347,11 @@ export class ProjectsManager {
                                     existProjectName.showNotificationMessage(buttonCallbacks);
                                     const deleteNameInput = document.querySelector("#newProjectName") as HTMLInputElement | null
                                     if (deleteNameInput) {
-                                        deleteNameInput.value =""
+                                        deleteNameInput.value = ""
                                     }
                                 } else {
 
-                                    
+
 
                                     // Update the project name
                                     data.name = newName;
@@ -370,17 +406,17 @@ export class ProjectsManager {
                 }
                 popupDuplicateProject.showNotificationMessage(buttonCallbacks);
             })
-        
+
         } else {
             // No duplicate, create the project
             const project = new Project(data)
             // *** Create and populate UI for ToDoIssues when a new project is created ***
             //project.todoList.forEach((toDoIssue) => {
-                //Create the UI element
-                //renderToDoIssueListInsideProject(toDoIssue) ////////
-                
-                //Set the projectId in the dataset
-                //toDoIssue.ui.dataset.projectId = project.id
+            //Create the UI element
+            //renderToDoIssueListInsideProject(toDoIssue) ////////
+
+            //Set the projectId in the dataset
+            //toDoIssue.ui.dataset.projectId = project.id
             //})
 
             /*// ATTACH THE EVENT LISTENER HERE
@@ -401,12 +437,12 @@ export class ProjectsManager {
             
             })
             */
-            
+
             console.log(project.todoList)
 
             // this.ui.append(project.ui)
             this.list.push(project)
-            this.removeDefaultProject();
+            //this.removeDefaultProject();
             this.onProjectCreated(project)
             return project
         }
@@ -420,7 +456,7 @@ export class ProjectsManager {
         })
         return filteredProjects
     }
-    
+
     /* //setDetailsPage function
     static setDetailsPage(project: Project) {
         const detailPage = document.getElementById("project-details")
@@ -537,7 +573,7 @@ export class ProjectsManager {
                 selectionProjectForProjectDetailPage.appendChild(option)
 
                 // Select the project corresponding to the stored project ID
-                
+
                 selectionProjectForProjectDetailPage.value = projectIdSelected
             })
         }
@@ -572,45 +608,45 @@ export class ProjectsManager {
                 ProjectsManager.setDetailsPage(selectedProject)
             }
         })
-        
+
     }
 
     /* USED INSIDE INDEX.TSX */
 
-    updateReactProjects ( dataToUpdate: Project) {
+    updateReactProjects(dataToUpdate: Project) {
         const projectIndex = this.list.findIndex(p => p.id === dataToUpdate.id)
-        
+
         if (projectIndex !== -1) {
             //Preserve the original ID
             dataToUpdate.id = this.list[projectIndex].id
 
             //CDreate a new list with the updated project
-            const updatedProjectsList = this.list.map((project, index) => 
+            const updatedProjectsList = this.list.map((project, index) =>
                 index === projectIndex ? new Project({
                     ...project, // Keep existing properties
                     ...dataToUpdate // Add new properties
                 }) : project
             );
             //Update the list reference
-                this.list = updatedProjectsList
+            this.list = updatedProjectsList
 
             //Return the entire updated list of projects
             return updatedProjectsList
-                
-                    
-        
-            
-          /*  
-            Update the Project Data in the Array.
-            this.list[projectIndex] = new Project({
-                ...this.list[projectIndex], // Keep existing properties
-                ...dataToUpdate // Update with new values
-            })
 
-            //ProjectsManager.setDetailsPage(this.list[projectIndex])
-            return this.list
-        // return true; // Indicate successful update
-        */
+
+
+
+            /*  
+              Update the Project Data in the Array.
+              this.list[projectIndex] = new Project({
+                  ...this.list[projectIndex], // Keep existing properties
+                  ...dataToUpdate // Update with new values
+              })
+  
+              //ProjectsManager.setDetailsPage(this.list[projectIndex])
+              return this.list
+          // return true; // Indicate successful update
+          */
 
         } else {
             console.error("Project not found in the list!")
@@ -619,9 +655,9 @@ export class ProjectsManager {
     }
 
 
-    updateProject (projectId: string, dataToUpdate: Project) {
+    updateProject(projectId: string, dataToUpdate: Project) {
         const projectIndex = this.list.findIndex(p => p.id === projectId)
-        
+
         if (projectIndex !== -1) {
             //Preserve the original ID
             dataToUpdate.id = this.list[projectIndex].id
@@ -686,13 +722,13 @@ export class ProjectsManager {
             // Return the updated UI element
             return newUiElement
 
-        } else {            
+        } else {
             throw new Error("Project UI element not found for update!")
         }
     }
 
-    
-/*  *** USED INSIDE NewProjectForm *** */
+
+    /*  *** USED INSIDE NewProjectForm *** */
     static populateProjectDetailsForm(project: Project) {
         const projectDetailsForm = document.getElementById("new-project-form")
         if (!projectDetailsForm) { return }
@@ -711,7 +747,7 @@ export class ProjectsManager {
                     inputField.forEach(element => {
                         (element as HTMLInputElement).value = formattedDate
                         console.log(`${project[key]}`);
-                        
+
                     })
                 } else {
                     inputField.forEach(element => {
@@ -735,45 +771,45 @@ export class ProjectsManager {
             }
         }
     }
-        
 
-/*  *** getChangedProjectDataForUpdate INSIDE NewProjectForm *** 
-    static getChangedProjectDataForUpdate(projectOrigin: Project, projectToUpdate: IProject) {
+
+    /*  *** getChangedProjectDataForUpdate INSIDE NewProjectForm *** 
+        static getChangedProjectDataForUpdate(projectOrigin: Project, projectToUpdate: IProject) {
+                    
+            //Create a object to hold the key - value pairs of changed data between projectOrigin and projectToUpdate:
+            const changedData: { [key: string]: [string, string] } = {};
+    
+            for (const key in projectOrigin) {
+    
+                // Exclude the 'backgroudcolorAcronym' property from comparison
+                 if (key === "backgroundColorAcronym") {
+                    continue
+                }
+    
+                const currentProjectValue = projectOrigin[key];
+                const valueToUpdate = projectToUpdate[key];
+    
+                console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Debugging line
+    
+                // Compare and store the difference (handling dates appropriately)
+                if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
+                    if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
+                        changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
+                    }
+                } else if (key === "description" && !currentProjectValue) {
+                    if (currentProjectValue !== valueToUpdate) {
+                        changedData[key] = ["Original description", "New description"];
+                    }
                 
-        //Create a object to hold the key - value pairs of changed data between projectOrigin and projectToUpdate:
-        const changedData: { [key: string]: [string, string] } = {};
-
-        for (const key in projectOrigin) {
-
-            // Exclude the 'backgroudcolorAcronym' property from comparison
-             if (key === "backgroundColorAcronym") {
-                continue
-            }
-
-            const currentProjectValue = projectOrigin[key];
-            const valueToUpdate = projectToUpdate[key];
-
-            console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Debugging line
-
-            // Compare and store the difference (handling dates appropriately)
-            if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
-                if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
-                    changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
+                } else if (currentProjectValue !== valueToUpdate) {
+                    changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
                 }
-            } else if (key === "description" && !currentProjectValue) {
-                if (currentProjectValue !== valueToUpdate) {
-                    changedData[key] = ["Original description", "New description"];
-                }
-            
-            } else if (currentProjectValue !== valueToUpdate) {
-                changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
             }
+            console.log("Changed Data:", changedData); // Debugging line
+            return changedData
+    
         }
-        console.log("Changed Data:", changedData); // Debugging line
-        return changedData
-
-    }
-*/
+    */
 
 
     renderProjectList(): void {
@@ -801,7 +837,7 @@ export class ProjectsManager {
 
                     ProjectsManager.setDetailsPage(project);
                     console.log("Details page set in a new window");
-                    
+
                     updateAsideButtonsState()
                 });
 
@@ -810,7 +846,7 @@ export class ProjectsManager {
         }
     }
 
-
+    /*REMOVED THE CREATION OF DEFAULT PROJECT
     createDefaultProject() {
         if (this.defaultProjectCreated) { return }
         const defaultData = {
@@ -834,7 +870,9 @@ export class ProjectsManager {
         this.list.push(defaultProject)
         this.defaultProjectCreated = true
     }
-    
+    */
+
+    /*REMOVED THE ERASE OF DEFAULT PROJECT
     removeDefaultProject() {
         if (this.defaultProjectCreated && this.list.length > 1) {
             // Remove the defautl project from the Ui and from the array list
@@ -846,17 +884,18 @@ export class ProjectsManager {
             this.defaultProjectCreated = false;
         }
     }
+    */
 
     /* USED INSIDE ProjectDetailsPage */
-    
-    
+
+
     getProject(id: string) {
         const project = this.list.find((project) => {
             return project.id === id
         })
         return project
     }
-    
+
     getProjectByName(name: string) {
         const project = this.list.find((project) => {
             return project.name === name
@@ -874,12 +913,12 @@ export class ProjectsManager {
     }
 
 
-    
+
     totalProjectsCost() {
         const TotalBudget = this.list.reduce((acumulative, Project) => acumulative + Project.cost, 0)
         return TotalBudget
     }
-    
+
     deleteProject(id: string) {
         const project = this.getProject(id)
         if (!project) { return }
@@ -891,7 +930,7 @@ export class ProjectsManager {
         this.onProjectDeleted()
     }
 
-        
+
     exprtToJSON(fileName: string = "projects") {
         console.log("Inside exprtToJSON")
         const projects: IProject[] = this.list
@@ -899,7 +938,7 @@ export class ProjectsManager {
         this.showExportJSONModal(projects, fileName)
         console.log("After showExportJSONModal")
     }
-    
+
     imprtFromJSON() {
         // Create a file input element to allow the user to select a JSON file
         const input = document.createElement("input")
@@ -935,21 +974,21 @@ export class ProjectsManager {
                     project.id = uuidv4(); // Genera un nuevo ID si no existe
                 }
             })
-            
+
             // Fire the dialog where you select the projects you want to import
             this.showImportJSONModal(projects)
-        
-/* // ESTE CODIGO HA SIDO TRANSLADADO A LA FUNCIÓN QUE MUESTRA EL LISTADO PARA SELECCIONAR
-            // for (const project of projects) {
-            //     try {
-            //         this.newProject(project)
-            //     } catch (error) {
-            //         console.log(error)
-            //     }
-*/
-        
+
+            /* // ESTE CODIGO HA SIDO TRANSLADADO A LA FUNCIÓN QUE MUESTRA EL LISTADO PARA SELECCIONAR
+                        // for (const project of projects) {
+                        //     try {
+                        //         this.newProject(project)
+                        //     } catch (error) {
+                        //         console.log(error)
+                        //     }
+            */
+
         })
-        
+
         input.addEventListener("change", () => {
             const filesList = input.files
             if (!filesList) { return }
@@ -957,11 +996,11 @@ export class ProjectsManager {
         })
         input.click()
     }
-    
+
     confirmBtnClickListener: EventListener | null = null
     cancelImportProjectBtnClickListener: EventListener | null = null
     cancelExportProjectBtnClickListener: EventListener | null = null
-    
+
     showImportJSONModal(projects: IProject[]) {
         // Create a modal dialog element
         const modalListOfProjectsJson = document.getElementById("modal-list-of-projects-json")
@@ -986,7 +1025,7 @@ export class ProjectsManager {
         } else {
             throw new Error("Title element not found")
         }
-        
+
         // Button to select all the projects at once
         const selectAllBtn = document.querySelector("#selectAllBtn")
         if (selectAllBtn) {
@@ -998,7 +1037,7 @@ export class ProjectsManager {
         } else {
             throw new Error("Select all button not found")
         }
-                
+
         // Button to deselect all the projects at once
         const deselectAllBtn = document.querySelector("#deselectAllBtn")
         if (deselectAllBtn) {
@@ -1010,7 +1049,7 @@ export class ProjectsManager {
         } else {
             throw new Error("Deselect all button not found")
         }
-        
+
         //Prevent the use of the keydown Escape
         modalListOfProjectsJson.addEventListener('keydown', (event) => {
             if (event.code === 'Escape') {
@@ -1018,7 +1057,7 @@ export class ProjectsManager {
                 event?.preventDefault()
             }
         })
-        
+
         // Confirmation-Cancellation button for taking the selection
         const confirmBtn = document.querySelector("#confirm-json-list")
         if (!confirmBtn) {
@@ -1034,7 +1073,7 @@ export class ProjectsManager {
             if (parentNode) {
                 const projectName: string | null = parentNode.textContent
                 if (projectName) {
-                const existingProject = this.getProjectByName(projectName)
+                    const existingProject = this.getProjectByName(projectName)
                     if (existingProject) {
                         (checkbox as HTMLInputElement).disabled = true;
                         // Add visual cues to the disabled checkbox
@@ -1056,8 +1095,8 @@ export class ProjectsManager {
                         // const gotItBtn = this.ui.querySelector("#btn-popup")
                         // gotItBtn?.classList.add("message-popup-mask-over-btn")
 
-                    
-                        
+
+
                         // Add event listener to the question mark icon
                         questionMarkIcon.addEventListener("click", async () => {
                             const projectExistingID = existingProject.id
@@ -1067,7 +1106,7 @@ export class ProjectsManager {
                                 "This Project already exists",
                                 'The specified project name is already in use. To import this project and replace the existing data, select the button "Allow overwrite"',
                                 ["Got it", "Allow overwrite"]
-                            )                            
+                            )
 
                             // Define ALL your button callbacks for the messagePopUp created
                             const buttonCallbacks = {
@@ -1084,18 +1123,18 @@ export class ProjectsManager {
                                         (checkbox as HTMLInputElement).disabled = false;
                                         (parentNode as HTMLElement).classList.remove("disabled-checkbox");
                                         // Add visual clues to the overwrite checkbox
-                                        (parentNode as HTMLElement).classList.add("overwrite-checkbox");                                         
+                                        (parentNode as HTMLElement).classList.add("overwrite-checkbox");
                                     } else {
                                         console.log("Errror:Could not find the project ID.");
-                                        
+
                                     }
                                     messagePopUp.closeMessageModal();
                                 }
- 
+
                             };
-                            
+
                             // *** Wait for the buttons to be rendered and event listeners attached ***
-                            await messagePopUp.showNotificationMessage(buttonCallbacks, );                              
+                            await messagePopUp.showNotificationMessage(buttonCallbacks,);
                         });
 
                         //change cursor to pointer on hover
@@ -1107,10 +1146,10 @@ export class ProjectsManager {
                             questionMarkIcon.style.cursor = "default"
                         });
                     }
-                }                
+                }
             }
         })
-            
+
 
         this.confirmBtnClickListener = async (e: Event) => {
             e.preventDefault()
@@ -1135,12 +1174,12 @@ export class ProjectsManager {
                     console.log("Parent node not found for the checkbox")
                 }
             })
-            
+
             //Check whether any project is selecter before confirm
             //if none project is selected, close the modal the same way cancel button
             if (selectedProjects.length > 0) {
                 console.log(selectedProjects);
-                
+
 
                 //Import the selected projects
                 for (const project of selectedProjects) {
@@ -1155,17 +1194,17 @@ export class ProjectsManager {
                         console.error("Error importing project:", project.name, error);
                     }
                 }
-                        
-              }
+
+            }
             this.clearProjectCheckList("#json-projects-list")
             closeModalProject("modal-list-of-projects-json", this)
         }
-                
+
         const cancelImportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
         if (!cancelImportProjectBtn) {
             throw new Error("Cancel button not found")
         }
-        
+
         const cancelSymbol = String.fromCharCode(0x274C)
         cancelImportProjectBtn.textContent = cancelSymbol
         this.cancelImportProjectBtnClickListener = (e: Event) => {
@@ -1173,7 +1212,7 @@ export class ProjectsManager {
             this.clearProjectCheckList("#json-project-list")
             closeModalProject("modal-list-of-projects-json", this)
         }
-            
+
         //Remove existing event listener
         confirmBtn.removeEventListener("click", this.confirmBtnClickListener);
         cancelImportProjectBtn?.removeEventListener("click", this.cancelImportProjectBtnClickListener);
@@ -1182,9 +1221,9 @@ export class ProjectsManager {
         confirmBtn.addEventListener("click", this.confirmBtnClickListener)
         cancelImportProjectBtn?.addEventListener("click", this.cancelImportProjectBtnClickListener)
     }
-    
+
     showExportJSONModal(projects: IProject[], fileName: string) {
-                
+
         // Show the modal dialog element
         const modalListOfProjectsJson = document.getElementById("modal-list-of-projects-json")
         if (modalListOfProjectsJson) {
@@ -1193,7 +1232,7 @@ export class ProjectsManager {
         } else {
             throw new Error("Modal dialog element not found")
         }
-        
+
         // Generate the list of projects
         const projectListJson = document.querySelector("#json-projects-list")
         this.generateProjectList(projects, projectListJson)
@@ -1206,19 +1245,19 @@ export class ProjectsManager {
             throw new Error("Title element not found")
         }
         console.log("cambio de titulo del modal");
-        
+
         // Button to select all the projects at once
         const selectAllBtn = document.querySelector("#selectAllBtn")
         if (selectAllBtn) {
             selectAllBtn.textContent = "Select all"
             selectAllBtn.addEventListener("click", (e) => {
                 e.preventDefault()
-                this.selectAllCheckboxes(projectListJson)                
+                this.selectAllCheckboxes(projectListJson)
             })
         } else {
             throw new Error("Selected all button not found")
         }
-        
+
         // Button to deselect all the projects at once
         const deselectAllBtn = document.querySelector("#deselectAllBtn")
         if (deselectAllBtn) {
@@ -1238,16 +1277,16 @@ export class ProjectsManager {
             }
         })
         // Confirmation-Cancellation button for taking the selection
-        const confirmBtn = document.getElementById("confirm-json-list")        
+        const confirmBtn = document.getElementById("confirm-json-list")
         if (!confirmBtn) {
             throw new Error("Confirm button not found")
-        } 
-        
+        }
+
         const checkmarkSymbol = String.fromCharCode(0x2713)
         confirmBtn.textContent = checkmarkSymbol
-        
-        this.confirmBtnClickListener = (e: Event) => { 
-            e.preventDefault() 
+
+        this.confirmBtnClickListener = (e: Event) => {
+            e.preventDefault()
 
             // Get the selected projects from the checkboxes
             const selectedProjects: IProject[] = []
@@ -1265,14 +1304,14 @@ export class ProjectsManager {
                     console.log("Parent node not found for the checkbox")
                 }
             })
-            
+
             // Check whether any project is selecter before confirm
             // if none project is selected, close the modal the same way cancel button                
             if (selectedProjects.length > 0) {
-                
+
                 // Export the selected projects
-                
-                    //function for the second argument of the STRINGIFY
+
+                //function for the second argument of the STRINGIFY
                 function removeUIfromExport(key, value) {
                     if (key === "ui") {
                         return undefined
@@ -1298,22 +1337,22 @@ export class ProjectsManager {
             }
             this.clearProjectCheckList("#json-projects-list")
             closeModalProject("modal-list-of-projects-json", this)
-            
+
         }
-        
+
         const cancelExportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
         if (!cancelExportProjectBtn) {
             throw new Error("Cancel button not found")
         }
-        const cancelSymbol = String.fromCharCode(0x274C)    
+        const cancelSymbol = String.fromCharCode(0x274C)
         cancelExportProjectBtn.textContent = cancelSymbol
-        this.cancelExportProjectBtnClickListener = (e: Event) => {            
+        this.cancelExportProjectBtnClickListener = (e: Event) => {
             e.preventDefault()
             this.clearProjectCheckList("#json-projects-list")
-            closeModalProject("modal-list-of-projects-json",this)  
+            closeModalProject("modal-list-of-projects-json", this)
         }
         // cancelExportProjectBtn.removeEventListener("click", cancelExportProjectBtnClickListener)
-    
+
         //Remove existing event listeners
         confirmBtn.removeEventListener("click", this.confirmBtnClickListener)
         cancelExportProjectBtn?.removeEventListener("click", this.cancelExportProjectBtnClickListener)
@@ -1322,7 +1361,7 @@ export class ProjectsManager {
         confirmBtn.addEventListener("click", this.confirmBtnClickListener)
         cancelExportProjectBtn?.addEventListener("click", this.cancelExportProjectBtnClickListener)
     }
-    
+
     generateProjectList(projects: IProject[], projectListJson: Element | null) {
         // const projectListJson = document.querySelector("#json-projects-list")
         if (!projectListJson) {
@@ -1346,9 +1385,9 @@ export class ProjectsManager {
             const checkmark = document.createElement("span")
             checkmark.classList.add("checkmark")
             checkboxLabel.appendChild(checkmark)
-            
 
-            
+
+
             // const listItems = document.createElement("li")
 
             // const checkbox = document.createElement("input")
@@ -1359,19 +1398,19 @@ export class ProjectsManager {
             listItems.appendChild(projectNametext)
             listItems.classList.add("checkbox-json")
             projectListJson?.appendChild(listItems)
-            
+
         })
     }
-    
+
     clearProjectCheckList(list: string) {
         const cleanCheckList = document.querySelector(list);
         if (cleanCheckList) {
             cleanCheckList.innerHTML = "";
         } else {
-        console.log("Error: cleanCheckList is null")
+            console.log("Error: cleanCheckList is null")
         }
     }
-    
+
     selectAllCheckboxes(list: Element | null) {
         if (!list) {
             throw new Error("List element not found");
@@ -1380,7 +1419,7 @@ export class ProjectsManager {
             (checkbox as HTMLInputElement).checked = true;
         });
     }
-    
+
     deselectAllCheckboxes(list: Element | null) {
         if (!list) {
             throw new Error("List element not found");
@@ -1389,7 +1428,7 @@ export class ProjectsManager {
             (checkbox as HTMLInputElement).checked = false;
         });
     }
-    
+
 }
 
 
