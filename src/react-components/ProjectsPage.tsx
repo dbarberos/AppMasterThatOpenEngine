@@ -6,6 +6,7 @@ import * as Firestore from 'firebase/firestore';
 import { SearchProjectBox } from '../react-components';
 import { useProjectsManager, NewProjectForm, ProjectCard } from './index.tsx';
 import { firebaseDB } from '../services/Firebase/index.ts'
+import {getCollection} from '../services/Firebase/index.ts'
 
 //import NewProjectForm from './NewProjectForm.tsx';
 //import { ProjectCard } from './ProjectCard.tsx';
@@ -22,6 +23,7 @@ interface Props {
     onProjectUpdate: (updatedProject: Project) => void
 
 }
+const projectsCollection = getCollection<IProject>("/projects")
 
 export function ProjectsPage({ projectsManager, onProjectUpdate }: Props) {
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
@@ -35,7 +37,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate }: Props) {
 
     //Retrieve information from Firebase
     const getFirestoreProjects = async () => {
-        const projectsCollection = Firestore.collection(firebaseDB, "/projects") as Firestore.CollectionReference<IProject>
+        
         const firebaseProjects = await Firestore.getDocs(projectsCollection)
         for (const doc of firebaseProjects.docs) {
             const data = doc.data()
@@ -49,12 +51,49 @@ export function ProjectsPage({ projectsManager, onProjectUpdate }: Props) {
 
     React.useEffect(() => {
         getFirestoreProjects()
-        
-      return () => {
-        
-      }
+
+        return () => {
+
+        }
     }, [])
+
+
+
+
+    /* CONSIDERAR iterar dentro de la base de datos para recoger la lista de ToDos, tags y assigned users.
+    const getFirestoreProjects = async () => {
+        const projectsCollection = getCollection<IProject>( "/projects");
+        const firebaseProjects = await Firestore.getDocs(projectsCollection);
+        
+        for (const doc of firebaseProjects.docs) {
+            const data = doc.data();
+            const project: IProject = {
+                ...data,
+                finishDate: (data.finishDate as unknown as Firestore.Timestamp).toDate(),
+                todos: [] // Inicializa un array para los todos
+            };
     
+            // Recuperar los "todos" de la subcolección
+            const todosCollection = Firestore.collection(firebaseDB, `/projects/${doc.id}/todos`);
+            const firebaseTodos = await Firestore.getDocs(todosCollection);
+            
+            for (const todoDoc of firebaseTodos.docs) {
+                const todoData = todoDoc.data();
+                const todo = {
+                    ...todoData,
+                    // Aquí puedes agregar más lógica para recuperar tags y assignedUsers si es necesario
+                };
+                project.todos.push(todo); // Agrega el todo al proyecto
+            }
+    
+            projectsManager.newProjectFromDB(project, doc.id);
+        }
+    };
+    
+    */
+
+
+
 
 
     const projectCardsList = projects.map((project) => {

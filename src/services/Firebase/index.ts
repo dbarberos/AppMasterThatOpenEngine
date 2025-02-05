@@ -1,5 +1,6 @@
+import * as Firestore from "firebase/firestore"
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore"
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -20,4 +21,10 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const firebaseDB =getFirestore()
+export const firebaseDB = Firestore.getFirestore()
+
+//Get a collection with a Master function
+export function getCollection<T>(path: string) {
+    const projectCollection = Firestore.collection(firebaseDB, path) as Firestore.CollectionReference<T>
+    return projectCollection
+}
