@@ -13,31 +13,17 @@ export interface IProject {
     status: ProjectStatus
     userRole: UserRole
     finishDate: Date
-    cost: Number
-    todoList: IToDoIssue[] 
+    cost: number
+    todoList: IToDoIssue[]
     
-
 }
-// const dummyProject: IProject = {
-//     name: "",
-//     description: "",
-//     status: "Active",
-//     businessUnit: "Commercial Construction",
-//     userRole: "Developer",
-//     finishDate: new Date()
-// }
-// You can simplify the code by using the IProject interface to get the property keys.
-// const projectKeys = Object.keys({} as IProject)
-// instead of
-// const projectKeys = Object.keys(dummyProject)
 
 export enum BusinessUnit {
     Edification = "Edification",
     Civil = "Civil",
     Transport = "Transport",
     Bridge = "Bridge",
-    Other = "Other"
-}
+    Other = "Other"}
 
 
 export class Project implements IProject {
@@ -51,17 +37,16 @@ export class Project implements IProject {
     finishDate: Date
     cost: number = 0
     
-    
     // Class internals
     id: string
     //ui: HTMLDivElement    
-    progress: number = 0
-    backgroundColorAcronym: string
+    progress?: number = 0
+    backgroundColorAcronym?: string
     todoList: IToDoIssue[] = []
 
     
 
-    constructor(data: IProject, id:string = uuidv4()) {
+    constructor(data: IProject, idString:string = uuidv4()) {
         // const projectKeys = Object.keys(dummyProject)
         for (const key in data) {  
             
@@ -77,95 +62,30 @@ export class Project implements IProject {
         this.backgroundColorAcronym = Project.calculateBackgroundColorAcronym(this.businessUnit)
         // // Handle todoList and todoList.todoIssue.ui
         this.todoList = data.todoList || []
-        // //Generate UI for the existing todoIssue
-        // data.todoList.forEach(toDoIssue => {
-        //     renderToDoIsuueListInsideProject(toDoIssue);
-        // });
 
-
-
-
-        /* Handle Project.ui
-        // Handle Project.ui
-        this.setUi();
-        */
-        
-
-        if (!this.id) { this.id = id } //In order to not change the ID when we import projects from JSON file
+        if (!this.id) { this.id = idString } //In order to not change the ID when we import projects from JSON file
         console.log(data);
 
         // lets create the ui for the list of todo ISssue if the proyect is imported. I mean exist todoIssue data but does not exist ui variable
 
-
-
-        
-        // I have passed the eventListener of the click over the UI because problems with the overwrite, since the event listener that I am trying to attach to the UI element is being added before the element actually exists in the DOM. In this new way, with the event listener attachment inside the Project constructor, it's added as soon as the UI element is created.
-        // this.ui.addEventListener("click", () => {
-        //     changePageContent("project-details", "flex")
-        //     ProjectsManager.setDetailsPage(this) // Pass 'this' to refer to the current project
-        //     console.log("Details page set in a new window")
-        // })
     }
 
-    calculateBackgroundColorAcronym
+    //calculateBackgroundColorAcronym
     static calculateBackgroundColorAcronym(businessUnit: BusinessUnit): string {
         switch (businessUnit) {
-            case "Edification":
+            case BusinessUnit.Edification:
                 return "#f08080"; // Light red
-            case "Civil":
+            case BusinessUnit.Civil:
                 return "#90ee90"; // Light green
-            case "Transport":
+            case BusinessUnit.Transport:
                 return "#add8e6"; // Light blue
-            case "Bridge":
+            case BusinessUnit.Bridge:
                 return "#c8a2c8"; // Light yellow
-            case "Other":
+            case BusinessUnit.Other:
                 return "#d3d3d3"; // Light grey
             default:
                 return "#ca8134"; // Default color
         }
     }
-    
-    
-    /* setUi() 
-    setUi() {
-        if (this.ui && this.ui instanceof HTMLElement) {return}
-        this.ui = document.createElement("div")
-        this.ui.className = "project-card"
-        this.ui.dataset.projectId = this.id
-
-        
-        this.ui.innerHTML = `
-            <div class="card-header">
-                <p style="background-color: ${this.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${this.acronym}</p>
-                <div style="width: 95%; word-break: break-all; overflow: auto;display:flex; flex-direction: column; align-items:flex-start; scrollbar-width:none;height: 100%;">
-                    <h5>${this.name}</h5>
-                    <p style="color: var(--color-fontbase-dark)">${this.description}</p>
-                </div>
-            </div>
-            <div class="card-content">
-                <div class="card-property">
-                    <p style="color: #969696;">Business Unit</p>
-                    <p>${this.businessUnit}</p>
-                </div>
-                <div class="card-property">
-                    <p style="color: #969696;">Status</p>
-                    <p>${this.status}</p>
-                </div>
-                <div class="card-property">
-                    <p style="color: #969696;">User Role</p>
-                    <p>${this.userRole}</p>
-                </div>
-                <div class="card-property">
-                    <p style="color: #969696;">Cost</p>
-                    <p>$${this.cost}</p>
-                </div>
-                <div class="card-property">
-                    <p style="color: #969696;">Progress</p>
-                    <p>${this.progress * 100}%</p>
-                </div>
-            </div>
-                    `
-    }
-    */
 
 }

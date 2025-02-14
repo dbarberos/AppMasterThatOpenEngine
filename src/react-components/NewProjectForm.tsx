@@ -1,206 +1,70 @@
 import React, { useState } from 'react';
-
-
-import { MessagePopUp } from '../react-components';
+import * as Router from 'react-router-dom';
 import * as Firestore from 'firebase/firestore';
-import { firebaseDB } from '../services/Firebase';
-import { getCollection } from '../services/Firebase';
+import { getCollection, firebaseDB, createDocument } from '../services/Firebase';
+
+import { DeleteProjectBtn, RenameElementMessage, DiffContentProjectsMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
+import { useUpdateExistingProject, useRenameProject, usePrepareProjectForm } from '../hooks';
 
 import { BusinessUnit, IProject, Project, ProjectStatus, UserRole } from '../classes/Project';
 import { ProjectsManager } from '../classes/ProjectsManager';
-import { closeModal, toggleModal } from '../classes/UiManager';
-
-
-//import { MessagePopUp } from '../classes/MessagePopUp';
+import { v4 as uuidV4 } from 'uuid';
 
 
 interface NewProjectFormProps {
     onClose: () => void;
-    projectsManager?: ProjectsManager;
+    projectsManager: ProjectsManager;
     updateProject?: Project | null;
-    onUpdatedProject?: (updatedProject: Project) => void
+    onUpdatedProject?: (updatedProject: Project) => void;
 }
 
 const projectsCollection = getCollection<IProject>("/projects")
 
+export function NewProjectForm({ onClose, projectsManager, updateProject = null, onUpdatedProject, }: NewProjectFormProps) {
 
-export function NewProjectForm({ onClose, projectsManager, updateProject = null, onUpdatedProject }: NewProjectFormProps) {
+    const [showMessagePopUp, setShowMessagePopUp] = useState(false)
+    const [messagePopUpContent, setMessagePopUpContent] = useState<MessagePopUpProps | null>(null)
+    const [newProjectName, setNewProjectName] = useState<string | null>(null);
+    const [renameConfirmationPending, setRenameConfirmationPending] = useState(false);
+    const [projectDetailsToRename, setProjectDetailsToRename] = useState<IProject | null>(null);
 
-    const [formData, setFormData] = React.useState<IProject | null>(null);
-    const [MessagePopUpProject, setMessagePopUpProject] = React.useState<React.ReactNode | null>(null)
-    const [showMessage, setShowMessage] = useState(false);
+
+
+    const { isRenaming, initiateRename, currentProjectName, handleProjectRename, cancelRename, setOnRename } = useRenameProject(projectsManager)
+    const updateDataProject = useUpdateExistingProject({ projectsManager, onUpdateExistingProject: onUpdatedProject || (() => { }) });
+    usePrepareProjectForm(updateProject, projectsManager)
 
 
 
-    const handleMessagePopUp = (options: {
-        type: 'error' | 'warning' | 'info' | 'success' | 'update' | 'message' | 'clock' | 'arrowup';
-        title: string;
-        message: string | React.ReactNode;
-        actions?: string[]; //The interrogation symbol make actions optional
-        messageHeight?: string;
-        callbacks?: Record<string, () => void>;  // Callbacks for actions
-    }) => {
-        console.log("Showing message popup with options:", options); // Debugging line
+    const handleRenameConfirmation = React.useCallback(async (renamedProjectName: string, projectDetails: IProject) => {
+        //setNewProjectName(renamedProjectName);
+        const projectToCreate = { ...projectDetails, name: renamedProjectName }
+        const newProject = new Project(projectToCreate);
+        console.log("project created with the new name", newProject)
         try {
-            setMessagePopUpProject( //Set the React element to the state
-                <MessagePopUp
-                    type={options.type}
-                    title={options.title}
-                    message={options.message}
-                    actions={options.actions || []}
-                    messageHeight={options.messageHeight}
-                    onActionClick={(action) => {
-                        console.log("Action clicked:", action); // Debugging line
-                        options.callbacks?.[action]?.(); //Call the appropriate callback
-                        setShowMessage(false); //Close the message after action
-                    }}
+            await createDocument("/projects", newProject)
+            console.log("data transfered to DB")
+            onUpdatedProject && onUpdatedProject(newProject)
+        } catch (error) {
+            console.error("Error creating project in Firestore:", error);
 
-
-                    onClose={() => {
-                        console.log("Popup closed"); // Debugging line
-                        setShowMessage(false); //Close the message popup
-                    }}  //Close the dialog if no actions or just closed}
-
-                />
-            );
-            setShowMessage(true); // Show the message popup
-
-            console.log("After change the state"); // Debugging line
-        } catch (err) {
-            console.error("Error showing message popup:", err); // Log any errors
-        }
-    }
-
-
-
-
-
-
-    React.useEffect(() => {
-        if (updateProject) {
-            setFormData(updateProject)
-
-            /* *** AMEND THE FORM INPUTS FOR UPDATE DETAILS ON AN EXISTING PROJECT *** */
-            console.dir("updatedProject", updateProject)
-            // *** Set Edit Mode ***
-            // Update Modal Title                    
-            const modalProjectTitle = document.getElementById("modal-project-title");
-            if (modalProjectTitle) {
-                modalProjectTitle.textContent = "Update Project";
-            }
-
-            // Update Buttons Text
-            const submitButton = document.getElementById("accept-project-btn");
-            if (submitButton) {
-                submitButton.textContent = "Save Changes";
-            }
-            const discardButton = document.getElementById("cancel-project-btn");
-            if (discardButton) {
-                discardButton.textContent = "Discard Changes";
-            }
-            //Create delete-project button                    
-
-            // CHeck if the button already exist
-            const existingDeleteButton = document.getElementById("delete-project-btn");
-            if (!existingDeleteButton) {
-
-                //Create delete-project button
-
-                const parentDeleteBtn = document.getElementById("titleModalNewProject")
-
-                const deleteProjectButton = document.createElement("button");
-                deleteProjectButton.className = "message-btn";
-                deleteProjectButton.type = "button";
-                deleteProjectButton.setAttribute("id", "delete-project-btn");
-                deleteProjectButton.className = "todo-icon-edit";
-                deleteProjectButton.style.borderRadius = "var(--br-circle)"
-                deleteProjectButton.style.aspectRatio = "1"
-                deleteProjectButton.style.padding = "0px"
-                deleteProjectButton.style.justifyContent = "center"
-
-                const svgTrash = document.createElement("svg");
-                const deleteButtonIconSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                deleteButtonIconSVG.setAttribute("class", "todo-icon-edit");
-                deleteButtonIconSVG.setAttribute("role", "img");
-                deleteButtonIconSVG.setAttribute("aria-label", "trash");
-                deleteButtonIconSVG.setAttribute("width", "30px");
-                deleteButtonIconSVG.setAttribute("height", "30px");
-                deleteButtonIconSVG.setAttribute("fill", "#08090a");
-                deleteButtonIconSVG.setAttribute("id", "delete-project-btn-svg");
-                deleteProjectButton.appendChild(deleteButtonIconSVG);
-
-                const deleteButtonIconUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
-                deleteButtonIconUse.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#trash");
-                deleteButtonIconUse.setAttributeNS("http://www.w3.org/2000/svg", "xlink:href", "#trash");
-                deleteButtonIconSVG.appendChild(deleteButtonIconUse);
-
-                parentDeleteBtn?.appendChild(deleteProjectButton)
-            }
-
-            // Populate the form fields with project data
-            ProjectsManager.populateProjectDetailsForm(updateProject)
-            // Populate the form fields with projectToEdit data
-            // ... your existing form population logic ...
-            console.log("Form populated", document.getElementById("new-project-form"));
-
-        } else {
-            setFormData(null)
-
-            // *** RESET THE FORM ***
-            // 1. Target specific input types
-            const projectForm = document.getElementById("new-project-form") as HTMLFormElement;
-            const inputsToReset = projectForm.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, select');
-
-            // 2. Loop through and reset each element
-            inputsToReset.forEach(element => {
-                (element as HTMLInputElement).value = ''; // Reset to empty string
-
-                // Additional handling for select elements:
-                if (element instanceof HTMLSelectElement) {
-                    element.selectedIndex = 0; // Reset to the first option
-                }
+            setMessagePopUpContent({
+                type: "error",
+                title: "Error Creating Project",
+                message: "There was a problem saving the project. Please try again later.",
+                actions: ["OK"],
+                onActionClick: {
+                    "OK": () => setShowMessagePopUp(false),
+                },
+                onClose: () => setShowMessagePopUp(false),
             });
-
-
-            // Set Modal in case previously we updated a project
-            // Update Modal Title
-            const modalProjectTitle = document.getElementById("modal-project-title");
-            if (modalProjectTitle) {
-                modalProjectTitle.textContent = "New Project";
-            }
-            // Update Buttons Text 
-            const submitButton = document.getElementById("accept-project-btn");
-            if (submitButton) {
-                submitButton.textContent = "Accept"
-            }
-            const discardButton = document.getElementById("cancel-project-btn");
-            if (discardButton) {
-                discardButton.textContent = "Cancel";
-            }
-            //Remove the delete project button from the modal in case previously we updated a project
-            const parentDeleteBtn = document.getElementById("titleModalNewProject")
-            if (parentDeleteBtn) {
-                const deleteButton = document.getElementById("delete-project-btn")
-                if (deleteButton) {
-                    parentDeleteBtn.removeChild(deleteButton)
-                }
-            }
+            setShowMessagePopUp(true)
+            error.preventDefault()
         }
-    }, [])
+    }, [onUpdatedProject])
 
 
-
-
-    const handleClose = () => {
-        onClose();
-    };
-
-
-
-
-
-
-    const handleNewProjectFormSubmit = (e: React.FormEvent) => {
+    function handleNewProjectFormSubmit(e: React.FormEvent) {
         e.preventDefault()
         const projectForm = document.getElementById("new-project-form")
 
@@ -209,282 +73,174 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
         const formDataProject = new FormData(projectForm)
         //const checkProjectID = updateProject.id
 
+
+
+
         if (projectForm.checkValidity()) {
-
             // Form is valid, proceed with data processing
-            if (updateProject === null) {
-                //When the form is for a new Project
-
-                // *** Get the finishDate from the form data ***
-                let finishProjectDate: Date | null = null // Allow null initially
-                const finishProjectDateString = formDataProject.get("finishDate") as string
-                // Try to create a Date object, handling potential errors
-                if (finishProjectDateString) {
-                    finishProjectDate = new Date(finishProjectDateString)
-                    // Check if the Date object is valid
-                    if (isNaN(finishProjectDate.getTime())) {
-                        // Handle invalid date input (e.g., show an error message)
-                        console.error("Invalid date input:", finishProjectDateString);
-                        finishProjectDate = null; // Reset to null if invalid
-                    }
+            // *** Get the finishDate from the form data ***
+            let finishProjectDate: Date | null = null // Allow null initially
+            const finishProjectDateString = formDataProject.get("finishDate") as string
+            // Try to create a Date object, handling potential errors
+            if (finishProjectDateString) {
+                finishProjectDate = new Date(finishProjectDateString)
+                // Check if the Date object is valid
+                if (isNaN(finishProjectDate.getTime())) {
+                    // Handle invalid date input (e.g., show an error message)
+                    console.error("Invalid date input:", finishProjectDateString);
+                    finishProjectDate = null; // Reset to null if invalid
                 }
-                // Set to current date if no valid date was provided
-                if (!finishProjectDate) {
-                    finishProjectDate = new Date("2026-12-31"); // Create a new Date object for today
-                }
-                // Now you can safely use finishProjectDate as a Date object
-
-
-                const projectDetails: IProject = {
-                    name: formDataProject.get("name") as string,
-                    acronym: formDataProject.get("acronym") as string,
-                    businessUnit: BusinessUnit[formDataProject.get("businessUnit") as keyof typeof BusinessUnit],
-                    description: formDataProject.get("description") as string,
-                    status: formDataProject.get("status") as ProjectStatus,
-                    userRole: formDataProject.get("userRole") as UserRole,
-                    finishDate: finishProjectDate,
-                    cost: formDataProject.get("cost") ? parseFloat(formDataProject.get("cost") as string) : 0,
-                    todoList: []
-                };
-
-                try {
-                    Firestore.addDoc(projectsCollection, projectDetails)
-                    const project = projectsManager?.newProject(projectDetails);
-                    //if (project !== undefined && onUpdatedProject) {
-                    //    onUpdatedProject(project)
-                    //}
-
-                    onCloseNewProjectForm(e)
-
-                } catch (err) {
-                    const errorPopUp = document.querySelector(".message-popup")
-                    const contentError = {
-                        contentDescription: err.message,
-                        contentTitle: "Error",
-                        contentClass: "popup-error",
-                        contentIcon: "report"
-                    }
-                    if (errorPopUp) {
-                        const text = errorPopUp.querySelector("#message-popup-text p")
-                        const title = errorPopUp.querySelector("#message-popup-text h5")
-                        const icon = errorPopUp.querySelector("#message-popup-icon span")
-
-                        if (text) text.textContent = contentError.contentDescription
-                        if (title) title.textContent = contentError.contentTitle
-                        if (icon) icon.textContent = contentError.contentIcon
-
-                        errorPopUp?.classList.add(contentError.contentClass)
-                        toggleModal("message-popup")
-                    }
-                    const closePopUp: Element | null = document.querySelector(".btn-popup")
-                    if (closePopUp) {
-                        const closePopUpHandler = () => {
-                            toggleModal("message-popup");
-                            closePopUp.removeEventListener("click", closePopUpHandler);
-                        }
-                        closePopUp.addEventListener("click", closePopUpHandler);
-                    }
-                }
-
-            } else {
-                //When the form is for update an existing Project
-
-                console.log("Button submit clicked in the edit project mode");
-                e.preventDefault()
-
-                //const formDataToUpdate = new FormData(projectForm)
-
-                // *** Get the finishDate from the form data ***
-                let finishProjectDate: Date | null = null // Allow null initially
-                const finishProjectDateString = formDataProject.get("finishDate") as string
-                // Try to create a Date object, handling potential errors
-                if (finishProjectDateString) {
-                    finishProjectDate = new Date(finishProjectDateString)
-                    // Check if the Date object is valid
-                    if (isNaN(finishProjectDate.getTime())) {
-                        // Handle invalid date input (e.g., show an error message)
-                        console.error("Invalid date input:", finishProjectDateString);
-                        finishProjectDate = null; // Reset to null if invalid
-                    }
-                }
-
-                const projectDetailsToUpdate = new Project({
-                    name: formDataProject.get("name") as string,
-                    acronym: formDataProject.get("acronym") as string,
-                    businessUnit: BusinessUnit[formDataProject.get("businessUnit") as keyof typeof BusinessUnit],
-                    description: formDataProject.get("description") as string,
-                    status: formDataProject.get("status") as ProjectStatus,
-                    userRole: formDataProject.get("userRole") as UserRole,
-                    finishDate: finishProjectDate as Date,
-                    cost: formDataProject.get("cost") ? parseFloat(formDataProject.get("cost") as string) : 0,
-                    todoList: updateProject.todoList,
-                })
-                projectDetailsToUpdate.id = updateProject.id as string
-
-                projectDetailsToUpdate.progress = updateProject.progress as number
-                projectDetailsToUpdate.backgroundColorAcronym = Project.calculateBackgroundColorAcronym(updateProject.businessUnit)
-
-                console.log("proyect detail to update", projectDetailsToUpdate)
-                console.log("proyect to be updated", updateProject)
-                /* ASK FOR CONFIRMATION OF THE CHANGES */
-
-
-                const changesInProject = getChangedProjectDataForUpdate(updateProject, projectDetailsToUpdate);
-                if (Object.keys(changesInProject).length > 0) {
-                    const messageContent = createMessageContent(changesInProject);
-
-                    // Calculate the number of rows in the messageContent table
-                    const messageRowsCount = Object.keys(changesInProject).length
-                    // Calculate the desired message height
-                    const messageHeight = `calc(${messageRowsCount} * 3.5rem + 5rem)`; // 3.5rem per row + 5rem for the title
-
-                    handleMessagePopUp({
-                        type: "info",
-                        title: "Confirm Project Update",
-                        message: messageContent,
-                        messageHeight: messageHeight,
-                        actions: ["Confirm update", "Cancel"],
-                        callbacks: {
-                            "Confirm update": () => {
-                                if (projectDetailsToUpdate !== undefined && onUpdatedProject) {
-                                    onUpdatedProject(projectDetailsToUpdate);
-                                }
-                                handleClose();
-                                setMessagePopUpProject(null)
-                            },
-                            "Cancel": () => {
-                                console.log("User  cancelled the update.");
-                                setMessagePopUpProject(null)
-                            },
-                        },
-                    });
-                    setShowMessage(true);
-                    //onCloseNewProjectForm(e)
-                } else {
-
-                    handleMessagePopUp({
-                        type: "info",
-                        title: "No Changes Detected",
-                        message: "No changes were detected in the project details.",
-                        actions: ["Got it"],
-                        callbacks: {
-                            "Got it": () => {
-                                console.log("No changes to update in the project.");
-                                setMessagePopUpProject(null);
-                            }
-                        }
-
-                    });
-                    setShowMessage(true);
-                }
-
-
-                // if (projectDetailsToUpdate !== undefined && onUpdatedProject) {
-                //     onUpdatedProject(projectDetailsToUpdate)
-                // }
-
+            }
+            // Set to current date if no valid date was provided
+            if (!finishProjectDate) {
+                finishProjectDate = new Date("2026-12-31"); // Create a new Date object for today
             }
 
+            const projectDetails: IProject = {
+                name: formDataProject.get("name") as string,
+                acronym: formDataProject.get("acronym") as string,
+                businessUnit: BusinessUnit[formDataProject.get("businessUnit") as keyof typeof BusinessUnit],
+                description: formDataProject.get("description") as string,
+                status: formDataProject.get("status") as ProjectStatus,
+                userRole: formDataProject.get("userRole") as UserRole,
+                finishDate: finishProjectDate,
+                cost: formDataProject.get("cost") ? parseFloat(formDataProject.get("cost") as string) : 0,
+                todoList: []
+            }
+            if (updateProject === null) {
+                //When the form is for a NEW PROJECT
+                //createNewProject(projectDetails)
+                const projectNames = projectsManager.list.map(project => project.name);
+                const existingProject = projectNames.find(existingName => existingName.toLowerCase() === projectDetails.name.toLowerCase())
+
+                if (existingProject) {
+                    console.log(`A project with the name [ ${projectDetails.name} ] already exists`)
+                    console.log("Setting messagePopUpContent state...");    // Log before setting state
+                    //Create a Confirmation Modal to prompt the user about the duplication and offer options
+                    setMessagePopUpContent({
+                        type: "warning",
+                        title: `A project with the name "${projectDetails.name}" already exist`,
+                        message: `<b><u>Overwrite:</b></u> Replace the existing project with the new data.<br>
+                                    <b><u>Skip:</b></u> Do not create a new project.<br>
+                                    <b><u>Rename:</b></u> Enter a new name for the new project.`,
+                        actions: ["Overwrite", "Skip", "Rename"],
+                        onActionClick: {
+                            "Overwrite": () => {
+                                console.log("Overwrite button clicked!");
+
+                                //AQUI FALTA LA LÓGICA PARA BORRA DE FIREBASE EL PROYECTO E INTRODUCIR EL NUEVO
+                                //AQUI SE SOBREESCRIBEN LOS DATOS CON LO QUE SEA AL CREAR EL NUEVO
+
+                                const newProject = new Project(projectDetails)
+                                onUpdatedProject && onUpdatedProject(newProject)
+                                setShowMessagePopUp(false)
+                                onCloseNewProjectForm()
+
+                            },
+                            "Skip": () => {
+                                console.log("Skip button clicked!")
+                                setShowMessagePopUp(false)
+                            },
+                            "Rename": () => {
+                                console.log("Rename button clicked!");
+                                setProjectDetailsToRename(projectDetails)
+
+                                //SE CREA UN ARCHIVO NUEVO PERO CAMBIAMOS EL NOMBRE ANTES DE AÑADIRLO 
+                                initiateRename(projectDetails.name)
+                                setRenameConfirmationPending(true)
+
+
+                                setShowMessagePopUp(false)
+
+                            },
+
+                        },
+                        onClose: () => setShowMessagePopUp(false)
+                    })
+                    setShowMessagePopUp(true)
+                    console.log("showMessagePopUp state:", showMessagePopUp);  // Log state *after* setting it.  Will still be false!
+                    console.log("messagePopUpContent state:", messagePopUpContent); // Log content after setting it.
+                    e.preventDefault()
+                    return
+
+                } else {
+                    // No duplicate, create the project
+                    const newProject = new Project(projectDetails)
+                    console.log(newProject)
+
+                    createDocument("/projects", newProject)
+                    console.log("data transfered to DB")
+
+                    //projectsManager.onProjectCreated(newProject)
+                    console.log("project created")
+                    onUpdatedProject && onUpdatedProject(newProject)
+                    console.log("project adde to the list")
+                    onCloseNewProjectForm(); // Close the form for new projects only after creation
+                }
+
+                //onCloseNewProjectForm(e)
+
+
+            } else {
+                //When the form is for UPDATE AN EXISTING PROJECT
+
+                //HAY QUE COMPROBAR SI LOS DATOS QUE SE CAPTAN DEL FORMULARIO HAY QUE COGER LOS DATOS QUE NO ESTAN EN IProyect.
+                const projectDetailsToUpdate = new Project({
+                    ...projectDetails,
+                    id: updateProject.id,
+                    progress: updateProject.progress,
+                    backgroundColorAcronym: Project.calculateBackgroundColorAcronym(updateProject.businessUnit),
+                    todoList: updateProject.todoList,
+                })
+                const changesInProject = ProjectsManager.getChangedProjectDataForUpdate(updateProject, projectDetailsToUpdate)
+                
+
+                
+                if (onUpdatedProject) {
+                    onUpdatedProject(projectDetailsToUpdate)
+
+                    updateDataProject(updateProject, projectDetailsToUpdate)
+                }
+            }
+
+            onCloseNewProjectForm()
         } else {
-
             // Form is invalid, let the browser handle the error display
-            projectForm.reportValidity()
+            projectForm.reportValidity();
         }
-        // }   
-
-        //onCloseNewProjectForm(e);
     }
 
-
-
-    const onCloseNewProjectForm = (e: React.FormEvent) => {
+    const onCloseNewProjectForm = () => {
         const projectForm = document.getElementById("new-project-form") as HTMLFormElement
-        e.preventDefault()
-        projectForm.reset()
-        // Delete the data-projectId attribute with the unique ID of the proyect in the button of "Save Changes"
-        //const projectDatasetAttributeIdInForm = document.getElementById("accept-project-btn")
-        //if (projectDatasetAttributeIdInForm) {
-        //    projectDatasetAttributeIdInForm.dataset.projectId = ""
-        //}
-        //toggleModal("new-project-modal");
+        //preventDefault()
+        if (projectForm) {
+            projectForm.reset()
+        }
         onClose() // Close the form after the accept button is clicked
     }
 
 
 
-
-    const createMessageContent = (changes: Record<string, [any, any]>) => {
-        return (
-            <React.Fragment>  {/* Use a Fragment to return multiple elements */}
-                The following project details will be updated:<br /><br />
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr>
-                            <th style={{ borderBottom: '1px solid #ccc' }}>Property</th>
-                            <th style={{ borderBottom: '1px solid #ccc' }}>Changes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Object.entries(changes).map(([key, [oldValue, newValue]]) => (
-                            <tr key={key}>
-                                <td style={{ borderBottom: '1px solid #ccc' }}><b>{key}</b></td>
-                                <td style={{ borderBottom: '1px solid #ccc' }}>
-                                    From: <i>{oldValue}</i><br />
-                                    To: <i style={{ color: 'var(--popup-warning)' }}>{newValue}</i>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </React.Fragment>
-        );
-    }
-
-
-
-
-
-    const getChangedProjectDataForUpdate = (existingProject: Project | null, updatedProject: Project): Record<string, [any, any]> => {
-        const changedData: { [key: string]: [string, string] } = {};
-
-        if (!existingProject) return changedData;
-
-        for (const key in existingProject) {
-            // Excluir la propiedad 'backgroundColorAcronym' de la comparación
-            if (key === "backgroundColorAcronym") {
-                continue;
-            }
-
-            const currentProjectValue = existingProject[key];
-            const valueToUpdate = updatedProject[key];
-
-            console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Línea de depuración
-
-            // Comparar y almacenar la diferencia (manejando las fechas adecuadamente)
-            if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
-                if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
-                    changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
-                }
-            } else if (currentProjectValue !== valueToUpdate) {
-                changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
-            }
-        }
-
-        console.log("Changed Data:", changedData); // Línea de depuración
-        return changedData;
-    };
-
-
-
+    // Effect to handle rename confirmation after rename is complete
     React.useEffect(() => {
-        console.log("Estado de showMessagePopUp actualizado:", showMessage);
-    }, [showMessage]);
+        if (!isRenaming && renameConfirmationPending && projectDetailsToRename && newProjectName) {
+            handleRenameConfirmation(newProjectName, projectDetailsToRename)
+                .then(() => {
+                    setRenameConfirmationPending(false);
+                    setProjectDetailsToRename(null);
+                    setNewProjectName(null); // Reset after use.
+                    onCloseNewProjectForm() // Close the form.
+                })
+        }
+    }, [isRenaming, renameConfirmationPending, projectDetailsToRename, newProjectName, handleRenameConfirmation, onCloseNewProjectForm]);
+
+
 
 
     return (
         <div className="dialog-container">
             <div className="custom-backdrop">
-                <dialog id="new-project-modal" open>
+                <dialog id="new-project-modal" style={{ overflow: "visible" }} open> {/*HERE THE SECRET FOR SHOWINHG ON IT MESSAGESPOPUP*/}
                     <form onSubmit={(e) => { handleNewProjectFormSubmit(e) }} id="new-project-form" action="" name="new-project-form" method="post" >
                         <h2
                             style={{
@@ -495,7 +251,10 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                             }}
                         >
                             <div id="modal-project-title">New Project</div>
-                            <div id="titleModalNewProject" />
+                            <div id="titleModalNewProject" >
+                                {updateProject ? <DeleteProjectBtn updateProject={updateProject} projectsManager={projectsManager} /> : null}
+                            </div>
+
                         </h2>
                         <div className="input-list">
                             <div className="form-field-container">
@@ -630,10 +389,10 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                     </form>
                 </dialog>
             </div>
-            {showMessage && MessagePopUpProject}
+            {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
+            {isRenaming && <RenameElementMessage elementTitle="Project" previousElementName={currentProjectName} onRename={(newName) => { setNewProjectName(newName); handleProjectRename(newName) }} onCancel={() => { cancelRename(); setRenameConfirmationPending(false); setProjectDetailsToRename(null) }} />}
         </div >
 
     )
 }
 
-export default NewProjectForm;

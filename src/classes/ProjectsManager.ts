@@ -14,7 +14,7 @@ export class ProjectsManager {
     list: Project[] = []
     //ui: HTMLElement
     onProjectCreated = (project: Project) => { }
-    onProjectDeleted = () => { }
+    onProjectDeleted = (id: string) => { }
 
     //defaultProjectCreated: boolean = false
 
@@ -48,7 +48,7 @@ export class ProjectsManager {
     }
     */
     
-    newProjectFromDB(data: IProject, id?: string): Project | undefined {
+    newProject(data: IProject, id?: string): Project | undefined{
         const projectNames = this.list.map((project) => {
             return project.name
         })
@@ -57,7 +57,7 @@ export class ProjectsManager {
             // Find and remove the existing project from the ui & list since you are going to use it later
             const existingProjectIndex = this.list.findIndex(project => project.name === data.name);
             if (existingProjectIndex !== -1) {
-
+                //It is clare that there is an index, since there is a project with that name
                 // 1. Remove the existing project from the list
                 this.list = this.list.filter((project) => project.name !== data.name);
 
@@ -67,22 +67,25 @@ export class ProjectsManager {
                 // 3. Add the new project to the list
                 this.list.push(newProject);
                 this.onProjectCreated(newProject);
+                return newProject;
 
             } else {
                 console.error("Project to overwrite not found in the list.")
+                return undefined
             }
 
         } else {
-            const project = new Project(data, id)
-            this.list.push(project)
-            this.onProjectCreated(project)
-            return project
+            //Create a new proyect  
+            const newProject = new Project(data, id)
+            this.list.push(newProject)
+            this.onProjectCreated(newProject)            
+            return newProject
         }
     }
     
 
-
-    newProject(data: IProject): Project | undefined {
+/*OLD NEWpROJECT FUNCTION
+    OLDnewProject(data: IProject): Project | undefined {
         const projectNames = this.list.map((project) => {
             return project.name
         })
@@ -123,7 +126,7 @@ export class ProjectsManager {
                             // 3. Create a new project with the imported data
                             const newProject = new Project(data);
 
-                            /* ATTACH THE EVENT LISTENER HERE
+                            ATTACH THE EVENT LISTENER HERE
                             newProject.ui.addEventListener("click", () => {
                                 changePageContent("project-details", "flex")
 
@@ -139,7 +142,7 @@ export class ProjectsManager {
                                 
                                 updateAsideButtonsState()
                             })
-                            */
+                            
 
 
                             // 4. Add the new project to the list and UI
@@ -368,7 +371,7 @@ export class ProjectsManager {
                                     // Create the new project and resolve the Promise
                                     const newProject = new Project(data);
 
-                                    /*// ATTACH THE EVENT LISTENER HERE
+                                    // ATTACH THE EVENT LISTENER HERE
                                     newProject.ui.addEventListener("click", () => {
                                         changePageContent("project-details", "flex")
 
@@ -384,7 +387,7 @@ export class ProjectsManager {
                                         
                                         updateAsideButtonsState()
                                     });
-                                    */
+                                    
 
                                     this.list.push(newProject)
                                     // this.ui.append(newProject.ui)
@@ -410,33 +413,6 @@ export class ProjectsManager {
         } else {
             // No duplicate, create the project
             const project = new Project(data)
-            // *** Create and populate UI for ToDoIssues when a new project is created ***
-            //project.todoList.forEach((toDoIssue) => {
-            //Create the UI element
-            //renderToDoIssueListInsideProject(toDoIssue) ////////
-
-            //Set the projectId in the dataset
-            //toDoIssue.ui.dataset.projectId = project.id
-            //})
-
-            /*// ATTACH THE EVENT LISTENER HERE
-            project.ui.addEventListener("click", () => {
-                localStorage.setItem("selectedProjectId", project.id)
-
-                ProjectsManager.setDetailsPage(project)
-                changePageContent("project-details", "flex")
-
-                //Set the funcionality of search between todoIssues
-                setupProjectDetailsSearch()
-
-                // Set the localStorage value for pageWIP to "project-details"
-                localStorage.setItem("pageWIP", "project-details")                
-                console.log("Details pages set in a new window");
-                
-                updateAsideButtonsState()
-            
-            })
-            */
 
             console.log(project.todoList)
 
@@ -448,7 +424,7 @@ export class ProjectsManager {
         }
 
     }
-
+*/
 
     filterProjects(value: string) {
         const filteredProjects = this.list.filter((project) => {
@@ -620,7 +596,7 @@ export class ProjectsManager {
             //Preserve the original ID
             dataToUpdate.id = this.list[projectIndex].id
 
-            //CDreate a new list with the updated project
+            //Create a new list with the updated project
             const updatedProjectsList = this.list.map((project, index) =>
                 index === projectIndex ? new Project({
                     ...project, // Keep existing properties
@@ -678,57 +654,7 @@ export class ProjectsManager {
         }
     }
 
-    updateProjectUi(projectToUpdateTheUi: Project): HTMLDivElement {
-        // Update the UI.
-        // Ensure projectToUpdate.ui is defined
-        if (projectToUpdateTheUi.ui) {
-
-            // Create a new UI element with updated content
-            const newUiElement = document.createElement('div')
-            newUiElement.className = "project-card"
-            newUiElement.dataset.projectId = projectToUpdateTheUi.id
-            newUiElement.innerHTML = `
-                <div class="card-header" style="overflow:auto;" >
-                    <p style="background-color: ${projectToUpdateTheUi.backgroundColorAcronym}; padding: 10px; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; color: #43464e">${projectToUpdateTheUi.acronym}</p>
-                    <div style="width: 95%; word-break: break-all; overflow: auto;display:flex; flex-direction: column; align-items:flex-start; scrollbar-width:none; height: 100%;">
-                        <h5>${projectToUpdateTheUi.name}</h5>
-                        <p style="color: var(--color-fontbase-dark)">${projectToUpdateTheUi.description}</p>
-                    </div>
-                </div>
-                <div class="card-content">
-                    <div class="card-property">
-                        <p style="color: #969696;">Business Unit</p>
-                        <p>${projectToUpdateTheUi.businessUnit}</p>
-                    </div>
-                    <div class="card-property">
-                        <p style="color: #969696;">Status</p>
-                        <p>${projectToUpdateTheUi.status}</p>
-                    </div>
-                    <div class="card-property">
-                        <p style="color: #969696;">User Role</p>
-                        <p>${projectToUpdateTheUi.userRole}</p>
-                    </div>
-                    <div class="card-property">
-                        <p style="color: #969696;">Cost</p>
-                        <p>$${projectToUpdateTheUi.cost}</p>
-                    </div>
-                    <div class="card-property">
-                        <p style="color: #969696;">Progress</p>
-                        <p>${projectToUpdateTheUi.progress * 100}%</p>
-                    </div>
-                </div>
-            `;
-
-            // Return the updated UI element
-            return newUiElement
-
-        } else {
-            throw new Error("Project UI element not found for update!")
-        }
-    }
-
-
-    /*  *** USED INSIDE NewProjectForm *** */
+    //  *** USED INSIDE NewProjectForm *** 
     static populateProjectDetailsForm(project: Project) {
         const projectDetailsForm = document.getElementById("new-project-form")
         if (!projectDetailsForm) { return }
@@ -773,43 +699,43 @@ export class ProjectsManager {
     }
 
 
-    /*  *** getChangedProjectDataForUpdate INSIDE NewProjectForm *** 
-        static getChangedProjectDataForUpdate(projectOrigin: Project, projectToUpdate: IProject) {
-                    
-            //Create a object to hold the key - value pairs of changed data between projectOrigin and projectToUpdate:
-            const changedData: { [key: string]: [string, string] } = {};
-    
-            for (const key in projectOrigin) {
-    
-                // Exclude the 'backgroudcolorAcronym' property from comparison
-                 if (key === "backgroundColorAcronym") {
-                    continue
-                }
-    
-                const currentProjectValue = projectOrigin[key];
-                const valueToUpdate = projectToUpdate[key];
-    
-                console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Debugging line
-    
-                // Compare and store the difference (handling dates appropriately)
-                if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
-                    if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
-                        changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
+      //*** USED INSIDE NewProjectForm *** *
+        static getChangedProjectDataForUpdate(existingProject: Project | null, updatedProject: Project): Record<string, [any, any]> {
+                const changedData: { [key: string]: [string, string] } = {};
+        
+                if (!existingProject) return changedData;
+        
+                for (const key in existingProject) {
+                    // Avoid 'backgroundColorAcronym' property from the comparation
+                    if (key === "backgroundColorAcronym") {
+                        continue;
                     }
-                } else if (key === "description" && !currentProjectValue) {
-                    if (currentProjectValue !== valueToUpdate) {
-                        changedData[key] = ["Original description", "New description"];
+        
+                    const currentProjectValue = existingProject[key];
+                    const valueToUpdate = updatedProject[key];
+        
+                    console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Línea de depuración
+        
+                    // Comparar y almacenar la diferencia (manejando las fechas adecuadamente)
+                    if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
+                        if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
+                            changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
+                        }
+                    } else if (currentProjectValue !== valueToUpdate) {
+                        changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
                     }
-                
-                } else if (currentProjectValue !== valueToUpdate) {
-                    changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
                 }
-            }
-            console.log("Changed Data:", changedData); // Debugging line
-            return changedData
+        
+                console.log("Changed Data:", changedData); 
+                return changedData;
+            };
     
-        }
-    */
+    
+
+
+
+
+    
 
 
     renderProjectList(): void {
@@ -927,7 +853,7 @@ export class ProjectsManager {
             return project.id !== id
         })
         this.list = remain
-        this.onProjectDeleted()
+        this.onProjectDeleted(project.name)
     }
 
 

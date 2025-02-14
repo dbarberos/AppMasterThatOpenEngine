@@ -4,9 +4,11 @@ import * as Firestore from 'firebase/firestore';
 
 
 import { SearchProjectBox } from '../react-components';
+import { useMessagePopUp } from '../hooks';
+
 import { useProjectsManager, NewProjectForm, ProjectCard } from './index.tsx';
 import { firebaseDB } from '../services/Firebase/index.ts'
-import {getCollection} from '../services/Firebase/index.ts'
+import { getCollection } from '../services/Firebase/index.ts'
 
 //import NewProjectForm from './NewProjectForm.tsx';
 //import { ProjectCard } from './ProjectCard.tsx';
@@ -21,23 +23,25 @@ import { log } from 'three/examples/jsm/nodes/Nodes.js';
 interface Props {
     projectsManager: ProjectsManager,
     onProjectUpdate: (updatedProject: Project) => void
-
+    onNewProjectCreated: (newProjectCreated: Project) => void
 }
 const projectsCollection = getCollection<IProject>("/projects")
 
-export function ProjectsPage({ projectsManager, onProjectUpdate }: Props) {
-    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
+export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCreated }: Props) {
 
-    //const projectsManager = useProjectsManager(); // Access projectsManager
-    //const [projectsManager] = React.useState(new ProjectsManager())
+    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
     const [projects, setProjects] = React.useState<Project[]>(projectsManager.list)
+    const { messagePopUp, showMessage, handleMessagePopUp } = useMessagePopUp()
+
 
     projectsManager.onProjectCreated = () => { setProjects([...projectsManager.list]) }
-    projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
+    //projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
+
+
 
     //Retrieve information from Firebase
     const getFirestoreProjects = async () => {
-        
+
         const firebaseProjects = await Firestore.getDocs(projectsCollection)
         for (const doc of firebaseProjects.docs) {
             const data = doc.data()
@@ -45,15 +49,13 @@ export function ProjectsPage({ projectsManager, onProjectUpdate }: Props) {
                 ...data,
                 finishDate: (data.finishDate as unknown as Firestore.Timestamp).toDate()
             }
-            projectsManager.newProjectFromDB(project, doc.id)
+            projectsManager.newProject(project, doc.id)
         }
     }
 
     React.useEffect(() => {
         getFirestoreProjects()
-
         return () => {
-
         }
     }, [])
 
@@ -91,9 +93,6 @@ export function ProjectsPage({ projectsManager, onProjectUpdate }: Props) {
     };
     
     */
-
-
-
 
 
     const projectCardsList = projects.map((project) => {
@@ -153,22 +152,22 @@ export function ProjectsPage({ projectsManager, onProjectUpdate }: Props) {
         }
     };
 
-    const handleUpdatedProjectList = (updatedProject: Project) => {
-        const prevProjects = projectsManager.list
-        setProjects((prevProjects) =>
-            prevProjects.map((project) => (project.id === updatedProject.id ? updatedProject : project))
-        );
-        onProjectUpdate(updatedProject)
+    const handleUpdatedProject = (updatedProject: Project) => {
+
+        projectsManager.newProject(updatedProject, updatedProject.id)
+        // const prevProjects = projectsManager.list
+        // setProjects((prevProjects) =>
+        //     prevProjects.map((project) => (project.id === updatedProject.id ? updatedProject : project))
+        // );
+        //onProjectUpdate(updatedProject)
     }
-
-
 
 
     const newProjectForm = isNewProjectFormOpen ? (
         <NewProjectForm
             onClose={handleCloseForm}
             projectsManager={projectsManager}
-            onUpdatedProject={handleUpdatedProjectList}
+            onUpdatedProject={handleUpdatedProject}            
         />
     ) : null;
 
@@ -239,6 +238,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate }: Props) {
             </div>
             {/*  Render the form if  isNewProjectFormOpen = true  */}
             {newProjectForm}
+            {showMessage && messagePopUp}
         </section>
     )
 }

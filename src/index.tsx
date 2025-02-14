@@ -8,7 +8,7 @@ import { Sidebar, ProjectsPage, ProjectDetailsPage } from './react-components';
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project.ts";
 import { IToDoIssue, ToDoIssue } from "./classes/ToDoIssue.ts"
 import { ProjectsManager } from "./classes/ProjectsManager.ts";
-import { showModal, closeModal, toggleModal, changePageContent, PageChangeEvent, PageShowEvent, PageHideEvent } from "./classes/UiManager.ts";
+import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager.ts";
 //import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp.ts"
@@ -23,16 +23,14 @@ const projectsManager = new ProjectsManager();
 
 const App = () => {
     const [projects, setProjects] = React.useState(projectsManager.list);
+    function handleNewProject(newProject: Project) {
+        setProjects([...projects, newProject])        
+    }
 
 
     const handleProjectUpdate = (updatedProject) => {
         projectsManager.updateReactProjects(updatedProject); // Update the project in projectsManager
-        // setProjects((prevProjects) =>
-        //     prevProjects.map((proj) =>
-        //         proj.id === updatedProject.id ? updatedProject : proj
-        //     )
-        // ); // Update the state to trigger re-render
-    
+            
         setProjects([...projectsManager.list]);
         
     };
@@ -43,7 +41,7 @@ const App = () => {
             <Router.BrowserRouter>
                 <Sidebar />
                 <Router.Routes>
-                    <Router.Route path="/" element={<ProjectsPage  projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
+                    <Router.Route path="/" element={<ProjectsPage  projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate} onNewProjectCreated={handleNewProject}/>} />
                     <Router.Route path="/project/:id" element={<ProjectDetailsPage projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
                 </Router.Routes>
                 
@@ -583,6 +581,8 @@ if (btnEditProjectDetails) {
 }
 */
 
+/*DELETE PROJECT BUTTON 
+
 function handleTitleClick(event: Event) {
         //Event Delegation: The handleModalClick function now handles clicks on the modal.It uses targetElement.closest('#delete-project-btn-svg') to check if the click originated from the "Delete Project" button or any of its parent elements.
         //Efficiency: With event delegation, you only have one event listener attached to the modal, even if you dynamically add or remove multiple "Delete Project" buttons.
@@ -702,7 +702,7 @@ function handleDeleteProjectButtonClick(e: Event) {
         console.error("Delete project button was not found")
     }
 } 
-
+*/
 
 //Delete a ToDoISsue when click the trash delete botton in the todo-detail page
 const btnToDoIssueDelete = document.querySelector("#delete-todoIssue-btn")

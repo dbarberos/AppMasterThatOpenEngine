@@ -17,7 +17,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
 
     const routeParams = Router.useParams<{ id: string }>();
     console.log("I´m the ID of the proyect selected", routeParams.id);
-    const navigate = Router.useNavigate();
+    const navigateTo = Router.useNavigate();
 
     const projectId = routeParams.id;
 
@@ -27,9 +27,9 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
     // Redirect if project is not found
     React.useEffect(() => {
         if (!project) {
-            navigate('/'); // Redirect to home
+            navigateTo('/'); // Redirect to home
         }
-    }, [project, navigate]);
+    }, []);
 
 
     const [projectState, setProjectState] = React.useState<Project | undefined>(project);
@@ -109,7 +109,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
             </header>
             <div className="main-page-content">
                 <div style={{ display: "flex", flexDirection: "column", rowGap: 40 }}>
-                    <ProjectDetailsCard project={project} onUpdatedProject={handleUpdatedProject} />
+                    <ProjectDetailsCard project={project} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager}/>
                     <ProjectDetailsToDoList project={projectState as Project} onUpdatedProject={handleUpdatedProject} />
                 </div>
                 <ThreeJSViewer />                

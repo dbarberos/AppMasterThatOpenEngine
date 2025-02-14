@@ -10,9 +10,10 @@ import { Project } from '../classes/Project';
 interface Props {   
     project: Project,
     onUpdatedProject: (updatedProject: Project) => void
+    projectsManager: ProjectsManager
 }
 
-export function ProjectDetailsCard({ project, onUpdatedProject }:Props) {
+export function ProjectDetailsCard({ project, onUpdatedProject, projectsManager }:Props) {
 
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)   
 
@@ -33,7 +34,7 @@ export function ProjectDetailsCard({ project, onUpdatedProject }:Props) {
         }
 
     const updateProjectDetailsForm = isNewProjectFormOpen ? (
-        <NewProjectForm onClose={handleCloseForm} updateProject={project} onUpdatedProject={handleUpdatedProject } />
+        <NewProjectForm onClose={handleCloseForm} updateProject={project} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager} />
     ) : null
 
 
