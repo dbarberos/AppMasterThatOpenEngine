@@ -9,32 +9,35 @@ import { Project } from '../classes/Project';
 
 interface Props {   
     project: Project,
+    onCreatedProject: (createdProject: Project) => void
     onUpdatedProject: (updatedProject: Project) => void
     projectsManager: ProjectsManager
 }
 
-export function ProjectDetailsCard({ project, onUpdatedProject, projectsManager }:Props) {
+export function ProjectDetailsCard({ project, onCreatedProject, onUpdatedProject, projectsManager }:Props) {
 
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)   
 
     const handleCloseForm = () => {
         // Cierra el formulario
         setIsNewProjectFormOpen(false);
-    };
-
-
+    }
 
     const onEditProjectDetailsClick = () => {
         setIsNewProjectFormOpen(true)
     }
 
-
+    const handleCreatedProject = (createdProject: Project) => {
+        onCreatedProject(createdProject)
+    }
+    
     const handleUpdatedProject = (updatedProject: Project) => {
-            onUpdatedProject(updatedProject)
-        }
+        onUpdatedProject(updatedProject)
+    }
+
 
     const updateProjectDetailsForm = isNewProjectFormOpen ? (
-        <NewProjectForm onClose={handleCloseForm} updateProject={project} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager} />
+        <NewProjectForm onClose={handleCloseForm} updateProject={project} onCreatedProject={handleCreatedProject} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager} />
     ) : null
 
 

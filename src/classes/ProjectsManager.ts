@@ -15,6 +15,8 @@ export class ProjectsManager {
     //ui: HTMLElement
     onProjectCreated = (project: Project) => { }
     onProjectDeleted = (id: string) => { }
+    onProjectUpdated = (id:string) => { }
+
 
     //defaultProjectCreated: boolean = false
 
@@ -48,7 +50,8 @@ export class ProjectsManager {
     }
     */
     
-    newProject(data: IProject, id?: string): Project | undefined{
+    //ESTA FUCNION ESTA CREADA PARA LA CREACIÓN DE PROYECTOS AL RERENDERIZAR EL COMPONENTE DE REAC PROJECTPAGE
+    newProject(data: IProject, id?: string): IProject | undefined{
         const projectNames = this.list.map((project) => {
             return project.name
         })
@@ -78,7 +81,7 @@ export class ProjectsManager {
             //Create a new proyect  
             const newProject = new Project(data, id)
             this.list.push(newProject)
-            this.onProjectCreated(newProject)            
+            this.onProjectCreated(newProject)
             return newProject
         }
     }
@@ -609,18 +612,15 @@ export class ProjectsManager {
             //Return the entire updated list of projects
             return updatedProjectsList
 
-
-
-
             /*  
-              Update the Project Data in the Array.
-              this.list[projectIndex] = new Project({
-                  ...this.list[projectIndex], // Keep existing properties
-                  ...dataToUpdate // Update with new values
-              })
-  
-              //ProjectsManager.setDetailsPage(this.list[projectIndex])
-              return this.list
+            Update the Project Data in the Array.
+            this.list[projectIndex] = new Project({
+                ...this.list[projectIndex], // Keep existing properties
+                ...dataToUpdate // Update with new values
+            })
+
+            //ProjectsManager.setDetailsPage(this.list[projectIndex])
+            return this.list
           // return true; // Indicate successful update
           */
 
@@ -630,27 +630,46 @@ export class ProjectsManager {
         }
     }
 
+    /* USED INSIDE NEWPROJECTFORM.TSX */
 
     updateProject(projectId: string, dataToUpdate: Project) {
-        const projectIndex = this.list.findIndex(p => p.id === projectId)
+        const projectIdString = projectId.toString().trim()
+        const projectIndex = this.list.findIndex(p => p.id?.toString().trim() === projectIdString) //Convert to string and trim for the comparing the same type of data
 
         if (projectIndex !== -1) {
-            //Preserve the original ID
-            dataToUpdate.id = this.list[projectIndex].id
+            //  Update the existing project object directly (instead of creating a new one)
+            const projectToUpdate = this.list[projectIndex];
 
-            // Update the Project Data in the Array.
-            this.list[projectIndex] = {
-                ...this.list[projectIndex], // Keep existing properties
-                ...dataToUpdate // Update with new values
+            // Update properties of the existing project
+            for (const key in dataToUpdate) {
+                if (key !== "id") { // Explicitly exclude the ID to prevent it from being overwritten.
+                    projectToUpdate[key] = dataToUpdate[key];
+                }
             }
 
-            ProjectsManager.setDetailsPage(this.list[projectIndex])
-            return this.list[projectIndex]
-            // return true; // Indicate successful update
+            this.onProjectUpdated(projectId);
+            return projectToUpdate;
 
+
+            // //Preserve the original ID
+            // dataToUpdate.id = this.list[projectIndex].id
+
+            // // Update the Project Data in the Array. Clone the project previously stored in the list and update the properties with the new values
+            // const updatedProjectCloned = new Project(dataToUpdate)
+
+
+            // this.list[projectIndex] = {
+            //     ...this.list[projectIndex], // Keep existing properties
+            //     ...dataToUpdate // Update with new values
+            // }
+
+            // this.onProjectUpdated(projectId)
+            
+            // return this.list[projectIndex]
+            
         } else {
             console.error("Project not found in the list!")
-            return false
+            return null
         }
     }
 
@@ -700,44 +719,37 @@ export class ProjectsManager {
 
 
       //*** USED INSIDE NewProjectForm *** *
-        static getChangedProjectDataForUpdate(existingProject: Project | null, updatedProject: Project): Record<string, [any, any]> {
-                const changedData: { [key: string]: [string, string] } = {};
-        
-                if (!existingProject) return changedData;
-        
-                for (const key in existingProject) {
-                    // Avoid 'backgroundColorAcronym' property from the comparation
-                    if (key === "backgroundColorAcronym") {
-                        continue;
-                    }
-        
-                    const currentProjectValue = existingProject[key];
-                    const valueToUpdate = updatedProject[key];
-        
-                    console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Línea de depuración
-        
-                    // Comparar y almacenar la diferencia (manejando las fechas adecuadamente)
-                    if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
-                        if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
-                            changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
-                        }
-                    } else if (currentProjectValue !== valueToUpdate) {
-                        changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
-                    }
+    static getChangedProjectDataForUpdate(existingProject: Project | null, updatedProject: Project): Record<string, [any, any]> {
+            const changedData: { [key: string]: [string, string] } = {};
+    
+            if (!existingProject) return changedData;
+    
+            for (const key in existingProject) {
+                // Avoid 'backgroundColorAcronym' property from the comparation
+                if (key === "backgroundColorAcronym") {
+                    continue;
                 }
-        
-                console.log("Changed Data:", changedData); 
-                return changedData;
-            };
+    
+                const currentProjectValue = existingProject[key];
+                const valueToUpdate = updatedProject[key];
+    
+                console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Línea de depuración
+    
+                // Comparar y almacenar la diferencia (manejando las fechas adecuadamente)
+                if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
+                    if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
+                        changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
+                    }
+                } else if (currentProjectValue !== valueToUpdate) {
+                    changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
+                }
+            }
+    
+            console.log("Changed Data:", changedData); 
+            return changedData;
+        };
     
     
-
-
-
-
-    
-
-
     renderProjectList(): void {
         const projectListUiElements = document.getElementById('project-list');
         if (projectListUiElements) {
@@ -824,7 +836,7 @@ export class ProjectsManager {
 
     getProjectByName(name: string) {
         const project = this.list.find((project) => {
-            return project.name === name
+            return project.name.toLowerCase() === name.toLowerCase()
         })
         return project
     }

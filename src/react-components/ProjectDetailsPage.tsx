@@ -7,11 +7,12 @@ import { Project } from '../classes/Project';
 
 interface Props {
     projectsManager: ProjectsManager
+    onProjectCreate: (updatedProject: Project) => void
     onProjectUpdate: (updatedProject: Project) => void
 }
 
 
-export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) {
+export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProjectUpdate }: Props) {
 
 
 
@@ -47,6 +48,12 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
     }
 
 
+
+    const handleCreatedProject = (createdProject: Project) => {
+        //Update the parent project object to trigger the rerender.
+        setProjectState(createdProject)
+        onProjectCreate(createdProject)
+    }
 
     const handleUpdatedProject = (updatedProject: Project) => {
         //Update the parent project object to trigger the rerender.
@@ -109,8 +116,8 @@ export function ProjectDetailsPage({ projectsManager, onProjectUpdate }: Props) 
             </header>
             <div className="main-page-content">
                 <div style={{ display: "flex", flexDirection: "column", rowGap: 40 }}>
-                    <ProjectDetailsCard project={project} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager}/>
-                    <ProjectDetailsToDoList project={projectState as Project} onUpdatedProject={handleUpdatedProject} />
+                    <ProjectDetailsCard project={project} onCreatedProject={handleCreatedProject} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager}/>
+                    <ProjectDetailsToDoList project={projectState as Project} onUpdatedProject={handleCreatedProject} />
                 </div>
                 <ThreeJSViewer />                
             </div>

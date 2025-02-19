@@ -1,50 +1,64 @@
 import React, { useState } from 'react';
 import * as Router from 'react-router-dom';
-import * as Firestore from 'firebase/firestore';
-import { getCollection, firebaseDB, createDocument } from '../services/Firebase';
+import { createDocument, updateDocument, deleteDocument } from '../services/Firebase';
 
 import { DeleteProjectBtn, RenameElementMessage, DiffContentProjectsMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
-import { useUpdateExistingProject, useRenameProject, usePrepareProjectForm } from '../hooks';
+import { usePrepareProjectForm } from '../hooks';
 
 import { BusinessUnit, IProject, Project, ProjectStatus, UserRole } from '../classes/Project';
 import { ProjectsManager } from '../classes/ProjectsManager';
-import { v4 as uuidV4 } from 'uuid';
-
+import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 interface NewProjectFormProps {
     onClose: () => void;
     projectsManager: ProjectsManager;
     updateProject?: Project | null;
+    onCreatedProject?: (createdProject: Project) => void;
     onUpdatedProject?: (updatedProject: Project) => void;
+
 }
 
-const projectsCollection = getCollection<IProject>("/projects")
+export function NewProjectForm({ onClose, projectsManager, updateProject = null, onCreatedProject, onUpdatedProject }: NewProjectFormProps) {
 
-export function NewProjectForm({ onClose, projectsManager, updateProject = null, onUpdatedProject, }: NewProjectFormProps) {
-
+    const navigateTo = Router.useNavigate()
     const [showMessagePopUp, setShowMessagePopUp] = useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = useState<MessagePopUpProps | null>(null)
+
     const [newProjectName, setNewProjectName] = useState<string | null>(null);
-    const [renameConfirmationPending, setRenameConfirmationPending] = useState(false);
+    const [projectNameToConfirm, setProjectNameToConfirm] = useState<string | null>(null);
     const [projectDetailsToRename, setProjectDetailsToRename] = useState<IProject | null>(null);
+    const [isRenaming, setIsRenaming] = React.useState(false);
+    const [currentProjectName, setCurrentProjectName] = React.useState('');
 
-
-
-    const { isRenaming, initiateRename, currentProjectName, handleProjectRename, cancelRename, setOnRename } = useRenameProject(projectsManager)
-    const updateDataProject = useUpdateExistingProject({ projectsManager, onUpdateExistingProject: onUpdatedProject || (() => { }) });
+    // const { isRenaming, initiateRename, currentProjectName, handleProjectRename, cancelRename, setOnRename } = useRenameProject(projectsManager)
+    //const updateDataProject = useUpdateExistingProject({ projectsManager, onUpdateExistingProject: onCreatedProject || (() => { }) });
     usePrepareProjectForm(updateProject, projectsManager)
 
 
+    const onCloseNewProjectForm = () => {
+        const projectForm = document.getElementById("new-project-form") as HTMLFormElement
+        if (projectForm) {
+            projectForm.reset()
+        }
+        onClose() // Close the form after the accept button is clicked
+    }
 
-    const handleRenameConfirmation = React.useCallback(async (renamedProjectName: string, projectDetails: IProject) => {
+    const handleRenameConfirmation = React.useCallback(async (renamedProjectName: string, projectDetailsToRename: IProject) => {
         //setNewProjectName(renamedProjectName);
-        const projectToCreate = { ...projectDetails, name: renamedProjectName }
+        const projectToCreate = { ...projectDetailsToRename, name: renamedProjectName }
         const newProject = new Project(projectToCreate);
         console.log("project created with the new name", newProject)
+
         try {
-            await createDocument("/projects", newProject)
+
+            const docRef = await createDocument("/projects", newProject)
+            newProject.id = docRef.id
             console.log("data transfered to DB")
-            onUpdatedProject && onUpdatedProject(newProject)
+
+            projectsManager.newProject(new Project(newProject, newProject.id))
+            console.log("project added to the list", projectsManager.list)
+
+            onCreatedProject && onCreatedProject(newProject)
         } catch (error) {
             console.error("Error creating project in Firestore:", error);
 
@@ -61,10 +75,66 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
             setShowMessagePopUp(true)
             error.preventDefault()
         }
-    }, [onUpdatedProject])
+    }, [onCreatedProject])
 
 
-    function handleNewProjectFormSubmit(e: React.FormEvent) {
+    
+    async function handleUpdateDataProjectInDB (projectDetailsToUpdate: Project, simplifiedChanges: Record<string, any>) {
+        
+        if (!projectDetailsToUpdate.id) return
+        await updateDocument<Partial<Project>>("/projects", projectDetailsToUpdate.id, simplifiedChanges)
+        console.log("data transfered to DB")
+
+        console.log("projectDetailsToUpdate.id", projectDetailsToUpdate.id)
+        console.log("projectDetailsToUpdate", projectDetailsToUpdate)
+        console.log("Projects in manager:", projectsManager.list.map(p => p.id))
+        //const updatedProject = projectsManager.updateProject(projectDetailsToUpdate.id, projectDetailsToUpdate)
+       
+        
+            onUpdatedProject && onUpdatedProject(projectDetailsToUpdate)
+
+        
+        projectsManager.onProjectUpdated(projectDetailsToUpdate.id)   
+    }
+
+
+    async function handleCreateProjectInDB(projectDetails: IProject) {
+
+        const newProject = new Project(projectDetails)
+        console.log(newProject)
+        try {
+
+            const newProjectDoc = await createDocument("/projects", newProject)
+            newProject.id = newProjectDoc.id
+            console.log("data transfered to DB", newProject)
+
+            projectsManager.newProject(newProject, newProject.id)
+            
+
+            onCreatedProject && onCreatedProject({ ...newProject, id: newProjectDoc.id })
+
+            console.log("project added to the list", projectsManager.list)
+        } catch (error) {
+            console.error("Error creating project in DB:", error);
+            
+            setMessagePopUpContent({ 
+                type: "error",
+                title: "Error Creating Project",
+                message: "There was a problem saving the project. Please try again later.",
+                actions: ["OK"],
+                onActionClick: {
+                    "OK": () => setShowMessagePopUp(false),
+                },
+                onClose: () => setShowMessagePopUp(false),
+            });
+            setShowMessagePopUp(true);
+        }
+
+    }
+
+
+
+    async function handleNewProjectFormSubmit(e: React.FormEvent) {
         e.preventDefault()
         const projectForm = document.getElementById("new-project-form")
 
@@ -72,8 +142,6 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
         const formDataProject = new FormData(projectForm)
         //const checkProjectID = updateProject.id
-
-
 
 
         if (projectForm.checkValidity()) {
@@ -120,19 +188,52 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                     setMessagePopUpContent({
                         type: "warning",
                         title: `A project with the name "${projectDetails.name}" already exist`,
-                        message: `<b><u>Overwrite:</b></u> Replace the existing project with the new data.<br>
-                                    <b><u>Skip:</b></u> Do not create a new project.<br>
-                                    <b><u>Rename:</b></u> Enter a new name for the new project.`,
+                        message: (
+                            <React.Fragment>
+                                    <b>
+                                        <u>Overwrite:</u>
+                                    </b>{" "}
+                                    Replace the existing project with the new data.
+                                    <br />
+                                    <b>
+                                        <u>Skip:</u>
+                                    </b>{" "}
+                                    Do not create a new project.
+                                    <br />
+                                    <b>
+                                        <u>Rename:</u>
+                                    </b>{" "}
+                                    Enter a new name for the new project.
+                                
+                            </React.Fragment>),
                         actions: ["Overwrite", "Skip", "Rename"],
                         onActionClick: {
-                            "Overwrite": () => {
+                            "Overwrite": async () => {
                                 console.log("Overwrite button clicked!");
 
-                                //AQUI FALTA LA LÓGICA PARA BORRA DE FIREBASE EL PROYECTO E INTRODUCIR EL NUEVO
-                                //AQUI SE SOBREESCRIBEN LOS DATOS CON LO QUE SEA AL CREAR EL NUEVO
+                                //Logic inside newProject already delete if is found a project with the same name
+                                //so, we overwrite the project usin create newProject
+                                const originalDataProject = projectsManager.getProjectByName(projectDetails.name)
+                                console.log("originalDataProject", originalDataProject);
 
-                                const newProject = new Project(projectDetails)
+                                if (!originalDataProject) return
+                                const newProject = new Project({
+                                    ...projectDetails,
+                                    id: originalDataProject.id,
+                                })
+                                console.log(newProject);
+
+                                await deleteDocument("/projects", originalDataProject.name)
+                                await createDocument("/projects", newProject)
+
+
+                                // await updateDocument<Project>("/projects", originalDataProject.id, newProject)
+                                console.log("data transfered to DB created")
+
                                 onUpdatedProject && onUpdatedProject(newProject)
+                                //Because newProject manage the overwrite as well
+                                projectsManager.newProject(newProject)
+
                                 setShowMessagePopUp(false)
                                 onCloseNewProjectForm()
 
@@ -145,12 +246,12 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                                 console.log("Rename button clicked!");
                                 setProjectDetailsToRename(projectDetails)
 
-                                //SE CREA UN ARCHIVO NUEVO PERO CAMBIAMOS EL NOMBRE ANTES DE AÑADIRLO 
-                                initiateRename(projectDetails.name)
-                                setRenameConfirmationPending(true)
+                                setCurrentProjectName(projectDetails.name);
+                                setIsRenaming(true)
 
 
                                 setShowMessagePopUp(false)
+                                
 
                             },
 
@@ -165,20 +266,15 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
                 } else {
                     // No duplicate, create the project
-                    const newProject = new Project(projectDetails)
-                    console.log(newProject)
-
-                    createDocument("/projects", newProject)
-                    console.log("data transfered to DB")
-
-                    //projectsManager.onProjectCreated(newProject)
-                    console.log("project created")
-                    onUpdatedProject && onUpdatedProject(newProject)
-                    console.log("project adde to the list")
+                    try {
+                        handleCreateProjectInDB(projectDetails)
+                    } catch (error) {
+                        console.error("Error creating project in DB:", error)
+                        throw error
+                    }
+                    
                     onCloseNewProjectForm(); // Close the form for new projects only after creation
                 }
-
-                //onCloseNewProjectForm(e)
 
 
             } else {
@@ -189,20 +285,89 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                     ...projectDetails,
                     id: updateProject.id,
                     progress: updateProject.progress,
-                    backgroundColorAcronym: Project.calculateBackgroundColorAcronym(updateProject.businessUnit),
+                    // backgroundColorAcronym: Project.calculateBackgroundColorAcronym(updateProject.businessUnit),
                     todoList: updateProject.todoList,
                 })
+
+
                 const changesInProject = ProjectsManager.getChangedProjectDataForUpdate(updateProject, projectDetailsToUpdate)
-                
-
-                
-                if (onUpdatedProject) {
-                    onUpdatedProject(projectDetailsToUpdate)
-
-                    updateDataProject(updateProject, projectDetailsToUpdate)
+                const simplifiedChanges: Record<string, any> = {}
+                for (const key in changesInProject) {
+                    if (changesInProject.hasOwnProperty(key)) { //Variant of the for...in loop that avoids iterating over inherited properties.
+                        simplifiedChanges[key] = changesInProject[key][1]; // Onlytakes the second value
+                    }
                 }
-            }
+                console.log("simplifiedChanges for DB", simplifiedChanges)
 
+                if (Object.keys(simplifiedChanges).length > 0) {
+                    const messageContent = <DiffContentProjectsMessage changes={changesInProject} />
+                    // Calculate the number of rows in the messageContent table
+                    const messageRowsCount = Object.keys(simplifiedChanges).length
+                    // Calculate the desired message height
+                    const messageHeight = `calc(${messageRowsCount} * 3.5rem + 5rem)`; // 3.5rem per row + 5rem for the title
+        
+                    setMessagePopUpContent({
+                        type: "info",
+                        title: "Confirm Project Update",
+                        message: messageContent,
+                        messageHeight: messageHeight,
+                        actions: ["Confirm update", "Cancel update"],
+                        onActionClick: {
+                            "Confirm update": async () =>  {
+                                try {
+                                    await handleUpdateDataProjectInDB(projectDetailsToUpdate, simplifiedChanges)
+                                    navigateTo("/")
+                                    
+                                    setShowMessagePopUp(false)
+        
+                                } catch (error) {
+                                    console.error("Error updating project in callback throw App till index.ts", error)
+                                    throw error                                    
+                                }  
+                            },
+                            "Cancel update": () => {
+                                console.log("User  cancelled the update.")
+                                setShowMessagePopUp(false)
+                            }
+                        },
+                        onClose: () => setShowMessagePopUp(false)
+                    })
+                    setShowMessagePopUp(true)
+                    e.preventDefault()
+                    return
+        
+                } else {
+                    setMessagePopUpContent({
+                        type: "info",
+                        title: "No Changes Detected",
+                        message: "No changes were detected in the project details.",
+                        actions: ["Got it"],
+                        onActionClick: {
+                            "Got it": () => {
+                                console.log("No changes to update in the project.");
+                                setShowMessagePopUp(false)
+                            }
+                        },
+                        onClose: () => setShowMessagePopUp(false)
+                    })
+                    setShowMessagePopUp(true)
+                    e.preventDefault()
+                    return
+                }
+
+
+
+
+                // try {
+                //     await handleUpdateDataProjectInDB(projectDetailsToUpdate, simplifiedChanges)
+                //     navigateTo("/")
+                    
+
+                // } catch (error) {
+                //     console.error("Error updating project in callback throw App till index.ts", error);
+                //     throw error
+                // }
+            }
             onCloseNewProjectForm()
         } else {
             // Form is invalid, let the browser handle the error display
@@ -210,31 +375,17 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
         }
     }
 
-    const onCloseNewProjectForm = () => {
-        const projectForm = document.getElementById("new-project-form") as HTMLFormElement
-        //preventDefault()
-        if (projectForm) {
-            projectForm.reset()
-        }
-        onClose() // Close the form after the accept button is clicked
-    }
 
-
-
-    // Effect to handle rename confirmation after rename is complete
     React.useEffect(() => {
-        if (!isRenaming && renameConfirmationPending && projectDetailsToRename && newProjectName) {
-            handleRenameConfirmation(newProjectName, projectDetailsToRename)
+        if (projectDetailsToRename && projectNameToConfirm) { 
+            handleRenameConfirmation(projectNameToConfirm, projectDetailsToRename)
                 .then(() => {
-                    setRenameConfirmationPending(false);
-                    setProjectDetailsToRename(null);
-                    setNewProjectName(null); // Reset after use.
-                    onCloseNewProjectForm() // Close the form.
-                })
+                    setProjectDetailsToRename(null)
+                    setProjectNameToConfirm(null) // Reset after use
+                    onCloseNewProjectForm() // Close the form
+                });
         }
-    }, [isRenaming, renameConfirmationPending, projectDetailsToRename, newProjectName, handleRenameConfirmation, onCloseNewProjectForm]);
-
-
+    }, [projectDetailsToRename, projectNameToConfirm, handleRenameConfirmation, onCloseNewProjectForm]);
 
 
     return (
@@ -390,7 +541,22 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                 </dialog>
             </div>
             {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
-            {isRenaming && <RenameElementMessage elementTitle="Project" previousElementName={currentProjectName} onRename={(newName) => { setNewProjectName(newName); handleProjectRename(newName) }} onCancel={() => { cancelRename(); setRenameConfirmationPending(false); setProjectDetailsToRename(null) }} />}
+            {isRenaming && <RenameElementMessage
+                projectsManager={projectsManager}
+                elementTitle="Project"
+                previousElementName={currentProjectName}
+                onRename={(newName) => {
+                    setProjectNameToConfirm(newName)
+                    setIsRenaming(false)
+                }}
+                onCancel={() => {
+                    //setRenameConfirmationPending(false);
+                    setIsRenaming(false)
+                    setProjectDetailsToRename(null)
+
+                    setNewProjectName(null)
+                    setProjectNameToConfirm(null)
+                }} />}
         </div >
 
     )

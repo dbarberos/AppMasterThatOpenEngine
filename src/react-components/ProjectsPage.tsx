@@ -4,7 +4,7 @@ import * as Firestore from 'firebase/firestore';
 
 
 import { SearchProjectBox } from '../react-components';
-import { useMessagePopUp } from '../hooks';
+
 
 import { useProjectsManager, NewProjectForm, ProjectCard } from './index.tsx';
 import { firebaseDB } from '../services/Firebase/index.ts'
@@ -31,11 +31,12 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
     const [projects, setProjects] = React.useState<Project[]>(projectsManager.list)
-    const { messagePopUp, showMessage, handleMessagePopUp } = useMessagePopUp()
 
 
-    projectsManager.onProjectCreated = () => { setProjects([...projectsManager.list]) }
-    //projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
+
+    projectsManager.onProjectCreated = (newProject) => {setProjects([...projectsManager.list]) }
+    projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
+    projectsManager.onProjectUpdated = () => { setProjects([...projectsManager.list]) }
 
 
 
@@ -114,12 +115,9 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
 
     const onNewProjectClick = () => {
-
         setIsNewProjectFormOpen(true);
-
-
-
     }
+
 
     const handleCloseForm = () => {
         // Cierra el formulario
@@ -152,22 +150,13 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
         }
     };
 
-    const handleUpdatedProject = (updatedProject: Project) => {
-
-        projectsManager.newProject(updatedProject, updatedProject.id)
-        // const prevProjects = projectsManager.list
-        // setProjects((prevProjects) =>
-        //     prevProjects.map((project) => (project.id === updatedProject.id ? updatedProject : project))
-        // );
-        //onProjectUpdate(updatedProject)
-    }
-
 
     const newProjectForm = isNewProjectFormOpen ? (
         <NewProjectForm
             onClose={handleCloseForm}
             projectsManager={projectsManager}
-            onUpdatedProject={handleUpdatedProject}            
+            onCreatedProject={onNewProjectCreated}
+            onUpdatedProject={onProjectUpdate} 
         />
     ) : null;
 
@@ -238,7 +227,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
             </div>
             {/*  Render the form if  isNewProjectFormOpen = true  */}
             {newProjectForm}
-            {showMessage && messagePopUp}
+            
         </section>
     )
 }

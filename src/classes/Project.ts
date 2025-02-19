@@ -14,7 +14,9 @@ export interface IProject {
     userRole: UserRole
     finishDate: Date
     cost: number
+    progress?: number 
     todoList: IToDoIssue[]
+    id?: string
     
 }
 
@@ -36,17 +38,18 @@ export class Project implements IProject {
     userRole: "Architect" | "Engineer" | "Developer"
     finishDate: Date
     cost: number = 0
-    
-    // Class internals
-    id: string
-    //ui: HTMLDivElement    
     progress?: number = 0
-    backgroundColorAcronym?: string
     todoList: IToDoIssue[] = []
 
+    // Class internals
+    id?: string
+    //ui: HTMLDivElement    
+    backgroundColorAcronym?: string
     
 
-    constructor(data: IProject, idString:string = uuidv4()) {
+    
+
+    constructor(data: IProject, idString?:string ) {
         // const projectKeys = Object.keys(dummyProject)
         for (const key in data) {  
             
@@ -62,8 +65,10 @@ export class Project implements IProject {
         this.backgroundColorAcronym = Project.calculateBackgroundColorAcronym(this.businessUnit)
         // // Handle todoList and todoList.todoIssue.ui
         this.todoList = data.todoList || []
-
-        if (!this.id) { this.id = idString } //In order to not change the ID when we import projects from JSON file
+        if (idString) {
+            this.id = idString
+        }
+        //if (!this.id) { this.id = idString } //In order to not change the ID when we import projects from JSON file
         console.log(data);
 
         // lets create the ui for the list of todo ISssue if the proyect is imported. I mean exist todoIssue data but does not exist ui variable

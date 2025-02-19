@@ -34,15 +34,15 @@ export function getCollection<T>(path: string) {
 export async function deleteDocument(path: string, name: string) {
 
     //Look for a doc with a field name specific and returns its id inside Firestore
-    const collectionRef = getCollection(path); 
-    const q = Firestore.query(collectionRef, Firestore.where("name", "==", name)); 
+    const collectionRef = getCollection(path);
+    const q = Firestore.query(collectionRef, Firestore.where("name", "==", name));
 
-    const querySnapshot = await Firestore.getDocs(q); 
+    const querySnapshot = await Firestore.getDocs(q);
 
-    if (!querySnapshot.empty) {        
+    if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
         const docId = doc.id;
-        
+
         const docRef = Firestore.doc(firebaseDB, `${path}/${docId}`)
 
         await Firestore.deleteDoc(docRef)
@@ -50,7 +50,7 @@ export async function deleteDocument(path: string, name: string) {
         return docId
     }
     return null;
-    
+
 }
 
 
@@ -70,18 +70,30 @@ export async function getDocumentIdByName(collectionPath: string, name: string):
     return null; // Si no se encuentra, devuelve null
 }
 
-export async function createDocument(path: string, data) {
-    const collectionRef = getCollection(path);
-    const docRef = {...data}
-    await Firestore.addDoc(collectionRef, docRef)
+export async function createDocument<T>(path: string, data: T) {
+    try {
+        const collectionRef = getCollection(path);
+        const docRef = { ...data }
+        const createdDoc = await Firestore.addDoc(collectionRef, docRef)
+        return createdDoc        
+    } catch (error) {
+        console.error("Error creating document:", error);
+        throw error;
+    }
 }
 
 
 //Delete a document from Firebase
-export async function updateDocument <T extends Record<string, any>>(path: string, id: string, data : T) {
+export async function updateDocument<T extends Record<string, any>>(path: string, id: string, data: T) {
 
     const docRef = Firestore.doc(firebaseDB, `${path}/${id}`)
-
-    await Firestore.updateDoc(docRef, data)
+    
+    try {
+        await Firestore.updateDoc(docRef, data)
+    } catch (error) {
+        console.error("Error updating document:", error);
+        throw error
+    }
+    
 
 }

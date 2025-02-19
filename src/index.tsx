@@ -23,17 +23,25 @@ const projectsManager = new ProjectsManager();
 
 const App = () => {
     const [projects, setProjects] = React.useState(projectsManager.list);
+
     function handleNewProject(newProject: Project) {
-        setProjects([...projects, newProject])        
+        projectsManager.updateReactProjects(newProject);
+        setProjects([...projectsManager.list])
     }
 
+    const handleProjectCreate = (createProject) => {
+        projectsManager.updateReactProjects(createProject); // Update the project in projectsManager
 
-    const handleProjectUpdate = (updatedProject) => {
-        projectsManager.updateReactProjects(updatedProject); // Update the project in projectsManager
-            
         setProjects([...projectsManager.list]);
-        
+
     };
+    const handleProjectUpdate = (updatedProject) => {
+        projectsManager.updateProject(updatedProject.id, updatedProject); // Update the project in projectsManager
+
+        setProjects([...projectsManager.list]);
+
+    };
+
 
     return (
         //<ProjectsManagerProvider>        
@@ -41,21 +49,25 @@ const App = () => {
             <Router.BrowserRouter>
                 <Sidebar />
                 <Router.Routes>
-                    <Router.Route path="/" element={<ProjectsPage  projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate} onNewProjectCreated={handleNewProject}/>} />
-                    <Router.Route path="/project/:id" element={<ProjectDetailsPage projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
+
+                    <Router.Route path="/" element={<ProjectsPage projectsManager={projectsManager} onProjectUpdate={handleProjectCreate} onNewProjectCreated={handleNewProject} />} />
+
+
+                    <Router.Route path="/project/:id" element={<ProjectDetailsPage projectsManager={projectsManager} onProjectCreate={handleProjectCreate} onProjectUpdate={handleProjectUpdate} />} />
+
                 </Router.Routes>
-                
+
             </Router.BrowserRouter>
-            
+
         </>
-    //</ProjectsManagerProvider>
-        
+        //</ProjectsManagerProvider>
+
     )
 }
 
 const rootElement = document.getElementById('app') as HTMLElement;
 const appRoot = ReactDOM.createRoot(rootElement)
-appRoot.render( <App /> )
+appRoot.render(<App />)
 
 
 
@@ -712,7 +724,7 @@ if (btnToDoIssueDelete) {
         svg.addEventListener("click", handleDeleteToDoIssueButtonClick)
     }
 }
-    
+
 
 function handleDeleteToDoIssueButtonClick(e: Event) {
     e.preventDefault()
@@ -722,7 +734,7 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
     const deleteToDoIssueBtn = (e.target as HTMLElement).closest("#delete-todoIssue-btn")
 
     if (deleteToDoIssueBtn) {
-        
+
         //Get the projectID
         const todoIssueIdToDelete = (deleteToDoIssueBtn as HTMLElement)?.dataset.toDoIssueId
         console.log("todoIssueId:", todoIssueIdToDelete)
@@ -737,7 +749,7 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
                     document.body,
                     "warning",
                     "Confirm Project Deletion",
-                    `Are you sure you want to delete the To-Do Issue: "${projectWithToDoIssueToDelete.todoList.find((todoIssue) =>todoIssue.id === todoIssueIdToDelete)?.title}" This action cannot be undone.`,
+                    `Are you sure you want to delete the To-Do Issue: "${projectWithToDoIssueToDelete.todoList.find((todoIssue) => todoIssue.id === todoIssueIdToDelete)?.title}" This action cannot be undone.`,
                     ["Yes,go on", "Cancel"],
                 )
 
@@ -752,8 +764,8 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
                         projectWithToDoIssueToDelete.todoList = newToDoList ?? [];
                         console.log("projectWithToDoIssueToDelete:", projectWithToDoIssueToDelete)
 
-                        
-                        
+
+
                         // Update the ToDo board if we're on that page or the Page-details
                         const currentPage = localStorage.getItem("pageWIP");
                         if (currentPage === "todo-page") {
@@ -766,7 +778,7 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
                         // Close the Modal and the Todo-Detail page
                         popupDeleteToDoIssueConfirmation.closeMessageModal();
                         closeToDoIssueDetailPage()
-                        
+
                     },
                     "Cancel": () => {
                         // User cancelled, do nothing or provide feedback
@@ -831,7 +843,7 @@ if (btnToDoIssueBoard) {
 
             await setUpToDoBoard(selectedProjectId);
             resetSearchState(counterElement)
-            
+
         } else {
             await setUpToDoBoard()
             resetSearchState(counterElement)
@@ -1127,7 +1139,7 @@ if (btnUsersBoard) {
         e.preventDefault()
         const selectedProjectId = localStorage.getItem("selectedProjectId")
         console.log("Btn Users clicked")
-    
+
         changePageContent("users-page", "flex");
 
         //Show the default content of href = "#/users"(users - index)
@@ -1146,7 +1158,7 @@ if (btnUsersBoard) {
             localStorage.setItem("pageWIP", "users-page");
             updateAsideButtonsState()
         }
-    
+
         //Set up the select project Element inside the header
         if (selectedProjectId) {
             await setUpUserPage(selectedProjectId)

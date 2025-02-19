@@ -9,7 +9,7 @@ interface MessagePopUpOptions {
     messageHeight?: string;
     callbacks?: Record<string, () => void>; // Callbacks for actions. Typescript restriction of a generic type
 }
-
+/*
 export function useMessagePopUp() {
 
     const [messagePopUp, setMessagePopUp] = React.useState<React.ReactNode | null>(null)
@@ -39,3 +39,4 @@ export function useMessagePopUp() {
         
     return { messagePopUp, showMessage, handleMessagePopUp }
 }
+*/
