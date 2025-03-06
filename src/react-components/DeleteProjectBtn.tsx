@@ -16,7 +16,7 @@ interface Props {
     projectsManager: ProjectsManager
 }
 
-export function DeleteProjectBtn({ updateProject, projectsManager }:Props): JSX.Element {
+export function DeleteProjectBtn({ updateProject, projectsManager }: Props): JSX.Element {
 
     const navigateTo = Router.useNavigate()
     const [showMessagePopUp, setShowMessagePopUp] = useState(false)
@@ -32,14 +32,17 @@ export function DeleteProjectBtn({ updateProject, projectsManager }:Props): JSX.
     function handleDeleteProject(e: React.FormEvent) {
         e.preventDefault()
         console.log("Button delete project clicked")
-        
+
         if (updateProject.id) {
             if (updateProject.todoList.length > 0) {
                 // Project has To-Do issues, show confirmation popup
                 setMessagePopUpContent({
                     type: "warning",
                     title: "The project has pending task to be resolved",
-                    message: `This project has <span style="color: var(--color-warning2)">${updateProject.todoList.length}</span> associated To-Do issues. Are you sure you want to delete it? This action cannot be undone`,
+                    message: (
+                        <>
+                            This project has <span style={{ color: 'var(--color-warning2)' }}>{updateProject.todoList.length}</span> associated To-Do issues. Are you sure you want to delete it? This action cannot be undone`,
+                        </>),
                     actions: ["Delete anyway", "Cancel"],
                     onActionClick: {
                         "Delete anyway": () => {
@@ -70,7 +73,7 @@ export function DeleteProjectBtn({ updateProject, projectsManager }:Props): JSX.
                             if (!updateProject) {
                                 console.error("Not found project ID")
                                 return
-                            } 
+                            }
                             updateProject.id && projectsManager.deleteProject(updateProject.id)
                         },
                         "Cancel": () => {
@@ -102,10 +105,10 @@ export function DeleteProjectBtn({ updateProject, projectsManager }:Props): JSX.
                     justifyContent: "center"
                 }}
             >
-            <TrashIcon size={30} color="var(--color-fontbase)" className="todo-icon-edit"/>
+                <TrashIcon size={30} color="var(--color-fontbase)" className="todo-icon-edit" />
             </button>
-            {showMessagePopUp && messagePopUpContent && ( <MessagePopUp {...messagePopUpContent} />)}
-            </>
+            {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
+        </>
     )
 }
 

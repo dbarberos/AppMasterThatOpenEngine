@@ -3,11 +3,11 @@ import * as Router from 'react-router-dom';
 import * as Firestore from 'firebase/firestore';
 
 
-import { SearchProjectBox } from '../react-components';
+import { LoadingIcon, SearchProjectBox } from '../react-components';
 
 
 import { useProjectsManager, NewProjectForm, ProjectCard } from './index.tsx';
-import { firebaseDB } from '../services/Firebase/index.ts'
+import { firebaseDB, getProjectsFromDB } from '../services/Firebase/index.ts'
 import { getCollection } from '../services/Firebase/index.ts'
 
 //import NewProjectForm from './NewProjectForm.tsx';
@@ -31,6 +31,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
     const [projects, setProjects] = React.useState<Project[]>(projectsManager.list)
+    const [isLoading, setIsLoading] = React.useState(false)
 
 
 
@@ -39,7 +40,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
     projectsManager.onProjectUpdated = () => { setProjects([...projectsManager.list]) }
 
 
-
+/*
     //Retrieve information from Firebase
     const getFirestoreProjects = async () => {
 
@@ -53,12 +54,36 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
             projectsManager.newProject(project, doc.id)
         }
     }
+    */
 
     React.useEffect(() => {
-        getFirestoreProjects()
-        return () => {
+        const loadProjects = async () => {
+            try {
+                setIsLoading(true)
+                const firebaseProjects = await getProjectsFromDB()
+                
+                // Create Project instances using ProjectManager for each project from Firebase
+                firebaseProjects.forEach(projectData => {
+                    projectsManager.newProject(projectData, projectData.id);
+                })
+            } catch (error) {
+                console.error("Error loading projects:", error);
+                // Handle error appropriately - maybe set an error state
+            } finally {
+                setIsLoading(false);
+            }
         }
+        loadProjects();
+        // }
+        // getFirestoreProjects()
+        // return () => {
+        // }
     }, [])
+
+    // if (isLoading) {
+    //     return <div>Loading...</div>;
+    // }
+
 
 
 
@@ -221,10 +246,16 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                     </button>
                 </div>
             </header>
+            {isLoading ? (
+                <LoadingIcon
+                    >
+                </LoadingIcon>
+            ) : (
             <div id="project-list">
                 {projects.length > 0 ? projectCardsList : <p>No projects found</p>}
 
-            </div>
+                </div>
+            )}
             {/*  Render the form if  isNewProjectFormOpen = true  */}
             {newProjectForm}
             

@@ -18,8 +18,7 @@ export function ProjectDetailsCard({ project, onCreatedProject, onUpdatedProject
 
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)   
 
-    const handleCloseForm = () => {
-        // Cierra el formulario
+    const handleCloseForm = () => {        
         setIsNewProjectFormOpen(false);
     }
 
@@ -36,9 +35,15 @@ export function ProjectDetailsCard({ project, onCreatedProject, onUpdatedProject
     }
 
 
-    const updateProjectDetailsForm = isNewProjectFormOpen ? (
-        <NewProjectForm onClose={handleCloseForm} updateProject={project} onCreatedProject={handleCreatedProject} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager} />
-    ) : null
+    const updateProjectDetailsForm = isNewProjectFormOpen
+        ? (
+        <NewProjectForm
+            onClose={handleCloseForm}
+            updateProject={project}
+            onCreatedProject={handleCreatedProject}
+            onUpdatedProject={handleUpdatedProject}
+            projectsManager={projectsManager} />
+        ) : null
 
 
     return (

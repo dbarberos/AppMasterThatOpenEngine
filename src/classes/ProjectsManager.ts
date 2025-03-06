@@ -3,7 +3,7 @@ import { showModal, closeModal, toggleModal, closeModalProject, changePageConten
 import { MessagePopUp } from "./MessagePopUp"
 import { v4 as uuidv4 } from 'uuid'
 import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
-import { clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState, setupProjectDetailsSearch } from "./ToDoManager"
+import { newToDoIssue, clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState, setupProjectDetailsSearch } from "./ToDoManager"
 
 import { updateAsideButtonsState } from "./HTMLUtilities.ts"
 
@@ -51,7 +51,7 @@ export class ProjectsManager {
     */
     
     //ESTA FUCNION ESTA CREADA PARA LA CREACIÓN DE PROYECTOS AL RERENDERIZAR EL COMPONENTE DE REAC PROJECTPAGE
-    newProject(data: IProject, id?: string): IProject | undefined{
+    newProject(data: Project, id?: string): Project | undefined{
         const projectNames = this.list.map((project) => {
             return project.name
         })
@@ -67,7 +67,17 @@ export class ProjectsManager {
                 // 2. Create a new project with the imported data
                 const newProject = new Project(data, id);
 
-                // 3. Add the new project to the list
+                // 3. Process todo list if exists
+                if (data.todoList && Array.isArray(data.todoList)) {
+                    newProject.todoList = data.todoList.map(todoData => {
+                        return ToDoIssue.createFromData({
+                            ...todoData,
+                            todoProject: newProject.id || '' 
+                        });
+                    });
+                }
+
+                // 4. Add the new project to the list
                 this.list.push(newProject);
                 this.onProjectCreated(newProject);
                 return newProject;
@@ -80,6 +90,14 @@ export class ProjectsManager {
         } else {
             //Create a new proyect  
             const newProject = new Project(data, id)
+            if (data.todoList && Array.isArray(data.todoList)) {
+                newProject.todoList = data.todoList.map(todoData => {
+                    return ToDoIssue.createFromData({
+                        ...todoData,
+                        todoProject: newProject.id || ''
+                    });
+                });
+            }
             this.list.push(newProject)
             this.onProjectCreated(newProject)
             return newProject
@@ -672,6 +690,41 @@ export class ProjectsManager {
             return null
         }
     }
+
+
+    //FOR UPDATING THE TODO LIST INSIDE DE PROHJECTS.MANAGER WHEN IT SHOULD BE UPDATED
+    updateProjectTodoList(projectId: string, todo: ToDoIssue) {
+        const project = this.list.find(p => p.id === projectId);
+        if (project) {
+            //Check if the todo already exists to avoid duplicate toDos
+            const existingTodoIndex = project.todoList.findIndex(t => t.id === todo.id);
+
+            // Only add if it doesn't exist
+            if (existingTodoIndex === -1) {
+                project.todoList.push(todo);
+                this.onProjectUpdated(projectId);
+            } else {
+                console.warn(`ToDoIssue with ID ${todo.id} already exists in project ${projectId}. It will not be added again.`);
+            
+            }
+        } else {
+            console.error(`Project with ID ${projectId} not found.`);
+        }
+    }
+
+    // Add this method to handle todo updates
+    updateToDoIssue(projectId: string, todoId: string, updatedTodo: ToDoIssue) {
+        const project = this.list.find(p => p.id === projectId);
+        if (project) {
+            const todoIndex = project.todoList.findIndex(t => t.id === todoId);
+            if (todoIndex !== -1) {
+                project.todoList[todoIndex] = updatedTodo;
+                this.onProjectUpdated(projectId);
+            }
+        }
+    }
+
+
 
     //  *** USED INSIDE NewProjectForm *** 
     static populateProjectDetailsForm(project: Project) {
@@ -1366,6 +1419,41 @@ export class ProjectsManager {
             (checkbox as HTMLInputElement).checked = false;
         });
     }
+
+    //Method for get all the selected projects in the export and import modals
+    getSelectedProjects(projectListJson, projects): IProject[] {
+        const selectedProjects: IProject[] = []
+        projectListJson.querySelectorAll("li > label > input[type='checkbox']").forEach((checkbox) => {
+            if ((checkbox as HTMLInputElement).checked) {
+                // Add the project to the selectedProjects array
+                const parentNode = checkbox.closest("li")
+                if (!parentNode) {
+                    console.error("Error: parentNode not found")
+                    return
+                }
+                const projectName = parentNode.textContent?.trim()
+
+                // Get the project object from the projects array using the project name
+                const selectedProject = projects.find(project => project.name === projectName)
+
+                if (selectedProject) {
+                    selectedProjects.push(selectedProject)
+                } else {
+                    console.error(`Error: Project with name "${projectName}" not found in projects array.`)
+                }
+            }
+        })
+        return selectedProjects
+    }
+
+
+
+
+
+
+
+
+
 
 }
 

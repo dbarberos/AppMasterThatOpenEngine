@@ -1,63 +1,220 @@
 import * as React from 'react';
+import { createDocument, updateDocument, deleteDocument } from '../services/Firebase'
 
-
-import { MessagePopUp } from '../react-components';
+import { MessagePopUp, MessagePopUpProps, RenameElementMessage } from '../react-components';
+import { usePrepareToDoForm } from '../hooks';
 
 
 import { Project } from '../classes/Project';
-import { IToDoIssue, ToDoIssue } from '../classes/ToDoIssue';
-import { newToDoIssue } from '../classes/ToDoManager';
+import { type IToDoIssue, type ITag, ToDoIssue } from '../classes/ToDoIssue';
+import { getToDoIssueByTitle, newToDoIssue } from '../classes/ToDoManager';
 
 
 interface NewToDoIssueFormProps {
     onClose: () => void;
     project: Project;
-    onUpdateToDoList: (newToDo: ToDoIssue) => void;
-
+    onCreatedNewToDo: (newToDo: ToDoIssue) => void;
 }
 
 
-export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDoIssueFormProps) {
+export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDoIssueFormProps) {
 
     const [tags, setTags] = React.useState<string[]>([]); 
     const [assignedUsers, setAssignedUsers] = React.useState<string[]>([]);
-    const [showMessagePopUp, setShowMessagePopUp] = React.useState<React.ReactElement | null>(null);
+    const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
+    const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
+
+
+    const [newToDoTitle, setNewToDoTitle] = React.useState<string | null>(null);
+    const [toDoTitleToConfirm, setToDoTitleToConfirm] = React.useState<string | null>(null);
+    const [toDoDetailsToRename, setToDoDetailsToRename] = React.useState<IToDoIssue | null>(null);
+    const [isRenaming, setIsRenaming] = React.useState(false);
+    const [currentToDoTitle, setCurrentToDoTitle] = React.useState('');
+
+
+    usePrepareToDoForm(project)
+
+
+    const onCloseNewToDoIssueForm = (e: React.FormEvent) => {
+        const toDoIssueForm = document.getElementById("new-todo-form") as HTMLFormElement
+        e.preventDefault()
+        e.stopPropagation() // Prevent event from bubbling up
+        toDoIssueForm && toDoIssueForm.reset()
+        console.log("Close the form")        
+        onClose() // Close the form after the accept button is clicked
+    }
+
+    const handleRenameConfirmation = React.useCallback(async (renameToDoTitle: string, toDoDetailsToRename: IToDoIssue) => {
+        try {
+            const todoToCreate = {
+                ...toDoDetailsToRename,
+                title: renameToDoTitle
+            }
+            const newToDoIssueCreated = await handleCreateTodoIssueInDB(project, todoToCreate)
+            
+            if (newToDoIssueCreated) { 
+                console.log("todo created with the new title", newToDoIssueCreated)
+
+                onCreatedNewToDo && onCreatedNewToDo(newToDoIssueCreated)
+                onClose()
+            }
+        } catch (error) {
+            console.error("Error creating todo in Firestore:", error);
+
+            setMessagePopUpContent({
+                type: "error",
+                title: "Error Creating ToDo",
+                message: "There was a problem saving the To-Do. Please try again later.",
+                actions: ["OK"],
+                onActionClick: {
+                    "OK": () => setShowMessagePopUp(false),
+                },
+                onClose: () => setShowMessagePopUp(false),
+            });
+            setShowMessagePopUp(true)
+        } finally {
+            // Reset rename states
+            setToDoDetailsToRename(null);
+            setNewToDoTitle(null);
+            setToDoTitleToConfirm(null);
+            setIsRenaming(false);
+            setCurrentToDoTitle('');
+        }
+    }, [project, onCreatedNewToDo])
+    
 
 
 
-
-    const handleMessagePopUp = (options: {
-        type: 'error' | 'warning' | 'info' | 'success' | 'update' | 'message' | 'clock' | 'arrowup';
-        title: string;
-        message: string;
-        actions?: string[]; //The interrogation symbol make actions optional
-        messageHeight?: string;
-        callbacks?: Record<string, () => void>;  // Callbacks for actions
-
-    }) => {
+    async function handleCreateTodoIssueInDB(project: Project, toDoIssueDetails: IToDoIssue) {
         
-        setShowMessagePopUp( // Set the React element to the state
-            <MessagePopUp
-            type={options.type}
-            title={options.title}
-            message={options.message}
-            actions={options.actions || []}
-            messageHeight={options.messageHeight || "200"}
-            onActionClick={(action) => {
-                options.callbacks?.[action]?.(); //Call the appropriate callback
-                setShowMessagePopUp(null); //Close the message after action
-            }}
-            onClose={() => setShowMessagePopUp(null)} // Close the dialog if no actions or just closed
-            />
+        try {
+            // Create the main todo document first
+            //const ToDoIssueCreated = new ToDoIssue(toDoIssueDetails) Duplicado
+            const todoPath = `projects/${project.id}/todoList`
+            //console.log(ToDoIssueCreated)
+
+            // Create the todo document and get its ID
+            const newToDoIssueDoc = await createDocument(todoPath, toDoIssueDetails)
+            const todoId = newToDoIssueDoc.id
+            console.log("data transfered to DB", newToDoIssueDoc)
+
+
+
+            // Create subcollections
+            await Promise.all([
+                createTodoTags(todoPath, todoId, toDoIssueDetails.tags),
+                createTodoAssignedUsers(todoPath, todoId, toDoIssueDetails.assignedUsers)
+            ]);
+
+            // Create ToDoIssue instance with the new ID
+            const ToDoIssueCreated = new ToDoIssue({
+                ...toDoIssueDetails,
+                id: todoId
+            });
+
+            /*
+            // Create tags collection and documents
+            if (toDoIssueDetails.tags && toDoIssueDetails.tags.length > 0) {
+                const tagsPath = `${todoPath}/${todoId}/tags`;
+
+                // Create a document for each tag
+                const tagPromises = toDoIssueDetails.tags.map(async (tag, index) => {
+                    const tagData = {
+                        id: `tag-${index}`,
+                        title: typeof tag === 'string' ? tag : tag.title,
+                        createdAt: new Date()
+                    };
+                    return createDocument(tagsPath, tagData);
+                });
+
+                await Promise.all(tagPromises);
+            }
+
+            // Create assignedUsers collection and documents
+            if (toDoIssueDetails.assignedUsers && toDoIssueDetails.assignedUsers.length > 0) {
+                const usersPath = `${todoPath}/${todoId}/assignedUsers`;
+
+                // Create a document for each assigned user
+                const userPromises = toDoIssueDetails.assignedUsers.map(async (userId, index) => {
+                    const userData = {
+                        id: `user-${index}`,
+                        userId: userId,
+                        assignedAt: new Date()
+                    };
+                    return createDocument(usersPath, userData);
+                });
+
+                await Promise.all(userPromises);
+            }
+            */
+            
+            //Debugging
+            console.log("Todo created with nested collections in DB", {
+                todoId,
+                tagsCount: toDoIssueDetails.tags.length,
+                usersCount: toDoIssueDetails.assignedUsers.length
+            });
+            // Update local state
+            // project.todoList.push(ToDoIssueCreated); 
+            // Don´t duplicate the todo, let the parent component handle the state update
+            //newToDoIssue(project.todoList, ToDoIssueCreated);
+            onCreatedNewToDo && onCreatedNewToDo(ToDoIssueCreated)
+
+            return ToDoIssueCreated
+            
+        } catch (error) {
+            
+            console.error("Error creating new To-Do Issue in the database:", error)
+
+            setMessagePopUpContent({
+                type: "error",
+                title: "Error Creating To-Do Issue",
+                message: "There was a problem saving the ToDo Issue. Please try again later.",
+                actions: ["Ok"],
+                onActionClick: {
+                    "Ok": () => setShowMessagePopUp(false),
+                },
+                onClose: () => setShowMessagePopUp(false),
+            })
+            setShowMessagePopUp(true)
+            throw error
+        }
+    }
+
+    async function createTodoTags(todoPath: string, todoId: string, tags: (string | ITag)[]) {
+        const tagsPath = `${todoPath}/${todoId}/tags`;
+        return Promise.all(
+            tags.map((tag, index) => {
+                const tagData = {
+                    id: `tag-${index}`,
+                    title: typeof tag === 'string' ? tag : tag.title,
+                    createdAt: new Date()
+                };
+                return createDocument(tagsPath, tagData);
+            })
         );
-        
+    }
+
+    async function createTodoAssignedUsers(todoPath: string, todoId: string, users: string[]) {
+        const usersPath = `${todoPath}/${todoId}/assignedUsers`;
+        return Promise.all(
+            users.map((userId, index) => {
+                const userData = {
+                    id: `user-${index}`,
+                    userId,
+                    assignedAt: new Date()
+                };
+                return createDocument(usersPath, userData);
+            })
+        );
     }
 
 
 
 
 
-    const handleNewToDoIssueFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+
+    const handleNewToDoIssueFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         e.stopPropagation() // Prevent event from bubbling up
         //Obtaining data from the form via giving an id to the form and using FormToDoData
@@ -74,8 +231,7 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
         console.log("submitToDoFormButton press")
         const formToDoData = new FormData(toDoIssueForm)
         console.log(formToDoData)
-        const checkToDoId = (submitToDoFormButton as HTMLButtonElement)?.dataset.toDoIssueId
-        //const checkProjectId = (submitToDoFormButton as HTMLButtonElement)?.dataset.projectId
+
         const checkProjectId = project.id
         // console.log(checkToDoId)
         //console.log("checkProjectId",checkProjectId)
@@ -84,135 +240,159 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
             //Form is valid, proceed with data processing
 
             // If checkToDoId is empty is because the user is not updating data in the form, so we are going to create a new todoIssue.
-            if (!checkToDoId) {
-                //When the form is for a new To-Do Issue not an update
+            //if (!checkToDoId) {
+            //When the form is for a new To-Do Issue not an update
 
-                // *** Get the dueDate from the form data ***
-                let dueDateToDoForm: Date | null = null // Allow null initially
-                const dueDateToDoFormString = formToDoData.get("dueDate") as string
-                // Try to create a Date object, handling potential errors
-                if (dueDateToDoFormString) {
-                    dueDateToDoForm = new Date(dueDateToDoFormString)
-                    // Check if the Date object is valid
-                    if (isNaN(dueDateToDoForm.getTime())) {
-                        // Handle invalid date input (e.g., show an error message)
-                        console.error("Invalid date input:", dueDateToDoFormString);
-                        dueDateToDoForm = null; // Reset to null if invalid
-                    }
-                }
-                // Set to current date if no valid date was provided
-                if (!dueDateToDoForm) {
-                    dueDateToDoForm = new Date("2025-12-31"); // Create a new Date object for today
-                }
-                console.log("dueDateToDoFormString",dueDateToDoFormString)
-                
-                
-                // Get the current Date as the Created Date
-                const currentDate = new Date();
-                //Get the value of the statusColumn and assign a default value if necessary.
-                const statusColumnValue = formToDoData.get("statusColumn") as string || "notassigned"
-
-
-                const toDoIssueDetails: IToDoIssue = {
-                    title: formToDoData.get("title") as string,
-                    description: formToDoData.get("description") as string,
-                    statusColumn: statusColumnValue,
-                    tags: tags,
-                    assignedUsers: assignedUsers,
-                    dueDate: dueDateToDoForm,
-                    todoProject: checkProjectId as string,
-                    createdDate: currentDate,
-                    todoUserOrigin: formToDoData.get("todoUserOrigin") as string,
-                }
-
-                try {
-                    //if (!checkProjectId) {
-                        const toDoListInProject = project.todoList; 
-                        const newToDo = newToDoIssue(toDoListInProject, toDoIssueDetails)
-                        //const newToDoList = [...toDoListInProject, newToDo]
-                        onUpdateToDoList(newToDo)
-                    
-                    
-                        onCloseNewToDoIssueForm(e)
-                        //toDoIssueForm.reset()
-                        //closeModal("new-todo-card-modal")
-
-                        // setUpToDoBoard(checkProjectId) //Testing updatin the todoList inside todo-apge
-
-                        // Log the project details                        
-                        //console.log("Project details:", project);
-                
-                    //}
-
-                } catch (err) {
-                    const errorPopUp = document.querySelector(".message-popup")
-                    const contentError = {
-                        contentDescription: err.message,
-                        contentTitle: "Error",
-                        contentClass: "popup-error",
-                        contentIcon: "report"
-                    }
-                    if (err) {
-                        const text = document.querySelector("#message-popup-text p")
-                        if (text) {
-                            text.textContent = contentError.contentDescription
-                        }
-                        const title = document.querySelector("#message-popup-text h5")
-                        if (title) {
-                            title.textContent = contentError.contentTitle
-                        }
-                        const icon = document.querySelector("#message-popup-icon span")
-                        if (icon) {
-                            icon.textContent = contentError.contentIcon
-                        }
-                        errorPopUp?.classList.add(contentError.contentClass)
-                        toggleModal("message-popup")
-                    }
-                    const closePopUp: Element | null = document.querySelector(".btn-popup")
-                    if (closePopUp) {
-                        const closePopUpHandler = () => {
-                            toggleModal("message-popup");
-                            closePopUp.removeEventListener("click", closePopUpHandler);
-                        }
-                        closePopUp.addEventListener("click", closePopUpHandler);
-                    }
+            // *** Get the dueDate from the form data ***
+            let dueDateToDoForm: Date | null = null // Allow null initially
+            const dueDateToDoFormString = formToDoData.get("dueDate") as string
+            // Try to create a Date object, handling potential errors
+            if (dueDateToDoFormString) {
+                dueDateToDoForm = new Date(dueDateToDoFormString)
+                // Check if the Date object is valid
+                if (isNaN(dueDateToDoForm.getTime())) {
+                    // Handle invalid date input (e.g., show an error message)
+                    console.error("Invalid date input:", dueDateToDoFormString);
+                    dueDateToDoForm = null; // Reset to null if invalid
                 }
             }
+            // Set to current date if no valid date was provided
+            if (!dueDateToDoForm) {
+                dueDateToDoForm = new Date("2025-12-31"); // Create a new Date object for today
+            }
+            console.log("dueDateToDoFormString", dueDateToDoFormString)
+                
+                
+            // Get the current Date as the Created Date
+            const currentDate = new Date();
+            //Get the value of the statusColumn and assign a default value if necessary.
+            const statusColumnValue = formToDoData.get("statusColumn") as string || "notassigned"
 
+
+            const toDoIssueDetails: IToDoIssue = {
+                title: formToDoData.get("title") as string,
+                description: formToDoData.get("description") as string,
+                statusColumn: statusColumnValue,
+                tags: tags,
+                assignedUsers: assignedUsers,
+                dueDate: dueDateToDoForm,
+                todoProject: checkProjectId as string,
+                createdDate: currentDate,
+                todoUserOrigin: formToDoData.get("todoUserOrigin") as string,
+            }
+            
+            const ToDoExistingTitles = project.todoList.map(todoIssue => todoIssue.title);
+            const existingToDoIssues = ToDoExistingTitles.some(existingTitle => existingTitle.toLowerCase() === toDoIssueDetails.title.toLowerCase())
+
+            if (existingToDoIssues) {
+                console.log(`A To-Do Issue with the title [ ${toDoIssueDetails.title} ] already exists`)
+                console.log("Setting messagePopUpContent state...");
+                //Create a Confirmation Modal to prompt the user about the duplication and offer options
+                setMessagePopUpContent({
+                    type: "warning",
+                    title: `A project with the name "${toDoIssueDetails.title}" already exist`,
+                    message: (
+                        <React.Fragment>
+                            <b>
+                                <u>Overwrite:</u>
+                            </b>{" "}
+                            Replace the existing To-Do Issue with the new data.
+                            <br />
+                            <b>
+                                <u>Skip:</u>
+                            </b>{" "}
+                            Do not create a new To-Do Issue.
+                            <br />
+                            <b>
+                                <u>Rename:</u>
+                            </b>{" "}
+                            Enter a new title for the To-Do Issueproject.
+                                                
+                        </React.Fragment>),
+                    actions: ["Overwrite", "Skip", "Rename"],
+                    onActionClick: {
+                        "Overwrite": async () => {
+                            try {
+                                console.log("Overwrite button clicked!");
+
+                                //We will keep the logic of deleting a ToDo with an existing title and creating a new one inside newToDoIssue
+                                const originalDataToDoIssue = getToDoIssueByTitle(project.todoList, toDoIssueDetails.title)
+
+                                console.log("originalDataToDoIssue", originalDataToDoIssue);
+
+                                if (!originalDataToDoIssue) return
+                                // const newToDoIssueCreated = new ToDoIssue({
+                                //     ...toDoIssueDetails,
+                                //     id: originalDataToDoIssue.id,
+                                // })
+                                // console.log(newToDoIssueCreated);
+
+                                await deleteDocument(`/projects/${originalDataToDoIssue.id}/todoList`, originalDataToDoIssue.id)
+                                await handleCreateTodoIssueInDB(project, toDoIssueDetails);
+                                //await createDocument(`/projects/${originalDataToDoIssue.id}/todoList`, toDoIssueDetails)
+                                console.log("data transfered to DB created")
+
+                                //onCreatedNewToDo && onCreatedNewToDo(newToDoIssueCreated)
+
+                                //newToDoIssue(project.todoList, newToDoIssueCreated)
+                                setShowMessagePopUp(false)
+                                onCloseNewToDoIssueForm(e)
+
+                            } catch (error) {
+                                console.log("Error overwiritng todo:", error)
+
+                                setMessagePopUpContent({
+                                    type: "error",
+                                    title: "Error overwiritng To-Do Issue",
+                                    message: "There was a problem saving the ToDo Issue. Please try again later.",
+                                    actions: ["Ok"],
+                                    onActionClick: {
+                                        "Ok": () => setShowMessagePopUp(false),
+                                    },
+                                    onClose: () => setShowMessagePopUp(false),
+                                })
+                                setShowMessagePopUp(true)
+                                throw error
+                            }
+                        },
+                        "Skip": () => {
+                            console.log("Skip button clicked!")
+                            setShowMessagePopUp(false)
+                        },
+                        "Rename": () => {
+                            console.log("Rename button clicked!")
+                            setToDoDetailsToRename(toDoIssueDetails)
+                            setCurrentToDoTitle(toDoIssueDetails.title)
+                            setIsRenaming(true)
+
+                            setShowMessagePopUp(false)
+                        },
+                    },
+                    onClose: () => setShowMessagePopUp(false)
+                })
+                setShowMessagePopUp(true)
+
+                e.preventDefault()
+                return
+
+            } else {
+                // No duplicate, create the ToDoIssue
+                try {
+                    await handleCreateTodoIssueInDB(project, toDoIssueDetails)
+                    onCloseNewToDoIssueForm(e);
+                } catch (error) {
+                    console.error("Error creating project in DB:", error)
+                    throw error
+                }
+
+                //nCloseNewToDoIssueForm(e);
+            }
         } else {
             // Form is invalid, let the browser handle the error display
             toDoIssueForm.reportValidity()
 
         }
-        //})
-        //onCloseNewToDoIssueForm(e);
-    
     }
-
-
-
-
-
-
-    const onCloseNewToDoIssueForm = (e: React.FormEvent) => {
-        const toDoIssueForm = document.getElementById("new-todo-form") as HTMLFormElement
-        e.preventDefault()
-        e.stopPropagation() // Prevent event from bubbling up
-        toDoIssueForm.reset()
-        // Delete the data-ToDoIssueId attribute with the unique ID of the ToDoIssue in the button of "Save Changes"
-        const toDoIssueDatasetAttributeIdInForm = document.getElementById("accept-todo-btn")
-            if (toDoIssueDatasetAttributeIdInForm) {
-                toDoIssueDatasetAttributeIdInForm.dataset.projectId = ""
-            }
-        console.log("Close the form")
-        //toggleModal("new-todo-card-modal");
-        onClose() // Close the form after the accept button is clicked
-    }
-
-
-
-
-
     
 
     const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -227,34 +407,22 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
 
                 if (tagExist) {
                     // Tag already exists, show error message
-                    handleMessagePopUp({
+                    setMessagePopUpContent({
                         type: "warning",
                         title: "Duplicated Tag",
                         message: `The tag "${tagText}" already exists.`,
                         actions: ["Got it"],
-                        callbacks: {
+                        onActionClick: {
                             "Got it": () => {
-                                setShowMessagePopUp(null);
+                                setShowMessagePopUp(false);
                             }
-                        }
+                        },
+                        onClose: () => setShowMessagePopUp(false)
                     })
+                    setShowMessagePopUp(true)
+                    e.preventDefault()
+                    return
 
-                    /* OLD CODE
-                    const existTagPopup = new MessagePopUp(
-                    document.body,
-                            "warning",
-                            "Duplicate Tag",
-                            `The tag "${tagText}" already exists.`,
-                            ["Got it"]
-                    );
-                    // Define button callback
-                    const buttonCallbacks = {
-                        "Got it": () => {
-                            existTagPopup.closeMessageModal();
-                        }
-                    }
-                    existTagPopup.showNotificationMessage(buttonCallbacks);
-                    */
                     
                 } else {
                     // Tag is new, add it to the list
@@ -274,9 +442,6 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
 
 
 
-
-
-
     const handleAssignedUsersInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
         const inputValue = (e.target as HTMLInputElement).value.trim()
         if (e.key === "Enter" && inputValue) {
@@ -289,36 +454,22 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
 
                 if (assignedUserExist) {
                     // AssignedUser already exists, show error message
-                    handleMessagePopUp({
+                    setMessagePopUpContent({
                         type: "warning",
                         title: "Duplicated assigned user",
                         message: `User ${assignedUsersText} already exists in the assigned users list.`,
                         actions: ["Got it"],
-                        callbacks: {
+                        onActionClick: {
                             "Got it": () => {
-                                setShowMessagePopUp(null);
+                                setShowMessagePopUp(false);
                             }
                         },
+                        onClose: () => setShowMessagePopUp(false)
                     })
-                    
-                    
-                    /*OLD CODE
-                    const existAssignedUserPopup = new MessagePopUp(
-                        document.body,
-                        "warning",
-                        "Duplicate Tag",
-                        `The tag "${assignedUsersText}" already exists.`,
-                        ["Got it"],
-                        "200"
-                    );
-                    // Define button callback
-                    const buttonCallbacks = {
-                        "Got it": () => {
-                            existAssignedUserPopup.closeMessageModal();
-                        }
-                    }
-                    existAssignedUserPopup.showNotificationMessage(buttonCallbacks);
-                */
+                    setShowMessagePopUp(true)
+                    e.preventDefault()
+                    return
+
                 } else {
                     // Tag is new, add it to the list
                     setAssignedUsers(prevAssignedUsers => [...prevAssignedUsers, assignedUsersText]);
@@ -330,15 +481,21 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
     }
 
 
-
-
     const removeAssignedUsers = (assignedUserToRemove: string) => {
         setAssignedUsers(prevAssignedUsers => prevAssignedUsers.filter(assignedUsers => assignedUsers !== assignedUserToRemove));
     };
 
 
-
-
+    React.useEffect(() => {
+        if (toDoDetailsToRename && toDoTitleToConfirm) {
+            handleRenameConfirmation(toDoTitleToConfirm, toDoDetailsToRename)
+                .then(() => {
+                    setToDoDetailsToRename(null)
+                    setToDoTitleToConfirm(null)
+                    onCloseNewToDoIssueForm
+            })
+        }    
+    },[toDoDetailsToRename, toDoTitleToConfirm, handleRenameConfirmation, onCloseNewToDoIssueForm]  )
 
 
 
@@ -571,7 +728,24 @@ export function NewToDoIssueForm({ onClose, project, onUpdateToDoList }: NewToDo
                     </form>
                 </dialog>
             </div>
-            {showMessagePopUp}
+            {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
+            {isRenaming && <RenameElementMessage
+                project={project}
+                elementType="todo"
+                elementTitle="To-Do"
+                previousElementName={currentToDoTitle}
+                onRename={(newName) => {
+                    setToDoTitleToConfirm(newName)
+                    //setIsRenaming(false)
+                }}
+                onCancel={() => {
+                    //setRenameConfirmationPending(false);
+                    setIsRenaming(false)
+                    setToDoDetailsToRename(null)
+                    setNewToDoTitle(null)
+                    setToDoTitleToConfirm(null)                    
+                }} />
+            }
         </div >
 
     )

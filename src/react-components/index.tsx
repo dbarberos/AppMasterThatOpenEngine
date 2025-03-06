@@ -6,12 +6,14 @@ export * from './ProjectCard';
 export * from './ProjectDetailsPage';
 export * from './ProjectDetailsCard';
 export * from './ProjectDetailsToDoList';
-export * from './ToDoDetailsCard';
+export * from './ToDoCard';
 export * from './NewToDoIssueForm';
 export * from './MessagePopUp';
 export * from './SearchProjectBox';
 export * from './ThreeJSViewer';
 export * from './DeleteProjectBtn';
-export * from './RenameElementMessage'
-export * from './icons'
-export * from './DiffContentProjectsMessage'
+export * from './RenameElementMessage';
+export * from './icons';
+export * from './DiffContentProjectsMessage';
+export * from './LoadingIcon'
+

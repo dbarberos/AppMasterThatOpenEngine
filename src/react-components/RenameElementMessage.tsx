@@ -4,16 +4,27 @@ import { RenameIcon } from '../react-components/icons';
 import { MessagePopUp, MessagePopUpProps } from '../react-components';
 
 import { ProjectsManager } from '../classes/ProjectsManager';
+import { Project } from '../classes/Project';
 
 interface RenameElementMessageProps {
-    projectsManager: ProjectsManager
+    projectsManager?: ProjectsManager
+    project?: Project
+    elementType: 'project' | 'todo'
     elementTitle: string
     previousElementName: string;
     onRename: (newName: string) => void;
     onCancel: () => void;
 }
 
-export function RenameElementMessage({ projectsManager, elementTitle, previousElementName, onRename , onCancel }: RenameElementMessageProps) {
+export function RenameElementMessage({
+    projectsManager,
+    project,
+    elementType,
+    elementTitle,
+    previousElementName,
+    onRename,
+    onCancel
+}: RenameElementMessageProps) {
 
     const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -21,86 +32,59 @@ export function RenameElementMessage({ projectsManager, elementTitle, previousEl
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
 
-
-    const handleProjectRename = () => {
-        const newProjectName = inputRef.current?.value.trim() || ""
-        const projectNames = projectsManager.list.map(project => project.name);
-
+    const validateName = (newName: string): boolean => {        
         // Basic validation: Check if the name is empty
-        if (newProjectName.trim() === "") {
+        if (newName.trim() === "") {
             // Show an error message
-            setMessagePopUpContent({
-                type: "error",
-                title: `A project with a empty name is not allow`,
-                message: `Please enter a valid project name.`,
-                actions: ["Got it"],
-                onActionClick: {
-                    "Got it": () => {
-                        // Close the message pop-up
-                        setShowMessagePopUp(false)
+            showError(`Empty ${elementType} name`, `Please enter a valid ${elementType} name.`)
+            return false
+
                     }
-                },
-                onClose: () => setShowMessagePopUp(false)
-            })
-            setShowMessagePopUp(true)
-            return
-        }
-        if (newProjectName.length < 5) {
+        if (newName.length < 5) {
             // Show an error message
-            setMessagePopUpContent({
-                type: "error",
-                title: `Invalid Project Name`,
-                message: "Please enter a project name that is at least 5 characters long.",
-                actions: ["Got it"],
-                onActionClick: {
-                    "Got it": () => {
-                        // Close the message pop-up
-                        setShowMessagePopUp(false)
-                    }
-                },
-                onClose: () => setShowMessagePopUp(false)
-            })
-            setShowMessagePopUp(true)
+            showError(`Invalid ${elementType} Name`,
+                `Please enter a ${elementType} name that is at least 5 characters long.`)
+            return false
             
-            return
         }
-        // Validation: Check if the new name is not in use
-        const existingProject = projectNames.find(existingName => existingName.toLowerCase() === newProjectName.toLowerCase())
-
-        // Update the project name
-        if (existingProject) {
-            setMessagePopUpContent({
-                type: "error",
-                title: "Duplicate Name",
-                message: `A project named "${newProjectName}" already exists. Please choose a different name.`,
-                actions: ["Got it"],
-                onActionClick: {
-                    "Got it": () => {
-                        // Close the message pop-up
-                    }
-                },
-                onClose: () => setShowMessagePopUp(false)
-            })
-            setShowMessagePopUp(true)
-            return
-
-        } else {
-            //Create a new project with the new name
-            
-            onRename && onRename(newProjectName)
-            // setOnRename(() => { }) // Reset the callback
+        // Validation: Check for duplicates based on element type
+        if (elementType === 'project' && projectsManager) {
+            const projectNames = projectsManager.list.map(p => p.name.toLowerCase())
+            if (projectNames.includes(newName.toLowerCase())) {
+                showError('Duplicate Name', `A project named "${newName}" already exists. Please choose a different name.`)
+                return false
+            }
+        } else if (elementType === 'todo' && project) {
+            const todoTitles = project.todoList.map(todo => todo.title.toLowerCase())
+            if (todoTitles.includes(newName.toLowerCase())) {
+                showError('Duplicate Name', `A todo issue title "${newName}" already exists. Please choose a different title`)
+                return false
+            }
         }
+        return true
     }
 
-
-    const cancelRename = () => {
-        onCancel && onCancel()
-        //setOnRename(() => { }) // Reset the callback
+    const showError = (title: string, message: string) => {
+        setMessagePopUpContent({
+            type: "error",
+            title,
+            message,
+            actions: ["Got it"],
+            onActionClick: {
+                "Got it": () => setShowMessagePopUp(false)
+            },
+            onClose: () => setShowMessagePopUp(false)
+        });
+        setShowMessagePopUp(true);
     };
 
 
-
-    
+    const handleRename = () => {
+        const newName = inputRef.current?.value.trim() || "";
+        if (validateName(newName)) {
+            onRename(newName);
+        }
+    }    
 
     return (
         <>
@@ -118,7 +102,7 @@ export function RenameElementMessage({ projectsManager, elementTitle, previousEl
                         <input
                             className="toast-input-text"
                             type="text"
-                            id="newProjectName"
+                                id="newElementName"
                             placeholder={previousElementName}
                             ref={inputRef}
                             autoFocus
@@ -126,16 +110,16 @@ export function RenameElementMessage({ projectsManager, elementTitle, previousEl
                             minLength={5}
                             autoComplete="off"
                         />
-                        <label className="toast-input-text" htmlFor="newProjectName" >
+                            <label className="toast-input-text" htmlFor="newElementName" >
                             {previousElementName}
                         </label>
                     </div>
                 </div>
                 <div className="message-btns">
-                    <button className="message-btn" type="button" id="confirmRename" onClick={handleProjectRename}>
+                    <button className="message-btn" type="button" id="confirmRename" onClick={handleRename}>
                         <span className="message-btn-text">Do it</span>
                     </button>
-                    <button className="message-btn" type="button" id="cancelRename" onClick={cancelRename}>
+                    <button className="message-btn" type="button" id="cancelRename" onClick={onCancel}>
                         <span className="message-btn-text">Cancel</span>
                     </button>
                 </div>

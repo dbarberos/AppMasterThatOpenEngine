@@ -1,18 +1,25 @@
 import { v4 as uuidv4 } from 'uuid'
+import * as Firestore from 'firebase/firestore'
 
+
+export interface ITag {
+    title: string
+}
 export interface IToDoIssue {
     title: string
     description: string
     statusColumn?: string
-    tags: string[]
+    tags: (string | ITag)[]
     assignedUsers: string[]
-    dueDate: Date
+    dueDate: Date | string | number | Firestore.Timestamp
     todoProject: string
-    createdDate: Date
+    createdDate: Date | string | number | Firestore.Timestamp
     todoUserOrigin: string
-    
-    
+    id?: string
+    backgroundColorColumn?: string
 }
+
+
 
 export class ToDoIssue implements IToDoIssue {
     title: string
@@ -30,26 +37,33 @@ export class ToDoIssue implements IToDoIssue {
     //ui: HTMLDivElement
     backgroundColorColumn: string
 
-    constructor(data: ToDoIssue) {
+    constructor(data: IToDoIssue, idString?: string) {
         for (const key in data) {
 
             if (key === "dueDate") {
-                this[key] = new Date(data.dueDate)
+                this[key] = data.dueDate instanceof Date
+                    ? data.dueDate
+                    : new Date(data.dueDate)
             } else if (key === "createdDate") {
-                this[key] = new Date(data.createdDate)
+                this[key] = data.createdDate instanceof Date
+                    ? data.createdDate
+                    : new Date(data.createdDate)
             } else if (key === "statusColumn") {
                 this[key] = data.statusColumn || "notassigned"
 
             } else {
                 this[key] = data[key]
             }
-        } 
+        }
 
         this.backgroundColorColumn = ToDoIssue.calculateBackgroundColorColumn(this.statusColumn)
 
         //this.setUi();
 
-        if (!this.id) { this.id = uuidv4() } //In order to not change the ID if the option of import toDoIssues is implemented
+        if (idString) {
+            this.id = idString
+            }
+        //if (!this.id) { this.id = uuidv4() } //In order to not change the ID if the option of import toDoIssues is implemented
         console.log(data);
     }
 
@@ -82,6 +96,25 @@ export class ToDoIssue implements IToDoIssue {
                 return "Not Assigned"
         }
     }
+
+    static createFromData(data: ToDoIssue) {
+        const todoIssue = new ToDoIssue({
+            title: data.title,
+            description: data.description,
+            statusColumn: data.statusColumn || "notassigned",
+            tags: [...data.tags],
+            assignedUsers: [...data.assignedUsers],
+            dueDate: data.dueDate,
+            todoProject: data.todoProject,
+            createdDate: data.createdDate,
+            todoUserOrigin: data.todoUserOrigin,
+            id: data.id,
+            backgroundColorColumn: data.backgroundColorColumn
+        });
+
+        return todoIssue;
+    }
+
 
     /*SET UI
     // setUi() {

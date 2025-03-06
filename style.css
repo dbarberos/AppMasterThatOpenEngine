@@ -1968,12 +1968,12 @@ progress::-moz-progress-bar {
     grid-area: content;
     display: flex;
     flex-direction: column;
-    padding: 10px 15px 5px 5px;
+    padding: 10px 0px 5px 5px;
     row-gap: 15px;
     overflow: hidden;
     text-overflow: ellipsis;
     overflow-wrap: break-word;
-    width: 90%;
+    width: 95%;
     white-space: normal;
 
 }

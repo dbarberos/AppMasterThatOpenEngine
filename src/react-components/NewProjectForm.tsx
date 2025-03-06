@@ -32,7 +32,8 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
     // const { isRenaming, initiateRename, currentProjectName, handleProjectRename, cancelRename, setOnRename } = useRenameProject(projectsManager)
     //const updateDataProject = useUpdateExistingProject({ projectsManager, onUpdateExistingProject: onCreatedProject || (() => { }) });
-    usePrepareProjectForm(updateProject, projectsManager)
+
+    usePrepareProjectForm({ projectToBeUpdated: updateProject, projectsManager })
 
 
     const onCloseNewProjectForm = () => {
@@ -42,6 +43,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
         }
         onClose() // Close the form after the accept button is clicked
     }
+    
 
     const handleRenameConfirmation = React.useCallback(async (renamedProjectName: string, projectDetailsToRename: IProject) => {
         //setNewProjectName(renamedProjectName);
@@ -91,8 +93,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
         //const updatedProject = projectsManager.updateProject(projectDetailsToUpdate.id, projectDetailsToUpdate)
        
         
-            onUpdatedProject && onUpdatedProject(projectDetailsToUpdate)
-
+        onUpdatedProject && onUpdatedProject(projectDetailsToUpdate)
         
         projectsManager.onProjectUpdated(projectDetailsToUpdate.id)   
     }
@@ -212,7 +213,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                                 console.log("Overwrite button clicked!");
 
                                 //Logic inside newProject already delete if is found a project with the same name
-                                //so, we overwrite the project usin create newProject
+                                //so, we overwrite the project using create newProject
                                 const originalDataProject = projectsManager.getProjectByName(projectDetails.name)
                                 console.log("originalDataProject", originalDataProject);
 
@@ -543,6 +544,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
             {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
             {isRenaming && <RenameElementMessage
                 projectsManager={projectsManager}
+                elementType="project"
                 elementTitle="Project"
                 previousElementName={currentProjectName}
                 onRename={(newName) => {
@@ -556,7 +558,8 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
                     setNewProjectName(null)
                     setProjectNameToConfirm(null)
-                }} />}
+                }} />
+            }
         </div >
 
     )

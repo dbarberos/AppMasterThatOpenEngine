@@ -13,8 +13,48 @@ import { organizeFilteredToDoIssuesByStatusColumns, setUpToDoBoard, organizeToDo
 // export function onTodoIssueUpdated = (toDoIssue: ToDoIssue) => { }
 // export function onTodoIssueDeleted = (toDoIssue: ToDoIssue) => { }
 
+export function newToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue, id?: string) {
+    const toDoIssueNames = toDoList.map((toDoIssue) => {
+        return toDoIssue.title
+    })
+    if (toDoIssueNames.includes(data.title)) {
+        // Find and remove the existing todo from the list since you are going to use it later
+        const existingToDoIndex = toDoList.findIndex(todo => todo.title === data.title);
+        if(existingToDoIndex !== -1) {
+            //It is clare that there is an index, since there is a todo with that name
+            // 1. Remove the existing todo from the list
+            toDoList = toDoList.filter((todo) => todo.title !== data.title);
+        
 
-export function newToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue /*onUpdateToDoList: (newToDoList: IToDoIssue[]) => void*/) {
+            // 2. Create a new todo with the imported data
+            const newToDoCreated = new ToDoIssue(data, id);
+
+            // 3. Process tag an assignedUsers???
+            // if (data.todoList && Array.isArray(data.todoList)) {
+            //     newProject.todoList = data.todoList.map(todoData => {
+            //         return ToDoIssue.createFromData({
+            //             ...todoData,
+            //             todoProject: newProject.id || ''
+            //         });
+            //     });
+            // }
+
+            // 4. Add the new project to the list
+            toDoList.push(newToDoCreated);
+            this.onToDoIssueCreated(newToDoCreated);
+            return newToDoCreated;
+
+        } else {
+            console.error("ToDo Issue to overwrite not found in the list.")
+            return undefined
+        }
+    }
+}
+
+
+
+/* OLD newToDoIssue
+export function CreatenewToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue onUpdateToDoList: (newToDoList: IToDoIssue[]) => void) {
     // Check if the issue already exists
     const toDoTitles = toDoList.map((toDoIssue) => {
         return toDoIssue.title
@@ -64,39 +104,39 @@ export function newToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue /*onUpdate
                             if (existingToDoIssueIndex !== -1) {
 
                                 //Remove the existing issue's UI from the display 
-                                const existingToDoIssue = toDoList[existingToDoIssueIndex];
-                                (existingToDoIssue as any).ui.remove();
-                                console.log("Old issue removed fromthe UI");
+                                // const existingToDoIssue = toDoList[existingToDoIssueIndex];
+                                // (existingToDoIssue as any).ui.remove();
+                                // console.log("Old issue removed fromthe UI");
 
                                 //Update the ToDoIssue in theproject´s ToDoList
                                 const newToDoIssue = new ToDoIssue(data);
                                 project.todoList[existingToDoIssueIndex] = newToDoIssue
 
                                                                 
-                                newToDoIssue.ui.addEventListener("click", () => {
+                                // newToDoIssue.ui.addEventListener("click", () => {
 
-                                    //Event that happens when clicking on one of the TODO tags
-                                    //The idea is to have a card come out from the left covering the ASIDE and the project, replacing them with the data. Leaving the IFC viewer visible
+                                //     //Event that happens when clicking on one of the TODO tags
+                                //     //The idea is to have a card come out from the left covering the ASIDE and the project, replacing them with the data. Leaving the IFC viewer visible
 
-                                    showPageContent("todo-details", "flex")
-                                    setDetailsIssuePage(newToDoIssue)
-                                    console.log(" details pages set in the new window");
-                                })
+                                //     showPageContent("todo-details", "flex")
+                                //     setDetailsIssuePage(newToDoIssue)
+                                //     console.log(" details pages set in the new window");
+                                // })
                                 toDoList.push(newToDoIssue)
 
-                                const storedPageWIP = localStorage.getItem("pageWIP")
-                                if (storedPageWIP === "todo-page") {
-                                    renderToDoIssueList(project.todoList); 
-                                    setUpToDoBoard(project.todoList);
+                                // const storedPageWIP = localStorage.getItem("pageWIP")
+                                // if (storedPageWIP === "todo-page") {
+                                //     renderToDoIssueList(project.todoList); 
+                                //     setUpToDoBoard(project.todoList);
                                     
-                                } else if (storedPageWIP === "project-details") {
+                                // } else if (storedPageWIP === "project-details") {
 
-                                    //  Update the ToDoOssue in the project´s toDoListnd UI
-                                    //Get the target element
-                                    const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
-                                    projectListToDosUI.appendChild((newToDoIssue as any).ui)
+                                //     //  Update the ToDoOssue in the project´s toDoListnd UI
+                                //     //Get the target element
+                                //     const projectListToDosUI = document.querySelector("#details-page-todo-list") as HTMLElement
+                                //     projectListToDosUI.appendChild((newToDoIssue as any).ui)
 
-                                }
+                                // }
                                 
                                 console.log("Added new project to the UI")
                                 console.dir("New toDoList:", toDoList)
@@ -357,7 +397,7 @@ export function newToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue /*onUpdate
         //toDoList.push(toDoIssue)
         return toDoIssue
 
-        /* EVENT LISTENER FOR THE TO-DO ISSUE CARD
+         EVENT LISTENER FOR THE TO-DO ISSUE CARD
         //toDoIssue.ui.addEventListener("click", () => {
             showPageContent("todo-details", "flex")//this should show the banner with the data of only one ISSUE not de board
             setDetailsIssuePage(toDoIssue) //for the new windows (todo-detalis)where the data of the todo issue is shown. From that place is where you can edit the content of the todoIssue
@@ -365,7 +405,7 @@ export function newToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue /*onUpdate
 
         //})
 
-        */
+        
         
         const storedPageWIP = localStorage.getItem("pageWIP")
         if (storedPageWIP === "todo-page") {
@@ -384,6 +424,7 @@ export function newToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue /*onUpdate
         
     }
 }
+*/
 
 export function setIssueInsideDetailsProjectPage(toDoIssue: ToDoIssue) { 
     //Get the target element
@@ -817,11 +858,11 @@ export function renderToDoIssueList(toDoList: IToDoIssue[]): void {
             toDoIssueListUiElements.appendChild(todoIssue.ui);
 
             // Attach the click listener 
-            todoIssue.ui.addEventListener("click", () => {
-                showPageContent("todo-details", "flex");
-                setDetailsIssuePage(todoIssue);
-                console.log("Details page set in a new window");
-            });
+            // todoIssue.ui.addEventListener("click", () => {
+            //     showPageContent("todo-details", "flex");
+            //     setDetailsIssuePage(todoIssue);
+            //     console.log("Details page set in a new window");
+            // });
         });
     } else {
         console.error("The father element of the Todo list was not found")
@@ -835,9 +876,10 @@ export function getToDoIssue(toDoList: ToDoIssue[], id: string) {
     return toDoIssue
 }
 
+// *** USED INSIDE NewToDoIssueForm ***
 export function getToDoIssueByTitle(toDoList: ToDoIssue[], title: string) {
     const toDoIssue = toDoList.find((project) => {
-        return toDoIssue.title === title
+        return toDoIssue.title.toLowerCase() === title.toLowerCase()
     })
     return toDoIssue
 }

@@ -15,7 +15,7 @@ export interface IProject {
     finishDate: Date
     cost: number
     progress?: number 
-    todoList: IToDoIssue[]
+    //todoList: IToDoIssue[]
     id?: string
     
 }
@@ -39,9 +39,10 @@ export class Project implements IProject {
     finishDate: Date
     cost: number = 0
     progress?: number = 0
-    todoList: IToDoIssue[] = []
+    
 
     // Class internals
+    todoList: IToDoIssue[] = []
     id?: string
     //ui: HTMLDivElement    
     backgroundColorAcronym?: string
