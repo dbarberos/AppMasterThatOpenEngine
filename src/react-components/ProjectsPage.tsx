@@ -7,8 +7,8 @@ import { LoadingIcon, SearchProjectBox } from '../react-components';
 
 
 import { useProjectsManager, NewProjectForm, ProjectCard } from './index.tsx';
-import { firebaseDB, getProjectsFromDB } from '../services/Firebase/index.ts'
-import { getCollection } from '../services/Firebase/index.ts'
+import { firebaseDB, getProjectsFromDB } from '../services/firebase/index.ts'
+import { getCollection } from '../services/firebase/index.ts'
 
 //import NewProjectForm from './NewProjectForm.tsx';
 //import { ProjectCard } from './ProjectCard.tsx';
@@ -35,33 +35,33 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
 
 
-    projectsManager.onProjectCreated = (newProject) => {setProjects([...projectsManager.list]) }
+    projectsManager.onProjectCreated = (newProject) => { setProjects([...projectsManager.list]) }
     projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
     projectsManager.onProjectUpdated = () => { setProjects([...projectsManager.list]) }
 
 
-/*
-    //Retrieve information from Firebase
-    const getFirestoreProjects = async () => {
-
-        const firebaseProjects = await Firestore.getDocs(projectsCollection)
-        for (const doc of firebaseProjects.docs) {
-            const data = doc.data()
-            const project: IProject = {
-                ...data,
-                finishDate: (data.finishDate as unknown as Firestore.Timestamp).toDate()
+    /*
+        //Retrieve information from Firebase
+        const getFirestoreProjects = async () => {
+    
+            const firebaseProjects = await Firestore.getDocs(projectsCollection)
+            for (const doc of firebaseProjects.docs) {
+                const data = doc.data()
+                const project: IProject = {
+                    ...data,
+                    finishDate: (data.finishDate as unknown as Firestore.Timestamp).toDate()
+                }
+                projectsManager.newProject(project, doc.id)
             }
-            projectsManager.newProject(project, doc.id)
         }
-    }
-    */
+        */
 
     React.useEffect(() => {
         const loadProjects = async () => {
             try {
                 setIsLoading(true)
                 const firebaseProjects = await getProjectsFromDB()
-                
+
                 // Create Project instances using ProjectManager for each project from Firebase
                 firebaseProjects.forEach(projectData => {
                     projectsManager.newProject(projectData, projectData.id);
@@ -181,7 +181,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
             onClose={handleCloseForm}
             projectsManager={projectsManager}
             onCreatedProject={onNewProjectCreated}
-            onUpdatedProject={onProjectUpdate} 
+            onUpdatedProject={onProjectUpdate}
         />
     ) : null;
 
@@ -248,17 +248,17 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
             </header>
             {isLoading ? (
                 <LoadingIcon
-                    >
+                >
                 </LoadingIcon>
             ) : (
-            <div id="project-list">
-                {projects.length > 0 ? projectCardsList : <p>No projects found</p>}
+                <div id="project-list">
+                    {projects.length > 0 ? projectCardsList : <p>No projects found</p>}
 
                 </div>
             )}
             {/*  Render the form if  isNewProjectFormOpen = true  */}
             {newProjectForm}
-            
+
         </section>
     )
 }

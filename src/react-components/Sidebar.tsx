@@ -2,6 +2,32 @@ import * as React from 'react';
 import * as Router from 'react-router-dom';
 
 
+export const toggleSidebar = {
+    collapse: () => {
+        const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+        if (sidebarCheckbox) {
+            sidebarCheckbox.checked = true;
+        }
+    },
+    expand: () => {
+        const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+        if (sidebarCheckbox) {
+            sidebarCheckbox.checked = false;
+        }
+    },
+    getState: (): boolean => {
+        const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+        return sidebarCheckbox?.checked || false;
+    },
+    setState: (state: boolean) => {
+        const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+        if (sidebarCheckbox) {
+            sidebarCheckbox.checked = state;
+        }
+    }
+};
+
+
 export function Sidebar() {
     return (
         <aside id="sidebar">
@@ -30,8 +56,8 @@ export function Sidebar() {
                 </ul>
                 <div>
                     <div>
-                        <input type="checkbox" id="sidebar-active" />
-                        <label htmlFor="sidebar-active" className="open-sidebar-btn">
+                        <input type="checkbox" id="sidebar-checkbox-switch" />
+                        <label htmlFor="sidebar-checkbox-switch" className="open-sidebar-btn">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             height="100%"
@@ -46,7 +72,7 @@ export function Sidebar() {
                         </svg>
                         </label>
                         <div className="show-sidebar">
-                        <label htmlFor="sidebar-active" className="close-sidebar-btn">
+                        <label htmlFor="sidebar-checkbox-switch" className="close-sidebar-btn">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 height="100%"

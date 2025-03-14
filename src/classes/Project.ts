@@ -65,10 +65,12 @@ export class Project implements IProject {
 
         this.backgroundColorAcronym = Project.calculateBackgroundColorAcronym(this.businessUnit)
         // // Handle todoList and todoList.todoIssue.ui
-        this.todoList = data.todoList || []
+        //this.todoList = data.todoList || []
+        this.todoList=[]
         if (idString) {
             this.id = idString
         }
+        
         //if (!this.id) { this.id = idString } //In order to not change the ID when we import projects from JSON file
         console.log(data);
 

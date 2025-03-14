@@ -846,7 +846,7 @@ svg {
     color: var(--color-fontbase-dark);
 }
 
-#sidebar-active {
+#sidebar-checkbox-switch {
     display: none;
 }
 
@@ -894,34 +894,34 @@ svg {
     fill: var(--color-fontbase);
 }
 
-#app:has(#sidebar-active:checked) {
-    grid-template-columns: 130px 1fr;
+#app:has(#sidebar-checkbox-switch:checked) {
+    grid-template-columns: 105px 1fr;
 
 }
 
-#app:has(#sidebar-active:checked) #navigation-bar li span.material-icons-round {
+#app:has(#sidebar-checkbox-switch:checked) #navigation-bar li span.material-icons-round {
     /* No changes in the icon style */
 }
 
-#app:has(#sidebar-active:checked) .close-sidebar-btn>svg {
+#app:has(#sidebar-checkbox-switch:checked) .close-sidebar-btn>svg {
     display: none;
     /* No changes in the icon style */
 }
 
-#app:not(:has(#sidebar-active:checked)) .open-sidebar-btn>svg {
+#app:not(:has(#sidebar-checkbox-switch:checked)) .open-sidebar-btn>svg {
     display: none;
     /* No changes in the icon style */
 }
 
 
-#app:has(#sidebar-active:checked) #navigation-bar li {
+#app:has(#sidebar-checkbox-switch:checked) #navigation-bar li {
     font-size: 0;
     column-gap: 0px;
 
     /* padding-inline-start: 0px; */
 }
 
-#app:has(#sidebar-active:checked) #navigation-bar li::before {
+#app:has(#sidebar-checkbox-switch:checked) #navigation-bar li::before {
     content: attr(data-text);
     font-size: var(--font-base);
 
@@ -1542,7 +1542,8 @@ input[type="number"]::-webkit-outer-spin-button {
 
 
 #todo-tags-list-details-page,
-#todo-assignedUsers-list-details-page {
+#todo-assignedUsers-list-details-page,
+.todo-array-list-details-page {
     position: absolute;
     top: 100%;
     left: 0;
@@ -1619,7 +1620,8 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 
-#todo-tags-list-details-page:hover #todo-assignedUsers-list-details-page:hover {
+#todo-tags-list-details-page:hover, #todo-assignedUsers-list-details-page:hover,
+.todo-array-list-details-page:hover {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
 
@@ -1631,7 +1633,9 @@ input[type="number"]::-webkit-outer-spin-button {
 #todo-tags-list-details-page li,
 #todo-tags-list-details-page span,
 #todo-assignedUsers-list-details-page li,
-#todo-assignedUsers-list-details-page span {
+#todo-assignedUsers-list-details-page span,
+.todo-array-list-details-page li,
+.todo-array-list-details-page span {
     /* scroll-snap-align: start; */
     display: inline-block;
     margin: 5px;
@@ -1642,7 +1646,9 @@ input[type="number"]::-webkit-outer-spin-button {
 #todo-tags-list-details-page li:hover,
 #todo-tags-list-details-page span:hover,
 #todo-assignedUsers-list-details-page li:hover,
-#todo-assignedUsers-list-details-page span:hover {
+#todo-assignedUsers-list-details-page span:hover,
+.todo-array-list-details-page li:hover,
+.todo-array-list-details-page span:hover {
     background-color: var(--primary-200);
 }
 
@@ -2259,6 +2265,130 @@ header {
     height: 80%;
 }
 
+/* INSIDE DETAILS TODO HALF-WINDOW */
+
+.todo-status-tag {
+    padding: 4px 8px;
+    border-radius: var(--br-sm);
+    font-weight: 500;
+}
+
+.status-backlog {
+    background: var(--color-backlog);
+    color: #ccc;
+}
+
+.status-wip {
+    background: var(--color-wip);
+    color: #343537;
+}
+
+.status-qa {
+    background: var(--color-qa);
+    color: #343537;
+}
+
+.status-completed {
+    background: var(--color-completed);
+    color: var(--color-status-completed-text);
+}
+
+.todo-status-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.todo-field-select {
+    position: relative;
+    min-width: 150px;
+}
+
+
+/* INSIDE DETAILS TODO HALF-WINDOW FOR TAGS AND ASSIGNEDUSERS*/
+
+.todo-field-list {
+    width: 100%;
+    position: relative;
+}
+
+.todo-tags-tag,
+.todo-assignedUsers-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: var(--br-sm);
+    background: var(--color-bg2);
+    color: var(--color-fontbase);
+    font-size: var(--font-sm);
+}
+
+.todo-tags-tag.editable,
+.todo-assignedUsers-tag.editable {
+    gap: 4px;
+    background: var(--color-bg1);
+    border: 1px solid var(--color-border);
+}
+
+.todo-empty-message {
+    color: var(--color-fontbase-dark);
+    font-style: italic;
+}
+
+.selected-items-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.remove-item-btn {
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    cursor: pointer;
+    padding: 0 4px;
+    font-size: var(--font-lg);
+    line-height: 1;
+}
+
+.add-item-container {
+    display: flex;
+    gap: 8px;
+}
+
+.add-item-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--br-sm);
+    background: var(--color-bg1);
+    color: var(--color-fontbase);
+    font-size: var(--font-base);
+}
+
+.add-item-btn {
+    padding: 8px 16px;
+    border-radius: var(--br-sm);
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.add-item-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+
+
+
+
+
+
+
+
 /* To-do details page */
 
 #todo-details {
@@ -2282,7 +2412,7 @@ header {
     height: 100%;
     max-height: 100vh;
     box-sizing: border-box;
-    padding: 25px 25px 25px;
+    padding: 25px 25px 25px ;
     border-radius: 0 35px 35px 0;
     background: var(--color-tododetails-bg);
     backdrop-filter: blur(10px);

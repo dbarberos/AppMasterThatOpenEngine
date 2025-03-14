@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import * as Router from 'react-router-dom';
-import { createDocument, updateDocument, deleteDocument } from '../services/Firebase';
+import { createDocument, updateDocument, deleteDocument } from '../services/firebase';
 
 import { DeleteProjectBtn, RenameElementMessage, DiffContentProjectsMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
 import { usePrepareProjectForm } from '../hooks';
@@ -43,7 +43,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
         }
         onClose() // Close the form after the accept button is clicked
     }
-    
+
 
     const handleRenameConfirmation = React.useCallback(async (renamedProjectName: string, projectDetailsToRename: IProject) => {
         //setNewProjectName(renamedProjectName);
@@ -80,9 +80,9 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
     }, [onCreatedProject])
 
 
-    
-    async function handleUpdateDataProjectInDB (projectDetailsToUpdate: Project, simplifiedChanges: Record<string, any>) {
-        
+
+    async function handleUpdateDataProjectInDB(projectDetailsToUpdate: Project, simplifiedChanges: Record<string, any>) {
+
         if (!projectDetailsToUpdate.id) return
         await updateDocument<Partial<Project>>("/projects", projectDetailsToUpdate.id, simplifiedChanges)
         console.log("data transfered to DB")
@@ -91,11 +91,11 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
         console.log("projectDetailsToUpdate", projectDetailsToUpdate)
         console.log("Projects in manager:", projectsManager.list.map(p => p.id))
         //const updatedProject = projectsManager.updateProject(projectDetailsToUpdate.id, projectDetailsToUpdate)
-       
-        
+
+
         onUpdatedProject && onUpdatedProject(projectDetailsToUpdate)
-        
-        projectsManager.onProjectUpdated(projectDetailsToUpdate.id)   
+
+        projectsManager.onProjectUpdated(projectDetailsToUpdate.id)
     }
 
 
@@ -110,15 +110,15 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
             console.log("data transfered to DB", newProject)
 
             projectsManager.newProject(newProject, newProject.id)
-            
+
 
             onCreatedProject && onCreatedProject({ ...newProject, id: newProjectDoc.id })
 
             console.log("project added to the list", projectsManager.list)
         } catch (error) {
             console.error("Error creating project in DB:", error);
-            
-            setMessagePopUpContent({ 
+
+            setMessagePopUpContent({
                 type: "error",
                 title: "Error Creating Project",
                 message: "There was a problem saving the project. Please try again later.",
@@ -174,7 +174,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                 userRole: formDataProject.get("userRole") as UserRole,
                 finishDate: finishProjectDate,
                 cost: formDataProject.get("cost") ? parseFloat(formDataProject.get("cost") as string) : 0,
-                todoList: []
+                //todoList: []
             }
             if (updateProject === null) {
                 //When the form is for a NEW PROJECT
@@ -191,21 +191,21 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                         title: `A project with the name "${projectDetails.name}" already exist`,
                         message: (
                             <React.Fragment>
-                                    <b>
-                                        <u>Overwrite:</u>
-                                    </b>{" "}
-                                    Replace the existing project with the new data.
-                                    <br />
-                                    <b>
-                                        <u>Skip:</u>
-                                    </b>{" "}
-                                    Do not create a new project.
-                                    <br />
-                                    <b>
-                                        <u>Rename:</u>
-                                    </b>{" "}
-                                    Enter a new name for the new project.
-                                
+                                <b>
+                                    <u>Overwrite:</u>
+                                </b>{" "}
+                                Replace the existing project with the new data.
+                                <br />
+                                <b>
+                                    <u>Skip:</u>
+                                </b>{" "}
+                                Do not create a new project.
+                                <br />
+                                <b>
+                                    <u>Rename:</u>
+                                </b>{" "}
+                                Enter a new name for the new project.
+
                             </React.Fragment>),
                         actions: ["Overwrite", "Skip", "Rename"],
                         onActionClick: {
@@ -252,7 +252,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
 
                                 setShowMessagePopUp(false)
-                                
+
 
                             },
 
@@ -273,7 +273,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                         console.error("Error creating project in DB:", error)
                         throw error
                     }
-                    
+
                     onCloseNewProjectForm(); // Close the form for new projects only after creation
                 }
 
@@ -306,7 +306,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                     const messageRowsCount = Object.keys(simplifiedChanges).length
                     // Calculate the desired message height
                     const messageHeight = `calc(${messageRowsCount} * 3.5rem + 5rem)`; // 3.5rem per row + 5rem for the title
-        
+
                     setMessagePopUpContent({
                         type: "info",
                         title: "Confirm Project Update",
@@ -314,17 +314,17 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                         messageHeight: messageHeight,
                         actions: ["Confirm update", "Cancel update"],
                         onActionClick: {
-                            "Confirm update": async () =>  {
+                            "Confirm update": async () => {
                                 try {
                                     await handleUpdateDataProjectInDB(projectDetailsToUpdate, simplifiedChanges)
                                     navigateTo("/")
-                                    
+
                                     setShowMessagePopUp(false)
-        
+
                                 } catch (error) {
                                     console.error("Error updating project in callback throw App till index.ts", error)
-                                    throw error                                    
-                                }  
+                                    throw error
+                                }
                             },
                             "Cancel update": () => {
                                 console.log("User  cancelled the update.")
@@ -336,7 +336,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                     setShowMessagePopUp(true)
                     e.preventDefault()
                     return
-        
+
                 } else {
                     setMessagePopUpContent({
                         type: "info",
@@ -362,7 +362,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                 // try {
                 //     await handleUpdateDataProjectInDB(projectDetailsToUpdate, simplifiedChanges)
                 //     navigateTo("/")
-                    
+
 
                 // } catch (error) {
                 //     console.error("Error updating project in callback throw App till index.ts", error);
@@ -378,7 +378,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
 
     React.useEffect(() => {
-        if (projectDetailsToRename && projectNameToConfirm) { 
+        if (projectDetailsToRename && projectNameToConfirm) {
             handleRenameConfirmation(projectNameToConfirm, projectDetailsToRename)
                 .then(() => {
                     setProjectDetailsToRename(null)

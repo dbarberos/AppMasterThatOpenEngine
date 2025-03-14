@@ -176,6 +176,63 @@ export async function deleteDocumentByID(path: string, id: string) {
     
 }
 
+export async function deleteProjectWithSubcollections(projectId: string): Promise<void> {
+    try {
+        // Get reference to project document        
+        //const projectRef = Firestore.doc(firestoreDB, `projects/${projectId}`);
+
+        // Get reference to todoList collection
+        const todoListRef = getCollection(`projects/${projectId}/todoList`)
+        // const todoListRef = Firestore.collection(
+        //     firestoreDB, 
+        //     `projects/${projectId}/todoList`
+        // );
+
+        // Get all todos
+        const todoSnapshot = await Firestore.getDocs(todoListRef);
+
+        // Delete each todo and its subcollections
+        const deleteTodoPromises = todoSnapshot.docs.map(async (todoDoc) => {
+            // Delete tags subcollection
+            const tagsRef = Firestore.collection(todoDoc.ref, 'tags');
+            const tagsSnapshot = await Firestore.getDocs(tagsRef);
+            await Promise.all(
+                tagsSnapshot.docs.map(tagDoc => Firestore.deleteDoc(tagDoc.ref))
+            );
+
+            // Delete assignedUsers subcollection
+            const usersRef = Firestore.collection(todoDoc.ref, 'assignedUsers');
+            const usersSnapshot = await Firestore.getDocs(usersRef);
+            await Promise.all(
+                usersSnapshot.docs.map(userDoc => Firestore.deleteDoc(userDoc.ref))
+            );
+
+            // Delete the todo document
+            return Firestore.deleteDoc(todoDoc.ref);
+        });
+
+        // Wait for all todos to be deleted
+        await Promise.all(deleteTodoPromises);
+
+        // Finally delete the project document
+        //await Firestore.deleteDoc(projectRef)
+        await deleteDocumentByID(`projects`, projectId);
+
+
+
+    } catch (error) {
+        console.error("Error deleting project and subcollections:", error);
+        throw new Error(`Failed to delete project: ${error.message}`);
+    }
+}
+
+
+
+
+
+
+
+
 
 //Get a document from Firebase knowing its name.
 export async function getDocumentIdByName(collectionPath: string, name: string): Promise<string | null> {
@@ -196,13 +253,13 @@ export async function getDocumentIdByName(collectionPath: string, name: string):
 export async function createDocument<T extends Record<string, any>>(path: string, data: T) {
     try {
         // Create a clean copy of the data without arrays that will become subcollections
-        const dataToSave = Object.entries(data).reduce((acc, [key, value]) => {
+        const dataToSave = Object.entries(data).reduce<Record<string,any>>((acc, [key, value]) => {
             // Skip arrays that will be subcollections
             if (key === 'todoList' || key === 'tags' || key === 'assignedUsers') {
                 return acc;
             }
 
-            // Handle special cases for dates
+            //Handle special cases for dates
             if (value instanceof Date) {
                 acc[key] = Firestore.Timestamp.fromDate(value);
             } else {
@@ -214,7 +271,7 @@ export async function createDocument<T extends Record<string, any>>(path: string
 
 
         const collectionRef = getCollection(path);
-        const docRef = { ...data, createdAt: Firestore.serverTimestamp() }
+        const docRef = { ...dataToSave, createdAt: Firestore.serverTimestamp() }
         const createdDoc = await Firestore.addDoc(collectionRef, docRef)
 
         console.log(`Document created at ${path} with ID:`, createdDoc.id);

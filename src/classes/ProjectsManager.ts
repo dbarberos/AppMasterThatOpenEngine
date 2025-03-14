@@ -693,7 +693,7 @@ export class ProjectsManager {
 
 
     //FOR UPDATING THE TODO LIST INSIDE DE PROHJECTS.MANAGER WHEN IT SHOULD BE UPDATED
-    updateProjectTodoList(projectId: string, todo: ToDoIssue) {
+    updateProjectToDoList(projectId: string, todo: ToDoIssue) {
         const project = this.list.find(p => p.id === projectId);
         if (project) {
             //Check if the todo already exists to avoid duplicate toDos
@@ -782,6 +782,15 @@ export class ProjectsManager {
                 if (key === "backgroundColorAcronym") {
                     continue;
                 }
+                // Avoid 'createdAt' property from the comparation
+                if (key === "createdAt") {
+                    continue;
+                }
+                // Avoid 'todoList' property from the comparation
+                if (key === "todoList") {
+                    continue;
+                }
+
     
                 const currentProjectValue = existingProject[key];
                 const valueToUpdate = updatedProject[key];

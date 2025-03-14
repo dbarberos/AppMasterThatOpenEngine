@@ -1,31 +1,12 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Firestore from 'firebase/firestore'
-
-
-export interface ITag {
-    title: string
-}
-export interface IToDoIssue {
-    title: string
-    description: string
-    statusColumn?: string
-    tags: (string | ITag)[]
-    assignedUsers: string[]
-    dueDate: Date | string | number | Firestore.Timestamp
-    todoProject: string
-    createdDate: Date | string | number | Firestore.Timestamp
-    todoUserOrigin: string
-    id?: string
-    backgroundColorColumn?: string
-}
-
-
+import { ITag, IToDoIssue, type StatusColumnKey } from '../Types'
 
 export class ToDoIssue implements IToDoIssue {
     title: string
     description: string
-    statusColumn: string
-    tags: string[]
+    statusColumn: StatusColumnKey
+    tags: ITag[]
     assignedUsers: string[]
     dueDate: Date
     todoProject: string
@@ -50,7 +31,8 @@ export class ToDoIssue implements IToDoIssue {
                     : new Date(data.createdDate)
             } else if (key === "statusColumn") {
                 this[key] = data.statusColumn || "notassigned"
-
+            } else if (key === "tags") {
+                this.tags = data.tags || []
             } else {
                 this[key] = data[key]
             }
@@ -67,9 +49,9 @@ export class ToDoIssue implements IToDoIssue {
         console.log(data);
     }
 
-    static calculateBackgroundColorColumn(statusColumn: string): string {
+    static calculateBackgroundColorColumn(statusColumn: StatusColumnKey): string {
         switch (statusColumn) {
-            case "backlog":
+            case 'backlog':
                 return "var(--color-backlog)";
             case "wip":
                 return "var(--color-wip)";
@@ -82,7 +64,7 @@ export class ToDoIssue implements IToDoIssue {
         }
     }
 
-    static getStatusColumnText(statusColumn: string): string {
+    static getStatusColumnText(statusColumn: StatusColumnKey): string {
         switch (statusColumn) {
             case "backlog":
                 return "Task Ready"

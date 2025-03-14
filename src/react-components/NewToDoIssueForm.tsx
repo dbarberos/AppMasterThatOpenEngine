@@ -1,14 +1,14 @@
 import * as React from 'react';
-import { createDocument, updateDocument, deleteDocument } from '../services/Firebase'
+import { createDocument, updateDocument, deleteDocument } from '../services/firebase'
 
 import { MessagePopUp, MessagePopUpProps, RenameElementMessage } from '../react-components';
 import { usePrepareToDoForm } from '../hooks';
 
 
 import { Project } from '../classes/Project';
-import { type IToDoIssue, type ITag, ToDoIssue } from '../classes/ToDoIssue';
+import {  ToDoIssue } from '../classes/ToDoIssue';
 import { getToDoIssueByTitle, newToDoIssue } from '../classes/ToDoManager';
-
+import { IToDoIssue, ITag, StatusColumnKey } from '../Types'
 
 interface NewToDoIssueFormProps {
     onClose: () => void;
@@ -19,7 +19,7 @@ interface NewToDoIssueFormProps {
 
 export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDoIssueFormProps) {
 
-    const [tags, setTags] = React.useState<string[]>([]); 
+    const [tags, setTags] = React.useState<ITag[]>([]); 
     const [assignedUsers, setAssignedUsers] = React.useState<string[]>([]);
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
@@ -99,17 +99,21 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
             console.log("data transfered to DB", newToDoIssueDoc)
 
 
+            // Create tags and get their Firebase IDs
+            const createdTags = await createTodoTags(todoPath, todoId, toDoIssueDetails.tags.map(t => t.title));
 
             // Create subcollections
             await Promise.all([
-                createTodoTags(todoPath, todoId, toDoIssueDetails.tags),
+                
+                //createTodoTags(todoPath, todoId, toDoIssueDetails.tags),
                 createTodoAssignedUsers(todoPath, todoId, toDoIssueDetails.assignedUsers)
             ]);
 
-            // Create ToDoIssue instance with the new ID
+            // Create ToDoIssue instance with the new ID and created tags
             const ToDoIssueCreated = new ToDoIssue({
                 ...toDoIssueDetails,
-                id: todoId
+                id: todoId,
+                tags: createdTags // Use the tags with Firebase IDs
             });
 
             /*
@@ -182,17 +186,39 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
     }
 
     async function createTodoTags(todoPath: string, todoId: string, tags: (string | ITag)[]) {
-        const tagsPath = `${todoPath}/${todoId}/tags`;
-        return Promise.all(
-            tags.map((tag, index) => {
-                const tagData = {
-                    id: `tag-${index}`,
-                    title: typeof tag === 'string' ? tag : tag.title,
-                    createdAt: new Date()
-                };
-                return createDocument(tagsPath, tagData);
-            })
-        );
+        try {
+            const tagsPath = `${todoPath}/${todoId}/tags`;
+            const createdTags = await Promise.all(
+                tags.map(async (tagTitle) => {
+                    const tagData = {
+                        title: tagTitle,
+                        createdAt: new Date()
+                    };
+                    const docRef = await createDocument(tagsPath, tagData);
+                    return {
+                        id: docRef.id, // Use Firebase-generated ID
+                        title: tagTitle,
+                        createdAt: new Date()
+                    };
+                })
+            );
+            return createdTags;
+        } catch (error) {
+            console.error("Error creating tags:", error);
+            throw error;
+        }
+
+            // const tagsPath = `${todoPath}/${todoId}/tags`;
+        // return Promise.all(
+        //     tags.map((tag, index) => {
+        //         const tagData = {
+        //             id: `tag-${index}`,
+        //             title: typeof tag === 'string' ? tag : tag.title,
+        //             createdAt: new Date()
+        //         };
+        //         return createDocument(tagsPath, tagData);
+        //     })
+        // );
     }
 
     async function createTodoAssignedUsers(todoPath: string, todoId: string, users: string[]) {
@@ -266,7 +292,7 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
             // Get the current Date as the Created Date
             const currentDate = new Date();
             //Get the value of the statusColumn and assign a default value if necessary.
-            const statusColumnValue = formToDoData.get("statusColumn") as string || "notassigned"
+            const statusColumnValue = formToDoData.get("statusColumn") as StatusColumnKey
 
 
             const toDoIssueDetails: IToDoIssue = {
@@ -316,6 +342,7 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                                 console.log("Overwrite button clicked!");
 
                                 //We will keep the logic of deleting a ToDo with an existing title and creating a new one inside newToDoIssue
+                                
                                 const originalDataToDoIssue = getToDoIssueByTitle(project.todoList, toDoIssueDetails.title)
 
                                 console.log("originalDataToDoIssue", originalDataToDoIssue);
@@ -403,7 +430,7 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
 
             newTags.forEach(tagText => {
                 // Check if the tag already exists in the status list
-                const tagExist = tags.some(tag => tag.toLowerCase() === tagText.toLowerCase());
+                const tagExist = tags.some(tag => tag.title.toLowerCase() === tagText.toLowerCase());
 
                 if (tagExist) {
                     // Tag already exists, show error message
@@ -422,11 +449,16 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                     setShowMessagePopUp(true)
                     e.preventDefault()
                     return
-
-                    
                 } else {
+                    // Update handleTagInput to create temporary IDs until Firebase creates the real ones
+                    // Create new tag with temporary ID
+                    const newTag: ITag = {
+                        id: `temp-${Date.now()}-${tagText}`,
+                        title: tagText,
+                        createdAt: new Date()
+                    };
                     // Tag is new, add it to the list
-                    setTags(prevTags => [...prevTags, tagText]);
+                    setTags(prevTags => [...prevTags, newTag]);
                     
                 }
             });
@@ -434,9 +466,9 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
         }
     }
 
-
-    const removeTag = (tagToRemove: string) => {
-        setTags(prevTags => prevTags.filter(tag => tag !== tagToRemove))
+    // Update removeTag to work with ITag objects
+    const removeTag = (tagToRemove: ITag) => {
+        setTags(prevTags => prevTags.filter(tag => tag.id !== tagToRemove.id))
     };
 
 
@@ -603,13 +635,13 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                                         className="todo-form-field-container"
                                         style={{}}
                                         >
-                                            {tags.map((tag, index) => (
-                                                <li key={index}
+                                            {tags.map((tag) => (
+                                                <li key={tag.id}
                                                     className="todo-tags"
                                                     onClick={() => removeTag(tag)}
                                                     style ={{cursor: "pointer" }}
                                                 >
-                                                    {tag}
+                                                    {tag.title}
                                                 </li>
                                             ))}
                                         </ul>

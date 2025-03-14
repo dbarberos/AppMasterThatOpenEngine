@@ -1,4 +1,5 @@
-import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
+import {  ToDoIssue } from "./ToDoIssue"
+import { IToDoIssue } from '../Types'
 import { showModal, closeModal, toggleModal, closeModalProject, changePageContent, showPageContent, hidePageContent } from "./UiManager"
 import { Project } from "./Project"
 import { ProjectsManager } from "./ProjectsManager";
@@ -884,7 +885,7 @@ export function getToDoIssueByTitle(toDoList: ToDoIssue[], title: string) {
     return toDoIssue
 }
 
-export function deleteToDoIssue(toDoList: IToDoIssue[], id: string) {
+export function deleteToDoIssue(toDoList: ToDoIssue[], id: string) {
 
     const toDoIssue = getToDoIssue(toDoList, id)
     if (!toDoIssue || !toDoIssue.ui) { return toDoList }

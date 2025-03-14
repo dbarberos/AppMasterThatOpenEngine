@@ -1,11 +1,12 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 
-import { ToDoCard, NewToDoIssueForm,} from '../react-components';
+import { ToDoCard, NewToDoIssueForm, ToDoDetailsWindow, toggleSidebar } from '../react-components';
 import { AddIcon, SearchIcon } from './icons';
 
-import { Project } from '../classes/Project';
-import { ToDoIssue, IToDoIssue } from '../classes/ToDoIssue';
+import { type Project } from '../classes/Project';
+import { ToDoIssue, type IToDoIssue } from '../classes/ToDoIssue';
+import { log } from 'three/examples/jsm/nodes/Nodes.js';
 //import { ProjectsManager } from '../classes/ProjectsManager';
 //import { ToDoManager } from '../classes/ToDoManager';
 //import { showModal } from '../classes/UiManager';
@@ -19,13 +20,15 @@ interface Props {
 }
 
 export function ProjectDetailsToDoList({ project, onUpdatedProject, onCreatedToDoIssue }: Props) {
-    console.log('ProjectDetailsToDoList rendering with todos:', project.todoList);
 
 
+    
     const [isNewToDoIssueFormOpen, setIsNewToDoIssueFormOpen] = React.useState(false)
     const [isTodoDetailsWindowOpen, setIsTodoDetailsWindowOpen] = React.useState(false)
+    const [selectedToDo, setSelectedToDo] = React.useState<ToDoIssue | null>(null);
+    const [initialSidebarState, setInitialSidebarState] = React.useState<boolean | null>(null);
 
-    const [todoList, setTodoList] = React.useState<IToDoIssue[]>(project.todoList)
+    //const [todoList, setTodoList] = React.useState<IToDoIssue[]>(project.todoList)
 
     //const [updateProject, setUpdateProject]= React.useState(project)
 
@@ -39,22 +42,13 @@ export function ProjectDetailsToDoList({ project, onUpdatedProject, onCreatedToD
     //     onUpdatedProject(updatedProject) // Pass the NEW project object to the parent
     // }
 
-
-
-    const handleCloseForm = () => {
+    const handleCloseNewToDoForm = () => {
         // Cierra el formulario
-        setIsNewToDoIssueFormOpen(false);
-        console.table(todoList);
-    };
-
+        setIsNewToDoIssueFormOpen(false)
+    }
 
     const onNewToDoIssueClick = () => {
         setIsNewToDoIssueFormOpen(true)
-
-    }
-
-    const handleClickOpenToDo = () => {
-        setIsTodoDetailsWindowOpen(true)
     }
 
     const handleCreatedToDoIssue = (createdNewToDoIssue: ToDoIssue) => {
@@ -62,40 +56,123 @@ export function ProjectDetailsToDoList({ project, onUpdatedProject, onCreatedToD
         setIsNewToDoIssueFormOpen(false);
     }
 
+    const handleClickOpenToDo = (toDoIssue) => {
+        try {
+            console.log('handleClickOpenToDo called with:', toDoIssue)
+            // Verify todo is valid
+            if (!toDoIssue || !toDoIssue.id) {
+                console.error('Invalid todo object:', toDoIssue);
+                return;
+            }
 
-    const toDoCardsList = project.todoList.map((toDoIssue) => {
-        console.log('Rendering ToDoCard with issue:', toDoIssue);
-        return (
-            <ToDoCard
-                key={toDoIssue.id}
-                toDoIssue={toDoIssue}
-                handleClickOpenToDoDetailsWindow={() => {
-                    console.log('ToDoCard clicked:', toDoIssue)
-                    handleClickOpenToDo
-                }} //This should open de window todo page not the new todo form
-            />
+            setSelectedToDo(toDoIssue)
+            setIsTodoDetailsWindowOpen(true)
+            console.log('States after update:', {
+                willOpenWindow: true,
+                selectedTodo: isNewToDoIssueFormOpen
+            });
+        } catch (error) {
+            console.error('Error in handleClickOpenToDo:', error);
+        }
+    }
+
+    const handleCloseToDoDetailsWindow = () => {
+        console.log('Closing ToDoDetailsWindow');
+        setIsTodoDetailsWindowOpen(false)
+        setSelectedToDo(null)
+    }
+
+    const handleDeleteToDoIssue = () => {
+        console.log("Delete ToDo Issue funtion launched for  todo:", selectedToDo!.id)
+
+    }
+
+
+    // ***ESTA FUNCION HAY QUE PASARLA AL TODOMANAGER  *** 
+
+    const handleUpdateToDoIssue = (updatedTodo: ToDoIssue) => {
+        if (!project.id) return;
+
+        const updatedTodoList = project.todoList.map(todo =>
+            todo.id === updatedTodo.id ? updatedTodo : todo
         );
-    });
+
+        const updatedProject = { ...project, todoList: updatedTodoList };
+        onUpdatedProject(updatedProject);
+    };
+
+
+    // Memorize the todo cards list to prevent unnecessary re-renders
+    const toDoCardsList = React.useMemo(() =>
+        project.todoList.map((todoItem) => {
+            // Ensure we have a ToDoIssue instance
+            const todoInstance = todoItem instanceof ToDoIssue
+                ? todoItem
+                : new ToDoIssue(todoItem);
+
+            return (
+                <ToDoCard
+                    key={todoInstance.id}
+                    toDoIssue={todoInstance}
+                    onClickOpenToDoDetailsWindow={ handleClickOpenToDo } 
+                />
+            )
+        }),
+        [project.todoList] // Only re-run if todoList changes
+    )
+
+
+    // Console.log wrapped in useEffect to avoid double logging
+    React.useEffect(() => {
+        console.log('ProjectDetailsToDoList - States:', {
+            isDetailsWindowOpen: isTodoDetailsWindowOpen,
+            selectedTodo: selectedToDo,
+            projectTodos: project.todoList
+        });
+    }, [isTodoDetailsWindowOpen, selectedToDo, project.todoList]);
+
+    // Store initial sidebar state when mounting ToDoDetailsWindow
+    React.useEffect(() => {
+        if (isTodoDetailsWindowOpen && initialSidebarState === null) {
+            const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+            setInitialSidebarState(sidebarCheckbox?.checked || false);
+            toggleSidebar.collapse();
+        }
+
+        // Cleanup restore initial state when unmounting
+        return () => {
+            if (!isTodoDetailsWindowOpen && initialSidebarState !== null) {
+                const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+                if (sidebarCheckbox) {
+                    sidebarCheckbox.checked = initialSidebarState;
+                }
+                setInitialSidebarState(null);
+            }
+        };
+    }, [isTodoDetailsWindowOpen, , initialSidebarState]);
+
+
 
     //Open the form for a new todo issue
     const newToDoIssueForm = isNewToDoIssueFormOpen ? (
         <NewToDoIssueForm
-            onClose={handleCloseForm}
+            onClose={handleCloseNewToDoForm}
             project={project}
             onCreatedNewToDo={handleCreatedToDoIssue} />
     ) : null;
 
-    //Open the detail page of an existing todo issue  **************** PENDIENTE DE TERMINAR ***************
-
-    const updateToDoDetailsForm = isTodoDetailsWindowOpen
-        ? (
+    //Open the detail page of an existing todo issue 
+    const updateToDoDetailsWindow = isTodoDetailsWindowOpen && selectedToDo
+        ? (            
             <ToDoDetailsWindow
-                onClose={handleCloseForm}
-                updateProject={project}
-                onCreatedProject={handleCreatedProject}
-                onUpdatedProject={handleUpdatedProject}
-                projectsManager={projectsManager} />
-        ) : null
+                project={project}
+                toDoIssue={selectedToDo}
+                onClose={handleCloseToDoDetailsWindow}
+                onUpdatedToDoIssue={handleUpdateToDoIssue}
+                onDeleteToDoIssueButtonClick={handleDeleteToDoIssue}
+                />
+        )
+        : null
 
 
 
@@ -234,6 +311,8 @@ export function ProjectDetailsToDoList({ project, onUpdatedProject, onCreatedToD
                 </div>
             </div>
             {newToDoIssueForm}
+            {updateToDoDetailsWindow}
+            {}
         </div>
 
 

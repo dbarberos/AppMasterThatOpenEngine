@@ -8,19 +8,26 @@ import { Project } from '../classes/Project';
 
 interface Props {   
     toDoIssue: ToDoIssue
-    handleClickOpenToDoDetailsWindow: () => void
-    
+    onClickOpenToDoDetailsWindow: (todoIssue: ToDoIssue) => void    
 }
-
 interface Tag {
     title: string
 }
 
-export function ToDoCard({ toDoIssue, handleClickOpenToDoDetailsWindow }: Props) {
-    console.log('ToDoCard rendering with:', toDoIssue);
+export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow }: Props) {
+    // Console.log wrapped in useEffect
+    React.useEffect(() => {
+        console.log('ToDoCard rendering with:', toDoIssue);
+    }, [toDoIssue]);
+    
 
-    // Convert Firebase timestamp to Date object    
+    const handleClickOverToDoCard = (e: React.MouseEvent) => {
+        e.preventDefault();
+        onClickOpenToDoDetailsWindow(toDoIssue);
+    }
 
+
+    // Convert Firebase timestamp to Date object
     const formatDueDate = (date: Date | string |number|undefined) => {
         if (!date) return 'No date set';
 
@@ -63,7 +70,7 @@ export function ToDoCard({ toDoIssue, handleClickOpenToDoDetailsWindow }: Props)
     return (
         <div
             className="todo-item"
-            onClick={handleClickOpenToDoDetailsWindow}
+            onClick={handleClickOverToDoCard}
         >
             <div
                 className="todo-color-column"

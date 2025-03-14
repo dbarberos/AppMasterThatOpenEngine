@@ -4,7 +4,7 @@ import { ProjectDetailsCard, ProjectDetailsToDoList, ThreeJSViewer } from '../re
 
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { type ToDoIssue } from '../classes/ToDoIssue';
-import { type Project } from '../classes/Project';
+import { Project } from '../classes/Project';
 
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -27,84 +27,107 @@ interface Props {
 
 export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProjectUpdate, onToDoIssueCreated }: Props) {
 
-    const routeParams = Router.useParams<{ id: string }>();
+    const  routeParams  = Router.useParams<{ id: string }>();
     console.log("I am the ID of the proyect selected", routeParams.id);
     const navigateTo = Router.useNavigate();
-    const [currentProject, setCurrentProject] = React.useState<Project | null>(null);
 
     const projectId = routeParams.id;
 
-    const project = projectId ? projectsManager.getProject(projectId): undefined;
+    // Retrieve project based on projectId as soon as possible.
+    const initialProject = projectId ? projectsManager.getProject(projectId) : null;
+
+    const [currentProject, setCurrentProject] = React.useState<Project | null>(initialProject!);
+
+    console.log("I am the ID of the proyect selected", routeParams.id);
+    console.log('ProjectDetailsPage rendering with project:', currentProject);
+
+    //const project = projectId ? projectsManager.getProject(projectId): undefined;
     
-    console.log('ProjectDetailsPage rendering with project:', project);
+    //console.log('ProjectDetailsPage rendering with project:', project);
 
     // Redirect if project is not found
     React.useEffect(() => {
-        if (!project) {
+        if (!projectId) {
             navigateTo('/'); // Redirect to home
         }
-    }, [])
+        if (projectId && !currentProject) {
+            navigateTo('/')
+        }
+        
+    }, [projectId, navigateTo, currentProject])
 
+
+    // Update current project if the route params change.
     React.useEffect(() => {
-        if (routeParams.id) {
-            const project = projectsManager.list.find(p => p.id === routeParams.id);
+        if (projectId) {
+            const project = projectsManager.getProject(projectId);
             if (project) {
-                setCurrentProject(project);
+                setCurrentProject(project)
+            } else {
+                navigateTo('/')
             }
         }
-    }, [routeParams, projectsManager])
+    }, [projectId, projectsManager, navigateTo])
 
 
-    const [projectState, setProjectState] = React.useState<Project | undefined>(project);
-    
-
-    React.useEffect(() => {
-        // Update projectState if project prop changes (e.g., after navigation)
-        setProjectState(project);
-    }, [project])
+    //const [projectState, setProjectState] = React.useState<Project | undefined>(project);
+ 
 
 
     // If project is found, render the details
-    if (!project) {
-        return null
-    }
+    // if (!project) {
+    //     return null
+    // }
 
 
 
     const handleCreatedProject = (createdProject: Project) => {
         //Update the parent project object to trigger the rerender.
-        setProjectState(createdProject)
+        setCurrentProject(createdProject)
         onProjectCreate(createdProject)
     }
 
     const handleUpdatedProject = (updatedProject: Project) => {
         //Update the parent project object to trigger the rerender.
-        setProjectState(updatedProject)
+        setCurrentProject(updatedProject)
         onProjectUpdate(updatedProject)
     }
+
+    
 
     const handleToDoCreated = (newTodo: ToDoIssue) => {
         if (!currentProject) return
 
-        // Find current project
-        const project = projectsManager.list.find(p => p.id === currentProject?.id);
-        if (project) {
-            // Check if todo already exists
-            const existingTodoIndex = project.todoList.findIndex(
-                todo => todo.id === newTodo.id
-            )
-            
-            if (existingTodoIndex === -1) {
-                // Only add if it doesn't exist
-                project.todoList.push(newTodo)
-                // Update current project state
-                setCurrentProject({ ...project })
-            }
-            // Notify parent for state update
-            onToDoIssueCreated(newTodo)
-            
+        // Find current project in the list by ID
+        const projectIndex = projectsManager.list.findIndex(p => p.id === currentProject?.id);
+        if (projectIndex === -1) {
+            console.error(`Project with ID ${currentProject.id} not found in the manager.`);
+            return;
         }
+        //Create a new list with the updated project
+        const updatedProject = new Project({
+            ...currentProject
+        })
+
+        // Then set the todoList property
+        updatedProject.todoList = [...currentProject.todoList, newTodo]; // Add the new ToDo
+        
+
+        // Update the state of the current project
+        setCurrentProject(updatedProject);
+        // Update the project in the manager list
+        projectsManager.updateReactProjects(updatedProject)
+        
+        // Notify parent for state update
+        onToDoIssueCreated(newTodo) 
+        
     }
+
+    // If project is not found (after checking), return null.
+    if (!currentProject) {
+        return null;
+    }
+    
     
 
 
@@ -158,16 +181,16 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                 </div>
                 </div>
                 <div>
-                    <h2 data-project-info="name">{project.name}</h2>
+                    <h2 data-project-info="name">{currentProject.name}</h2>
                 {/* <p style="color: var(--color-grey)"> Community hospital location city</p> */}
                 </div>
             </header>
             <div className="main-page-content">
                 <div style={{ display: "flex", flexDirection: "column", rowGap: 40 }}>
-                    <ProjectDetailsCard project={project} onCreatedProject={handleCreatedProject} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager}/>
-                    <ProjectDetailsToDoList project={projectState as Project} onUpdatedProject={handleUpdatedProject} onCreatedToDoIssue={handleToDoCreated} />
+                    <ProjectDetailsCard project={currentProject} onCreatedProject={handleCreatedProject} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager}/>
+                    <ProjectDetailsToDoList project={currentProject as Project} onUpdatedProject={handleUpdatedProject} onCreatedToDoIssue={handleToDoCreated} />
                 </div>
-                <ThreeJSViewer />                
+                <ThreeJSViewer />
             </div>
             </section>
         </ErrorBoundary>

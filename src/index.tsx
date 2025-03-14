@@ -43,7 +43,7 @@ const App = () => {
     };
 
     const handleToDoIssueCreated = (todoIssueCreated) => {
-        projectsManager.updateProyectToDoList (updatedToDoIssue.id, updatedToDoIssue)
+        projectsManager.updateProjectToDoList(todoIssueCreated.id, todoIssueCreated)
         setProjects([...projectsManager.list]);
     }
 
