@@ -2,47 +2,46 @@ import * as React from 'react'
 
 import {EditIcon, ReportIcon, SaveIcon } from './icons'
 import { ToDoIssue } from '../classes/ToDoIssue'
-import {updateToDoIssueField } from '../services/firebase'
 import { ToDoFieldText } from './ToDoFieldText'
 import { ToDoFieldTextArea } from './ToDoFieldTextArea'
 import { ToDoFieldSelect } from './ToDoFieldSelect'
-import { ToDoFieldArray } from './ToDoFieldArray'
-import { StatusColumnKey } from '../Types'
+import { ToDoFieldArray, IToDoFieldArrayRef } from './ToDoFieldArray'
+import { IAssignedUsers, ITag, StatusColumnKey } from '../Types'
+import { ToDoFieldDate } from './ToDoFieldDate'
 
 
 
-interface Props {
-    //label: string   
-    //icon?: string
+interface Props {    
     fieldName: keyof ToDoIssue
-    value: string | Date | string[]
-    onSave: ( typeField, newValueDataField ) => void
+    value: string | Date | ITag[] | IAssignedUsers[];
     type: 'text' | 'textarea' | 'array' | 'date' | 'select'
+    onSave: ( fieldDataName: string, newValueDataField: any ) => void
+    style?: React.CSSProperties
     options?: string[]
-    style?: React.CSSProperties    
-    onEditStart?: () => void;
-    onEditEnd?: () => void;    
+    onEditStart?: () => void
+    onEditEnd?: () => void
 }
 
-export function ToDoEditableField({
-    //label,
-    //icon,
+export function ToDoEditableField({    
     fieldName,
-    value,
+    value: initialValue,
     onSave,
     type = 'text',
     options = [],
-    style = {},    
+    style = {},
     onEditStart,
-    onEditEnd,    
+    onEditEnd,
     ...props
 }: Props) {
 
-    const [isEditing, setIsEditing] = React.useState(false)
-    const inputRef = React.useRef<HTMLInputElement>(null)
-    const textAreaRef = React.useRef<HTMLTextAreaElement>(null)
-    const selectRef = React.useRef<HTMLSelectElement>(null)
-    const arrayRef = React.useRef<HTMLDivElement>(null)
+    const [isEditing, setIsEditing] = React.useState(false)    
+    
+    // Referencias para los componentes hijos
+    const textRef = React.useRef<{ handleSave: () => void }>(null);
+    const textAreaRef = React.useRef<{ handleSave: () => void }>(null);
+    const selectRef = React.useRef<{ handleSave: () => void }>(null);
+    const dateRef = React.useRef<{ handleSave: () => void }>(null);
+    const arrayRef = React.useRef<{ handleSave: () => void }>(null);
 
 
 
@@ -50,29 +49,50 @@ export function ToDoEditableField({
     React.useEffect(() => {
         if (isEditing ) {
             onEditStart?.();
-        } else if (!isEditing)  {
+        } else {
             onEditEnd?.();
         }
-    }, [isEditing]);
+    }, [isEditing, onEditStart, onEditEnd]);
 
 
     const handleEditClikBtn = () => {
-        setIsEditing(true);
-        setTimeout(() => inputRef.current?.focus(), 0);
+        setIsEditing(true)
     };
 
-    const handleSaveClickBtn = () => {
-        // Get current input value directly from the field component
-        const currentValue = inputRef.current?.value;
-        if (currentValue !== undefined && currentValue !== value) {
-            onSave(fieldName, currentValue);
+    const handleSaveClickBtn = (newValue:any) => {
+        try {
+            // Determine which component is active and call its handleSave
+            switch (type) {
+                case 'text':
+                    textRef.current?.handleSave();
+                    break;
+                case 'textarea':
+                    textAreaRef.current?.handleSave();
+                    break;
+                case 'select':
+                    selectRef.current?.handleSave();
+                    break;
+                case 'date':
+                    dateRef.current?.handleSave();
+                    break;
+                case 'array':
+                    arrayRef.current?.handleSave();
+                    break;
+            }
+        } catch (error) {
+            console.error('Error in field update:', error);
         }
-        setIsEditing(false);
-        
-    };
+    }
+    
 
     const handleCancelClickBtn = () => {
-        setIsEditing(false)
+        try {            
+            setIsEditing(false)
+            onEditEnd?.()
+        
+        } catch (error) {
+            console.error('Error handling cancel:', error);
+        }
     }
 
 
@@ -80,48 +100,64 @@ export function ToDoEditableField({
     function renderInput() {
 
         switch (type) {
+            case 'text':
+                return (
+                    <ToDoFieldText
+                        ref={textRef}
+                        value={initialValue as string}
+                        isEditing={isEditing}
+                        setIsEditing={setIsEditing}
+                        onSave={(newValue) => onSave(fieldName, newValue)}
+                        onCancel={handleCancelClickBtn}
+                        placeholder={`Enter ${fieldName}...`}
+                    />
+                )
             case 'textarea':
                 return (
                     <ToDoFieldTextArea
-                        value={value as string}
+                        ref={textAreaRef}
+                        value={initialValue as string}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
-                        onChange={(newValue) => onSave(fieldName, newValue)}
+                        onSave={(newValue) => onSave(fieldName, newValue)}
+                        onCancel={handleCancelClickBtn}
                         placeholder={`Leave a comment. Enter ${fieldName}...`}
-                        textAreaRef={textAreaRef} />
+                    />
                 )
             case 'select':
                 return (
                     <ToDoFieldSelect
-                        value={value as StatusColumnKey}
+                        ref={selectRef}
+                        value={initialValue as StatusColumnKey}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
                         onChange={(newValue) => onSave(fieldName, newValue)}
                         options={['backlog', 'wip', 'qa', 'completed']}
-                        selectRef={selectRef} />
+                    />
                 )
-            case 'array':                
+            case 'array':
                 return (
                     <ToDoFieldArray
+                        ref={arrayRef}
                         fieldName={fieldName as 'tags' | 'assignedUsers'}
-                        value={value as string[]}
+                        value={initialValue as ITag[] | IAssignedUsers[]}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
-                        onChange={(newValue) => onSave(fieldName, newValue)}
-                        placeholder={`Add ${fieldName === 'tags' ? 'a tag' : 'a user'}...`}
-                        arrayRef={inputRef} />
+                        onSave={(newValue) => onSave(fieldName, newValue)}
+                        onCancel={handleCancelClickBtn}
+                        placeholder={`Add ${fieldName === 'tags' ? 'a tag' : 'a user'}..`}
+                    />
                 )
             case 'date':
-                return <ToDoFieldDate value={fieldValue} onChange={setFieldValue} inputRef={inputRef} />;
-            case 'text':
                 return (
-                    <ToDoFieldText
-                        value={value as string}
+                    <ToDoFieldDate
+                        ref={dateRef}
+                        fieldName={fieldName}
+                        value={initialValue as Date}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
-                        onChange={(newValue) => onSave(fieldName, newValue)}
-                        placeholder={`Enter ${fieldName}...`}
-                        inputRef={inputRef} />
+                        onSave={(newValue) => onSave(fieldName, newValue)}
+                        onCancel={handleCancelClickBtn} />
                 )
             default:
                 return null
@@ -130,13 +166,12 @@ export function ToDoEditableField({
 
 
 
-    const combinedStyle: React.CSSProperties = { 
-        display:"flex",
+    const combinedStyle: React.CSSProperties = {
+        display: "flex",
         flexDirection: "row",
         alignItems: "flex-start",
         justifyContent: "flex-start",
-        
-        ...style 
+        ...style
     }
 
 
@@ -145,16 +180,6 @@ export function ToDoEditableField({
             style={combinedStyle}
             data-todo-info-btn={fieldName}
         >
-            {/* Field Header */}
-            {/* {icon && (
-                <div className="todo-detail-datafiled-title">
-                    <label>
-                        <span className="material-icons-round">{icon}</span>
-                    </label>
-                    <h3>{label}</h3>
-                </div>
-            )} */}
-
             {/* Edit/Save Button */}
             {isEditing
                 ? (
@@ -165,7 +190,7 @@ export function ToDoEditableField({
                             columnGap: 5,
                             justifyContent: "flex-start",
                             alignItems: "center",
-                            
+                        
                         }}
                     >
                         <button
@@ -177,7 +202,7 @@ export function ToDoEditableField({
                                 aspectRatio: 1,
                                 padding: 0,
                                 justifyContent: "center",
-                                
+                            
                             }}
                             data-todo-info-btn={fieldName}
                         >
@@ -192,36 +217,35 @@ export function ToDoEditableField({
                                 aspectRatio: 1,
                                 padding: 0,
                                 justifyContent: "center",
-                                
+                            
                             }}
                             data-todo-info-btn={fieldName}
                         >
                             <ReportIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
                         </button>
                     </div>
-                    )
-            : (
-                <button
-                    className={`todo-icon-edit ${isEditing ? 'svg-save' : 'svg-edit'}`}
+                )
+                : (
+                    <button
+                        className={`todo-icon-edit ${isEditing ? 'svg-save' : 'svg-edit'}`}
                         onClick={handleEditClikBtn}
-                    style={{
-                        display: "flex",
-                        borderRadius: "var(--br-circle)",
-                        aspectRatio: 1,
-                        padding: 0,
-                        justifyContent: "center",
-                        position: "absolute"
-                    }}
-                    data-todo-info-btn={fieldName}
-                >
-                
-                    <EditIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
-                </button>
-            )}
+                        style={{
+                            display: "flex",
+                            borderRadius: "var(--br-circle)",
+                            aspectRatio: 1,
+                            padding: 0,
+                            justifyContent: "center",
+                            position: "absolute"
+                        }}
+                        data-todo-info-btn={fieldName}
+                    >
+            
+                        <EditIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
+                    </button>
+                )
+            }
             {/* Dynamic Input Field */}
             {renderInput()}
         </div>
-    )
-
+    )    
 }
-

@@ -15,7 +15,9 @@ export class ProjectsManager {
     //ui: HTMLElement
     onProjectCreated = (project: Project) => { }
     onProjectDeleted = (id: string) => { }
-    onProjectUpdated = (id:string) => { }
+    onProjectUpdated = (id: string) => { }
+    //onToDoUpdated = (projectId: string, todoId: string) => { }
+    
 
 
     //defaultProjectCreated: boolean = false
@@ -719,7 +721,8 @@ export class ProjectsManager {
             const todoIndex = project.todoList.findIndex(t => t.id === todoId);
             if (todoIndex !== -1) {
                 project.todoList[todoIndex] = updatedTodo;
-                this.onProjectUpdated(projectId);
+                this.onProjectUpdated(projectId)
+                //this.onToDoUpdated(projectId, todoId);
             }
         }
     }

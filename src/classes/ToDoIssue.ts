@@ -1,13 +1,13 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Firestore from 'firebase/firestore'
-import { ITag, IToDoIssue, type StatusColumnKey } from '../Types'
+import { IAssignedUsers, ITag, IToDoIssue, type StatusColumnKey } from '../Types'
 
 export class ToDoIssue implements IToDoIssue {
     title: string
     description: string
     statusColumn: StatusColumnKey
     tags: ITag[]
-    assignedUsers: string[]
+    assignedUsers: IAssignedUsers[]
     dueDate: Date
     todoProject: string
     createdDate: Date
@@ -33,6 +33,8 @@ export class ToDoIssue implements IToDoIssue {
                 this[key] = data.statusColumn || "notassigned"
             } else if (key === "tags") {
                 this.tags = data.tags || []
+            } else if (key === "assignedUsers") {
+                this.assignedUsers = data.assignedUsers || []
             } else {
                 this[key] = data[key]
             }

@@ -15,7 +15,13 @@ export interface IStatusColumn {
 export interface ITag {
     id: string
     title: string
-    createdAt: Date | string | number | Firestore.Timestamp    
+    createdAt: Date | string | number | Firestore.Timestamp
+}
+
+export interface IAssignedUsers {
+    id: string
+    name: string
+    createdAt: Date | string | number | Firestore.Timestamp
 }
 
 
@@ -24,7 +30,7 @@ export interface IToDoIssue {
     description: string
     statusColumn?: StatusColumnKey
     tags: ITag[]
-    assignedUsers: string[]
+    assignedUsers: IAssignedUsers[]
     dueDate: Date | string | number | Firestore.Timestamp
     todoProject: string
     createdDate: Date | string | number | Firestore.Timestamp

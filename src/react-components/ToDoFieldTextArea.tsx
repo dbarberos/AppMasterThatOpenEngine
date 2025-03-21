@@ -4,30 +4,53 @@ interface ToDoFieldTextAreaProps {
     value: string;
     isEditing: boolean;
     setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
-    onChange: (value: string) => void;
+    onSave?: (value: string) => void;
+    onCancel?: () => void;
     placeholder?: string;
     textAreaRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
-export function ToDoFieldTextArea({
+export const ToDoFieldTextArea = React.forwardRef <
+    { handleSave: () => void }, ToDoFieldTextAreaProps>
+(({
     value,
     isEditing,
     setIsEditing,
-    onChange,
+    onSave,
+    onCancel,
     placeholder,
     textAreaRef
-}: ToDoFieldTextAreaProps) {
+},ref) => {
 
-    const [inputValue, setInputValue] = React.useState(value);
-
+    //const [inputValue, setInputValue] = React.useState(value);
+    const defaultTextAreaRef = React.useRef<HTMLTextAreaElement>(null)
+    const actualTextAreaRef = textAreaRef || defaultTextAreaRef
     const [rowsHeight, setRowsHeight] = React.useState(28)
 
+    const handleSave = () => {
+        try {
+            const currentValue = actualTextAreaRef.current?.value.trim();
+            if (currentValue && currentValue !== value) {
+                onSave?.(currentValue);
+            }
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Error saving text area:', error);
+        }
+    }
 
-    React.useEffect(() => {
-        setInputValue(value);
-    }, [isEditing,value])
+    // Expose handleSave through ref
+    React.useImperativeHandle(ref, () => ({
+        handleSave
+    }))
 
 
+    // React.useEffect(() => {
+    //     setInputValue(value);
+    // }, [isEditing,value])
+
+
+    // Handle text area size updates
     React.useEffect(() => {
         const updateTextAreaSize = () => {
             const parentElement = document.querySelector('.father-todoissue-textarea')
@@ -37,27 +60,49 @@ export function ToDoFieldTextArea({
             }
         }
         if (isEditing) {
-            setTimeout(updateTextAreaSize, 0);
-            window.addEventListener('resize', updateTextAreaSize);
+            setTimeout(updateTextAreaSize, 5)
+            window.addEventListener('resize', updateTextAreaSize)
         }
         return () => {
-            window.removeEventListener('resize', updateTextAreaSize);
-        };
-    }, [isEditing, textAreaRef, inputValue]);
+            window.removeEventListener('resize', updateTextAreaSize)
+        }
+    }, [isEditing, textAreaRef])
 
 
     React.useEffect(() => {
-        if (isEditing && textAreaRef?.current) {
-            textAreaRef.current.focus();
+        if (actualTextAreaRef?.current) {
+            if (isEditing) {
+                actualTextAreaRef.current.focus()
+            }
+            // Set initial value when entering edit mode
+            actualTextAreaRef.current.value = value;
         }
-    }, [isEditing]);
+    }, [isEditing, value])
 
+
+
+
+    const handleCancel = () => {
+        if (actualTextAreaRef.current) {
+            actualTextAreaRef.current.value = value;
+        }
+        setIsEditing(false);
+        onCancel?.();
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Escape') {
+            handleCancel();
+        }
+    }
 
 
     const handleBlur = () => {
-        onChange(value)
-        setIsEditing(false)
-        setInputValue(value)
+        // Only reset value on blur, don't trigger save
+        if (actualTextAreaRef.current) {
+            actualTextAreaRef.current.value = value;
+        }
+        setIsEditing(false);
     }
 
 
@@ -108,9 +153,9 @@ export function ToDoFieldTextArea({
                     className="father-todoissue-textarea"
                 >
                     <textarea
-                        ref={textAreaRef}
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
+                        ref={actualTextAreaRef}
+                        defaultValue={value}
+                        onKeyPress={handleKeyPress}
                         onBlur={handleBlur}
                         data-todo-info-origin="description"
                         name="description"
@@ -136,4 +181,8 @@ export function ToDoFieldTextArea({
             </fieldset>
         </div>
     );
-}
+})
+
+
+// Add display name for debugging
+ToDoFieldTextArea.displayName = 'ToDoFieldTextArea';

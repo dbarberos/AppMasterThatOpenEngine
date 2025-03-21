@@ -22,10 +22,11 @@ interface Props {
     onProjectCreate: (updatedProject: Project) => void
     onProjectUpdate: (updatedProject: Project) => void
     onToDoIssueCreated: (createdToDoIssue: ToDoIssue) => void
+    onToDoIssueUpdated: (updatedToDoIssue: ToDoIssue) => void
 }
 
 
-export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProjectUpdate, onToDoIssueCreated }: Props) {
+export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProjectUpdate, onToDoIssueCreated, onToDoIssueUpdated }: Props) {
 
     const  routeParams  = Router.useParams<{ id: string }>();
     console.log("I am the ID of the proyect selected", routeParams.id);
@@ -123,6 +124,14 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
         
     }
 
+
+    const handleUpdatedToDo = (updatedTodo: ToDoIssue) => {
+        // Update the ToDoIssue in the todoList inside the project inside the manager list
+        projectsManager.updateToDoIssue(updatedTodo.todoProject, updatedTodo.id ,updatedTodo)
+        onToDoIssueUpdated(updatedTodo)
+    }
+
+
     // If project is not found (after checking), return null.
     if (!currentProject) {
         return null;
@@ -187,8 +196,18 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
             </header>
             <div className="main-page-content">
                 <div style={{ display: "flex", flexDirection: "column", rowGap: 40 }}>
-                    <ProjectDetailsCard project={currentProject} onCreatedProject={handleCreatedProject} onUpdatedProject={handleUpdatedProject} projectsManager={projectsManager}/>
-                    <ProjectDetailsToDoList project={currentProject as Project} onUpdatedProject={handleUpdatedProject} onCreatedToDoIssue={handleToDoCreated} />
+                        <ProjectDetailsCard
+                            project={currentProject}
+                            onCreatedProject={handleCreatedProject}
+                            onUpdatedProject={handleUpdatedProject}
+                            projectsManager={projectsManager}
+                        />
+                        <ProjectDetailsToDoList
+                            project={currentProject as Project}
+                            onUpdatedProject={handleUpdatedProject}
+                            onCreatedToDoIssue={handleToDoCreated}
+                            onUpdatedToDoIssue={handleUpdatedToDo}
+                        />
                 </div>
                 <ThreeJSViewer />
             </div>

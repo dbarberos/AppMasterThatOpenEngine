@@ -54,6 +54,24 @@ export function newToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue, id?: stri
 
 
 
+export function updateToDoIssue(toDoList: ToDoIssue[], toDoIssueId: string, dataToUpdate: ToDoIssue) {
+    const toDoIssueIndex = toDoList.findIndex(p => p.id === toDoIssueId)
+    if (toDoIssueIndex !== -1) {
+        //Preserve the original ID
+        dataToUpdate.id = toDoList[toDoIssueIndex].id
+        // Update the Project Data in the Array.
+        toDoList[toDoIssueIndex] = {
+            ...toDoList[toDoIssueIndex], // Keep existing properties
+            ...dataToUpdate // Update with new values
+        }
+        setDetailsIssuePage(toDoList[toDoIssueIndex])
+        return toDoList[toDoIssueIndex]
+    } else {
+        console.error("Issue not found in the list!")
+        return false
+    }
+}
+
 /* OLD newToDoIssue
 export function CreatenewToDoIssue(toDoList: IToDoIssue[], data: IToDoIssue onUpdateToDoList: (newToDoList: IToDoIssue[]) => void) {
     // Check if the issue already exists
@@ -607,7 +625,6 @@ export function setDetailsIssuePage(toDoIssue: ToDoIssue) {
 
 
 
-
 export function renderToDoIssueListInsideProject(toDoIssue: IToDoIssue) {
     console.log('Rendering ToDo Issue:', toDoIssue);
         
@@ -668,32 +685,11 @@ export function renderToDoIssueListInsideProject(toDoIssue: IToDoIssue) {
         setDetailsIssuePage(toDoIssue) //for the new windows (todo-detalis)where the data of the todo issue is shown. From that place is where you can edit the content of the todoIssue
         console.log("Details page set in a new window")
 
-    }) 
-    
-
+    })
 }
 
 
-
-
-export function updateToDoIssue(toDoList: ToDoIssue[], toDoIssueId: string, dataToUpdate: ToDoIssue) { 
-    const toDoIssueIndex = toDoList.findIndex(p => p.id === toDoIssueId)
-    if (toDoIssueIndex !== -1) {
-        //Preserve the original ID
-        dataToUpdate.id = toDoList[toDoIssueIndex].id
-        // Update the Project Data in the Array.
-        toDoList[toDoIssueIndex] = {
-            ...toDoList[toDoIssueIndex], // Keep existing properties
-            ...dataToUpdate // Update with new values
-        }
-        setDetailsIssuePage(toDoList[toDoIssueIndex])
-        return toDoList[toDoIssueIndex]
-    } else {
-        console.error("Issue not found in the list!")
-        return false
-    }
-}
-
+/*  OLD updateToDoIssueUi
 export function updateToDoIssueUi(toDoIssueToUpdateTheUi: ToDoIssue): HTMLDivElement {
     // Update the UI.
     // Ensure toDoIssueToUpdate.ui is defined
@@ -754,6 +750,7 @@ export function updateToDoIssueUi(toDoIssueToUpdateTheUi: ToDoIssue): HTMLDivEle
         throw new Error("Project UI element not found for update!")
     }
 }
+*/
 
 export function populateToDoIssueDetailsForm(toDoIssue: ToDoIssue) {
     // Get the form elements
@@ -839,6 +836,8 @@ export function getChangedToDoIssueDataForUpdate(toDoIssueOrigin: ToDoIssue, toD
     return changedFields
 }
 
+
+
 export function renderToDoIssueList(toDoList: IToDoIssue[]): void {
 
     console.log("Inside render function List of to-dos´:", toDoList)
@@ -876,6 +875,8 @@ export function getToDoIssue(toDoList: ToDoIssue[], id: string) {
     })
     return toDoIssue
 }
+
+
 
 // *** USED INSIDE NewToDoIssueForm ***
 export function getToDoIssueByTitle(toDoList: ToDoIssue[], title: string) {
@@ -1082,7 +1083,7 @@ editButtons.forEach(button => {
     
 })
 
-
+/* OLD handleEditToDoIssueBtnClick
 
 //Function for managing data when edit-todo-field button is clicked
 function handleEditToDoIssueBtnClick(e) {
@@ -1393,7 +1394,7 @@ function handleEditToDoIssueBtnClick(e) {
     }
 }
 
-
+*/
 
 // Function to parse a text string and extract the month component
 function getMonthFromString(monthString) {
@@ -1410,7 +1411,7 @@ function getMonthFromString(monthString) {
 }
 
 
-
+handleSaveToDoIssueBtnClick
 // Function for managing data when save-todo-field button is clicked
 function handleSaveToDoIssueBtnClick(parentElement?, inputField?, dataKey?, originalElement?) {
 

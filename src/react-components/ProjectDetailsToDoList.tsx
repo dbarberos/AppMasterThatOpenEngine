@@ -17,11 +17,15 @@ interface Props {
     project: Project
     onUpdatedProject: (updatedProject: Project) => void
     onCreatedToDoIssue: (createdNewToDoIssue: ToDoIssue) => void
+    onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
 }
 
-export function ProjectDetailsToDoList({ project, onUpdatedProject, onCreatedToDoIssue }: Props) {
-
-
+export function ProjectDetailsToDoList({
+    project,
+    onUpdatedProject,
+    onCreatedToDoIssue,
+    onUpdatedToDoIssue
+}: Props) {
     
     const [isNewToDoIssueFormOpen, setIsNewToDoIssueFormOpen] = React.useState(false)
     const [isTodoDetailsWindowOpen, setIsTodoDetailsWindowOpen] = React.useState(false)
@@ -91,14 +95,27 @@ export function ProjectDetailsToDoList({ project, onUpdatedProject, onCreatedToD
     // ***ESTA FUNCION HAY QUE PASARLA AL TODOMANAGER  *** 
 
     const handleUpdateToDoIssue = (updatedTodo: ToDoIssue) => {
-        if (!project.id) return;
+        //Update the parent todo object to trigger the rerender.
 
-        const updatedTodoList = project.todoList.map(todo =>
-            todo.id === updatedTodo.id ? updatedTodo : todo
-        );
 
-        const updatedProject = { ...project, todoList: updatedTodoList };
-        onUpdatedProject(updatedProject);
+
+
+
+
+
+
+        onUpdatedToDoIssue(updatedTodo)
+        // try {
+            
+        // }
+        // if (!project.id) return;
+
+        // const updatedTodoList = project.todoList.map(todo =>
+        //     todo.id === updatedTodo.id ? updatedTodo : todo
+        // );
+
+        // const updatedProject = { ...project, todoList: updatedTodoList };
+        // onUpdatedProject(updatedProject);
     };
 
 

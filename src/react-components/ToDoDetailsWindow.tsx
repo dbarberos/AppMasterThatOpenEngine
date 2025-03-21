@@ -1,12 +1,12 @@
 import React from 'react'
 
+import { MessagePopUp, MessagePopUpProps } from '../react-components';
 import { type Project } from '../classes/Project';
-import { type ToDoIssue } from '../classes/ToDoIssue';
+import { ToDoIssue } from '../classes/ToDoIssue';
 
 import { EditIcon, Report2Icon, ReportIcon, TrashIcon } from './icons';
 import { ToDoEditableField } from './ToDoEditableField';
-
-
+import { updateDocument, UpdateDocumentOptions } from '../services/firebase';
 
 
 interface ToDoDetailsWindowProps {
@@ -18,37 +18,112 @@ interface ToDoDetailsWindowProps {
 }
 
 
-
-
 export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIssue, onDeleteToDoIssueButtonClick }) {
 
     const [editingField, setEditingField] = React.useState<string | null>(null);
+    const [previousValue, setPreviousValue] = React.useState<ToDoIssue>(toDoIssue);
+
+    const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
+    const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
+
+        
 
     // Handler to check if specific field is being edited
     const isFieldEditing = (fieldName: string) => editingField === fieldName;
 
 
-    // const handleSave = async () => {
-    //     try {
-    //         // Create updated todo instance
-    //         const updatedTodo = {
-    //             ...toDoIssue,
-    //             [fieldName]: fieldValue
-    //         };
 
-    //         // Update Firebase
-    //         await updateToDoIssueField(toDoIssue.id!, fieldName, fieldValue);
+    const handleToDoFieldSave = async (fieldName: string, newValue: any) => {
+        try {
+            // Store current state for potential rollback
+            setPreviousValue(toDoIssue);
 
-    //         // Notify parent
-    //         onUpdate(updatedTodo);
-    //         setIsEditing(false);
-    //     } catch (error) {
-    //         console.error(`Error updating ${fieldName}:`, error);
-    //     }
-    // };
+            // Create updated todo
+            const updatedTodo = new ToDoIssue({
+                ...toDoIssue,
+                [fieldName]: newValue
+            });
 
 
+            // Prepare data for updateDocument
+            let updateData: any;
+            let options: UpdateDocumentOptions;
 
+            if (fieldName === 'tags' || fieldName === 'assignedUsers') {
+                // Subcollection replacement
+                updateData = newValue; // The array of tags or assigned users
+                options = {
+                    basePath: 'projects',
+                    subcollection: fieldName, // 'tags' or 'assignedUsers'
+                    parentId: project.id,
+                    todoId: toDoIssue.id,
+                    isArrayCollection: true
+                };
+            } else {
+                // Single field update
+                updateData = { [fieldName]: newValue };
+                options = {
+                    basePath: 'projects',
+                    subcollection: 'todoList',
+                    parentId: project.id,
+                    todoId: toDoIssue.id,
+                    isArrayCollection: false
+                };
+            }
+
+            // La función updateDocument ya maneja internamente:
+            // - Timeouts
+            // - Reintentos
+            // - Errores de conexión
+            // - Backoff exponencial
+
+            // Update Firebase first
+            await updateDocument(
+                toDoIssue.id,
+                updateData,
+                options
+            );
+
+            // If Firebase update succeeds, notify parent
+            onUpdatedToDoIssue(updatedTodo);
+            //setError(null);
+
+        } catch (error) {
+            console.error('Error updating todo:', error);
+            // Aquí solo manejamos:
+            // 1. Rollback del estado local
+            // 2. Mostrar mensaje al usuario
+            // 3. Actualizar UI
+
+            // Rollback to previous state
+            onUpdatedToDoIssue(previousValue);
+            // Show message error to user
+            setMessagePopUpContent({
+                type: "error",
+                title: "Update Failed",
+                message: "There was a problem updating the ToDo Issue. Please try again later.",
+                actions: ["Ok"],
+                onActionClick: {
+                    "Ok": () => setShowMessagePopUp(false),
+                },
+                onClose: () => setShowMessagePopUp(false),
+            })
+            setShowMessagePopUp(true)
+            throw error
+        }
+    }
+
+
+    // Helper function to format the date
+    const formatDate = (date: Date): string => {
+        return date.toLocaleDateString('es-ES', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
 
 
 
@@ -72,75 +147,11 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                             //label="Title"
                             fieldName="title"
                             value={toDoIssue.title}
-                            onSave={onUpdatedToDoIssue}
+                            onSave={handleToDoFieldSave}
                             type="text"
                             style={{ marginTop: 30, minHeight: 50, paddingRight: 15, alignItems: "" }}
                         />
-                        {/* OLD TITLE TODO ISSUE
-                        <div
-                            className="todo-detail-datafield"
-                            style={{
-                                marginTop: 30,
-                                minHeight: 50,
-                                flexDirection: "row",
-                                justifyContent: "flex-start",
-                                paddingRight: 15
-                            }}
-                            data-todo-info-btn="title"
-                        >
-                            <button
-                                className="todo-icon-edit svg-edit"
-                                style={{
-                                    display: "flex",
-                                    borderRadius: "var(--br-circle)",
-                                    aspectRatio: 1,
-                                    padding: 0,
-                                    justifyContent: "center",
-                                    position: "absolute"
-                                }}
-                                data-todo-info-btn="title"
-                            >
-                                <EditIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
-
-                                
-                            </button>
-                            <button
-                                className="todo-icon-edit svg-save"
-                                style={{
-                                    display: "flex",
-                                    borderRadius: "var(--br-circle)",
-                                    aspectRatio: 1,
-                                    padding: 0,
-                                    justifyContent: "center",
-                                    position: "absolute"
-                                }}
-                                data-todo-info-btn="title"
-                            >
-                                <svg role="img" aria-label="save" width={22} height={22}>
-                                    <use href="#save" />
-                                </svg>
-                            </button>
-                            <h2 style={{ marginLeft: 25 }} data-todo-info="title">
-                                Title To-Do Issue
-                            </h2>
-                            <input
-                                data-todo-info-origin="title"
-                                name="title"
-                                className="title-todo-card"
-                                type="text"
-                                //size={var(--font-3xl)}
-                                placeholder="Title"
-                                required
-                                minLength={5}
-                                style={{
-                                    height: "20px",
-                                    fontSize: "var(--font-3xl)",
-                                    transform: "translateY(-2px) translateX(29px)",
-                                    display: "none"
-                                }}
-                            />
-                        </div>
-                        */}
+                    
                         <div
                             style={{
                                 display: "flex",
@@ -180,6 +191,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                             </button>
                         </div>
                     </div>
+                    {/* Display Not Editable Data */}
                     <div
                         style={{
                             display: "flex",
@@ -207,15 +219,19 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                                     }}
                                     data-todo-info="acronym"
                                 >
-                                    Ac
+                                    {project.acronym}
                                 </abbr>
                                 <p style={{ color: "var(--color-fontbase-dark)" }}>
-                                    Open in:{" "}
+                                    Open in:
                                     <span
                                         data-todo-info="todoProject"
-                                        style={{ color: "var(--color-fontbase)" }}
+                                        style={{
+                                            color: "var(--color-fontbase)",
+                                            fontSize: "var(--font-lg)",
+                                            fontWeight: "bold"
+                                        }}
                                     >
-                                        Project Name
+                                        {project.name}
                                     </span>
                                 </p>
                             </div>
@@ -233,12 +249,12 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                                     <use href="#radio_button_unchecked" />
                                 </svg>
                                 <p style={{ color: "var(--color-fontbase-dark)" }}>
-                                    Open by:{" "}
+                                    Open by:
                                     <span
                                         data-todo-info="todoUserOrigen"
                                         style={{ color: "var(--color-fontbase)" }}
                                     >
-                                        User Origin (WIP)
+                                        {toDoIssue.todoUserOrigin}User Origin (WIP)
                                     </span>
                                 </p>
                             </div>
@@ -253,12 +269,13 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                                     data-todo-info="createdDate"
                                     style={{ color: "var(--color-fontbase)" }}
                                 >
-                                    ***-**-**
+                                    {formatDate(toDoIssue.createdDate)}
                                 </span>
                             </p>
                         </div>
                     </div>
                 </div>
+                {/* Display Description */}
                 <div
                     style={{
                         maxHeight: "calc(100% - 780px)",
@@ -272,10 +289,9 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 >
                     <div className="todo-detail-datafield" >
                         <ToDoEditableField
-                            //label="Issue Description:"
                             fieldName="description"
                             value={toDoIssue.description}
-                            onSave={onUpdatedToDoIssue}
+                            onSave={handleToDoFieldSave}
                             type="textarea"
                             style={{ marginTop: 25, width: "100%" }}
                             onEditStart={() => {
@@ -286,114 +302,10 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                                 console.log('Setting editingField to null', editingField)
                             }}
                         />
-
-                        {/*<div
-                            style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "flex-start",
-                                justifyContent: "flex-start",
-                                marginTop: 25,
-                                width: "100%"
-                            }}
-                            data-todo-info-btn="description"                        
-                        >                            
-                            <button
-                                className="todo-icon-edit  svg-edit"
-                                style={{
-                                    display: "flex",
-                                    borderRadius: "var(--br-circle)",
-                                    aspectRatio: 1,
-                                    padding: 0,
-                                    justifyContent: "center",
-                                    boxShadow: "transparent",
-                                    position: "absolute"
-                                }}
-                                data-todo-info-btn="description"
-                            >
-                                <EditIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
-                                
-                            </button>
-                            <button
-                                className="todo-icon-edit  svg-save"
-                                style={{
-                                    display: "flex",
-                                    borderRadius: "var(--br-circle)",
-                                    aspectRatio: 1,
-                                    padding: 0,
-                                    justifyContent: "center",
-                                    boxShadow: "transparent",
-                                    position: "absolute"
-                                }}
-                                data-todo-info-btn="description"
-                            >
-                                <svg role="img" aria-label="save" width={22} height={22}>
-                                    <use href="#save" />
-                                </svg>
-                            </button>
-                            <fieldset
-                                className="todo-fieldset father-todoissue-textarea-fielset"
-                                style={{ width: "100%", marginLeft: 30 }}
-                            >
-                                <legend style={{ transform: "translatex(15px)" }}>
-                                    <h3>Issue Description: </h3>
-                                </legend>
-                                <div
-                                    style={{
-                                        height: "auto",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        flexGrow: 1,
-                                        transition: "min-height 0.3s ease"
-                                    }}
-                                    className="father-todoissue-textarea"
-                                >
-                                    <textarea
-                                        data-todo-info-origin="description"
-                                        name="description"
-                                        id=""
-                                        style={{
-                                            resize: "vertical",
-                                            scrollbarWidth: "none",
-                                            fontSize: "var(--font-lg)",
-                                            transform: "translateY(-15px) translateX(13px)",
-                                            maxHeight: 550,
-                                            height: "auto",
-                                            overflow: "visible",
-                                            whiteSpace: "pre-wrap",
-                                            display: "none"
-                                        }}
-                                        cols={59}
-                                        rows={15}
-                                        placeholder="Leave a comment"
-                                        defaultValue={""}
-                                    />
-                                </div>
-                                <div style={{ width: "90%", maxHeight: "calc(100% - 900px)" }}>
-                                    <p
-                                        data-todo-info="description"
-                                        style={{
-                                            height: "fit-content",
-                                            color: "var(--color-fontbase)"
-                                        }}
-                                    >
-                                        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Fugiat
-                                        quasi ut repellat consectetur quod perspiciatis nihil et quae
-                                        enim aperiam impedit, tempore debitis velit voluptate? Corporis
-                                        ullam est aut quia. Voluptatibus, sint illo? Doloremque eligendi
-                                        illo repudiandae esse dolor? Non neque aut alias odit mollitia
-                                        recusandae illo temporibus, facilis nostrum maxime dolores est
-                                        voluptas quam, at eius, a molestias sunt? Similique asperiores
-                                        rem ad expedita esse deserunt minima illum, magnam laudantium.
-                                        Totam hic architecto sed id, dolore harum laudantium qui ipsum?
-                                        Architecto, laudantium at accusamus placeat quasi corrupti eaque
-                                        et?
-                                    </p>
-                                </div>
-                            </fieldset>
-                        </div> */}
                     </div>
                 </div>
+
+                {/* Display StatusColumn */}
                 <div className="todo-detail-datafiled-title">
                     <label>
                         <span className="material-icons-round">view_column</span>
@@ -406,107 +318,14 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     //label="Stage:"
                     fieldName="statusColumn"
                     value={toDoIssue.statusColumn}
-                    onSave={onUpdatedToDoIssue}
+                    onSave={handleToDoFieldSave}
                     type="select"
                     style={{ alignItems: "center" }}
                     onEditStart={() => setEditingField('statusColumn')}
                     onEditEnd={() => setEditingField(null)}
                 />
 
-                {/*}
-                <div
-                    className="todo-detail-datafield"
-                    style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "flex-start"
-                    }}
-                    data-todo-info-btn="statusColumn"
-                >
-                    <button
-                        className="todo-icon-edit  svg-edit"
-                        style={{
-                            display: "flex",
-                            borderRadius: "var(--br-circle)",
-                            aspectRatio: 1,
-                            padding: 0,
-                            justifyContent: "center",
-                            position: "absolute"
-                        }}
-                        data-todo-info-btn="statusColumn"
-                    >
-                        <EditIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
-                        
-                    </button>
-                    <button
-                        className="todo-icon-edit  svg-save"
-                        style={{
-                            display: "flex",
-                            borderRadius: "var(--br-circle)",
-                            aspectRatio: 1,
-                            padding: 0,
-                            justifyContent: "center",
-                            position: "absolute"
-                        }}
-                        data-todo-info-btn="statusColumn"
-                    >
-                        <svg role="img" aria-label="save" width={22} height={22}>
-                            <use href="#save" />
-                        </svg>
-                    </button>
-
-                    <select
-                        data-todo-info-origin="statusColumn"
-                        name="statusColumn"
-                        id="todo-stagecolumn-detail-select"
-                        style={{
-                            height: 20,
-                            fontSize: "var(--font-lg)",
-                            transform: "translateY(0px) translateX(40px)",
-                            backgroundColor: "var(--color-bg1)",
-                            opacity: "0.5",
-                            display: "none"
-                        }}
-                    >
-                        
-                        <option
-                            label="Task ready"
-                            value="backlog"
-                            style={{ color: "var(--background-100)" }}
-                        />
-                        <option
-                            label="In progress"
-                            value="wip"
-                            style={{ color: "var(--background-100)" }}
-                        />
-                        <option
-                            label="In review"
-                            value="qa"
-                            style={{ color: "var(--background-100)" }}
-                        />
-                        <option
-                            label="Done"
-                            value="completed"
-                            style={{ color: "var(--background-100)" }}
-                        />
-                    </select>
-                    <p>
-                        <span
-                            className="todo-task-move todo-tags"
-                            style={{
-                                textWrap: "nowrap",
-                                marginLeft: 25,
-                                color: "var(--background) !important",
-                                fontSize: "var(--font-base)"
-                            }}
-                            data-todo-info="statusColumn"
-                        >
-                            Column stage To-Do Issue
-                        </span>
-                    </p>
-                </div>
-                */}
+                {/* Display AssignedUsers */}
                 <div className="todo-detail-datafiled-title">
                     <label>
                         <span className="material-icons-round">person</span>
@@ -515,96 +334,33 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         Assigned to
                     </h3>
                 </div>
-                <div className="todo-detail-datafield" style={{ position: "relative" }}>
+                <div className="todo-detail-datafield"
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        minHeight: "fit-content",
+                        height: "170px",
+                        overflow: "visible",
+                        justifyContent: "flex-start",
+                        position: "relative"
+                    }}>
                     <ToDoEditableField
-                        //label="Stage:"
-                        fieldName="tags"
-                        value={toDoIssue.tags}
-                        onSave={onUpdatedToDoIssue}
+                        fieldName="assignedUsers"
+                        value={toDoIssue.assignedUsers}
+                        onSave={handleToDoFieldSave}
                         type="array"
-                        style={{ alignItems: "stretch" }}
-                        onEditStart={() => setEditingField('statusColumn')}
+                        style={{
+                            transition: "min-height 0.3s ease",
+                            minHeight: "fit-content",
+                            height: "auto",
+                            overflow: "visible",
+                        }}
+                        onEditStart={() => setEditingField('assignedUsers')}
                         onEditEnd={() => setEditingField(null)}
                     />
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "flex-start",
-                            justifyContent: "flex-start"
-                        }}
-                        data-todo-info-btn="assignedUsers"
-                    >
-                        <button
-                            className="todo-icon-edit  svg-edit"
-                            style={{
-                                display: "flex",
-                                borderRadius: "var(--br-circle)",
-                                aspectRatio: 1,
-                                padding: 0,
-                                justifyContent: "center",
-                                position: "absolute"
-                            }}
-                            data-todo-info-btn="assignedUsers"
-                        >
-                            <EditIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
-                            {/* <svg role="img" aria-label="edit" width={22} height={22}>
-                                <use href="#edit" />
-                            </svg> */}
-                        </button>
-                        <button
-                            className="todo-icon-edit  svg-save"
-                            style={{
-                                display: "flex",
-                                borderRadius: "var(--br-circle)",
-                                aspectRatio: 1,
-                                padding: 0,
-                                justifyContent: "center",
-                                position: "absolute"
-                            }}
-                            data-todo-info-btn="assignedUsers"
-                        >
-                            <svg role="img" aria-label="save" width={22} height={22}>
-                                <use href="#save" />
-                            </svg>
-                        </button>
-                        <input
-                            data-todo-info-origin="assignedUsers"
-                            name="assignedUsers"
-                            className="assignedUsers-todo-card"
-                            type="text"
-                            //size="var(--sm)"
-                            id="todo-assignedUsers-detail-input"
-                            placeholder="New users + Enter key"
-                            style={{
-                                fontSize: "var(--sm)",
-                                height: 20,
-                                transform: "translateY(-50px) translateX(200px)",
-                                width: "fit-content",
-                                minWidth: "50%",
-                                position: "absolute",
-                                display: "none"
-                            }}
-                        />
-                        <ul
-                            data-todo-info="assignedUsers"
-                            className="todo-tags-list todo-form-field-container"
-                            aria-labelledby="assignedUsers"
-                            //name="assignedUsers"
-                            id="todo-assignedUsers-list-detail-page"
-                            style={{
-                                paddingLeft: 20,
-                                position: "relative",
-                                marginLeft: 25,
-                                listStyle: "none"
-                            }}
-                        >
-                            <li className="todo-tags">WIP_1</li>
-                            <li className="todo-tags">WIP_2</li>
-                            {/* ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')} */}
-                        </ul>
-                    </div>
                 </div>
+
+                {/* Display Tags */}
                 <div className="todo-detail-datafiled-title">
                     <label>
                         <span className="material-icons-round">label</span>
@@ -613,97 +369,35 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         Tags
                     </h3>
                 </div>
-                <div className="todo-detail-datafield">
+                <div className="todo-detail-datafield"
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        minHeight: "fit-content",
+                        height: "170px",
+                        overflow: "visible",
+                        justifyContent: "flex-start",
+                        position: 'relative'
+                    }}>
                     <ToDoEditableField
                         //label="Stage:"
                         fieldName="tags"
                         value={toDoIssue.tags}
-                        onSave={onUpdatedToDoIssue}
+                        onSave={handleToDoFieldSave}
                         type="array"
                         style={{
                             transition: "min-height 0.3s ease",
                             minHeight: "fit-content",
                             height: "auto",
                             overflow: "visible",
-                            
-}}
-                        onEditStart={() => setEditingField('statusColumn')}
+                        
+                        }}
+                        onEditStart={() => setEditingField('tags')}
                         onEditEnd={() => setEditingField(null)}
                     />
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "flex-start",
-                            justifyContent: "flex-start"
-                        }}
-                        data-todo-info-btn="tags"
-                    >
-                        <button
-                            className="todo-icon-edit  svg-edit"
-                            style={{
-                                display: "flex",
-                                borderRadius: "var(--br-circle)",
-                                aspectRatio: 1,
-                                padding: 0,
-                                justifyContent: "center",
-                                position: "absolute"
-                            }}
-                            data-todo-info-btn="tags"
-                        >
-                            <EditIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
-                            {/* <svg role="img" aria-label="edit" width={22} height={22}>
-                                <use href="#edit" />
-                            </svg> */}
-                        </button>
-                        <button
-                            className="todo-icon-edit  svg-save"
-                            style={{
-                                display: "flex",
-                                borderRadius: "var(--br-circle)",
-                                aspectRatio: 1,
-                                padding: 0,
-                                justifyContent: "center",
-                                position: "absolute"
-                            }}
-                            data-todo-info-btn="tags"
-                        >
-                            <svg role="img" aria-label="save" width={22} height={22}>
-                                <use href="#save" />
-                            </svg>
-                        </button>
-                        <input
-                            data-todo-info-origin="tags"
-                            name="tags"
-                            className="tags-todo-card"
-                            type="text"
-                            //size="var(--sm)"
-                            id="todo-tags-detail-input"
-                            placeholder="New tags + Enter key"
-                            style={{
-                                fontSize: "var(--sm)",
-                                height: 20,
-                                transform: "translateY(-50px) translateX(200px)",
-                                minWidth: "50%",
-                                width: "fit-content",
-                                display: "none"
-                            }}
-                        />
-                        <ul
-                            data-todo-info="tags"
-                            aria-labelledby="tags"
-                            //name="tags"
-                            className="todo-tags-list todo-form-field-container"
-                            id="todo-tags-list-details-page"
-                            style={{
-                                paddingLeft: 20,
-                                position: "relative",
-                                marginLeft: 25,
-                                listStyle: "none"
-                            }}
-                        ></ul>
-                    </div>
                 </div>
+
+                {/* Display Due Date */}
                 <div className="todo-detail-datafiled-title">
                     <label>
                         <span className="material-icons-round">calendar_today</span>
@@ -713,70 +407,22 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     </h4>
                 </div>
                 <div className="todo-detail-datafield">
-                    <div
-                        className="todo-detail-datafield"
+                    <ToDoEditableField
+                        fieldName="dueDate"
+                        value={toDoIssue.dueDate}
+                        onSave={handleToDoFieldSave}
+                        type="date"
                         style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "flex-start"
+                            // minHeight: "fit-content",
+                            // height: "auto",
+                            // overflow: "visible",
                         }}
-                        data-todo-info-btn="dueDate"
-                    >
-                        <button
-                            className="todo-icon-edit  svg-edit"
-                            style={{
-                                display: "flex",
-                                borderRadius: "var(--br-circle)",
-                                aspectRatio: 1,
-                                padding: 0,
-                                justifyContent: "center",
-                                position: "absolute"
-                            }}
-                            data-todo-info-btn="dueDate"
-                        >
-                            <EditIcon size={22} className="todo-icon-edit" color="var(--color-fontbase)" />
-                            {/* <svg role="img" aria-label="edit" width={22} height={22}>
-                                <use href="#edit" />
-                            </svg> */}
-                        </button>
-                        <button
-                            className="todo-icon-edit  svg-save"
-                            style={{
-                                display: "flex",
-                                borderRadius: "var(--br-circle)",
-                                aspectRatio: 1,
-                                padding: 0,
-                                justifyContent: "center",
-                                position: "absolute"
-                            }}
-                            data-todo-info-btn="dueDate"
-                        >
-                            <svg role="img" aria-label="save" width={22} height={22}>
-                                <use href="#save" />
-                            </svg>
-                        </button>
-                        <input
-                            data-todo-info-origin="dueDate"
-                            name="dueDate"
-                            type="date"
-                            id="todo-dueDate-details-input"
-                            style={{
-                                height: 20,
-                                fontSize: "var(--font-lg)",
-                                transform: "translateY(-60px) translateX(250px)",
-                                minWidth: "50%",
-                                width: "fit-content",
-                                display: "none"
-                            }}
-                            min="2024-01-01"
-                        />
-                        <p style={{ marginLeft: 25 }} data-todo-info="dueDate">
-                            ***-**-** To-Do Issue
-                        </p>
-                    </div>
+                        onEditStart={() => setEditingField('dueDate')}
+                        onEditEnd={() => setEditingField(null)}
+                    />
                 </div>
             </div>
+            {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
         </section>
     )
 }

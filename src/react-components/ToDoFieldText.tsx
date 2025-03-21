@@ -4,34 +4,96 @@ interface ToDoFieldTextProps {
     value: string;
     isEditing: boolean;
     setIsEditing: React.Dispatch<React.SetStateAction<boolean>>; 
-    onChange: (value: string) => void;
+    onSave: (value: string) => void;
+    onCancel: () => void;
     placeholder?: string;
     inputRef?: React.RefObject<HTMLInputElement>;
 }
 
-export function ToDoFieldText({
+export const ToDoFieldText = React.forwardRef<
+    { handleSave: () => void }, ToDoFieldTextProps>
+(({
     value,
     isEditing,
     setIsEditing,
-    onChange,
-    placeholder,
+    onSave,
+    onCancel,
+    placeholder, 
     inputRef
-}: ToDoFieldTextProps) {
+},ref ) => {
+    
+    const defaultInputRef = React.useRef<HTMLInputElement>(null);
+    const actualInputRef = inputRef || defaultInputRef;
+    const [hasInputChanged, setHasInputChanged] = React.useState(false);
+    const [previousValue, setPreviousValue] = React.useState(value);
 
-    const [inputValue, setInputValue] = React.useState(value)
+    const handleSave = async() => {
+        try {
+            const currentValue = actualInputRef.current?.value.trim();
+            if (currentValue && currentValue !== value ) {
+                setPreviousValue(currentValue)
+                await onSave(currentValue)
+                setHasInputChanged(false)
+                
+            }
+            setIsEditing(false)
+            
+        } catch (error) {
+            console.error('Error saving text field:', error)
+            if (actualInputRef.current) {
+                actualInputRef.current.value = previousValue;
+            }
+        }
+    }
 
-    // Reset input value when editing mode changes
+    // Expose handleSave through ref for parent component
+    React.useImperativeHandle(ref, () => ({
+        handleSave
+    }))
+
+    // Focus management and value sync
     React.useEffect(() => {
-        setInputValue(value);
-    }, [isEditing, value]);
+        if (actualInputRef?.current) {
+            if (isEditing) {
+                actualInputRef.current.focus()
+            }
+            // Set initial value when entering edit mode
+            actualInputRef.current.value = value
+        }
+    }, [isEditing, value])
 
-    const handleBlur = () => {
-        // Reset to original value if not saved
-        setInputValue(value);
-        setIsEditing(false);
-        onChange(value);
 
+    const handleCancel = () => {
+        if (actualInputRef.current) {
+            actualInputRef.current.value = value
+        }
+        setHasInputChanged(false)
+        setIsEditing(false)
+        onCancel?.()
+    }
+
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            handleSave()
+        } else if (e.key === 'Escape') {
+            handleCancel()
+        }
     };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setHasInputChanged(true)
+    }
+
+
+    const handleBlur = (e: React.FocusEvent) => {
+        // Only reset value on blur, don't trigger save
+        if (actualInputRef.current && !hasInputChanged) {
+            actualInputRef.current.value = value
+        }
+        setIsEditing(false)
+    }
 
 
     return (
@@ -49,10 +111,11 @@ export function ToDoFieldText({
 
             {/* Edit Input */}
             <input
-                ref={inputRef}
+                ref={actualInputRef}
                 type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                defaultValue={value}
+                onKeyPress={handleKeyPress}
+                onChange={handleChange}
                 onBlur={handleBlur}
                 className="title-todo-card"
                 placeholder={placeholder}
@@ -70,8 +133,10 @@ export function ToDoFieldText({
             />
         </div>
     );
-}
+})
 
-// style = {{
-//     transform: !isEditing ? "translatex(15px)" : "translatex(35px)"
-// }}>
+// Add display name for debugging purposes
+ToDoFieldText.displayName = 'ToDoFieldText'
+
+
+

@@ -8,39 +8,88 @@ interface ToDoFieldSelectProps {
     isEditing: boolean;
     setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
     onChange: (value: StatusColumnKey) => void;
+    onSave?: () => void;
+    onCancel?: () => void;
     options: Array<ToDoIssue['statusColumn']>;
     selectRef?: React.RefObject<HTMLSelectElement>;
 }
 
-export function ToDoFieldSelect({
+export const ToDoFieldSelect = React.forwardRef <
+    { handleSave: () => void },
+    ToDoFieldSelectProps
+>(({
+        
     value,
     isEditing,
     setIsEditing,
     onChange,
+    onSave,
+    onCancel,
     options,
     selectRef
-}: ToDoFieldSelectProps) {
-    const [selectedValue, setSelectedValue] = React.useState<StatusColumnKey>(value);
+}, ref) => {
+    //const [selectedValue, setSelectedValue] = React.useState<StatusColumnKey>(value);
+    const defaultSelectRef = React.useRef<HTMLSelectElement>(null);
+    const actualSelectRef = selectRef || defaultSelectRef;
+    const [hasChanged, setHasChanged] = React.useState(false)
 
-    // Update local state when prop changes
-    React.useEffect(() => {
-        setSelectedValue(value);
-    }, [value])
-
-    const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedValue(e.target.value as StatusColumnKey)
-    }
-
-    React.useEffect(() => {
-        if (isEditing && selectRef?.current) {
-            selectRef.current.focus();
+    const handleSave = () => {
+        try {
+            const currentValue = actualSelectRef.current?.value as StatusColumnKey;
+            if (currentValue && currentValue !== value) {
+                onChange(currentValue);
+                setHasChanged(false);
+            }
+            setIsEditing(false);
+            onSave?.();
+        } catch (error) {
+            console.error('Error saving select field:', error);
         }
-    }, [isEditing, selectRef])
+    }
+    // Expose handleSave through ref
+    React.useImperativeHandle(ref, () => ({
+        handleSave
+    }))
     
 
-    const handleBlur = () => {
-        if (selectedValue !== value) {
-            onChange(selectedValue);
+    // Focus management
+    React.useEffect(() => {
+        if (isEditing && actualSelectRef?.current) {
+            actualSelectRef.current.focus();
+            actualSelectRef.current.value = value;
+        }
+    }, [isEditing, value])
+
+
+
+
+    const handleCancel = () => {
+        if (actualSelectRef.current) {
+            actualSelectRef.current.value = value;
+        }
+        setHasChanged(false);
+        setIsEditing(false);
+        onCancel?.();
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLSelectElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSave();
+        } else if (e.key === 'Escape') {
+            handleCancel();
+        }
+    }
+
+    const handleChange = () => {
+        setHasChanged(true);
+    };
+    
+
+    const handleBlur = (e: React.FocusEvent) => {
+        // Only reset value on blur, don't trigger save
+        if (actualSelectRef.current && !hasChanged) {
+            actualSelectRef.current.value = value;
         }
         setIsEditing(false);
     }
@@ -73,9 +122,10 @@ export function ToDoFieldSelect({
                 }}
             >
                 <select
-                    ref={selectRef}
-                    value={selectedValue}
+                    ref={actualSelectRef}
+                    defaultValue={value}
                     onChange={handleChange}
+                    onKeyPress={handleKeyPress}
                     onBlur={handleBlur}
                     className="todo-status-select"
                     data-todo-info-origin="statusColumn"
@@ -109,4 +159,7 @@ export function ToDoFieldSelect({
             </div>
         </div>
     );
-}
+})
+
+// Add display name for debugging
+ToDoFieldSelect.displayName = 'ToDoFieldSelect';

@@ -8,7 +8,7 @@ import { usePrepareToDoForm } from '../hooks';
 import { Project } from '../classes/Project';
 import {  ToDoIssue } from '../classes/ToDoIssue';
 import { getToDoIssueByTitle, newToDoIssue } from '../classes/ToDoManager';
-import { IToDoIssue, ITag, StatusColumnKey } from '../Types'
+import { IToDoIssue, ITag, IAssignedUsers, StatusColumnKey } from '../types';
 
 interface NewToDoIssueFormProps {
     onClose: () => void;
@@ -20,7 +20,7 @@ interface NewToDoIssueFormProps {
 export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDoIssueFormProps) {
 
     const [tags, setTags] = React.useState<ITag[]>([]); 
-    const [assignedUsers, setAssignedUsers] = React.useState<string[]>([]);
+    const [assignedUsers, setAssignedUsers] = React.useState<IAssignedUsers[]>([]);
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
@@ -97,23 +97,27 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
             const newToDoIssueDoc = await createDocument(todoPath, toDoIssueDetails)
             const todoId = newToDoIssueDoc.id
             console.log("data transfered to DB", newToDoIssueDoc)
-
-
-            // Create tags and get their Firebase IDs
-            const createdTags = await createTodoTags(todoPath, todoId, toDoIssueDetails.tags.map(t => t.title));
-
+            
+            
             // Create subcollections
-            await Promise.all([
+            // Create tags and get their Firebase IDs
+            const createdTags = await createTodoTags(todoPath, todoId, toDoIssueDetails.tags.map(t => t.title))
+            
+            const createdUsers = await createTodoAssignedUsers(todoPath, todoId, toDoIssueDetails.assignedUsers.map(u => u.name))
+
+            
+            // await Promise.all([
                 
-                //createTodoTags(todoPath, todoId, toDoIssueDetails.tags),
-                createTodoAssignedUsers(todoPath, todoId, toDoIssueDetails.assignedUsers)
-            ]);
+                
+                
+            // ]);
 
             // Create ToDoIssue instance with the new ID and created tags
             const ToDoIssueCreated = new ToDoIssue({
                 ...toDoIssueDetails,
                 id: todoId,
-                tags: createdTags // Use the tags with Firebase IDs
+                tags: createdTags, // Use the tags with Firebase IDs
+                assignedUsers: createdUsers
             });
 
             /*
@@ -199,40 +203,39 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                         id: docRef.id, // Use Firebase-generated ID
                         title: tagTitle,
                         createdAt: new Date()
-                    };
+                    } as ITag
                 })
-            );
+            )
+            console.log('Created tags with Firebase IDs:', createdTags)
             return createdTags;
         } catch (error) {
             console.error("Error creating tags:", error);
             throw error;
         }
-
-            // const tagsPath = `${todoPath}/${todoId}/tags`;
-        // return Promise.all(
-        //     tags.map((tag, index) => {
-        //         const tagData = {
-        //             id: `tag-${index}`,
-        //             title: typeof tag === 'string' ? tag : tag.title,
-        //             createdAt: new Date()
-        //         };
-        //         return createDocument(tagsPath, tagData);
-        //     })
-        // );
     }
 
-    async function createTodoAssignedUsers(todoPath: string, todoId: string, users: string[]) {
-        const usersPath = `${todoPath}/${todoId}/assignedUsers`;
-        return Promise.all(
-            users.map((userId, index) => {
-                const userData = {
-                    id: `user-${index}`,
-                    userId,
-                    assignedAt: new Date()
-                };
-                return createDocument(usersPath, userData);
-            })
-        );
+    async function createTodoAssignedUsers(todoPath: string, todoId: string, users: (string | IAssignedUsers)[]) {
+        try {
+            const usersPath = `${todoPath}/${todoId}/assignedUsers`
+            const createdUsers =await Promise.all(            
+                users.map(async (userName) => {
+                    const userData = {
+                        name: userName                        
+                    }
+                    const docRef = await createDocument(usersPath, userData)
+                    return {
+                        id: docRef.id, // Use Firebase-generated ID
+                        name: userName,
+                        createdAt: new Date()
+                    } as IAssignedUsers
+                })
+            );
+            return createdUsers;
+        } catch (error) {
+            console.error("Error creating assigned users:", error);
+            throw error;
+        }
+        
     }
 
 
@@ -469,10 +472,8 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
     // Update removeTag to work with ITag objects
     const removeTag = (tagToRemove: ITag) => {
         setTags(prevTags => prevTags.filter(tag => tag.id !== tagToRemove.id))
-    };
-
-
-
+    }
+    
 
     const handleAssignedUsersInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
         const inputValue = (e.target as HTMLInputElement).value.trim()
@@ -482,7 +483,7 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
 
             newAssignedUser.forEach(assignedUsersText => {
                 // Check if the tag already exists in the status list
-                const assignedUserExist = assignedUsers.some(assignedUsers => assignedUsers.toLowerCase() === assignedUsersText.toLowerCase());
+                const assignedUserExist = assignedUsers.some(assignedUsers => assignedUsers.name.toLowerCase() === assignedUsersText.toLowerCase());
 
                 if (assignedUserExist) {
                     // AssignedUser already exists, show error message
@@ -503,9 +504,15 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                     return
 
                 } else {
-                    // Tag is new, add it to the list
-                    setAssignedUsers(prevAssignedUsers => [...prevAssignedUsers, assignedUsersText]);
-                    
+                    // Update handleTagInput to create temporary IDs until Firebase creates the real ones
+                    // AssignedUser is new, add it to the list with temporary ID
+                    const newAssignedUser: IAssignedUsers = {
+                        id: `temp-${Date.now()}-${assignedUsersText}`,
+                        name: assignedUsersText,
+                        createdAt: new Date()
+                    };
+                    // assignedUser is new, add it to the list
+                    setAssignedUsers(prevAssignedUsers => [...prevAssignedUsers, newAssignedUser]);
                 }
             });
             (e.target as HTMLInputElement).value = ""; // Clean the input
@@ -513,7 +520,7 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
     }
 
 
-    const removeAssignedUsers = (assignedUserToRemove: string) => {
+    const removeAssignedUsers = (assignedUserToRemove: IAssignedUsers) => {
         setAssignedUsers(prevAssignedUsers => prevAssignedUsers.filter(assignedUsers => assignedUsers !== assignedUserToRemove));
     };
 
@@ -606,13 +613,13 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                                         id="todo-assignedUsers-list"
                                         className="todo-form-field-container"
                                         >
-                                            {assignedUsers.map((assignedUser, index) => (
-                                                <li key={index}
+                                            {assignedUsers.map((assignedUser) => (
+                                                <li key={assignedUser.id}
                                                     className="todo-tags"
                                                     onClick={() => { removeAssignedUsers(assignedUser) }}
                                                     style ={{cursor: "pointer" }}
                                                 >
-                                                    {assignedUser}
+                                                    {assignedUser.name}
                                                 </li>
                                             ))}
                                         </ul>

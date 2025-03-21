@@ -47,6 +47,11 @@ const App = () => {
         setProjects([...projectsManager.list]);
     }
 
+    const handleToDoIssueUpdated = (todoIssueUpdated) => {
+        projectsManager.updateToDoIssue(todoIssueUpdated.todoProject, todoIssueUpdated.id, todoIssueUpdated)
+        setProjects([...projectsManager.list]);
+    }
+
 
     return (
         //<ProjectsManagerProvider>        
@@ -55,9 +60,23 @@ const App = () => {
                 <Sidebar />
                 <Router.Routes>
 
-                    <Router.Route path="/" element={<ProjectsPage projectsManager={projectsManager} onProjectUpdate={handleProjectCreate} onNewProjectCreated={handleNewProject} />} />
+                    <Router.Route path="/" element={
+                        <ProjectsPage
+                            projectsManager={projectsManager}
+                            onProjectUpdate={handleProjectCreate}
+                            onNewProjectCreated={handleNewProject}
+                        />
+                    } />
 
-                    <Router.Route path="/project/:id" element={<ProjectDetailsPage projectsManager={projectsManager} onProjectCreate={handleProjectCreate} onProjectUpdate={handleProjectUpdate} onToDoIssueCreated={handleToDoIssueCreated} />} />
+                    <Router.Route path="/project/:id" element={
+                        <ProjectDetailsPage
+                            projectsManager={projectsManager}
+                            onProjectCreate={handleProjectCreate}
+                            onProjectUpdate={handleProjectUpdate}
+                            onToDoIssueCreated={handleToDoIssueCreated}
+                            onToDoIssueUpdated={handleToDoIssueUpdated}
+                        />
+                    } />
 
                     {/* <Router.Route path="/project/:id/todo/:todoId" element={<TodoDetailsPage projectsManager={projectsManager} onProjectCreate={handleProjectCreate} onProjectUpdate={handleProjectUpdate} />} /> */}
 
