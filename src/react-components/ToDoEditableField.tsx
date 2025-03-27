@@ -1,12 +1,14 @@
 import * as React from 'react'
 
+import { MessagePopUp, MessagePopUpProps } from '../react-components';
+
 import {EditIcon, ReportIcon, SaveIcon } from './icons'
 import { ToDoIssue } from '../classes/ToDoIssue'
 import { ToDoFieldText } from './ToDoFieldText'
 import { ToDoFieldTextArea } from './ToDoFieldTextArea'
 import { ToDoFieldSelect } from './ToDoFieldSelect'
 import { ToDoFieldArray, IToDoFieldArrayRef } from './ToDoFieldArray'
-import { IAssignedUsers, ITag, StatusColumnKey } from '../Types'
+import { IAssignedUsers, ITag, StatusColumnKey } from '../types'
 import { ToDoFieldDate } from './ToDoFieldDate'
 
 
@@ -20,6 +22,7 @@ interface Props {
     options?: string[]
     onEditStart?: () => void
     onEditEnd?: () => void
+    toDoIssue: ToDoIssue
 }
 
 export function ToDoEditableField({    
@@ -31,67 +34,135 @@ export function ToDoEditableField({
     style = {},
     onEditStart,
     onEditEnd,
+    toDoIssue,
     ...props
 }: Props) {
 
-    const [isEditing, setIsEditing] = React.useState(false)    
+    const [isEditing, setIsEditing] = React.useState(false)
+    const [currentValue, setCurrentValue] = React.useState(initialValue)
+    const [isValid, setIsValid] = React.useState(true)
     
     // Referencias para los componentes hijos
-    const textRef = React.useRef<{ handleSave: () => void }>(null);
-    const textAreaRef = React.useRef<{ handleSave: () => void }>(null);
-    const selectRef = React.useRef<{ handleSave: () => void }>(null);
-    const dateRef = React.useRef<{ handleSave: () => void }>(null);
-    const arrayRef = React.useRef<{ handleSave: () => void }>(null);
+    const textRef = React.useRef<{ handleSave: () => void, setIsValid: React.Dispatch<React.SetStateAction<boolean>> }>(null)
+    const textAreaRef = React.useRef < { handleSave: () => void, setIsValid: React.Dispatch<React.SetStateAction<boolean>> }>(null)
 
 
+    const selectRef = React.useRef<{ handleSave: () => void }>(null)
+    const dateRef = React.useRef<{ handleSave: () => void }>(null)
+    const arrayRef = React.useRef<{ handleSave: () => void }>(null)
+
+    const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
+    const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
     // Notificar al padre cuando cambia el estado local
     React.useEffect(() => {
         if (isEditing ) {
-            onEditStart?.();
+            onEditStart?.()
         } else {
-            onEditEnd?.();
+            onEditEnd?.()
         }
-    }, [isEditing, onEditStart, onEditEnd]);
+    }, [isEditing, onEditStart, onEditEnd])
+
+
+    // Update the currentValue when the initialValue prop changes
+    React.useEffect(() => {
+        if (!isEditing) {
+            // Get the updated value from the toDoIssue
+            //const updatedValue = toDoIssue[fieldName]
+            setCurrentValue(initialValue)
+            setIsValid(true)
+        }
+    }, [initialValue, isEditing]) 
+
+    //}, [toDoIssue, fieldName, isEditing])
 
 
     const handleEditClikBtn = () => {
         setIsEditing(true)
-    };
+        setIsValid(false)
+    }
+    
 
-    const handleSaveClickBtn = (newValue:any) => {
+    const handleSaveClickBtn = async (newValue: any) => {
+
+        console.log("ToDoEditableField: handleSaveClickBtn called", {
+            fieldName,
+            newValue,
+            isValid,
+            type,
+        });
+
+
+        if (!isValid) {
+            setMessagePopUpContent({
+                type: "error",
+                title: "Invalid Value",
+                message: "The value must be different from the original and cannot be empty.",
+                actions: ["Ok"],
+                onActionClick: {
+                    "Ok": () => setShowMessagePopUp(false),
+                },
+                onClose: () => setShowMessagePopUp(false),
+            })
+            setShowMessagePopUp(true)
+
+            console.warn("Cannot save: Field is not valid.");
+            return; // Do not proceed if not valid
+        }
+
         try {
             // Determine which component is active and call its handleSave
             switch (type) {
                 case 'text':
-                    textRef.current?.handleSave();
+                    console.log("ToDoEditableField: Calling textRef.current?.handleSave()");
+
+                    await textRef.current?.handleSave()
                     break;
                 case 'textarea':
-                    textAreaRef.current?.handleSave();
+                    console.log("ToDoEditableField: Calling textAreaRef.current?.handleSave()");
+
+                    await textAreaRef.current?.handleSave()
                     break;
                 case 'select':
-                    selectRef.current?.handleSave();
+                    console.log("ToDoEditableField: Calling selectRef.current?.handleSave()");
+
+                    await selectRef.current?.handleSave()
                     break;
                 case 'date':
-                    dateRef.current?.handleSave();
+                    console.log("ToDoEditableField: Calling dateRef.current?.handleSave()");
+
+                    await dateRef.current?.handleSave()
                     break;
                 case 'array':
-                    arrayRef.current?.handleSave();
+                    console.log("ToDoEditableField: Calling arrayRef.current?.handleSave()");
+
+                    await arrayRef.current?.handleSave()
                     break;
             }
+
+            console.log("ToDoEditableField: handleSaveClickBtn - After switch, before updating state", { newValue });
+            // Update the current value after saving
+            setCurrentValue(newValue)
+            setIsEditing(false)
+            onEditEnd?.()
+
         } catch (error) {
-            console.error('Error in field update:', error);
-        }
+            console.error('Error in field update:', error)
+        } 
+
     }
     
 
     const handleCancelClickBtn = () => {
-        try {            
+        console.log("ToDoEditableField: handleCancelClickBtn called")
+        try {
             setIsEditing(false)
+            setCurrentValue(initialValue)
+            setIsValid(true)
             onEditEnd?.()
         
         } catch (error) {
-            console.error('Error handling cancel:', error);
+            console.error('Error handling cancel:', error)
         }
     }
 
@@ -104,23 +175,37 @@ export function ToDoEditableField({
                 return (
                     <ToDoFieldText
                         ref={textRef}
-                        value={initialValue as string}
+                        value={currentValue as string}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
-                        onSave={(newValue) => onSave(fieldName, newValue)}
+                        onSave={(newValue) => {
+                            console.log("ToDoEditableField: onSave callback from ToDoFieldText", { newValue })
+                            onSave(fieldName, newValue)
+                            //handleSaveClickBtn(newValue)
+                        }}
                         onCancel={handleCancelClickBtn}
-                        placeholder={`Enter ${fieldName}...`}
+                        onInvalid={() => setIsValid(false)}
+                        setIsValid={setIsValid}
+                        isValid={isValid}
+                        
                     />
                 )
             case 'textarea':
                 return (
                     <ToDoFieldTextArea
                         ref={textAreaRef}
-                        value={initialValue as string}
+                        value={currentValue as string}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
-                        onSave={(newValue) => onSave(fieldName, newValue)}
+                        onSave={(newValue) => {
+                            
+                            onSave(fieldName, newValue)
+                            //handleSaveClickBtn(newValue)
+                        }}
                         onCancel={handleCancelClickBtn}
+                        onInvalid={() => setIsValid(false)}
+                        setIsValid={setIsValid}
+                        isValid={isValid}
                         placeholder={`Leave a comment. Enter ${fieldName}...`}
                     />
                 )
@@ -128,10 +213,13 @@ export function ToDoEditableField({
                 return (
                     <ToDoFieldSelect
                         ref={selectRef}
-                        value={initialValue as StatusColumnKey}
+                        value={currentValue as StatusColumnKey}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
-                        onChange={(newValue) => onSave(fieldName, newValue)}
+                        onChange={(newValue) => {
+                            onSave(fieldName, newValue)
+                            //handleSaveClickBtn(newValue)
+                        }}                        
                         options={['backlog', 'wip', 'qa', 'completed']}
                     />
                 )
@@ -140,10 +228,13 @@ export function ToDoEditableField({
                     <ToDoFieldArray
                         ref={arrayRef}
                         fieldName={fieldName as 'tags' | 'assignedUsers'}
-                        value={initialValue as ITag[] | IAssignedUsers[]}
+                        value={currentValue as ITag[] | IAssignedUsers[]}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
-                        onSave={(newValue) => onSave(fieldName, newValue)}
+                        onSave={(newValue) => {
+                            onSave(fieldName, newValue)
+                            //handleSaveClickBtn(newValue)
+                        }}
                         onCancel={handleCancelClickBtn}
                         placeholder={`Add ${fieldName === 'tags' ? 'a tag' : 'a user'}..`}
                     />
@@ -153,10 +244,13 @@ export function ToDoEditableField({
                     <ToDoFieldDate
                         ref={dateRef}
                         fieldName={fieldName}
-                        value={initialValue as Date}
+                        value={currentValue as Date}
                         isEditing={isEditing}
                         setIsEditing={setIsEditing}
-                        onSave={(newValue) => onSave(fieldName, newValue)}
+                        onSave={(newValue) => {
+                            onSave(fieldName, newValue)
+                            //handleSaveClickBtn(newValue)
+                        }}
                         onCancel={handleCancelClickBtn} />
                 )
             default:
@@ -190,18 +284,23 @@ export function ToDoEditableField({
                             columnGap: 5,
                             justifyContent: "flex-start",
                             alignItems: "center",
+                            position: 'relative',
+                            zIndex: 999,
                         
                         }}
                     >
                         <button
                             className={`todo-icon-edit ${isEditing ? 'svg-save' : 'svg-edit'}`}
                             onClick={handleSaveClickBtn}
+                            disabled={!isValid}
                             style={{
                                 display: "flex",
                                 borderRadius: "var(--br-circle)",
                                 aspectRatio: 1,
                                 padding: 0,
                                 justifyContent: "center",
+                                opacity: isValid ? 1 : 0.5,
+                                cursor: isValid ? 'pointer' : 'not-allowed'
                             
                             }}
                             data-todo-info-btn={fieldName}
@@ -216,8 +315,7 @@ export function ToDoEditableField({
                                 borderRadius: "var(--br-circle)",
                                 aspectRatio: 1,
                                 padding: 0,
-                                justifyContent: "center",
-                            
+                                justifyContent: "center",                            
                             }}
                             data-todo-info-btn={fieldName}
                         >
@@ -246,6 +344,10 @@ export function ToDoEditableField({
             }
             {/* Dynamic Input Field */}
             {renderInput()}
+            {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
         </div>
     )    
 }
+
+// Add display name for debugging purposes
+ToDoEditableField.displayName = 'ToDoEditableField'

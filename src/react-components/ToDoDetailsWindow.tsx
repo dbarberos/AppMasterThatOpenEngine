@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { MessagePopUp, MessagePopUpProps } from '../react-components';
+import { MessagePopUp, MessagePopUpProps, DeleteToDoIssueBtn } from '../react-components';
 import { type Project } from '../classes/Project';
 import { ToDoIssue } from '../classes/ToDoIssue';
 
@@ -14,7 +14,7 @@ interface ToDoDetailsWindowProps {
     toDoIssue: ToDoIssue
     onClose: () => void
     onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
-    onDeleteToDoIssueButtonClick: (toDoToDeleted: ToDoIssue) => void
+    onDeleteToDoIssueButtonClick: (projectId: string, todoId: string) => Promise<void>
 }
 
 
@@ -22,6 +22,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
 
     const [editingField, setEditingField] = React.useState<string | null>(null);
     const [previousValue, setPreviousValue] = React.useState<ToDoIssue>(toDoIssue);
+    const [currentToDoIssue, setCurrentToDoIssue] = React.useState<ToDoIssue>(toDoIssue); // Use local state for current todo issue
 
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
@@ -84,7 +85,8 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 options
             );
 
-            // If Firebase update succeeds, notify parent
+            // If Firebase update succeeds, update local state and notify parent
+            setCurrentToDoIssue(updatedTodo)
             onUpdatedToDoIssue(updatedTodo);
             //setError(null);
 
@@ -146,10 +148,11 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         <ToDoEditableField
                             //label="Title"
                             fieldName="title"
-                            value={toDoIssue.title}
+                            value={currentToDoIssue.title}
                             onSave={handleToDoFieldSave}
                             type="text"
                             style={{ marginTop: 30, minHeight: 50, paddingRight: 15, alignItems: "" }}
+                            toDoIssue={currentToDoIssue}
                         />
                     
                         <div
@@ -160,24 +163,16 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                                 alignItems: "center"
                             }}
                         >
-                            <button
-                                title="Delete To-Do"
-                                className="todo-icon-edit"
-                                id="delete-todoIssue-btn"
-                                style={{
-                                    display: "flex",
-                                    borderRadius: "var(--br-circle)",
-                                    aspectRatio: 1,
-                                    padding: 0,
-                                    justifyContent: "center"
-                                }}
-                            >
-                                <TrashIcon size={30} className="todo-icon-edit" color="var(--color-fontbase)" />
 
-                            </button>
+                            <DeleteToDoIssueBtn
+                                projectId={toDoIssue.todoProject}
+                                todoToBeDeleted={toDoIssue}
+                                onDeleteToDoIssue={onDeleteToDoIssueButtonClick}
+                                onClose={onClose} />
                             <button
                                 className="todo-icon-edit"
                                 id="close-todoIssue-details-btn"
+                                onClick={onClose}
                                 style={{
                                     display: "flex",
                                     borderRadius: "var(--br-circle)",
@@ -278,7 +273,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 {/* Display Description */}
                 <div
                     style={{
-                        maxHeight: "calc(100% - 780px)",
+                        maxHeight: "calc(100% - 1100px)",
                         overflowY: "auto",
                         height: editingField === 'description'
                             ? "calc(100vh - 220px)"
@@ -290,7 +285,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     <div className="todo-detail-datafield" >
                         <ToDoEditableField
                             fieldName="description"
-                            value={toDoIssue.description}
+                            value={currentToDoIssue.description}
                             onSave={handleToDoFieldSave}
                             type="textarea"
                             style={{ marginTop: 25, width: "100%" }}
@@ -301,6 +296,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                                 setEditingField(null)
                                 console.log('Setting editingField to null', editingField)
                             }}
+                            toDoIssue={currentToDoIssue}
                         />
                     </div>
                 </div>
@@ -317,12 +313,13 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 <ToDoEditableField
                     //label="Stage:"
                     fieldName="statusColumn"
-                    value={toDoIssue.statusColumn}
+                    value={currentToDoIssue.statusColumn}
                     onSave={handleToDoFieldSave}
                     type="select"
                     style={{ alignItems: "center" }}
                     onEditStart={() => setEditingField('statusColumn')}
                     onEditEnd={() => setEditingField(null)}
+                    toDoIssue={currentToDoIssue}
                 />
 
                 {/* Display AssignedUsers */}
@@ -346,7 +343,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     }}>
                     <ToDoEditableField
                         fieldName="assignedUsers"
-                        value={toDoIssue.assignedUsers}
+                        value={currentToDoIssue.assignedUsers}
                         onSave={handleToDoFieldSave}
                         type="array"
                         style={{
@@ -357,6 +354,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         }}
                         onEditStart={() => setEditingField('assignedUsers')}
                         onEditEnd={() => setEditingField(null)}
+                        toDoIssue={currentToDoIssue}
                     />
                 </div>
 
@@ -382,7 +380,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     <ToDoEditableField
                         //label="Stage:"
                         fieldName="tags"
-                        value={toDoIssue.tags}
+                        value={currentToDoIssue.tags}
                         onSave={handleToDoFieldSave}
                         type="array"
                         style={{
@@ -394,6 +392,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         }}
                         onEditStart={() => setEditingField('tags')}
                         onEditEnd={() => setEditingField(null)}
+                        toDoIssue={currentToDoIssue}
                     />
                 </div>
 
@@ -409,7 +408,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 <div className="todo-detail-datafield">
                     <ToDoEditableField
                         fieldName="dueDate"
-                        value={toDoIssue.dueDate}
+                        value={currentToDoIssue.dueDate}
                         onSave={handleToDoFieldSave}
                         type="date"
                         style={{
@@ -419,6 +418,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         }}
                         onEditStart={() => setEditingField('dueDate')}
                         onEditEnd={() => setEditingField(null)}
+                        toDoIssue={currentToDoIssue}
                     />
                 </div>
             </div>

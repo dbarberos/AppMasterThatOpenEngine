@@ -17,7 +17,7 @@ export class ProjectsManager {
     onProjectDeleted = (id: string) => { }
     onProjectUpdated = (id: string) => { }
     //onToDoUpdated = (projectId: string, todoId: string) => { }
-    
+    onToDoIssueDeleted = (todoIssueId: string) => { }
 
 
     //defaultProjectCreated: boolean = false
@@ -653,6 +653,7 @@ export class ProjectsManager {
     /* USED INSIDE NEWPROJECTFORM.TSX */
 
     updateProject(projectId: string, dataToUpdate: Project) {
+        console.log("ProjectsManager.ts: updateProject called", { projectId, dataToUpdate })
         const projectIdString = projectId.toString().trim()
         const projectIndex = this.list.findIndex(p => p.id?.toString().trim() === projectIdString) //Convert to string and trim for the comparing the same type of data
 
@@ -716,6 +717,7 @@ export class ProjectsManager {
 
     // Add this method to handle todo updates
     updateToDoIssue(projectId: string, todoId: string, updatedTodo: ToDoIssue) {
+        console.log("ProjectsManager.ts: updateToDoIssue called", { projectId, todoId, updatedTodo })
         const project = this.list.find(p => p.id === projectId);
         if (project) {
             const todoIndex = project.todoList.findIndex(t => t.id === todoId);
@@ -932,6 +934,32 @@ export class ProjectsManager {
         this.list = remain
         this.onProjectDeleted(project.name)
     }
+
+/*
+    deleteToDoIssue(projectId: string, todoId: string) {
+        const project = this.getProject(projectId)
+        if (!project) { return }
+        const todoIssue = project.todoList.find((todo) => {
+            return todo.id === todoId
+        })
+        if (!todoIssue) {
+            console.error(`ToDoIssue with ID ${todoId} not found in project ${projectId}.`);
+            return;
+        }
+        // Filter the todoList of the project to remove the todo
+        project.todoList = project.todoList.filter((todo) => todo.id !== todoId);
+
+        // Update the project in the main list
+        const projectIndex = this.list.findIndex((p) => p.id === projectId);
+        if (projectIndex !== -1) {
+            this.list[projectIndex] = project; // Replace the old project with the updated one
+        } else {
+            console.error(`Project with ID ${projectId} not found in the main list.`);
+            return;
+        }
+        this.onToDoIssueDeleted(todoIssue.id)
+    }
+    */
 
 
     exprtToJSON(fileName: string = "projects") {

@@ -18,13 +18,15 @@ interface Props {
     onUpdatedProject: (updatedProject: Project) => void
     onCreatedToDoIssue: (createdNewToDoIssue: ToDoIssue) => void
     onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
+    //onDeletedToDoIssue: (deletedTodo: ToDoIssue) => void
 }
 
 export function ProjectDetailsToDoList({
     project,
     onUpdatedProject,
     onCreatedToDoIssue,
-    onUpdatedToDoIssue
+    onUpdatedToDoIssue,
+    //onDeletedToDoIssue
 }: Props) {
     
     const [isNewToDoIssueFormOpen, setIsNewToDoIssueFormOpen] = React.useState(false)
@@ -86,8 +88,21 @@ export function ProjectDetailsToDoList({
         setSelectedToDo(null)
     }
 
-    const handleDeleteToDoIssue = () => {
+    const handleDeleteToDoIssue = async (projectId: string, todoId: string) => {
         console.log("Delete ToDo Issue funtion launched for  todo:", selectedToDo!.id)
+        try {
+            // Actualiza el proyecto local removiendo el todo
+            const updatedTodoList = project.todoList.filter(todo => todo.id !== todoId);
+            const updatedProject = { ...project, todoList: updatedTodoList };
+
+            // Notifica al componente padre del cambio
+            onUpdatedProject(updatedProject);
+
+            setIsTodoDetailsWindowOpen(false)
+            setSelectedToDo(null)
+        } catch (error) {
+            console.error('ProjectDetailsTodOList: Error deleting todo from projects.Manager:', error);
+        }
 
     }
 
@@ -97,25 +112,9 @@ export function ProjectDetailsToDoList({
     const handleUpdateToDoIssue = (updatedTodo: ToDoIssue) => {
         //Update the parent todo object to trigger the rerender.
 
-
-
-
-
-
-
-
         onUpdatedToDoIssue(updatedTodo)
-        // try {
-            
-        // }
-        // if (!project.id) return;
 
-        // const updatedTodoList = project.todoList.map(todo =>
-        //     todo.id === updatedTodo.id ? updatedTodo : todo
-        // );
 
-        // const updatedProject = { ...project, todoList: updatedTodoList };
-        // onUpdatedProject(updatedProject);
     };
 
 

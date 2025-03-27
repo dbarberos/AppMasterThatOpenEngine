@@ -36,6 +36,7 @@ const App = () => {
 
     };
     const handleProjectUpdate = (updatedProject) => {
+        console.log("index.tsx: handleProjectUpdate called", { updatedProject })
         projectsManager.updateProject(updatedProject.id, updatedProject); // Update the project in projectsManager
 
         setProjects([...projectsManager.list]);
@@ -48,6 +49,7 @@ const App = () => {
     }
 
     const handleToDoIssueUpdated = (todoIssueUpdated) => {
+        console.log("index.tsx: handleToDoIssueUpdated called", { todoIssueUpdated })
         projectsManager.updateToDoIssue(todoIssueUpdated.todoProject, todoIssueUpdated.id, todoIssueUpdated)
         setProjects([...projectsManager.list]);
     }

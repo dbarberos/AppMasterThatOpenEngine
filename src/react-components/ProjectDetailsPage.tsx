@@ -127,8 +127,29 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
 
     const handleUpdatedToDo = (updatedTodo: ToDoIssue) => {
         // Update the ToDoIssue in the todoList inside the project inside the manager list
-        projectsManager.updateToDoIssue(updatedTodo.todoProject, updatedTodo.id ,updatedTodo)
+        //projectsManager.updateToDoIssue(updatedTodo.todoProject, updatedTodo.id ,updatedTodo) ******* he quitado este pero hay que comprobarlo lo tiene el padre
         onToDoIssueUpdated(updatedTodo)
+
+        //*****???????? */
+
+        // Find the project in the list and update its todoList
+        const projectIndex = projectsManager.list.findIndex(p => p.id === currentProject?.id);
+        if (projectIndex !== -1 && currentProject) {
+            const updatedProject = new Project({
+                ...currentProject
+            });
+            const todoIndex = updatedProject.todoList.findIndex(todo => todo.id === updatedTodo.id);
+            if (todoIndex !== -1) {
+                updatedProject.todoList[todoIndex] = updatedTodo;
+                // Update the state of the current project
+                setCurrentProject(updatedProject);
+                // Update the project in the manager list
+                projectsManager.updateReactProjects(updatedProject);
+            }
+        }
+
+        //*****???????? */
+
     }
 
 

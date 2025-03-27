@@ -397,10 +397,52 @@ export async function deleteProjectWithSubcollections(projectId: string): Promis
         }
     }, {
         maxRetries: 3,
-        timeout: 7000, // Increased timeout due to multiple operations
+        timeout: 5000, // Should increased timeout due to multiple operations
         baseDelay: 1000
     });
 }
+
+export async function deleteToDoWithSubcollections(
+    projectId: string,
+    todoId: string
+): Promise<void> {
+    return withRetry(async () => {
+        try {
+            // Get reference to todo document
+            const todoDocRef = Firestore.doc(
+                firestoreDB,
+                `projects/${projectId}/todoList/${todoId}`
+            );
+
+            // Delete tags subcollection
+            const tagsRef = Firestore.collection(todoDocRef, 'tags');
+            const tagsSnapshot = await Firestore.getDocs(tagsRef);
+            await Promise.all(
+                tagsSnapshot.docs.map(tagDoc => Firestore.deleteDoc(tagDoc.ref))
+            );
+
+            // Delete assignedUsers subcollection
+            const usersRef = Firestore.collection(todoDocRef, 'assignedUsers');
+            const usersSnapshot = await Firestore.getDocs(usersRef);
+            await Promise.all(
+                usersSnapshot.docs.map(userDoc => Firestore.deleteDoc(userDoc.ref))
+            );
+
+            // Finally delete the todo document
+            await Firestore.deleteDoc(todoDocRef);
+            console.log(`Todo and its subcollections deleted successfully at projects/${projectId}/todoList/${todoId}`);
+
+        } catch (error) {
+            console.error("Error deleting todo and subcollections:", error);
+            throw new Error(`Failed to delete todo: ${error.message}`);
+        }
+    }, {
+        maxRetries: 3,
+        timeout: 5000,
+        baseDelay: 500
+    });
+}
+
 
 
 

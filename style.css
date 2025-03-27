@@ -144,7 +144,7 @@
     /* ToDo Details Panel */
 
     --color-tododetails-bg: rgba(40, 40, 40, 0.65);
-
+    --color-tododetails-bg-dark: rgba(40, 40, 40, 0.85);
 
     /* Añadir estas nuevas variables */
     --color-border: #2d2d2d;
@@ -1333,8 +1333,8 @@ input[type="number"] {
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    #appearance: none;
-    -webkit-#appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 input[type="text"]:focus,
@@ -1356,7 +1356,7 @@ input[type="number"]:focus {
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
-    -webkit-#appearance: none;
+    -webkit-appearance: none;
     margin: 0;
 }
 
@@ -1710,8 +1710,8 @@ input[type="number"]::-webkit-outer-spin-button {
 
     transition: all 0.3s ease-in-out;
     user-select: none;
-    #appearance: none;
-    -webkit-#appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
 
 }
 
@@ -1820,8 +1820,8 @@ fieldset:after {
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    #appearance: none;
-    -webkit-#appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 
@@ -2304,6 +2304,22 @@ header {
     min-width: 150px;
 }
 
+.todo-field-text {
+    /* ... existing styles ... */
+    position: relative;
+    /* Ensure z-index works */
+}
+
+.todo-field-text.editing {
+    z-index: 999;
+    /* Above the overlay */
+}
+
+.todo-field-text input:focus {
+    outline: 2px solid var(--color-primary);
+    /* Visual feedback for focus */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
 
 /* INSIDE DETAILS TODO HALF-WINDOW FOR TAGS AND ASSIGNEDUSERS*/
 
