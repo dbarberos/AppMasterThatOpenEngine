@@ -21,11 +21,14 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow }: Props) {
     }, [toDoIssue]);
     
 
-    const handleClickOverToDoCard = (e: React.MouseEvent) => {
-        e.preventDefault();
+    const handleClickOverToDoCard = React.useCallback(() => {
         onClickOpenToDoDetailsWindow(toDoIssue);
-    }
+    }, [toDoIssue, onClickOpenToDoDetailsWindow]);
 
+    // const handleClickOverToDoCard = (e: React.MouseEvent) => {
+    //     e.preventDefault();
+    //     onClickOpenToDoDetailsWindow(toDoIssue);
+    // }
 
     // Convert Firebase timestamp to Date object
     const formatDueDate = (date: Date | string |number|undefined) => {

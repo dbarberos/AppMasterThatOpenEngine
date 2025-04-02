@@ -1,11 +1,12 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 
-import { ToDoCard, NewToDoIssueForm, ToDoDetailsWindow, toggleSidebar } from '../react-components';
+import { ToDoCard, NewToDoIssueForm, ToDoDetailsWindow, toggleSidebar, SearchToDoBox, CounterBox } from '../react-components';
 import { AddIcon, SearchIcon } from './icons';
 
 import { type Project } from '../classes/Project';
-import { ToDoIssue, type IToDoIssue } from '../classes/ToDoIssue';
+import { ToDoIssue, } from '../classes/ToDoIssue';
+import { type IToDoIssue } from '../Types';
 import { log } from 'three/examples/jsm/nodes/Nodes.js';
 //import { ProjectsManager } from '../classes/ProjectsManager';
 //import { ToDoManager } from '../classes/ToDoManager';
@@ -32,7 +33,12 @@ export function ProjectDetailsToDoList({
     const [isNewToDoIssueFormOpen, setIsNewToDoIssueFormOpen] = React.useState(false)
     const [isTodoDetailsWindowOpen, setIsTodoDetailsWindowOpen] = React.useState(false)
     const [selectedToDo, setSelectedToDo] = React.useState<ToDoIssue | null>(null);
-    const [initialSidebarState, setInitialSidebarState] = React.useState<boolean | null>(null);
+    //const [initialSidebarState, setInitialSidebarState] = React.useState<boolean | null>(null);
+
+    // TodoList state to track changes
+    const [todoList, setTodoList] = React.useState<ToDoIssue[]>(project.todoList);
+
+
 
     //const [todoList, setTodoList] = React.useState<IToDoIssue[]>(project.todoList)
 
@@ -73,8 +79,7 @@ export function ProjectDetailsToDoList({
 
             setSelectedToDo(toDoIssue)
             setIsTodoDetailsWindowOpen(true)
-            console.log('States after update:', {
-                willOpenWindow: true,
+            console.log('States after update:', {                
                 selectedTodo: isNewToDoIssueFormOpen
             });
         } catch (error) {
@@ -107,20 +112,79 @@ export function ProjectDetailsToDoList({
     }
 
 
-    // ***ESTA FUNCION HAY QUE PASARLA AL TODOMANAGER  *** 
+    // ***ESTA FUNCION HAY QUE PASARLA AL TODOMANAGER  ??*** 
 
     const handleUpdateToDoIssue = (updatedTodo: ToDoIssue) => {
-        //Update the parent todo object to trigger the rerender.
+        console.log('ProjectDetailsToDoList - handleUpdateToDoIssue:', {
+            todoId: updatedTodo.id,
+            updates: updatedTodo
+        })
 
+        // Create new todoList with updated todo
+        const updatedTodoList = todoList.map(todo =>
+            todo.id === updatedTodo.id ? updatedTodo : todo
+        )
+
+        // Create new project with updated todoList
+        const updatedProject = {
+            ...project,
+            todoList: updatedTodoList
+        }
+
+        // Update parent state
+        onUpdatedProject(updatedProject)
+
+        // Update local state
+        setTodoList(updatedTodoList)
+
+        //Notify the parent todo object to trigger the rerender.
         onUpdatedToDoIssue(updatedTodo)
-
 
     };
 
 
+    // Update useEffect to sync with project changes
+    React.useEffect(() => {
+        console.log('ProjectDetailsToDoList - Project todoList changed:', {
+            projectId: project.id,
+            todoListLength: project.todoList.length,
+            todoListIds: todoList.map(todo => todo.id)
+        });
+        setTodoList(project.todoList);
+    }, [project.todoList])
+
+
+
+    const onToDoIssueSearch = (value: string) => {
+        const searchLower = value.toLowerCase()
+        const filteredList = project.todoList.filter((todoIssue) => {
+            // Safely check if arrays exist
+            const tags = Array.isArray(todoIssue.tags) ? todoIssue.tags : [];
+            const users = Array.isArray(todoIssue.assignedUsers) ? todoIssue.assignedUsers : [];
+
+            return (
+                // Check title and description
+                todoIssue.title.toLowerCase().includes(searchLower) ||
+                todoIssue.description.toLowerCase().includes(searchLower) ||
+                // Check tags - looking for tag.title
+                tags.some(tag =>
+                    tag.title?.toLowerCase().includes(searchLower)
+                ) ||
+                // Check assigned users - looking for user.name
+                users.some(user =>
+                    user.name?.toLowerCase().includes(searchLower)
+                ) ||
+                // Check status column text
+                ToDoIssue.getStatusColumnText(todoIssue.statusColumn).toLowerCase().includes(searchLower)
+            );
+        })
+        setTodoList(filteredList)
+    }
+
+
     // Memorize the todo cards list to prevent unnecessary re-renders
     const toDoCardsList = React.useMemo(() =>
-        project.todoList.map((todoItem) => {
+        todoList.map((todoItem) => {
             // Ensure we have a ToDoIssue instance
             const todoInstance = todoItem instanceof ToDoIssue
                 ? todoItem
@@ -134,7 +198,7 @@ export function ProjectDetailsToDoList({
                 />
             )
         }),
-        [project.todoList] // Only re-run if todoList changes
+        [todoList] // Dependency on local todoList state
     )
 
 
@@ -147,25 +211,40 @@ export function ProjectDetailsToDoList({
         });
     }, [isTodoDetailsWindowOpen, selectedToDo, project.todoList]);
 
-    // Store initial sidebar state when mounting ToDoDetailsWindow
-    React.useEffect(() => {
-        if (isTodoDetailsWindowOpen && initialSidebarState === null) {
-            const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-            setInitialSidebarState(sidebarCheckbox?.checked || false);
-            toggleSidebar.collapse();
-        }
 
-        // Cleanup restore initial state when unmounting
-        return () => {
-            if (!isTodoDetailsWindowOpen && initialSidebarState !== null) {
-                const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-                if (sidebarCheckbox) {
-                    sidebarCheckbox.checked = initialSidebarState;
-                }
-                setInitialSidebarState(null);
-            }
-        };
-    }, [isTodoDetailsWindowOpen, , initialSidebarState]);
+    // // Add these state handlers using useCallback
+    // const handleSidebarState = React.useCallback((isOpen: boolean) => {
+    //     const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+    //     if (!sidebarCheckbox) return;
+
+    //     if (isOpen) {
+    //         // Store current state and collapse sidebar when opening
+    //         setInitialSidebarState(sidebarCheckbox.checked);
+    //         toggleSidebar.collapse();
+    //     } else {
+    //         // Restore state when closing
+    //         if (initialSidebarState !== null) {
+    //             sidebarCheckbox.checked = initialSidebarState;
+    //             setInitialSidebarState(null);
+    //         }
+    //     }
+    // }, [initialSidebarState]);
+
+    // // Update the useEffect to use the callback
+    // React.useEffect(() => {
+    //     if (isTodoDetailsWindowOpen) {
+    //         handleSidebarState(true);
+    //     } else {
+    //         handleSidebarState(false);
+    //     }
+
+    //     // Cleanup function
+    //     return () => {
+    //         if (!isTodoDetailsWindowOpen) {
+    //             handleSidebarState(false);
+    //         }
+    //     };
+    // }, [isTodoDetailsWindowOpen, handleSidebarState]);
 
 
 
@@ -189,8 +268,6 @@ export function ProjectDetailsToDoList({
                 />
         )
         : null
-
-
 
 
     return (
@@ -268,14 +345,10 @@ export function ProjectDetailsToDoList({
                     }}
                 >
                     <div
-                        style={{ display: "flex", alignItems: "center", columnGap: 15 }}
+                        style={{ display: "flex", alignItems: "center", columnGap: 10 }}
                     >
-                        <SearchIcon size={24} className="todo-icon-plain" color="var(--color-fontbase)" />                        
-                        <input
-                            id="todo-search-in-Project-Details"
-                            type="search"
-                            placeholder="Search inside To-Do"
-                        />
+                        <SearchIcon size={24} className="todo-icon-plain" color="var(--color-fontbase)" />
+                        <SearchToDoBox onChange={(value) => onToDoIssueSearch(value)} />                        
                     </div>
                     <div
                         style={{
@@ -285,8 +358,12 @@ export function ProjectDetailsToDoList({
                             columnGap: 5
                         }}
                     >
-                        <div id="todolist-search-counter">Counter</div>
-                        <button className="todo-icon-plain" id="btn-todo-arrowup">
+                        <CounterBox
+                            filteredItemsNum={todoList.length > 0 ? todoList.length : 0 }
+                            totalItemsNum={project.todoList.length > 0 ?project.todoList.length :0}
+                        />
+                        {/*<div id="todolist-search-counter">Counter</div>
+                         <button className="todo-icon-plain" id="btn-todo-arrowup">
                             <svg
                                 className="todo-icon"
                                 role="img"
@@ -307,7 +384,7 @@ export function ProjectDetailsToDoList({
                             >
                                 <use href="#arrow-downward" />
                             </svg>
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             </div>

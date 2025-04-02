@@ -8,10 +8,9 @@ interface ToDoFieldTextProps {
     onCancel: () => void;
     placeholder?: string;
     inputRef?: React.RefObject<HTMLInputElement>;
-    onInvalid: () => void
-
     setIsValid: React.Dispatch<React.SetStateAction<boolean>>
     isValid: boolean
+    onInvalid: () => void
     
 }
 
@@ -193,7 +192,8 @@ export const ToDoFieldText = React.forwardRef<
                         background: 'var(--color-tododetails-bg)',
                         backdropFilter: 'blur(1px)',
                         zIndex: 998, // Below the input but above everything else
-                        cursor: 'not-allowed'
+                        cursor: 'not-allowed',
+                        animation: 'slideInBackdrop 0.3s ease-out',
                     }}
                 />
             )}

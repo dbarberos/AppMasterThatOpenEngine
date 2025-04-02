@@ -2,30 +2,30 @@ import * as React from 'react';
 import * as Router from 'react-router-dom';
 
 
-export const toggleSidebar = {
-    collapse: () => {
-        const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-        if (sidebarCheckbox) {
-            sidebarCheckbox.checked = true;
-        }
-    },
-    expand: () => {
-        const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-        if (sidebarCheckbox) {
-            sidebarCheckbox.checked = false;
-        }
-    },
-    getState: (): boolean => {
-        const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-        return sidebarCheckbox?.checked || false;
-    },
-    setState: (state: boolean) => {
-        const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-        if (sidebarCheckbox) {
-            sidebarCheckbox.checked = state;
-        }
-    }
-};
+// export const toggleSidebar = {
+//     collapse: () => {
+//         const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+//         if (sidebarCheckbox) {
+//             sidebarCheckbox.checked = true;
+//         }
+//     },
+//     expand: () => {
+//         const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+//         if (sidebarCheckbox) {
+//             sidebarCheckbox.checked = false;
+//         }
+//     },
+//     getState: (): boolean => {
+//         const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+//         return sidebarCheckbox?.checked || false;
+//     },
+//     setState: (state: boolean) => {
+//         const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+//         if (sidebarCheckbox) {
+//             sidebarCheckbox.checked = state;
+//         }
+//     }
+// };
 
 
 export function Sidebar() {
@@ -56,23 +56,12 @@ export function Sidebar() {
                 </ul>
                 <div>
                     <div>
-                        <input type="checkbox" id="sidebar-checkbox-switch" />
+                        <input
+                            type="checkbox"
+                            id="sidebar-checkbox-switch"
+                            defaultChecked={false}
+                        />
                         <label htmlFor="sidebar-checkbox-switch" className="open-sidebar-btn">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            height="100%"
-                            viewBox="0 0 24 24"
-                            width="100%"
-                            fill="var(--color-fontbase)"
-                            transform="rotate(90)"
-                            style={{ background: "transparent" }}
-                        >
-                            <path d="M0 0h24v24H0V0z" fill="none" />
-                            <path d="M12 5.83l2.46 2.46c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L12.7 3.7c-.39-.39-1.02-.39-1.41 0L8.12 6.88c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0L12 5.83zm0 12.34l-2.46-2.46c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l3.17 3.18c.39.39 1.02.39 1.41 0l3.17-3.17c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0L12 18.17z" />
-                        </svg>
-                        </label>
-                        <div className="show-sidebar">
-                        <label htmlFor="sidebar-checkbox-switch" className="close-sidebar-btn">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 height="100%"
@@ -81,11 +70,26 @@ export function Sidebar() {
                                 fill="var(--color-fontbase)"
                                 transform="rotate(90)"
                                 style={{ background: "transparent" }}
-                                >
-                                <path d="M24 0v24H0V0h24z" fill="none" opacity=".87" />
-                                <path d="M8.12 19.3c.39.39 1.02.39 1.41 0L12 16.83l2.47 2.47c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-3.17-3.17c-.39-.39-1.02-.39-1.41 0l-3.17 3.17c-.4.38-.4 1.02-.01 1.41zm7.76-14.6c-.39-.39-1.02-.39-1.41 0L12 7.17 9.53 4.7c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.03 0 1.42l3.17 3.17c.39.39 1.02.39 1.41 0l3.17-3.17c.4-.39.4-1.03.01-1.42z" />
+                            >
+                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                <path d="M12 5.83l2.46 2.46c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L12.7 3.7c-.39-.39-1.02-.39-1.41 0L8.12 6.88c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0L12 5.83zm0 12.34l-2.46-2.46c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l3.17 3.18c.39.39 1.02.39 1.41 0l3.17-3.17c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0L12 18.17z" />
                             </svg>
                         </label>
+                        <div className="show-sidebar">
+                            <label htmlFor="sidebar-checkbox-switch" className="close-sidebar-btn">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    height="100%"
+                                    viewBox="0 0 24 24"
+                                    width="100%"
+                                    fill="var(--color-fontbase)"
+                                    transform="rotate(90)"
+                                    style={{ background: "transparent" }}
+                                    >
+                                    <path d="M24 0v24H0V0h24z" fill="none" opacity=".87" />
+                                    <path d="M8.12 19.3c.39.39 1.02.39 1.41 0L12 16.83l2.47 2.47c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-3.17-3.17c-.39-.39-1.02-.39-1.41 0l-3.17 3.17c-.4.38-.4 1.02-.01 1.41zm7.76-14.6c-.39-.39-1.02-.39-1.41 0L12 7.17 9.53 4.7c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.03 0 1.42l3.17 3.17c.39.39 1.02.39 1.41 0l3.17-3.17c.4-.39.4-1.03.01-1.42z" />
+                                </svg>
+                            </label>
                         </div>
                     </div>
                     <div

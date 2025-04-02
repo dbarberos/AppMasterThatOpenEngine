@@ -4,7 +4,7 @@ import { getAuth, signInAnonymously } from "firebase/auth";
 import { IProject, Project } from "../../classes/Project";
 import { ToDoIssue } from "../../classes/ToDoIssue";
 import { ProjectsManager } from "../../classes/ProjectsManager";
-import { IToDoIssue } from '../../Types'
+import { IAssignedUsers, ITag, IToDoIssue } from '../../Types'
 
 
 type SubcollectionType = 'todoList' | 'tags' | 'assignedUsers';
@@ -535,8 +535,76 @@ export async function createDocument<T extends Record<string, any>>(
     });
 }
 
+// //Manage tags and assignedUsers documents from Firebase
 
+// async function handleArraySubcollection(
+//     basePath: string,
+//     parentId: string,
+//     todoId: string,
+//     subcollection: 'tags' | 'assignedUsers',
+//     newItems: any[]
+// ) {
+//     // Get current items in subcollection
+//     const subcollectionRef = await getCollection(`${basePath}/${parentId}/todoList/${todoId}/${subcollection}`);
+//     const currentSnapshot = await Firestore.getDocs(subcollectionRef);
+//     const currentItems = currentSnapshot.docs.map(doc => ({
+//         ...doc.data(),
+//         id: doc.id
+//     }));
 
+//     // Process each new item
+//     const processedItems = await Promise.all(newItems.map(async (item) => {
+//         // Check if item has a temporary ID
+//         if (item.id.startsWith('temp-')) {
+//             // Create new document
+//             const newDocData = subcollection === 'tags'
+//                 ? { title: item.title }
+//                 : { name: item.name };
+
+//             const createdDoc = await createDocument(
+//                 `${basePath}/${parentId}/todoList/${todoId}/${subcollection}`,
+//                 newDocData
+//             );
+
+//             return {
+//                 ...item,
+//                 id: createdDoc.id
+//             };
+//         }
+//         return item;
+//     }));
+
+//     // Delete items that no longer exist
+//     await Promise.all(currentItems.map(async (currentItem) => {
+//         const stillExists = processedItems.some(item => item.id === currentItem.id);
+//         if (!stillExists) {
+//             await deleteDocumentByID(
+//                 `${basePath}/${parentId}/todoList/${todoId}/${subcollection}`,
+//                 currentItem.id
+//             );
+//         }
+//     }));
+
+//     return processedItems;
+// }
+
+// Helper function to get items from a subcollection
+async function getSubcollectionItems(subcollectionPath: string) {
+    const subcollectionRef = await getCollection(subcollectionPath);
+    const subcollectionSnapshot = await Firestore.getDocs(subcollectionRef);
+    return subcollectionSnapshot.docs.map(doc => {
+        const data = doc.data()
+        if (data) {
+            return {
+                ...data,
+                id: doc.id
+            }
+        } else {
+            console.warn(`Document data is undefined for document ID: ${doc.id} in path: ${subcollectionPath}`);
+            return { id: doc.id }; // Return a minimal object with just the ID
+        }
+    })
+}
 
 
 //Update a document from Firebase
@@ -569,7 +637,32 @@ export async function updateDocument<T extends Record<string, any> | Array<any>>
             if (!todoId) {
                 throw new Error(`todoId is required for updating ${subcollection}`);
             }
-            fullPath = `${basePath}/${parentId}/todoList/${todoId}/${subcollection}/${id}`;
+            // Handle tags and assignedUsers subcollections
+            const subcollectionPath = `${basePath}/${parentId}/todoList/${todoId}/${subcollection}`;
+            const newItems = data as (ITag | IAssignedUsers)[];
+
+            // Delete all existing documents in the subcollection
+            const currentItems = await getSubcollectionItems(subcollectionPath);
+            await Promise.all(currentItems.map(item => deleteDocumentByID(subcollectionPath, item.id)));
+
+            // Create new documents for each item in the array
+            const createPromises = newItems.map(async (item) => {
+                const newDocData = 'title' in item
+                    ? { title: item.title }
+                    : { name: item.name };
+
+                const createdDoc = await createDocument(subcollectionPath, newDocData);
+                // Replace the temporary ID with the real ID
+                item.id = createdDoc.id;
+                return item;
+            });
+
+            // Wait for all new documents to be created
+            await Promise.all(createPromises);
+
+            console.log(`Subcollection ${subcollection} updated successfully at ${subcollectionPath}`);
+            return true;
+            
         }
 
 

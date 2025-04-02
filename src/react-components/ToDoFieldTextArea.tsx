@@ -212,7 +212,8 @@ export const ToDoFieldTextArea = React.forwardRef <
                         background: 'var(--color-tododetails-bg-dark)',
                         backdropFilter: 'blur(5px)',
                         zIndex: 997,
-                        cursor: 'not-allowed'
+                        cursor: 'not-allowed',
+                        animation: 'slideInBackdrop 0.3s ease-out',
                     }}
                 />
             )}

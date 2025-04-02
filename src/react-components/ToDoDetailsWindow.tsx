@@ -1,12 +1,13 @@
 import React from 'react'
 
-import { MessagePopUp, MessagePopUpProps, DeleteToDoIssueBtn } from '../react-components';
+import { MessagePopUp, MessagePopUpProps, DeleteToDoIssueBtn, toggleSidebar } from '../react-components';
 import { type Project } from '../classes/Project';
 import { ToDoIssue } from '../classes/ToDoIssue';
 
 import { EditIcon, Report2Icon, ReportIcon, TrashIcon } from './icons';
 import { ToDoEditableField } from './ToDoEditableField';
 import { updateDocument, UpdateDocumentOptions } from '../services/firebase';
+import { useSidebarState } from '../hooks';
 
 
 interface ToDoDetailsWindowProps {
@@ -27,10 +28,58 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
-        
+    //const [initialSidebarState, setInitialSidebarState] = React.useState<boolean | null>(null);
+    const { storeSidebarState, restoreSidebarState } = useSidebarState();
+
 
     // Handler to check if specific field is being edited
     const isFieldEditing = (fieldName: string) => editingField === fieldName;
+
+
+    React.useEffect(() => {
+        storeSidebarState();
+        return () => {
+            restoreSidebarState();
+        };
+    }, []);
+
+    // // Store initial sidebar state when mounting
+    // React.useEffect(() => {
+    //     const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+    //     if (sidebarCheckbox && initialSidebarState === null) {
+    //         setInitialSidebarState(sidebarCheckbox.checked);
+    //     }
+    // }, []);
+
+    // React.useEffect(() => {
+    //     // When component mounts (window opens)
+    //     const currentState = toggleSidebar.getState();
+    //     setPreviousSidebarState(currentState);
+    //     toggleSidebar.collapse();
+
+    //     // When component unmounts (window closes)
+    //     return () => {
+    //         if (previousSidebarState !== null) {
+    //             toggleSidebar.setState(previousSidebarState);
+    //         }
+    //     };
+    // }, [])
+
+
+    const handleClose = () => {
+        restoreSidebarState();
+        onClose();
+    };
+
+    // // Handle close with sidebar state restoration
+    // const handleClose = () => {
+    //     const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
+    //     if (sidebarCheckbox && initialSidebarState !== null) {
+    //         sidebarCheckbox.checked = initialSidebarState;
+    //     }
+    //     onClose();
+    // };
+
 
 
 
@@ -41,7 +90,8 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
 
             // Create updated todo
             const updatedTodo = new ToDoIssue({
-                ...toDoIssue,
+                ...currentToDoIssue,
+                //...toDoIssue,
                 [fieldName]: newValue
             });
 
@@ -86,7 +136,9 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
             );
 
             // If Firebase update succeeds, update local state and notify parent
+            // Update local state
             setCurrentToDoIssue(updatedTodo)
+            // Notify parent components
             onUpdatedToDoIssue(updatedTodo);
             //setError(null);
 
@@ -172,7 +224,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                             <button
                                 className="todo-icon-edit"
                                 id="close-todoIssue-details-btn"
-                                onClick={onClose}
+                                onClick={handleClose}
                                 style={{
                                     display: "flex",
                                     borderRadius: "var(--br-circle)",
@@ -316,7 +368,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     value={currentToDoIssue.statusColumn}
                     onSave={handleToDoFieldSave}
                     type="select"
-                    style={{ alignItems: "center" }}
+                    style={{  }}
                     onEditStart={() => setEditingField('statusColumn')}
                     onEditEnd={() => setEditingField(null)}
                     toDoIssue={currentToDoIssue}

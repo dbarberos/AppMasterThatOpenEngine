@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
-import { ProjectDetailsCard, ProjectDetailsToDoList, ThreeJSViewer } from '../react-components';
+import { ProjectDetailsCard, ProjectDetailsToDoList, ThreeJSViewer, ProjectSelector } from '../react-components';
 
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { type ToDoIssue } from '../classes/ToDoIssue';
@@ -192,23 +192,27 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                             </span>
                         </span>
                     </h2>
-                <div style={{ display: "flex", alignItems: "center", columnGap: 10 }}>
-                    <p>Swap project: </p>
-                    <select
-                    id="projectSelectedProjectDetailPage"
-                    style={{
-                        padding: 10,
-                        borderRadius: 5,
-                        fontSize: "var(--font-lg)",
-                        lineHeight: 1,
-                        letterSpacing: "normal",
-                        textTransform: "none",
-                        display: "inline-block",
-                        whiteSpace: "nowrap",
-                        wordWrap: "normal"
-                    }}
-                    ></select>
-                </div>
+                    <div style={{ display: "flex", alignItems: "center", columnGap: 10 }}>
+                                
+                        <ProjectSelector
+                            currentProject={currentProject}
+                            projectsList={projectsManager.list}
+                        />
+                        {/* <select
+                        id="projectSelectedProjectDetailPage"
+                        style={{
+                            padding: 10,
+                            borderRadius: 5,
+                            fontSize: "var(--font-lg)",
+                            lineHeight: 1,
+                            letterSpacing: "normal",
+                            textTransform: "none",
+                            display: "inline-block",
+                            whiteSpace: "nowrap",
+                            wordWrap: "normal"
+                        }}
+                        ></select> */}
+                    </div>
                 </div>
                 <div>
                     <h2 data-project-info="name">{currentProject.name}</h2>
