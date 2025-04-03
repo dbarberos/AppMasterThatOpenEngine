@@ -3,10 +3,11 @@ import * as Router from 'react-router-dom';
 import * as Firestore from 'firebase/firestore';
 
 
-import { LoadingIcon, SearchProjectBox } from '../react-components';
+import { LoadingIcon, SearchProjectBox, ProjectCard, CounterBox } from '../react-components';
+import { useProjectsCache, useProjectSearch } from '../hooks'
 
 
-import { useProjectsManager, NewProjectForm, ProjectCard } from './index.tsx';
+import { useProjectsManager, NewProjectForm } from './index.tsx';
 import { firebaseDB, getProjectsFromDB } from '../services/firebase/index.ts'
 import { getCollection } from '../services/firebase/index.ts'
 
@@ -30,32 +31,30 @@ const projectsCollection = getCollection<IProject>("/projects")
 export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCreated }: Props) {
 
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
-    const [projects, setProjects] = React.useState<Project[]>(projectsManager.list)
+    //const [projects, setProjects] = React.useState<Project[]>(projectsManager.list)
     const [isLoading, setIsLoading] = React.useState(false)
 
+    //const [displayedProjects, setDisplayedProjects] = React.useState<Project[]>([]);
+    //const originalProjectsRef = React.useRef<Project[]>([]);
+    //const [searchTerm, setSearchTerm] = React.useState('');
+
+    // Use custom hooks for cache and search
+    const {
+        projects,
+        updateCache,
+        setProjects
+    } = useProjectsCache()
+
+    const {
+        searchTerm,
+        setSearchTerm,
+        filteredProjects,
+        updateOriginalProjects,
+        setOriginalProjectsRef
+    } = useProjectSearch(projects)
 
 
-    projectsManager.onProjectCreated = (newProject) => { setProjects([...projectsManager.list]) }
-    projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
-    projectsManager.onProjectUpdated = () => { setProjects([...projectsManager.list]) }
-
-
-    /*
-        //Retrieve information from Firebase
-        const getFirestoreProjects = async () => {
-    
-            const firebaseProjects = await Firestore.getDocs(projectsCollection)
-            for (const doc of firebaseProjects.docs) {
-                const data = doc.data()
-                const project: IProject = {
-                    ...data,
-                    finishDate: (data.finishDate as unknown as Firestore.Timestamp).toDate()
-                }
-                projectsManager.newProject(project, doc.id)
-            }
-        }
-        */
-
+    //Loading projects at the beginnig
     React.useEffect(() => {
         const loadProjects = async () => {
             try {
@@ -66,6 +65,19 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                 firebaseProjects.forEach(projectData => {
                     projectsManager.newProject(projectData, projectData.id);
                 })
+
+                const currentProjects = projectsManager.list
+
+                //Update cache and local state
+                updateCache(currentProjects)
+                updateOriginalProjects(currentProjects)
+                setOriginalProjectsRef(currentProjects)
+                
+                console.log('Projects loaded:', {
+                    count: currentProjects.length,
+                    projects: currentProjects
+                })
+
             } catch (error) {
                 console.error("Error loading projects:", error);
                 // Handle error appropriately - maybe set an error state
@@ -74,69 +86,30 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
             }
         }
         loadProjects();
-        // }
-        // getFirestoreProjects()
-        // return () => {
-        // }
     }, [])
 
-    // if (isLoading) {
-    //     return <div>Loading...</div>;
-    // }
 
-
-
-
-
-    /* CONSIDERAR iterar dentro de la base de datos para recoger la lista de ToDos, tags y assigned users.
-    const getFirestoreProjects = async () => {
-        const projectsCollection = getCollection<IProject>( "/projects");
-        const firebaseProjects = await Firestore.getDocs(projectsCollection);
-        
-        for (const doc of firebaseProjects.docs) {
-            const data = doc.data();
-            const project: IProject = {
-                ...data,
-                finishDate: (data.finishDate as unknown as Firestore.Timestamp).toDate(),
-                todos: [] // Inicializa un array para los todos
-            };
+    //Suscription to ProjectsManager events
+    React.useEffect(() => {
     
-            // Recuperar los "todos" de la subcolección
-            const todosCollection = Firestore.collection(firebaseDB, `/projects/${doc.id}/todos`);
-            const firebaseTodos = await Firestore.getDocs(todosCollection);
-            
-            for (const todoDoc of firebaseTodos.docs) {
-                const todoData = todoDoc.data();
-                const todo = {
-                    ...todoData,
-                    // Aquí puedes agregar más lógica para recuperar tags y assignedUsers si es necesario
-                };
-                project.todos.push(todo); // Agrega el todo al proyecto
-            }
-    
-            projectsManager.newProjectFromDB(project, doc.id);
+        projectsManager.onProjectCreated = (newProject) => { setProjects([...projectsManager.list]) }
+        projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
+        projectsManager.onProjectUpdated = () => { setProjects([...projectsManager.list]) }
+
+        return () => {
+            projectsManager.onProjectCreated = () => { }
+            projectsManager.onProjectDeleted = () => { }
+            projectsManager.onProjectUpdated = () => { }
         }
-    };
-    
-    */
-
-
-    const projectCardsList = projects.map((project) => {
-        return (
-            <Router.Link to={`/project/${project.id}`} key={project.id}>
-                <ProjectCard
-                    project={project}
-                />
-            </Router.Link>
-
-        );
-    });
+    }, [])
 
 
     React.useEffect(() => {
         console.log("Projects state update", projects)
     }, [projects])
 
+
+    //Handlers
 
 
     const onNewProjectClick = () => {
@@ -149,13 +122,6 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
         setIsNewProjectFormOpen(false);
     };
 
-    const handleFormSubmit = (formData: any) => {
-        // Aquí puedes manejar el envío del formulario, como guardar el proyecto
-        console.log('Form submitted:', formData);
-        // Cierra el formulario después de enviar
-        handleCloseForm();
-    };
-
 
     const handleExportProjectsBtnClick = () => {
         const exportProjectsBtn = document.getElementById("export-projects-JSON-btn")
@@ -165,6 +131,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
             console.log("The export button was not found. Check the ID!")
         }
     };
+
 
     const handleImportProjectsBtnClick = () => {
         const importProjectsBtn = document.getElementById("import-projects-JSON-btn")
@@ -176,6 +143,43 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
     };
 
 
+    const handleFormSubmit = (formData: any) => {
+        // Aquí puedes manejar el envío del formulario, como guardar el proyecto
+        console.log('Form submitted:', formData);
+        // Cierra el formulario después de enviar
+        handleCloseForm();
+    }
+
+
+    const handleProjectSearch = React.useCallback((value: string) => {
+        setSearchTerm(value)
+    }, [setSearchTerm])
+    // const onProjectSearch = (value: string) => {
+    //     setProjects(projectsManager.filterProjects(value))
+    // }
+
+
+    // Memorizar lista de ProjectCards
+    const projectCardsList = React.useMemo(() =>
+        filteredProjects.map((project) => (
+            <Router.Link to={`/project/${project.id}`} key={project.id}>
+                <ProjectCard project={project} />
+            </Router.Link>
+        )),
+        [filteredProjects]
+    )
+    // const projectCardsList = projects.map((project) => {
+    //     return (
+    //         <Router.Link to={`/project/${project.id}`} key={project.id}>
+    //             <ProjectCard
+    //                 project={project}
+    //             />
+    //         </Router.Link>
+
+    //     );
+    // });
+
+
     const newProjectForm = isNewProjectFormOpen ? (
         <NewProjectForm
             onClose={handleCloseForm}
@@ -183,15 +187,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
             onCreatedProject={onNewProjectCreated}
             onUpdatedProject={onProjectUpdate}
         />
-    ) : null;
-
-
-    const onProjectSearch = (value: string) => {
-        setProjects(projectsManager.filterProjects(value))
-    }
-
-
-
+    ) : null
 
 
     return (
@@ -208,7 +204,16 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                         location_city
                     </span>
 
-                    <SearchProjectBox onChange={(value) => onProjectSearch(value)} />
+                    <SearchProjectBox onChange={handleProjectSearch} />
+                    <CounterBox
+                        filteredItemsNum={filteredProjects.length > 0
+                            ? filteredProjects.length
+                            : 0}
+                        totalItemsNum={projects.length > 0
+                            ? projects.length
+                            : 0}
+                    />
+
                 </h2>
                 <div style={{ display: "flex", alignItems: "center", columnGap: 5 }}>
                     <div>
@@ -247,13 +252,10 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                 </div>
             </header>
             {isLoading ? (
-                <LoadingIcon
-                >
-                </LoadingIcon>
+                <LoadingIcon/>
             ) : (
                 <div id="project-list">
-                    {projects.length > 0 ? projectCardsList : <p>No projects found</p>}
-
+                        {filteredProjects.length > 0 ? projectCardsList : <p>No projects found</p>}
                 </div>
             )}
             {/*  Render the form if  isNewProjectFormOpen = true  */}

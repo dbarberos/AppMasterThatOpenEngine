@@ -449,6 +449,7 @@ export class ProjectsManager {
     }
 */
 
+    // It has been suplanted by custome hook
     filterProjects(value: string) {
         const filteredProjects = this.list.filter((project) => {
             return project.name.toLowerCase().includes(value.toLowerCase())

@@ -6,3 +6,5 @@ export * from './usePrepareToDoForm';
 //export * from './useRenameProject';
 //export * from './useUpdateExistingProject.tsx';
 export * from './useSidebarState'
+export * from './useProjectCacheReturn'
+export * from './useProjectSearchReturn'

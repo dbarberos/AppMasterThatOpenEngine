@@ -15,7 +15,7 @@ export * from './DeleteProjectBtn';
 export * from './RenameElementMessage';
 export * from './icons';
 export * from './DiffContentProjectsMessage';
-export * from './LoadingIcon'
+//export * from './LoadingIcon'
 export * from './ToDoDetailsWindow'
 export * from './ToDoEditableField'
 export * from './ToDoFieldText'

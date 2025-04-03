@@ -15,11 +15,11 @@ export const CounterBox = ({
     const getMessage = React.useCallback(() => {
 
         if (filteredItemsNum === 0 && totalItemsNum === 0) {
-            return 'There are no Tasks'
+            return 'There are no Elements'
         } else if  (filteredItemsNum === 0 && totalItemsNum > 0) {
-            return `0 task of ${totalItemsNum} ${totalItemsNum === 1 ? 'Task' : 'Tasks'} in total`;
+            return `0 elements of ${totalItemsNum} ${totalItemsNum === 1 ? 'Element' : 'Elements'} in total`;
         } else {
-            return `${filteredItemsNum} ${filteredItemsNum === 1 ? 'Task' : 'Tasks'} of ${totalItemsNum}`;
+            return `${filteredItemsNum} ${filteredItemsNum === 1 ? 'Element' : 'Elements'} of ${totalItemsNum}`;
         }
     }, [totalItemsNum, filteredItemsNum]);
 
@@ -39,7 +39,7 @@ export const CounterBox = ({
             id="todolist-search-counter"
             style={{
                 fontSize: 'var(--font-base)',
-                color: 'var(--color-fontbase)',
+                color: 'var(--color-fontbase-dark)',
                 marginRight: '10px'
             }}
         >

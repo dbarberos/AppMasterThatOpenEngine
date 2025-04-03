@@ -211,3 +211,40 @@ export const SearchIcon = ({ size = 24, color = "var(--color-fontbase)", classNa
         <path d="M380-320q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l224 224q11 11 11 28t-11 28q-11 11-28 11t-28-11L532-372q-30 24-69 38t-83 14Zm0-80q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z" />
     </svg >
 )
+
+export const LoadingIcon = () => {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', margin: 'auto'}}>
+            <svg
+                style={{ boxShadow: "none", backgroundColor: "inherit", border: "none" }}
+
+                fill="var(--color-fontbase)"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                width="100px" // Puedes ajustar el tamaño aquí
+                height="100px" // Puedes ajustar el tamaño aquí
+            >
+                <g>
+                    <circle cx="12" cy="2.5" r="1.5" opacity=".14" />
+                    <circle cx="16.75" cy="3.77" r="1.5" opacity=".29" />
+                    <circle cx="20.23" cy="7.25" r="1.5" opacity=".43" />
+                    <circle cx="21.50" cy="12.00" r="1.5" opacity=".57" />
+                    <circle cx="20.23" cy="16.75" r="1.5" opacity=".71" />
+                    <circle cx="16.75" cy="20.23" r="1.5" opacity=".86" />
+                    <circle cx="12" cy="21.5" r="1.5" />
+                    <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        calcMode="discrete"
+                        dur="0.75s"
+                        values="0 12 12;30 12 12;60 12 12;90 12 12;120 12 12;150 12 12;180 12 12;210 12 12;240 12 12;270 12 12;300 12 12;330 12 12;360 12 12"
+                        repeatCount="indefinite"
+                    />
+                </g>
+            </svg>
+            <div style={{ marginTop: '10px', fontSize: '16px', color: '#333' }}>Loading...</div>
+        </div>
+    );
+};
+
+
