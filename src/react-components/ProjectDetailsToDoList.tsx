@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 
-import { ToDoCard, NewToDoIssueForm, ToDoDetailsWindow, toggleSidebar, SearchToDoBox, CounterBox } from '../react-components';
+import { ToDoCard, NewToDoIssueForm, ToDoDetailsWindow, SearchToDoBox, CounterBox } from '../react-components';
 import { AddIcon, SearchIcon } from './icons';
 
 import { type Project } from '../classes/Project';
@@ -32,27 +32,33 @@ export function ProjectDetailsToDoList({
     
     const [isNewToDoIssueFormOpen, setIsNewToDoIssueFormOpen] = React.useState(false)
     const [isTodoDetailsWindowOpen, setIsTodoDetailsWindowOpen] = React.useState(false)
-    const [selectedToDo, setSelectedToDo] = React.useState<ToDoIssue | null>(null);
-    //const [initialSidebarState, setInitialSidebarState] = React.useState<boolean | null>(null);
+    const [selectedToDo, setSelectedToDo] = React.useState<ToDoIssue | null>(null)
 
     // TodoList state to track changes
-    const [todoList, setTodoList] = React.useState<ToDoIssue[]>(project.todoList);
+    const [todoList, setTodoList] = React.useState<ToDoIssue[]>(project.todoList)
+    const originalTodoListRef = React.useRef<ToDoIssue[]>([])
+    const [searchTerm, setSearchTerm] = React.useState('')
 
 
+    // Update useEffect to sync with project changes
+    React.useEffect(() => {
+        console.log('ProjectDetailsToDoList - Project todoList changed:', {
+            projectId: project.id,
+            todoListLength: project.todoList.length,
+            todoListIds: todoList.map(todo => todo.id)
+        })
+        // Update both the current todoList and the original reference
+        originalTodoListRef.current = project.todoList
+        setTodoList(project.todoList)   
+    }, [project.todoList])
 
-    //const [todoList, setTodoList] = React.useState<IToDoIssue[]>(project.todoList)
+  
 
     //const [updateProject, setUpdateProject]= React.useState(project)
 
     // ToDoManager.onToDoIssueCreated = () => { setTodoList([...props.project.todoList]) }
     // ToDoManager.onToDoIssueDeleted = () => { setTodoList([...props.project.todoList]) }
 
-
-    // const handleUpdateToDoList = (newToDo: ToDoIssue) => {
-    //     const updatedToDoList = [...project.todoList, newToDo];
-    //     const updatedProject = { ...project, todoList: updatedToDoList }
-    //     onUpdatedProject(updatedProject) // Pass the NEW project object to the parent
-    // }
 
     const handleCloseNewToDoForm = () => {
         // Cierra el formulario
@@ -83,12 +89,12 @@ export function ProjectDetailsToDoList({
                 selectedTodo: isNewToDoIssueFormOpen
             });
         } catch (error) {
-            console.error('Error in handleClickOpenToDo:', error);
+            console.error('Error in handleClickOpenToDo:', error)
         }
     }
 
     const handleCloseToDoDetailsWindow = () => {
-        console.log('Closing ToDoDetailsWindow');
+        console.log('Closing ToDoDetailsWindow')
         setIsTodoDetailsWindowOpen(false)
         setSelectedToDo(null)
     }
@@ -96,9 +102,9 @@ export function ProjectDetailsToDoList({
     const handleDeleteToDoIssue = async (projectId: string, todoId: string) => {
         console.log("Delete ToDo Issue funtion launched for  todo:", selectedToDo!.id)
         try {
-            // Actualiza el proyecto local removiendo el todo
-            const updatedTodoList = project.todoList.filter(todo => todo.id !== todoId);
-            const updatedProject = { ...project, todoList: updatedTodoList };
+            // Update the local data project  removing the todo
+            const updatedTodoList = project.todoList.filter(todo => todo.id !== todoId)
+            const updatedProject = { ...project, todoList: updatedTodoList }
 
             // Notifica al componente padre del cambio
             onUpdatedProject(updatedProject);
@@ -140,46 +146,57 @@ export function ProjectDetailsToDoList({
         //Notify the parent todo object to trigger the rerender.
         onUpdatedToDoIssue(updatedTodo)
 
-    };
+    }
 
 
-    // Update useEffect to sync with project changes
+    // Modify the search handler to use useEffect for state updates
+    const onToDoIssueSearch = React.useCallback((value: string) => {
+        console.log('Search triggered with value:', value);
+        setSearchTerm(value);
+    }, [])
+
+
+
+
+    // Add useEffect to handle todoList updates when searchTerm changes
     React.useEffect(() => {
-        console.log('ProjectDetailsToDoList - Project todoList changed:', {
-            projectId: project.id,
-            todoListLength: project.todoList.length,
-            todoListIds: todoList.map(todo => todo.id)
-        });
-        setTodoList(project.todoList);
-    }, [project.todoList])
+        console.log('Filtering with searchTerm:', searchTerm);
+
+        if (!searchTerm.trim()) {
+            console.log('Empty search, restoring original list');
+            setTodoList(originalTodoListRef.current)
+            return
+        }
+
+        const searchLower = searchTerm.toLowerCase()
+        const filtered = originalTodoListRef.current.filter((todoIssue) => {
+            const tags = Array.isArray(todoIssue.tags) ? todoIssue.tags : []
+            const users = Array.isArray(todoIssue.assignedUsers) ? todoIssue.assignedUsers : []
 
 
-
-    const onToDoIssueSearch = (value: string) => {
-        const searchLower = value.toLowerCase()
-        const filteredList = project.todoList.filter((todoIssue) => {
-            // Safely check if arrays exist
-            const tags = Array.isArray(todoIssue.tags) ? todoIssue.tags : [];
-            const users = Array.isArray(todoIssue.assignedUsers) ? todoIssue.assignedUsers : [];
+            // // Format date to match possible search patterns (DD-MM-YYYY or DD/MM/YYYY)
+            // const formattedDate = todoIssue.dueDate instanceof Date
+            //     ? todoIssue.dueDate.toLocaleDateString('es-ES', {
+            //         year: 'numeric',
+            //         month: '2-digit',
+            //         day: '2-digit'
+            //     })
+            //     : '';
 
             return (
-                // Check title and description
                 todoIssue.title.toLowerCase().includes(searchLower) ||
                 todoIssue.description.toLowerCase().includes(searchLower) ||
-                // Check tags - looking for tag.title
-                tags.some(tag =>
-                    tag.title?.toLowerCase().includes(searchLower)
-                ) ||
-                // Check assigned users - looking for user.name
-                users.some(user =>
-                    user.name?.toLowerCase().includes(searchLower)
-                ) ||
-                // Check status column text
-                ToDoIssue.getStatusColumnText(todoIssue.statusColumn).toLowerCase().includes(searchLower)
+                tags.some(tag => tag.title?.toLowerCase().includes(searchLower)) ||
+                users.some(user => user.name?.toLowerCase().includes(searchLower)) ||
+                ToDoIssue.getStatusColumnText(todoIssue.statusColumn).toLowerCase().includes(searchLower) 
+                //formattedDate.includes(searchLower)
             );
-        })
-        setTodoList(filteredList)
-    }
+        });
+
+        console.log('Filtered results:', filtered.length);
+        setTodoList(filtered);
+    }, [searchTerm]);
+
 
 
     // Memorize the todo cards list to prevent unnecessary re-renders
@@ -210,41 +227,6 @@ export function ProjectDetailsToDoList({
             projectTodos: project.todoList
         });
     }, [isTodoDetailsWindowOpen, selectedToDo, project.todoList]);
-
-
-    // // Add these state handlers using useCallback
-    // const handleSidebarState = React.useCallback((isOpen: boolean) => {
-    //     const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-    //     if (!sidebarCheckbox) return;
-
-    //     if (isOpen) {
-    //         // Store current state and collapse sidebar when opening
-    //         setInitialSidebarState(sidebarCheckbox.checked);
-    //         toggleSidebar.collapse();
-    //     } else {
-    //         // Restore state when closing
-    //         if (initialSidebarState !== null) {
-    //             sidebarCheckbox.checked = initialSidebarState;
-    //             setInitialSidebarState(null);
-    //         }
-    //     }
-    // }, [initialSidebarState]);
-
-    // // Update the useEffect to use the callback
-    // React.useEffect(() => {
-    //     if (isTodoDetailsWindowOpen) {
-    //         handleSidebarState(true);
-    //     } else {
-    //         handleSidebarState(false);
-    //     }
-
-    //     // Cleanup function
-    //     return () => {
-    //         if (!isTodoDetailsWindowOpen) {
-    //             handleSidebarState(false);
-    //         }
-    //     };
-    // }, [isTodoDetailsWindowOpen, handleSidebarState]);
 
 
 
@@ -348,7 +330,7 @@ export function ProjectDetailsToDoList({
                         style={{ display: "flex", alignItems: "center", columnGap: 10 }}
                     >
                         <SearchIcon size={24} className="todo-icon-plain" color="var(--color-fontbase)" />
-                        <SearchToDoBox onChange={(value) => onToDoIssueSearch(value)} />                        
+                        <SearchToDoBox onChange={onToDoIssueSearch} />
                     </div>
                     <div
                         style={{
@@ -359,32 +341,15 @@ export function ProjectDetailsToDoList({
                         }}
                     >
                         <CounterBox
-                            filteredItemsNum={todoList.length > 0 ? todoList.length : 0 }
-                            totalItemsNum={project.todoList.length > 0 ?project.todoList.length :0}
+                            filteredItemsNum={todoList.length > 0
+                                ? todoList.length
+                                : 0
+                            }
+                            totalItemsNum={originalTodoListRef.current.length > 0
+                                ? originalTodoListRef.current.length
+                                : 0
+                            }
                         />
-                        {/*<div id="todolist-search-counter">Counter</div>
-                         <button className="todo-icon-plain" id="btn-todo-arrowup">
-                            <svg
-                                className="todo-icon"
-                                role="img"
-                                aria-label="arrow-upward"
-                                width={24}
-                                height={24}
-                            >
-                                <use href="#arrow-upward" />
-                            </svg>
-                        </button>
-                        <button className="todo-icon-plain" id="btn-todo-arrowdown">
-                            <svg
-                                className="todo-icon"
-                                role="img"
-                                aria-label="arrow-downward"
-                                width={24}
-                                height={24}
-                            >
-                                <use href="#arrow-downward" />
-                            </svg>
-                        </button> */}
                     </div>
                 </div>
             </div>
@@ -407,8 +372,5 @@ export function ProjectDetailsToDoList({
             {updateToDoDetailsWindow}
             {}
         </div>
-
-
-
     )
 }
