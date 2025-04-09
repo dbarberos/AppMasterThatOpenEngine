@@ -726,30 +726,57 @@ export class ProjectsManager {
 
     private updateLocalStorage(): void {
         try {
+            console.log('LS_Update: Iniciando updateLocalStorage. this.list tiene:',
+                this.list.map(p => ({ id: p.id, todoCount: p.todoList?.length ?? 'N/A' }))
+            );
             // Process projects before storing
-            const processedProjects = this.list.map(project => ({
-                ...project,
-                todoList: project.todoList.map(todo => ({
-                    ...todo,
-                    dueDate: todo.dueDate instanceof Date
-                        ? todo.dueDate.toISOString()
-                        : todo.dueDate,
-                    createdDate: todo.createdDate instanceof Date
-                        ? todo.createdDate.toISOString()
-                        : todo.createdDate
-                })),
-                finishDate: project.finishDate instanceof Date
-                    ? project.finishDate.toISOString()
-                    : project.finishDate
-            }))
+            const processedProjects = this.list.map(project => {
+                const processedTodoList = project.todoList.map(todo => {
+                    // *** Simplificación: Llamar directamente a toISOString() ***
+                    const processedDueDate = todo.dueDate.toString();
+                    const processedCreatedDate = todo.createdDate.toString();
+
+                    return {
+                        ...todo,
+                        dueDate: processedDueDate,
+                        createdDate: processedCreatedDate,
+                        // ui: undefined, // Asegúrate de excluir propiedades no serializables
+                    };
+                });
+                // Procesar finishDate (Aún necesita chequeo si puede ser inválido o no Date)
+                let processedFinishDate: string | null = null;
+                if (project.finishDate instanceof Date) {
+                    // *** ¡AÚN RECOMENDADO! Chequeo isNaN para finishDate ***
+                    if (!isNaN(project.finishDate.getTime())) {
+                        processedFinishDate = project.finishDate.toISOString();
+                    } else {
+                        console.warn(`LS_Update - Proyecto ${project.id}: finishDate inválida. Guardando null.`);
+                        processedFinishDate = null;
+                    }
+                } else if (project.finishDate !== null && project.finishDate !== undefined) {
+                    // Podría ser un string si viene de localStorage
+                    processedFinishDate = project.finishDate as string;
+                }
+
+                return {
+                    ...project,
+                    todoList: processedTodoList,
+                    finishDate: processedFinishDate,
+                    // ui: undefined, // Asegúrate de excluir propiedades no serializables
+                };
+            });
+
+
+            // *** Log CLAVE antes de JSON.stringify ***
+            // *** Log CLAVE antes de JSON.stringify ***
+            console.log('LS_Update - FINAL: Datos listos para guardar. Estado de las todoLists:',
+                processedProjects.map(p => ({ id: p.id, todoCount: p.todoList?.length ?? 'N/A' }))
+            )
 
             localStorage.setItem(STORAGE_KEY, JSON.stringify(processedProjects));
             localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
 
-            console.log('ProjectsManager: localStorage updated', {
-                projectsCount: this.list.length,
-                timestamp: new Date().toISOString()
-            })
+            console.log('LS_Update: localStorage actualizado.');
 
         } catch (error) {
             console.error('Error updating localStorage:', error);
@@ -761,24 +788,96 @@ export class ProjectsManager {
 
     //FOR UPDATING THE TODO LIST INSIDE DE PROHJECTS.MANAGER WHEN IT SHOULD BE UPDATED
     updateProjectToDoList(projectId: string, todo: ToDoIssue) {
-        const project = this.list.find(p => p.id === projectId);
-        if (project) {
-            //Check if the todo already exists to avoid duplicate toDos
-            const existingTodoIndex = project.todoList.findIndex(t => t.id === todo.id);
+        console.log(`PM.updateProjectToDoList ENTERED at ${Date.now()} for todo ID ${todo.id}`)
+        const projectIndex = this.list.findIndex(p => p.id === projectId);
+        //const project = this.list.find(p => p.id === projectId);
 
-            // Optimistic update
+        if (projectIndex !== -1) {
+            //if (project) {
+            const currentProject = this.list[projectIndex]
+
+            console.log(`PM.updateProjectToDoList: Checking project ${projectId}. Current todoList IDs:`, currentProject.todoList.map(t => t.id))
+
+
+            const existingTodoIndex = currentProject.todoList.findIndex(t => t.id === todo.id)
+
             // Only add if it doesn't exist
             if (existingTodoIndex === -1) {
-                project.todoList.push(todo);
+                try {
+                    //project.todoList.push(todo);
+                    // Process the todo before add
+                    const todoToAdd = new ToDoIssue({
+                        ...todo,
+                        dueDate: todo.dueDate instanceof Date
+                            ? todo.dueDate
+                            : new Date(todo.dueDate),
+                        createdDate: todo.createdDate instanceof Date 
+                            ? todo.createdDate
+                            : new Date(todo.createdDate),
+                        todoProject: projectId // Asegurar que mantiene la referencia al proyecto
+                    });
+                    console.log('PM: todoToAdd (instancia validada):', { ...todoToAdd });
+                
+                    if (isNaN(todoToAdd.dueDate.getTime())) {
+                        throw new Error(`Invalid dueDate for todo ${todo.id}`);
+                    }
 
+                    // Clonar la lista existente y añadir el nuevo ToDo
+                    const updatedTodoList = [...currentProject.todoList, todoToAdd];
+                    console.log('PM: updatedTodoList (antes de new Project):', updatedTodoList.map(t => ({ id: t.id, title: t.title }))); 
+
+                    // *** Log CLAVE antes de llamar al constructor ***
+                    const dataForNewProject = {
+                        ...currentProject,
+                        todoList: updatedTodoList,
+                        id: projectId
+                    };
+                    console.log('PM: Datos que se pasarán a new Project():', JSON.stringify(dataForNewProject, null, 2)); // Stringify para ver estructura
+
+                    // New ToDos Array in a inmutable way
+                    const updatedProject = new Project({
+                        ...currentProject,
+                        todoList: updatedTodoList,
+                        id: projectId
+                    })
+                    console.log('PM: updatedProject (DESPUÉS de new Project):', { ...updatedProject, todoList: updatedProject.todoList.map(t => ({ id: t.id, title: t.title })) }); // Log simplificado
+
+                
+                    // Actualizar la lista de proyectos con el nuevo proyecto
+                    this.list = [
+                        ...this.list.slice(0, projectIndex),
+                        updatedProject,
+                        ...this.list.slice(projectIndex + 1)
+                    ]
+                    console.log('PM: this.list actualizado, proyecto afectado:', this.list[projectIndex].todoList.map(t => ({ id: t.id, title: t.title })));
+
+                    // *** Log CLAVE antes de guardar en localStorage ***
+                    console.log('PM: Llamando a updateLocalStorage(). Estado actual de this.list:', this.list.map(p => ({ id: p.id, name: p.name, todoCount: p.todoList.length })));
+
+
+                    // Update localStorage immediately after updating ProjectsManager
+                    this.updateLocalStorage()
+
+                    console.log('Todo added successfully:', {
+                        projectId,
+                        todoId: todoToAdd.id,
+                        todoListLength: updatedProject.todoList.length,
+                        storedTodos: JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+                            .find(p => p.id === projectId)?.todoList?.length || 0
+                    });
+
+                    // Notify changes
+                    this.onProjectUpdated(projectId);
+                } catch (error) {
+                    console.error('Error adding todo:', error);
+                }
+
+            } else {
+                console.warn(`PM.updateProjectToDoList: Todo ID ${todo.id} ALREADY FOUND at index ${existingTodoIndex}. Skipping add/localStorage update.`);
                 // Update localStorage immediately after updating ProjectsManager
-                this.updateLocalStorage();
-                console.log("ProjectsManager.ts: updateProjectToDoList called",  this.list )
-
+                this.updateLocalStorage()
                 // Notify changes
                 this.onProjectUpdated(projectId);
-            } else {
-                console.warn(`ToDoIssue with ID ${todo.id} already exists in project ${projectId}. It will not be added again.`);
 
             }
         } else {

@@ -44,10 +44,21 @@ const App = () => {
 
     };
 
+    let callCounter = 0
+
     const handleToDoIssueCreated = (todoIssueCreated) => {
-        projectsManager.updateProjectToDoList(todoIssueCreated.id, todoIssueCreated)
-        console.log("index.tsx: handleToDoIssueCreated called", { todoIssueCreated })
-        setProjects([...projectsManager.list]);
+        callCounter++
+        console.log(`handleToDoIssueCreated - CALL #${callCounter} at ${Date.now()}: Calling updateProjectToDoList for todo ID ${todoIssueCreated.id}`);
+
+        try {
+
+            projectsManager.updateProjectToDoList(todoIssueCreated.todoProject, todoIssueCreated)
+            console.log(`handleToDoIssueCreated - CALL #${callCounter}: updateProjectToDoList finished.`);
+        
+            setProjects([...projectsManager.list]);
+        } catch (error) {
+            console.error(`handleToDoIssueCreated - CALL #${callCounter}: Error calling updateProjectToDoList`, error);
+        }
     }
 
     const handleToDoIssueUpdated = (todoIssueUpdated) => {

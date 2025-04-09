@@ -65,6 +65,10 @@ export const useProjectsCache = (cacheDuration: number = 5 * 60 * 1000): UseProj
 
     const updateCache = React.useCallback((newProjects: Project[]) => {
         try {
+            // *** Log CLAVE para ver qué llega a la caché de React ***
+            console.log('CacheHook: updateCache llamado con newProjects:', newProjects.map(p => ({ id: p.id, name: p.name, todoCount: p.todoList?.length ?? 'undefined' })));
+
+
             // Actualizar localStorage
             localStorage.setItem(STORAGE_KEY, JSON.stringify(newProjects))
             localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
@@ -77,6 +81,9 @@ export const useProjectsCache = (cacheDuration: number = 5 * 60 * 1000): UseProj
                 count: newProjects.length,
                 timestamp: new Date(lastFetchRef.current).toISOString()
             });
+
+
+            console.log('CacheHook: Cache actualizada en localStorage y estado React.');
         } catch (error) {
             setError('Failed to update cache');
             console.error('Error updating localStorage cache:', error);

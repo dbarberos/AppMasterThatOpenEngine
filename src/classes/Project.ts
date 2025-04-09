@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
-import { IToDoIssue } from "./ToDoIssue"
+import { IToDoIssue } from "../types"
+import { ToDoIssue } from "./ToDoIssue"
+import * as Firestore from 'firebase/firestore'
 
 
 export type ProjectStatus = "Pending" | "Active" | "Finished"
@@ -12,11 +14,12 @@ export interface IProject {
     description: string
     status: ProjectStatus
     userRole: UserRole
-    finishDate: Date
+    finishDate: Date | string 
     cost: number
     progress?: number 
     //todoList: IToDoIssue[]
     id?: string
+    todoList?: IToDoIssue[]
     
 }
 
@@ -95,16 +98,29 @@ export class Project implements IProject {
         }
 
         this.backgroundColorAcronym = Project.calculateBackgroundColorAcronym(this.businessUnit)
+
         // // Handle todoList and todoList.todoIssue.ui
-        //this.todoList = data.todoList || []
-        this.todoList=[]
+
+        if (data.todoList && Array.isArray(data.todoList)) {
+            // Si data.todoList existe, mapea sus elementos a instancias de ToDoIssue
+            this.todoList = data.todoList.map(todoData => {
+                // Si ya es una instancia, úsala; si no, créala
+                return todoData instanceof ToDoIssue
+                    ? todoData
+                    : new ToDoIssue(todoData); // Usa el constructor robusto de ToDoIssue
+            });
+        } else {
+            // Si no viene data.todoList, se queda con el valor inicial []
+            this.todoList = [];
+        }
+        //this.todoList=[]
+
+
         if (idString) {
             this.id = idString
         }
         
         //if (!this.id) { this.id = idString } //In order to not change the ID when we import projects from JSON file
-        console.log(data);
-
         // lets create the ui for the list of todo ISssue if the proyect is imported. I mean exist todoIssue data but does not exist ui variable
 
     }

@@ -127,17 +127,17 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
     //Suscription to ProjectsManager events with control of refreshing
     React.useEffect(() => {
-        const handleProjectsUpdate = async() => {
+        const handleProjectsUpdate = () => {
             //const updatedProjects = [...projectsManager.list];
             const updatedProjects = projectsManager.list.map(project => ({
                 ...project,
                 todoList: project.todoList.map(todo => ({
                     ...todo,
                     dueDate: todo.dueDate instanceof Date
-                        ? todo.dueDate
+                        ? new Date(todo.dueDate.getTime())
                         : new Date(todo.dueDate),
                     createdDate: todo.createdDate instanceof Date
-                        ? todo.createdDate
+                        ? new Date(todo.createdDate.getTime()) 
                         : new Date(todo.createdDate)
                 }))
             }))
@@ -145,9 +145,9 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
 
             //update cache and localStorage
-            await updateCache(updatedProjects);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
-            localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());            
+            updateCache(updatedProjects);
+            //localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
+            //localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());            
             //updateOriginalProjects([...projectsManager.list])
             lastSyncRef.current = Date.now(); // Actualice timestamp
 
