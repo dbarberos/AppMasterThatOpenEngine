@@ -9,6 +9,7 @@ import { deleteDocument, deleteProjectWithSubcollections } from '../services/fir
 
 import { ProjectsManager } from '../classes/ProjectsManager'
 import { IProject, Project } from '../classes/Project';
+import { STORAGE_KEY } from '../const';
 
 interface Props {
     updateProject: Project
@@ -21,30 +22,6 @@ export function DeleteProjectBtn({ updateProject, projectsManager }: Props): JSX
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
-
-    // projectsManager.onProjectDeleted = async (name) => {
-    //     await deleteDocument("/projects", name)
-    //     navigateTo("/")
-    // }
-
-    // projectsManager.onProjectDeleted = async (projectId: string) => {
-    //     try {
-    //         await deleteProjectWithSubcollections(projectId);            
-    //     } catch (error) {
-    //         console.error("Error in onProjectDeleted:", error);
-    //         setMessagePopUpContent({
-    //             type: "error",
-    //             title: "Error Deleting Project",
-    //             message: "Failed to delete project. Please try again.",
-    //             actions: ["Ok"],
-    //             onActionClick: {
-    //                 "Ok": () => setShowMessagePopUp(false)
-    //             },
-    //             onClose: () => setShowMessagePopUp(false)
-    //         });
-    //         setShowMessagePopUp(true);
-    //     }
-    // }
 
 
     function handleDeleteProject(e: React.FormEvent) {
@@ -74,29 +51,7 @@ export function DeleteProjectBtn({ updateProject, projectsManager }: Props): JSX
                 </>,
             actions: ["Delete", "Cancel"],
             onActionClick: {
-                "Delete": async () => {
-                    try {
-                        //Delete in the DB
-                        await deleteProjectWithSubcollections(updateProject.id!)
-                        //update projectsManager. Here is the onDeletedProject method
-                        projectsManager.deleteProject(updateProject.id!)
-                        setShowMessagePopUp(false)
-                        navigateTo('/')
-
-                    } catch (error) {
-                        console.error("Error deleting project:", error);
-                        setMessagePopUpContent({
-                            type: "error",
-                            title: "Error Deleting Project",
-                            message: "Failed to delete project. Please try again.",
-                            actions: ["Ok"],
-                            onActionClick: {
-                                "Ok": () => setShowMessagePopUp(false)
-                            },
-                            onClose: () => setShowMessagePopUp(false)
-                        });
-                    }
-                },
+                "Delete": handleProjectDelete,
                 "Cancel": () => {
                     console.log("Delete project cancelled");
                     setShowMessagePopUp(false)
@@ -109,9 +64,6 @@ export function DeleteProjectBtn({ updateProject, projectsManager }: Props): JSX
         setMessagePopUpContent(confirmConfig)
         setShowMessagePopUp(true)
         e.preventDefault()
-
-
-
 
 
         // if (updateProject.todoList.length > 0) {
@@ -178,6 +130,52 @@ export function DeleteProjectBtn({ updateProject, projectsManager }: Props): JSX
         //     return
         // }
     }
+
+    const handleProjectDelete = async () => {
+        try {
+            // Delete from Firebase
+            await deleteProjectWithSubcollections(updateProject.id!)
+
+            // Delete from ProjectsManager
+            projectsManager.deleteProject(updateProject.id!)
+
+            // Update localStorage cache
+            const cachedProjects = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const updatedProjects = cachedProjects.filter(
+                (project: Project) => project.id !== updateProject.id
+            );
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
+
+            console.log('Project deleted successfully:', {
+                projectId: updateProject.id,
+                remainingProjects: updatedProjects.length
+            });
+
+            setShowMessagePopUp(false)
+            navigateTo('/', { replace: true })
+            //window.location.reload() // Temporal reload in order to clean the state
+
+
+            // La recarga de página(window.location.reload()) es una solución temporal.En una implementación ideal, deberías usar un estado global(como React Context o Redux) para propagar los cambios sin recargar.
+
+
+        } catch (error) {
+            console.error("Error deleting project:", error)
+            setMessagePopUpContent({
+                type: "error",
+                title: "Error Deleting Project",
+                message: "Failed to delete project. Please try again.",
+                actions: ["Ok"],
+                onActionClick: {
+                    "Ok": () => setShowMessagePopUp(false)
+                },
+                onClose: () => setShowMessagePopUp(false)
+            })
+        }
+    }
+
+
+
 
     return (
         <>

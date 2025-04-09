@@ -3,7 +3,8 @@ import * as Router from 'react-router-dom';
 import { createDocument, updateDocument, deleteDocument } from '../services/firebase';
 
 import { DeleteProjectBtn, RenameElementMessage, DiffContentProjectsMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
-import { usePrepareProjectForm } from '../hooks';
+import { usePrepareProjectForm, useProjectsCache } from '../hooks';
+import {parseDate} from '../utils/DateUtils';
 
 import { BusinessUnit, IProject, Project, ProjectStatus, UserRole } from '../classes/Project';
 import { ProjectsManager } from '../classes/ProjectsManager';
@@ -29,6 +30,9 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
     const [projectDetailsToRename, setProjectDetailsToRename] = useState<IProject | null>(null);
     const [isRenaming, setIsRenaming] = React.useState(false);
     const [currentProjectName, setCurrentProjectName] = React.useState('');
+
+    // Add useProjectsCache hook
+    const { updateCache } = useProjectsCache();
 
     // const { isRenaming, initiateRename, currentProjectName, handleProjectRename, cancelRename, setOnRename } = useRenameProject(projectsManager)
     //const updateDataProject = useUpdateExistingProject({ projectsManager, onUpdateExistingProject: onCreatedProject || (() => { }) });
@@ -83,19 +87,60 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
     async function handleUpdateDataProjectInDB(projectDetailsToUpdate: Project, simplifiedChanges: Record<string, any>) {
 
-        if (!projectDetailsToUpdate.id) return
-        await updateDocument<Partial<Project>>("/projects", projectDetailsToUpdate.id, simplifiedChanges)
-        console.log("data transfered to DB")
+        if (!projectDetailsToUpdate.id) {
+            throw new Error('Invalid project ID');
+            return
+        }
+        try {
+            const processedChanges = { ...simplifiedChanges };
 
-        console.log("projectDetailsToUpdate.id", projectDetailsToUpdate.id)
-        console.log("projectDetailsToUpdate", projectDetailsToUpdate)
-        console.log("Projects in manager:", projectsManager.list.map(p => p.id))
-        //const updatedProject = projectsManager.updateProject(projectDetailsToUpdate.id, projectDetailsToUpdate)
+            // Convert the date string to a Date object
+            if (processedChanges.finishDate) {
+                const parsedDate = parseDate(processedChanges.finishDate);
+                console.log('Processing date:', {
+                    original: processedChanges.finishDate,
+                    parsed: parsedDate.toISOString()
+                });
+                processedChanges.finishDate = parsedDate;
+            }
 
+            //update in Firebase
+            const updatedData = await updateDocument<Partial<Project>>(
+                projectDetailsToUpdate.id,
+                processedChanges
+            )
+            
+            console.log("data transfered to DB")
+            console.log("projectDetailsToUpdate.id", projectDetailsToUpdate.id)
+            console.log("projectDetailsToUpdate", projectDetailsToUpdate)
+            console.log("Projects in manager:", projectsManager.list.map(p => p.id))
+            
+            //Update projectsManager and obtain the project
+            const updateResult = projectsManager.updateProject(
+                projectDetailsToUpdate.id,
+                new Project({ ...projectDetailsToUpdate, ...processedChanges })
+            );
 
-        onUpdatedProject && onUpdatedProject(projectDetailsToUpdate)
+            if (updateResult) {
+            
+                updateCache(projectsManager.list); // Update localStorage cache
+                onUpdatedProject && onUpdatedProject(updateResult!) //Prop_Notify parent component
+                projectsManager.onProjectUpdated?.(projectDetailsToUpdate.id);
+            
 
-        projectsManager.onProjectUpdated(projectDetailsToUpdate.id)
+                console.log('Project updated successfully:', {
+                    id: projectDetailsToUpdate.id,
+                    changes: simplifiedChanges
+                })
+
+            } else {
+                console.error("Project update failed in ProjectsManager")
+                throw new Error('Failed to update project in ProjectManager');
+            }
+        } catch (error) {
+            console.error('Error updating project:', error);
+            throw error
+        }
     }
 
 
@@ -150,9 +195,11 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
             // *** Get the finishDate from the form data ***
             let finishProjectDate: Date | null = null // Allow null initially
             const finishProjectDateString = formDataProject.get("finishDate") as string
+
             // Try to create a Date object, handling potential errors
             if (finishProjectDateString) {
                 finishProjectDate = new Date(finishProjectDateString)
+                finishProjectDate.setHours(12, 0, 0, 0) // Set time to noon to avoid timezone issues
                 // Check if the Date object is valid
                 if (isNaN(finishProjectDate.getTime())) {
                     // Handle invalid date input (e.g., show an error message)
@@ -162,7 +209,8 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
             }
             // Set to current date if no valid date was provided
             if (!finishProjectDate) {
-                finishProjectDate = new Date("2026-12-31"); // Create a new Date object for today
+                finishProjectDate = new Date("2026-12-31") // Create a new Date object for today
+                finishProjectDate.setHours(12, 0, 0, 0) // Set time to noon to avoid timezone issues
             }
 
             const projectDetails: IProject = {

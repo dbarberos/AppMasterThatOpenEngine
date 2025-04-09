@@ -8,13 +8,14 @@ import { newToDoIssue, clearSearchAndResetList, renderToDoIssueListInsideProject
 import { updateAsideButtonsState } from "./HTMLUtilities.ts"
 
 import { useProjectsManager } from '../react-components/ProjectsManagerContext'
+import { CACHE_TIMESTAMP_KEY, STORAGE_KEY } from "../const.ts"
 
 export class ProjectsManager {
 
     list: Project[] = []
     //ui: HTMLElement
     onProjectCreated = (project: Project) => { }
-    onProjectDeleted = (id: string) => { }
+    onProjectDeleted = (name: string) => { }
     onProjectUpdated = (id: string) => { }
     //onToDoUpdated = (projectId: string, todoId: string) => { }
     onToDoIssueDeleted = (todoIssueId: string) => { }
@@ -51,13 +52,13 @@ export class ProjectsManager {
         //this.createDefaultProject()
     }
     */
-    
+
     //ESTA FUCNION ESTA CREADA PARA LA CREACIÓN DE PROYECTOS AL RERENDERIZAR EL COMPONENTE DE REAC PROJECTPAGE
-    newProject(data: Project, id?: string): Project | undefined{
+    newProject(data: Project, id?: string): Project | undefined {
         const projectNames = this.list.map((project) => {
             return project.name
         })
-        
+
         if (projectNames.includes(data.name)) {
             // Find and remove the existing project from the ui & list since you are going to use it later
             const existingProjectIndex = this.list.findIndex(project => project.name === data.name);
@@ -74,7 +75,7 @@ export class ProjectsManager {
                     newProject.todoList = data.todoList.map(todoData => {
                         return ToDoIssue.createFromData({
                             ...todoData,
-                            todoProject: newProject.id || '' 
+                            todoProject: newProject.id || ''
                         });
                     });
                 }
@@ -105,349 +106,349 @@ export class ProjectsManager {
             return newProject
         }
     }
-    
 
-/*OLD NEWpROJECT FUNCTION
-    OLDnewProject(data: IProject): Project | undefined {
-        const projectNames = this.list.map((project) => {
-            return project.name
-        })
-        if (projectNames.includes(data.name)) {
-            console.log(`A project with the name [ ${data.name} ] already exists`)
-            //Create a Confirmation Modal to prompt the user about the duplication and offer options
-            return new Promise<Project | undefined>((resolve) => {// Return a Promise
-                const popupDuplicateProject = new MessagePopUp(
-                    document.body,
-                    "warning",
-                    `A project with the name "${data.name}" already exist`,
 
-                    `<b><u>Overwrite:</b></u> Replace the existing project with the imported data.<br>
-                <b><u>Skip:</b></u> Do not import the duplicated project.<br>
-                <b><u>Rename:</b></u> Enter a new name for the imported project.`,
-                    ["Overwrite", "Skip", "Rename"],
-                )
-
-                // Define ALL your button callbacks for the messagePopUp created
-                const buttonCallbacks = {
-                    "Overwrite": () => {
-                        console.log("Overwrite button clicked!");
-                        popupDuplicateProject.closeMessageModal();
-
-                        // Find and remove the existing project from the ui & list since you are going to use it later
-                        const existingProjectIndex = this.list.findIndex(project => project.name === data.name);
-                        if (existingProjectIndex !== -1) {
-
-                            // 1. Remove the existing project's UI from the display
-                            this.ui.removeChild(this.list[existingProjectIndex].ui);
-                            console.log("Old project removed fromthe UI");
-
-                            // 2. Remove the existing project from the list
-                            this.list = this.list.filter((project) => project.name !== data.name);
-                            console.log("Removed the oLd Project name from the List of names");
-
-
-                            // 3. Create a new project with the imported data
-                            const newProject = new Project(data);
-
-                            ATTACH THE EVENT LISTENER HERE
-                            newProject.ui.addEventListener("click", () => {
-                                changePageContent("project-details", "flex")
-
-                                //Set the funcionality of search between todoIssues
-                                setupProjectDetailsSearch()
-
-                                // Set the localStorage value for pageWIP to "project-details"
-                                localStorage.setItem("pageWIP", "project-details")
-                                localStorage.setItem("selectedProjectId", newProject.id)
-
-                                ProjectsManager.setDetailsPage(newProject)
-                                console.log(" details pages set in a new window")
-                                
-                                updateAsideButtonsState()
-                            })
-                            
-
-
-                            // 4. Add the new project to the list and UI
-                            this.list.push(newProject);
-                            this.onProjectCreated(newProject);
-                            console.log("Added new project to the List of names")
-                            // this.ui.append(newProject.ui)
-                            //console.log("Added new project to the UI")
-
-                            // 5. Resolve with the newly created project
-                            resolve(newProject);
-
-                        } else {
-                            // Handle the case where the project is not found (shouldn't happen, just in case
-                            console.error("Project to overwrite not found in the list.")
-                            resolve(undefined); // Or resolve with an appropriate error value
-                        }
-                    },
-                    "Skip": () => {
-                        console.log("Skip button clicked!")
-                        popupDuplicateProject.closeMessageModal()
-                        resolve(undefined); // Resolve with undefined to indicate skipping
-                    },
-                    "Rename": () => {
-                        console.log("Rename button clicked!")
-                        // **Get the project name BEFORE creating the dialog**
-                        const projectToRename = this.list.find((project) => project.name === data.name);
-                        const existingProjectName = projectToRename ? projectToRename.name : "Project Name";
-
-                        // 1. Create the rename dialog
-                        const renameDialog = document.createElement("dialog");
-                        // renameDialog.id = id;
-                        renameDialog.className = "popup-default";
-                        document.body.insertBefore(renameDialog, document.body.lastElementChild);
-
-                        const box = document.createElement("div");
-                        box.className = "message-content toast toast-popup-default";
-                        renameDialog.appendChild(box);
-
-                        const renameIcon = document.createElement("div");
-                        renameIcon.className = "message-icon";
-                        box.appendChild(renameIcon);
-
-                        const renameIconSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                        renameIconSVG.setAttribute("class", "message-icon-svgDark");
-                        renameIconSVG.setAttribute("role", "img");
-                        renameIconSVG.setAttribute("aria-label", "rename");
-                        renameIconSVG.setAttribute("width", "24px");
-                        renameIconSVG.setAttribute("height", "24px");
-                        renameIconSVG.setAttribute("fill", "#08090a");
-                        renameIcon.appendChild(renameIconSVG);
-
-                        const renameIconUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
-                        renameIconUse.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#rename");
-                        renameIconUse.setAttributeNS("http://www.w3.org/2000/svg", "xlink:href", "#rename");
-                        renameIconSVG.appendChild(renameIconUse);
-
-
-                        const content = document.createElement("div");
-                        content.className = "toast-column";
-                        box.appendChild(content);
-
-
-                        const text = document.createElement("div");
-                        text.className = "message-text";
-                        content.appendChild(text);
-
-                        const renameTitle = document.createElement("h5");
-                        renameTitle.className = "message-text-title";
-                        renameTitle.textContent = "Project name";
-                        text.appendChild(renameTitle);
-
-
-                        const renameSubtitle = document.createElement("p");
-                        renameSubtitle.className = "message-text-message";
-                        renameSubtitle.textContent = "Select the text field and populate it with a new name";
-                        text.appendChild(renameSubtitle);
-
-                        const boxInput = document.createElement("div");
-                        boxInput.className = "message-text";
-                        content.appendChild(boxInput);
-
-
-                        const renameInputName = document.createElement("input");
-                        renameInputName.className = "toast-input-text";
-                        renameInputName.type = "text";
-                        renameInputName.setAttribute("id", "newProjectName");
-                        renameInputName.setAttribute("placeholder", existingProjectName);
-                        renameInputName.setAttribute("autofocus", "");
-                        renameInputName.setAttribute("required", "");
-                        renameInputName.setAttribute("minlength", "5");
-                        renameInputName.setAttribute("autocomplete", "off");
-                        boxInput.appendChild(renameInputName);
-
-
-                        const renameInputLabel = document.createElement("label");
-                        renameInputLabel.className = "toast-input-text";
-                        renameInputLabel.textContent = existingProjectName
-                        renameInputLabel.setAttribute("autofocus", "false");
-                        boxInput.appendChild(renameInputLabel);
-
-
-                        const renameBtns = document.createElement("div");
-                        renameBtns.className = "message-btns";
-                        box.appendChild(renameBtns);
-
-                        const rBtnA = document.createElement("button");
-                        rBtnA.className = "message-btn";
-                        rBtnA.type = "button";
-                        rBtnA.setAttribute("id", "confirmRename");
-                        renameBtns.appendChild(rBtnA)
-
-                        const rBtnText = document.createElement("span");
-                        rBtnText.className = "message-btn-text";
-                        rBtnText.textContent = "Do it";
-                        rBtnA.appendChild(rBtnText);
-
-                        const rBtnC = document.createElement("button");
-                        rBtnC.className = "message-btn";
-                        rBtnC.type = "button";
-                        rBtnC.setAttribute("id", "cancelRename");
-                        renameBtns.appendChild(rBtnC)
-
-                        const btnTextC = document.createElement("span");
-                        btnTextC.className = "message-btn-text";
-                        btnTextC.textContent = "Cancel";
-                        rBtnC.appendChild(btnTextC);
-
-
-
-                        // 2. Append the dialog to the body and show it
-                        document.body.appendChild(renameDialog)
-                        renameDialog.showModal()
-
-                        // 3. Handle Confirm and Cancel buttons
-                        const confirmRenameBtn = renameDialog.querySelector('#confirmRename')
-                        const cancelRenameBtn = renameDialog.querySelector('#cancelRename')
-                        const newProjectNameInput = renameDialog.querySelector('#newProjectName') as HTMLInputElement;
-
-                        if (confirmRenameBtn && cancelRenameBtn && newProjectNameInput) {
-                            confirmRenameBtn.addEventListener('click', () => {
-                                const newName = newProjectNameInput.value.trim()
-
-                                // Basic validation: Check if the name is empty
-                                if (newName === "") {
-                                    const popupEnterNewName = new MessagePopUp(
-                                        document.body,
-                                        "error",
-                                        `A project with a empty name is not allow`,
-
-                                        "Please enter a valid project name.",
-                                        ["Got it"],
-                                    )
-                                    // Define ALL your button callbacks for the messagePopUp created
-                                    const buttonCallbacks = {
-                                        "Got it": () => {
-                                            console.log("Got it button clicked!")
-                                            popupEnterNewName.closeMessageModal()
-                                        },
-                                    }
-                                    popupEnterNewName.showNotificationMessage(buttonCallbacks);
-
-                                    return;
-                                }
-
-                                // Validation: Check if the minimun length is 5 characters
-                                if (newName.length < 5) {
-                                    const popupEnter5CharactersName = new MessagePopUp(
-                                        document.body,
-                                        "error",
-                                        "Invalid Project Name",
-                                        "Please enter a project name that is at least 5 characters long.",
-                                        ["Got it"],
-                                    )
-                                    // Define ALL your button callbacks for the messagePopUp created
-                                    const buttonCallbacks = {
-                                        "Got it": () => {
-                                            console.log("Got it button clicked!")
-                                            popupEnter5CharactersName.closeMessageModal()
-                                        },
-                                    }
-                                    popupEnter5CharactersName.showNotificationMessage(buttonCallbacks);
-
-                                    return;
-                                }
-
-                                // Validation: Check if the mame does not exist
-                                const existingProject = projectNames.find(existingName => existingName.toLowerCase() === newName.toLowerCase())
-
-                                if (existingProject) {
-                                    // Name already exists, show error message
-                                    const existProjectName = new MessagePopUp(
-                                        document.body,
-                                        "error",
-                                        "Duplicate Name",
-                                        `A project named "${newName}" already exists. Please choose a different name.`,
-                                        ["Got it"]
-                                    );
-                                    // Define button callback
-                                    const buttonCallbacks = {
-                                        "Got it": () => {
-                                            existProjectName.closeMessageModal();
-                                        }
-                                    }
-                                    existProjectName.showNotificationMessage(buttonCallbacks);
-                                    const deleteNameInput = document.querySelector("#newProjectName") as HTMLInputElement | null
-                                    if (deleteNameInput) {
-                                        deleteNameInput.value = ""
-                                    }
-                                } else {
-
-
-
-                                    // Update the project name
-                                    data.name = newName;
-
-                                    //Assign a new Id to the project
-                                    (data as any).id = uuidv4()
-
-                                    //Assign a new id to each todoIssue 
-                                    data.todoList.forEach((toDoIssue) => {
-                                        toDoIssue.id = uuidv4()
-                                    })
-
-
-                                    // Create the new project and resolve the Promise
-                                    const newProject = new Project(data);
-
-                                    // ATTACH THE EVENT LISTENER HERE
-                                    newProject.ui.addEventListener("click", () => {
-                                        changePageContent("project-details", "flex")
-
-                                        //Set the funcionality of search between todoIssues
-                                        setupProjectDetailsSearch()
-
-                                        // Set the localStorage value for pageWIP to "project-details"
-                                        localStorage.setItem("pageWIP", "project-details")
-                                        localStorage.setItem("selectedProjectId", newProject.id)
-
-                                        ProjectsManager.setDetailsPage(newProject);
-                                        console.log("Details page set in a new window");
-                                        
-                                        updateAsideButtonsState()
-                                    });
-                                    
-
-                                    this.list.push(newProject)
-                                    // this.ui.append(newProject.ui)
-                                    this.onProjectCreated(newProject)
-                                    resolve(newProject)
-
-                                    // Close the dialog
-                                    renameDialog.close()
-                                }
-                            });
-
-                            cancelRenameBtn.addEventListener('click', () => {
-                                renameDialog.close()
-                                resolve(undefined); // Resolve as undefined to indicate renaming was cancelled
-                            });
-                        }
-                        popupDuplicateProject.closeMessageModal()
-                    }
-                }
-                popupDuplicateProject.showNotificationMessage(buttonCallbacks);
+    /*OLD NEWpROJECT FUNCTION
+        OLDnewProject(data: IProject): Project | undefined {
+            const projectNames = this.list.map((project) => {
+                return project.name
             })
-
-        } else {
-            // No duplicate, create the project
-            const project = new Project(data)
-
-            console.log(project.todoList)
-
-            // this.ui.append(project.ui)
-            this.list.push(project)
-            //this.removeDefaultProject();
-            this.onProjectCreated(project)
-            return project
+            if (projectNames.includes(data.name)) {
+                console.log(`A project with the name [ ${data.name} ] already exists`)
+                //Create a Confirmation Modal to prompt the user about the duplication and offer options
+                return new Promise<Project | undefined>((resolve) => {// Return a Promise
+                    const popupDuplicateProject = new MessagePopUp(
+                        document.body,
+                        "warning",
+                        `A project with the name "${data.name}" already exist`,
+    
+                        `<b><u>Overwrite:</b></u> Replace the existing project with the imported data.<br>
+                    <b><u>Skip:</b></u> Do not import the duplicated project.<br>
+                    <b><u>Rename:</b></u> Enter a new name for the imported project.`,
+                        ["Overwrite", "Skip", "Rename"],
+                    )
+    
+                    // Define ALL your button callbacks for the messagePopUp created
+                    const buttonCallbacks = {
+                        "Overwrite": () => {
+                            console.log("Overwrite button clicked!");
+                            popupDuplicateProject.closeMessageModal();
+    
+                            // Find and remove the existing project from the ui & list since you are going to use it later
+                            const existingProjectIndex = this.list.findIndex(project => project.name === data.name);
+                            if (existingProjectIndex !== -1) {
+    
+                                // 1. Remove the existing project's UI from the display
+                                this.ui.removeChild(this.list[existingProjectIndex].ui);
+                                console.log("Old project removed fromthe UI");
+    
+                                // 2. Remove the existing project from the list
+                                this.list = this.list.filter((project) => project.name !== data.name);
+                                console.log("Removed the oLd Project name from the List of names");
+    
+    
+                                // 3. Create a new project with the imported data
+                                const newProject = new Project(data);
+    
+                                ATTACH THE EVENT LISTENER HERE
+                                newProject.ui.addEventListener("click", () => {
+                                    changePageContent("project-details", "flex")
+    
+                                    //Set the funcionality of search between todoIssues
+                                    setupProjectDetailsSearch()
+    
+                                    // Set the localStorage value for pageWIP to "project-details"
+                                    localStorage.setItem("pageWIP", "project-details")
+                                    localStorage.setItem("selectedProjectId", newProject.id)
+    
+                                    ProjectsManager.setDetailsPage(newProject)
+                                    console.log(" details pages set in a new window")
+                                    
+                                    updateAsideButtonsState()
+                                })
+                                
+    
+    
+                                // 4. Add the new project to the list and UI
+                                this.list.push(newProject);
+                                this.onProjectCreated(newProject);
+                                console.log("Added new project to the List of names")
+                                // this.ui.append(newProject.ui)
+                                //console.log("Added new project to the UI")
+    
+                                // 5. Resolve with the newly created project
+                                resolve(newProject);
+    
+                            } else {
+                                // Handle the case where the project is not found (shouldn't happen, just in case
+                                console.error("Project to overwrite not found in the list.")
+                                resolve(undefined); // Or resolve with an appropriate error value
+                            }
+                        },
+                        "Skip": () => {
+                            console.log("Skip button clicked!")
+                            popupDuplicateProject.closeMessageModal()
+                            resolve(undefined); // Resolve with undefined to indicate skipping
+                        },
+                        "Rename": () => {
+                            console.log("Rename button clicked!")
+                            // **Get the project name BEFORE creating the dialog**
+                            const projectToRename = this.list.find((project) => project.name === data.name);
+                            const existingProjectName = projectToRename ? projectToRename.name : "Project Name";
+    
+                            // 1. Create the rename dialog
+                            const renameDialog = document.createElement("dialog");
+                            // renameDialog.id = id;
+                            renameDialog.className = "popup-default";
+                            document.body.insertBefore(renameDialog, document.body.lastElementChild);
+    
+                            const box = document.createElement("div");
+                            box.className = "message-content toast toast-popup-default";
+                            renameDialog.appendChild(box);
+    
+                            const renameIcon = document.createElement("div");
+                            renameIcon.className = "message-icon";
+                            box.appendChild(renameIcon);
+    
+                            const renameIconSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                            renameIconSVG.setAttribute("class", "message-icon-svgDark");
+                            renameIconSVG.setAttribute("role", "img");
+                            renameIconSVG.setAttribute("aria-label", "rename");
+                            renameIconSVG.setAttribute("width", "24px");
+                            renameIconSVG.setAttribute("height", "24px");
+                            renameIconSVG.setAttribute("fill", "#08090a");
+                            renameIcon.appendChild(renameIconSVG);
+    
+                            const renameIconUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+                            renameIconUse.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#rename");
+                            renameIconUse.setAttributeNS("http://www.w3.org/2000/svg", "xlink:href", "#rename");
+                            renameIconSVG.appendChild(renameIconUse);
+    
+    
+                            const content = document.createElement("div");
+                            content.className = "toast-column";
+                            box.appendChild(content);
+    
+    
+                            const text = document.createElement("div");
+                            text.className = "message-text";
+                            content.appendChild(text);
+    
+                            const renameTitle = document.createElement("h5");
+                            renameTitle.className = "message-text-title";
+                            renameTitle.textContent = "Project name";
+                            text.appendChild(renameTitle);
+    
+    
+                            const renameSubtitle = document.createElement("p");
+                            renameSubtitle.className = "message-text-message";
+                            renameSubtitle.textContent = "Select the text field and populate it with a new name";
+                            text.appendChild(renameSubtitle);
+    
+                            const boxInput = document.createElement("div");
+                            boxInput.className = "message-text";
+                            content.appendChild(boxInput);
+    
+    
+                            const renameInputName = document.createElement("input");
+                            renameInputName.className = "toast-input-text";
+                            renameInputName.type = "text";
+                            renameInputName.setAttribute("id", "newProjectName");
+                            renameInputName.setAttribute("placeholder", existingProjectName);
+                            renameInputName.setAttribute("autofocus", "");
+                            renameInputName.setAttribute("required", "");
+                            renameInputName.setAttribute("minlength", "5");
+                            renameInputName.setAttribute("autocomplete", "off");
+                            boxInput.appendChild(renameInputName);
+    
+    
+                            const renameInputLabel = document.createElement("label");
+                            renameInputLabel.className = "toast-input-text";
+                            renameInputLabel.textContent = existingProjectName
+                            renameInputLabel.setAttribute("autofocus", "false");
+                            boxInput.appendChild(renameInputLabel);
+    
+    
+                            const renameBtns = document.createElement("div");
+                            renameBtns.className = "message-btns";
+                            box.appendChild(renameBtns);
+    
+                            const rBtnA = document.createElement("button");
+                            rBtnA.className = "message-btn";
+                            rBtnA.type = "button";
+                            rBtnA.setAttribute("id", "confirmRename");
+                            renameBtns.appendChild(rBtnA)
+    
+                            const rBtnText = document.createElement("span");
+                            rBtnText.className = "message-btn-text";
+                            rBtnText.textContent = "Do it";
+                            rBtnA.appendChild(rBtnText);
+    
+                            const rBtnC = document.createElement("button");
+                            rBtnC.className = "message-btn";
+                            rBtnC.type = "button";
+                            rBtnC.setAttribute("id", "cancelRename");
+                            renameBtns.appendChild(rBtnC)
+    
+                            const btnTextC = document.createElement("span");
+                            btnTextC.className = "message-btn-text";
+                            btnTextC.textContent = "Cancel";
+                            rBtnC.appendChild(btnTextC);
+    
+    
+    
+                            // 2. Append the dialog to the body and show it
+                            document.body.appendChild(renameDialog)
+                            renameDialog.showModal()
+    
+                            // 3. Handle Confirm and Cancel buttons
+                            const confirmRenameBtn = renameDialog.querySelector('#confirmRename')
+                            const cancelRenameBtn = renameDialog.querySelector('#cancelRename')
+                            const newProjectNameInput = renameDialog.querySelector('#newProjectName') as HTMLInputElement;
+    
+                            if (confirmRenameBtn && cancelRenameBtn && newProjectNameInput) {
+                                confirmRenameBtn.addEventListener('click', () => {
+                                    const newName = newProjectNameInput.value.trim()
+    
+                                    // Basic validation: Check if the name is empty
+                                    if (newName === "") {
+                                        const popupEnterNewName = new MessagePopUp(
+                                            document.body,
+                                            "error",
+                                            `A project with a empty name is not allow`,
+    
+                                            "Please enter a valid project name.",
+                                            ["Got it"],
+                                        )
+                                        // Define ALL your button callbacks for the messagePopUp created
+                                        const buttonCallbacks = {
+                                            "Got it": () => {
+                                                console.log("Got it button clicked!")
+                                                popupEnterNewName.closeMessageModal()
+                                            },
+                                        }
+                                        popupEnterNewName.showNotificationMessage(buttonCallbacks);
+    
+                                        return;
+                                    }
+    
+                                    // Validation: Check if the minimun length is 5 characters
+                                    if (newName.length < 5) {
+                                        const popupEnter5CharactersName = new MessagePopUp(
+                                            document.body,
+                                            "error",
+                                            "Invalid Project Name",
+                                            "Please enter a project name that is at least 5 characters long.",
+                                            ["Got it"],
+                                        )
+                                        // Define ALL your button callbacks for the messagePopUp created
+                                        const buttonCallbacks = {
+                                            "Got it": () => {
+                                                console.log("Got it button clicked!")
+                                                popupEnter5CharactersName.closeMessageModal()
+                                            },
+                                        }
+                                        popupEnter5CharactersName.showNotificationMessage(buttonCallbacks);
+    
+                                        return;
+                                    }
+    
+                                    // Validation: Check if the mame does not exist
+                                    const existingProject = projectNames.find(existingName => existingName.toLowerCase() === newName.toLowerCase())
+    
+                                    if (existingProject) {
+                                        // Name already exists, show error message
+                                        const existProjectName = new MessagePopUp(
+                                            document.body,
+                                            "error",
+                                            "Duplicate Name",
+                                            `A project named "${newName}" already exists. Please choose a different name.`,
+                                            ["Got it"]
+                                        );
+                                        // Define button callback
+                                        const buttonCallbacks = {
+                                            "Got it": () => {
+                                                existProjectName.closeMessageModal();
+                                            }
+                                        }
+                                        existProjectName.showNotificationMessage(buttonCallbacks);
+                                        const deleteNameInput = document.querySelector("#newProjectName") as HTMLInputElement | null
+                                        if (deleteNameInput) {
+                                            deleteNameInput.value = ""
+                                        }
+                                    } else {
+    
+    
+    
+                                        // Update the project name
+                                        data.name = newName;
+    
+                                        //Assign a new Id to the project
+                                        (data as any).id = uuidv4()
+    
+                                        //Assign a new id to each todoIssue 
+                                        data.todoList.forEach((toDoIssue) => {
+                                            toDoIssue.id = uuidv4()
+                                        })
+    
+    
+                                        // Create the new project and resolve the Promise
+                                        const newProject = new Project(data);
+    
+                                        // ATTACH THE EVENT LISTENER HERE
+                                        newProject.ui.addEventListener("click", () => {
+                                            changePageContent("project-details", "flex")
+    
+                                            //Set the funcionality of search between todoIssues
+                                            setupProjectDetailsSearch()
+    
+                                            // Set the localStorage value for pageWIP to "project-details"
+                                            localStorage.setItem("pageWIP", "project-details")
+                                            localStorage.setItem("selectedProjectId", newProject.id)
+    
+                                            ProjectsManager.setDetailsPage(newProject);
+                                            console.log("Details page set in a new window");
+                                            
+                                            updateAsideButtonsState()
+                                        });
+                                        
+    
+                                        this.list.push(newProject)
+                                        // this.ui.append(newProject.ui)
+                                        this.onProjectCreated(newProject)
+                                        resolve(newProject)
+    
+                                        // Close the dialog
+                                        renameDialog.close()
+                                    }
+                                });
+    
+                                cancelRenameBtn.addEventListener('click', () => {
+                                    renameDialog.close()
+                                    resolve(undefined); // Resolve as undefined to indicate renaming was cancelled
+                                });
+                            }
+                            popupDuplicateProject.closeMessageModal()
+                        }
+                    }
+                    popupDuplicateProject.showNotificationMessage(buttonCallbacks);
+                })
+    
+            } else {
+                // No duplicate, create the project
+                const project = new Project(data)
+    
+                console.log(project.todoList)
+    
+                // this.ui.append(project.ui)
+                this.list.push(project)
+                //this.removeDefaultProject();
+                this.onProjectCreated(project)
+                return project
+            }
+    
         }
-
-    }
-*/
+    */
 
     // It has been suplanted by custome hook
     filterProjects(value: string) {
@@ -660,18 +661,46 @@ export class ProjectsManager {
 
         if (projectIndex !== -1) {
             //  Update the existing project object directly (instead of creating a new one)
-            const projectToUpdate = this.list[projectIndex];
+            //const projectToUpdate = this.list[projectIndex];
 
-            // Update properties of the existing project
-            for (const key in dataToUpdate) {
-                if (key !== "id") { // Explicitly exclude the ID to prevent it from being overwritten.
-                    projectToUpdate[key] = dataToUpdate[key];
-                }
+            // Create new project instance with updated data
+            const currentProject = this.list[projectIndex];
+            const updatedProject = new Project({
+                ...currentProject,
+                ...dataToUpdate,
+                id: projectId,
+                finishDate: dataToUpdate.finishDate instanceof Date
+                    ? dataToUpdate.finishDate
+                    : new Date(dataToUpdate.finishDate)
+            });
+
+
+            // Check if the date is valid
+            if (isNaN(updatedProject.finishDate.getTime())) {
+                console.error("Invalid date provided for finishDate:", dataToUpdate.finishDate);
+                updatedProject.finishDate = new Date(); // Set a default valid date
             }
 
-            this.onProjectUpdated(projectId);
-            return projectToUpdate;
 
+            // // Update properties of the existing project
+            //for (const key in dataToUpdate) {
+            //    if (key !== "id") { // Explicitly exclude the ID to prevent it from //being overwritten.
+            //        projectToUpdate[key] = dataToUpdate[key];
+            //    }
+            //}
+
+            // Update the list
+            this.list[projectIndex] = updatedProject
+
+            // Trigger update callback
+            if (this.onProjectUpdated) {
+                this.onProjectUpdated(projectId)
+            }
+
+            // Update localStorage
+            this.updateLocalStorage()
+
+            return updatedProject
 
             // //Preserve the original ID
             // dataToUpdate.id = this.list[projectIndex].id
@@ -686,14 +715,48 @@ export class ProjectsManager {
             // }
 
             // this.onProjectUpdated(projectId)
-            
+
             // return this.list[projectIndex]
-            
+
         } else {
             console.error("Project not found in the list!")
             return null
         }
     }
+
+    private updateLocalStorage(): void {
+        try {
+            // Process projects before storing
+            const processedProjects = this.list.map(project => ({
+                ...project,
+                todoList: project.todoList.map(todo => ({
+                    ...todo,
+                    dueDate: todo.dueDate instanceof Date
+                        ? todo.dueDate.toISOString()
+                        : todo.dueDate,
+                    createdDate: todo.createdDate instanceof Date
+                        ? todo.createdDate.toISOString()
+                        : todo.createdDate
+                })),
+                finishDate: project.finishDate instanceof Date
+                    ? project.finishDate.toISOString()
+                    : project.finishDate
+            }))
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(processedProjects));
+            localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+
+            console.log('ProjectsManager: localStorage updated', {
+                projectsCount: this.list.length,
+                timestamp: new Date().toISOString()
+            })
+
+        } catch (error) {
+            console.error('Error updating localStorage:', error);
+        }
+    }
+
+
 
 
     //FOR UPDATING THE TODO LIST INSIDE DE PROHJECTS.MANAGER WHEN IT SHOULD BE UPDATED
@@ -703,13 +766,20 @@ export class ProjectsManager {
             //Check if the todo already exists to avoid duplicate toDos
             const existingTodoIndex = project.todoList.findIndex(t => t.id === todo.id);
 
+            // Optimistic update
             // Only add if it doesn't exist
             if (existingTodoIndex === -1) {
                 project.todoList.push(todo);
+
+                // Update localStorage immediately after updating ProjectsManager
+                this.updateLocalStorage();
+                console.log("ProjectsManager.ts: updateProjectToDoList called",  this.list )
+
+                // Notify changes
                 this.onProjectUpdated(projectId);
             } else {
                 console.warn(`ToDoIssue with ID ${todo.id} already exists in project ${projectId}. It will not be added again.`);
-            
+
             }
         } else {
             console.error(`Project with ID ${projectId} not found.`);
@@ -720,12 +790,32 @@ export class ProjectsManager {
     updateToDoIssue(projectId: string, todoId: string, updatedTodo: ToDoIssue) {
         console.log("ProjectsManager.ts: updateToDoIssue called", { projectId, todoId, updatedTodo })
         const project = this.list.find(p => p.id === projectId);
+
         if (project) {
             const todoIndex = project.todoList.findIndex(t => t.id === todoId);
             if (todoIndex !== -1) {
-                project.todoList[todoIndex] = updatedTodo;
-                this.onProjectUpdated(projectId)
-                //this.onToDoUpdated(projectId, todoId);
+
+                // Store previous state for potential rollback
+                const previousTodo = { ...project.todoList[todoIndex] }
+
+                try {
+                    // Optimistic update
+                    project.todoList[todoIndex] = updatedTodo;
+
+                    // Update localStorage
+                    this.updateLocalStorage();
+
+                    // Notify changes
+                    this.onProjectUpdated(projectId);
+                    //this.onToDoUpdated(projectId, todoId);
+                
+                } catch (error) {
+                    // Rollback on error
+                    project.todoList[todoIndex] = previousTodo;
+                    this.updateLocalStorage();
+                    console.error('Error updating todo:', error);
+                    throw error;
+                }
             }
         }
     }
@@ -743,7 +833,9 @@ export class ProjectsManager {
             if (inputField.length > 0) {
                 if (key === "finishDate") {
                     // Format date for input type="date"
-                    const formattedDate = project.finishDate.toISOString().split('T')[0]
+                    const date = new Date(project.finishDate);
+                    date.setHours(12, 0, 0, 0)
+                    const formattedDate = date.toISOString().split('T')[0]
 
 
                     // const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
@@ -777,47 +869,80 @@ export class ProjectsManager {
     }
 
 
-      //*** USED INSIDE NewProjectForm *** *
+    //*** USED INSIDE NewProjectForm *** *
     static getChangedProjectDataForUpdate(existingProject: Project | null, updatedProject: Project): Record<string, [any, any]> {
-            const changedData: { [key: string]: [string, string] } = {};
-    
-            if (!existingProject) return changedData;
-    
-            for (const key in existingProject) {
-                // Avoid 'backgroundColorAcronym' property from the comparation
-                if (key === "backgroundColorAcronym") {
-                    continue;
-                }
-                // Avoid 'createdAt' property from the comparation
-                if (key === "createdAt") {
-                    continue;
-                }
-                // Avoid 'todoList' property from the comparation
-                if (key === "todoList") {
-                    continue;
-                }
+        const changedData: { [key: string]: [string, string] } = {};
 
-    
-                const currentProjectValue = existingProject[key];
-                const valueToUpdate = updatedProject[key];
-    
-                console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Línea de depuración
-    
-                // Comparar y almacenar la diferencia (manejando las fechas adecuadamente)
-                if (key === "finishDate" && currentProjectValue instanceof Date && valueToUpdate instanceof Date) {
-                    if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
-                        changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
-                    }
-                } else if (currentProjectValue !== valueToUpdate) {
-                    changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
-                }
+        if (!existingProject) return changedData;
+
+        for (const key in existingProject) {
+            // Skip certain properties
+            if (['backgroundColorAcronym', 'createdAt', 'updatedAt', 'todoList'].includes(key)) {
+                continue;
             }
-    
-            console.log("Changed Data:", changedData); 
-            return changedData;
-        };
-    
-    
+
+            // // Avoid 'backgroundColorAcronym' property from the comparation
+            // if (key === "backgroundColorAcronym") {
+            //     continue;
+            // }
+            // // Avoid 'createdAt' property from the comparation
+            // if (key === "createdAt") {
+            //     continue;
+            // }
+            // // Avoid 'createdAt' property from the comparation
+            // if (key === "updatedAt") {
+            //     continue;
+            // }
+            // // Avoid 'todoList' property from the comparation
+            // if (key === "todoList") {
+            //     continue;
+            // }
+
+            const currentProjectValue = existingProject[key];
+            const valueToUpdate = updatedProject[key];
+
+            // Skip if both values are undefined or null
+            if (currentProjectValue === undefined && valueToUpdate === undefined) continue;
+            if (currentProjectValue === null && valueToUpdate === null) continue;
+
+            console.log(`Comparing ${key}:`, currentProjectValue, valueToUpdate); // Línea de depuración
+
+            if (key === 'finishDate') {
+                // Comparar y almacenar la diferencia (manejando las fechas adecuadamente)
+                // Set both dates to noon for comparison
+                const currentDate = currentProjectValue instanceof Date
+                    ? currentProjectValue
+                    : new Date(currentProjectValue);
+
+                const updateDate = valueToUpdate instanceof Date
+                    ? valueToUpdate
+                    : new Date(valueToUpdate);
+
+                // Set both dates to noon for comparison
+                currentDate.setHours(12, 0, 0, 0);
+                updateDate.setHours(12, 0, 0, 0);
+
+                // Only add to changedData if dates are different and valid
+                if (!isNaN(currentDate.getTime()) && !isNaN(updateDate.getTime()) && currentDate.getTime() !== updateDate.getTime()) {
+                    changedData[key] = [currentDate.toLocaleDateString('es-ES'), updateDate.toLocaleDateString('es-ES')];
+                }
+                continue
+            }
+
+
+            //     if (currentProjectValue.getTime() !== valueToUpdate.getTime()) {
+            //         changedData[key] = [currentProjectValue.toLocaleDateString(), valueToUpdate.toLocaleDateString()];
+            //     }
+            if (currentProjectValue !== valueToUpdate) {
+                changedData[key] = [String(currentProjectValue), String(valueToUpdate)];
+            }
+        }
+
+        console.log("Changed Data:", changedData);
+        return changedData;
+    };
+
+
     renderProjectList(): void {
         const projectListUiElements = document.getElementById('project-list');
         if (projectListUiElements) {
@@ -925,42 +1050,49 @@ export class ProjectsManager {
         return TotalBudget
     }
 
-    deleteProject(id: string) {
+    deleteProject(id: string): void {
         const project = this.getProject(id)
         if (!project) { return }
         //project.ui.remove()
-        const remain = this.list.filter((project) => {
-            return project.id !== id
-        })
-        this.list = remain
-        this.onProjectDeleted(project.name)
+
+        //Remove the project from the local list
+        this.list = this.list.filter(project => project.id !== id)
+        if (this.onProjectDeleted) {
+            this.onProjectDeleted(project.name)
+        }
+
+        //Clean the ID Project from the localStorage if there is project
+        if (localStorage.getItem("selectedProjectId") === id) {
+            localStorage.removeItem("selectedProjectId");
+        }
+
     }
 
-/*
-    deleteToDoIssue(projectId: string, todoId: string) {
-        const project = this.getProject(projectId)
-        if (!project) { return }
-        const todoIssue = project.todoList.find((todo) => {
-            return todo.id === todoId
-        })
-        if (!todoIssue) {
-            console.error(`ToDoIssue with ID ${todoId} not found in project ${projectId}.`);
-            return;
+    /*
+        deleteToDoIssue(projectId: string, todoId: string) {
+            const project = this.getProject(projectId)
+            if (!project) { return }
+            const todoIssue = project.todoList.find((todo) => {
+                return todo.id === todoId
+            })
+            if (!todoIssue) {
+                console.error(`ToDoIssue with ID ${todoId} not found in project ${projectId}.`);
+                return;
+            }
+            // Filter the todoList of the project to remove the todo
+            project.todoList = project.todoList.filter((todo) => todo.id !== todoId);
+    
+            // Update the project in the main list
+            const projectIndex = this.list.findIndex((p) => p.id === projectId);
+            if (projectIndex !== -1) {
+                this.list[projectIndex] = project; // Replace the old project with the updated one
+            } else {
+                console.error(`Project with ID ${projectId} not found in the main list.`);
+                return;
+            }
+            this.onToDoIssueDeleted(todoIssue.id)
         }
-        // Filter the todoList of the project to remove the todo
-        project.todoList = project.todoList.filter((todo) => todo.id !== todoId);
-
-        // Update the project in the main list
-        const projectIndex = this.list.findIndex((p) => p.id === projectId);
-        if (projectIndex !== -1) {
-            this.list[projectIndex] = project; // Replace the old project with the updated one
-        } else {
-            console.error(`Project with ID ${projectId} not found in the main list.`);
-            return;
-        }
-        this.onToDoIssueDeleted(todoIssue.id)
-    }
-    */
+        */
 
 
     exprtToJSON(fileName: string = "projects") {

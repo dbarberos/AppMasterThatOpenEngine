@@ -16,7 +16,13 @@ interface Props {
 
 export function ProjectDetailsCard({ project, onCreatedProject, onUpdatedProject, projectsManager }:Props) {
 
-    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)   
+    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
+
+    const isValidDate = (date: any): boolean => {
+        if (!date) return false;
+        const d = new Date(date);
+        return !isNaN(d.getTime());
+    };
 
     const handleCloseForm = () => {        
         setIsNewProjectFormOpen(false);
@@ -33,6 +39,19 @@ export function ProjectDetailsCard({ project, onCreatedProject, onUpdatedProject
     const handleUpdatedProject = (updatedProject: Project) => {
         onUpdatedProject(updatedProject)
     }
+
+    const formatDate = (date: Date | string | null): string => {
+        if (!date) return 'No date set';
+
+        try {
+            const d = new Date(date);
+            if (!isValidDate(d)) return 'Invalid date';
+            return d.toISOString().split('T')[0];
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid date';
+        }
+    };
 
 
     const updateProjectDetailsForm = isNewProjectFormOpen
@@ -163,9 +182,10 @@ export function ProjectDetailsCard({ project, onCreatedProject, onUpdatedProject
                     flexBasis: "auto"
                 }}
                 >
-                Finish Date
+                    Finish Date
                 </p>
-                <p data-project-info="finishDate">{project.finishDate.toISOString().split('T')[0]}</p>
+                    {/*<p data-project-info="finishDate">{formatDate(project.finishDate)}</p> */}
+                <p data-project-info="finishDate">{project.finishDate.toISOString().split('T')[0]}</p> 
             </div>
             </div>
             <div>

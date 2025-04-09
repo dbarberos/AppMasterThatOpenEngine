@@ -17,6 +17,7 @@ import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueD
 import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManager.ts";
 import "./classes/DragAndDropManager.ts";
 import { setUpUserPage } from "./classes/UsersManager.ts";
+import { ErrorBoundary } from 'react-error-boundary';
 //import "./classes/VisorModelManager.ts";
 
 const projectsManager = new ProjectsManager();
@@ -45,12 +46,14 @@ const App = () => {
 
     const handleToDoIssueCreated = (todoIssueCreated) => {
         projectsManager.updateProjectToDoList(todoIssueCreated.id, todoIssueCreated)
+        console.log("index.tsx: handleToDoIssueCreated called", { todoIssueCreated })
         setProjects([...projectsManager.list]);
     }
 
     const handleToDoIssueUpdated = (todoIssueUpdated) => {
         console.log("index.tsx: handleToDoIssueUpdated called", { todoIssueUpdated })
         projectsManager.updateToDoIssue(todoIssueUpdated.todoProject, todoIssueUpdated.id, todoIssueUpdated)
+        console.log("index.tsx: handleToDoIssueUpdated called", { todoIssueUpdated })
         setProjects([...projectsManager.list]);
     }
 
@@ -71,13 +74,15 @@ const App = () => {
                     } />
 
                     <Router.Route path="/project/:id" element={
-                        <ProjectDetailsPage
-                            projectsManager={projectsManager}
-                            onProjectCreate={handleProjectCreate}
-                            onProjectUpdate={handleProjectUpdate}
-                            onToDoIssueCreated={handleToDoIssueCreated}
-                            onToDoIssueUpdated={handleToDoIssueUpdated}
-                        />
+                        // <ErrorBoundary fallback="Error"> 
+                            <ProjectDetailsPage
+                                projectsManager={projectsManager}
+                                onProjectCreate={handleProjectCreate}
+                                onProjectUpdate={handleProjectUpdate}
+                                onToDoIssueCreated={handleToDoIssueCreated}
+                                onToDoIssueUpdated={handleToDoIssueUpdated}
+                            />
+                        // </ErrorBoundary>
                     } />
 
                     {/* <Router.Route path="/project/:id/todo/:todoId" element={<TodoDetailsPage projectsManager={projectsManager} onProjectCreate={handleProjectCreate} onProjectUpdate={handleProjectUpdate} />} /> */}

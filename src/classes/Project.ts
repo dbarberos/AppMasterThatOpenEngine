@@ -52,12 +52,43 @@ export class Project implements IProject {
 
     constructor(data: IProject, idString?:string ) {
         // const projectKeys = Object.keys(dummyProject)
-        for (const key in data) {  
+        for (const key in data) {
             
             if (key === "businessUnit") {
                 this[key] = data[key] as BusinessUnit
+            
             } else if (key === "finishDate") {
-                this.finishDate = new Date(data.finishDate)
+                if (data.finishDate) {
+                    if (data.finishDate instanceof Date) {
+                        const date = new Date(data.finishDate);
+                        date.setHours(12, 0, 0, 0);
+                        this.finishDate = date;
+                    } else if (typeof data.finishDate === 'string') {
+                        // Handle string date format (DD/MM/YYYY or ISO string)
+                        const parsedDate = new Date(data.finishDate);
+                        parsedDate.setHours(12, 0, 0, 0);
+                        this.finishDate = parsedDate;
+                    } else {
+                        // Default date with noon time
+                        const defaultDate = new Date();
+                        defaultDate.setHours(12, 0, 0, 0);
+                        this.finishDate = defaultDate;
+                    }
+                } else {
+                    // Set default date with noon time if no date provided
+                    const defaultDate = new Date();
+                    defaultDate.setHours(12, 0, 0, 0);
+                    this.finishDate = defaultDate;
+                }
+
+                // this.finishDate = data.finishDate instanceof Date
+                //     ? data.finishDate
+                // : new Date(data.finishDate);
+                // if (isNaN(this.finishDate.getTime())) {
+                //     console.error("Invalid date provided for finishDate:", data.finishDate);
+                //     this.finishDate = new Date(); // Set a default valid date
+                // }
+
             } else {
                 this[key] = data[key]
             }

@@ -714,7 +714,14 @@ export async function updateDocument<T extends Record<string, any> | Array<any>>
 
         await Firestore.updateDoc(docRef, processedData);
         console.log(`Document updated successfully at ${fullPath}`);
-        return true;
+
+        return true
+        // After successful update, get the full updated document
+        //const docSnap = await Firestore.getDoc(docRef);
+        //if (docSnap.exists()) {
+        //    // Return the updated document data
+        //    return docSnap.data() as T;
+        //}
 
     }, {
         maxRetries: 3,

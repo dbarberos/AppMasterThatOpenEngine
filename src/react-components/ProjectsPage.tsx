@@ -5,7 +5,7 @@ import * as Firestore from 'firebase/firestore';
 
 import { LoadingIcon, SearchProjectBox, ProjectCard, CounterBox } from '../react-components';
 import { useProjectsCache, useProjectSearch } from '../hooks'
-
+import { STORAGE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL } from '../const';
 
 import { useProjectsManager, NewProjectForm } from './index.tsx';
 import { firebaseDB, getProjectsFromDB } from '../services/firebase/index.ts'
@@ -31,82 +31,160 @@ const projectsCollection = getCollection<IProject>("/projects")
 export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCreated }: Props) {
 
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
-    //const [projects, setProjects] = React.useState<Project[]>(projectsManager.list)
-    const [isLoading, setIsLoading] = React.useState(false)
+    const [isInitialLoading, setIsInitialLoading] = React.useState(false);
+    const [isSyncing, setIsSyncing] = React.useState(false)
 
-    //const [displayedProjects, setDisplayedProjects] = React.useState<Project[]>([]);
-    //const originalProjectsRef = React.useRef<Project[]>([]);
-    //const [searchTerm, setSearchTerm] = React.useState('');
+    const lastSyncRef = React.useRef<number>(Date.now());
 
     // Use custom hooks for cache and search
     const {
         projects,
         updateCache,
-        setProjects
+        hasCache,
+        isStale 
     } = useProjectsCache()
 
     const {
         searchTerm,
         setSearchTerm,
         filteredProjects,
-        updateOriginalProjects,
-        setOriginalProjectsRef
+        // updateOriginalProjects
     } = useProjectSearch(projects)
+
+    // Verificar si necesitamos sincronizar
+    const shouldSync = React.useCallback(() => {
+        const now = Date.now();
+        return now - lastSyncRef.current > SYNC_INTERVAL;
+    }, []);
 
 
     //Loading projects at the beginnig
     React.useEffect(() => {
-        const loadProjects = async () => {
+        const syncWithDatabase = async () => {
             try {
-                setIsLoading(true)
+            // Si hay caché válido, y no ha pasado el intervalo, no hacer nada
+                if (hasCache && !isStale && projects.length > 0) {
+                    console.log('Using cached projects, next sync in:', {
+                        minutes: Math.round((SYNC_INTERVAL - (Date.now() - lastSyncRef.current)) / 60000)
+                    });
+                    // Ensure ProjectManager and search state are in sync with cache
+                    projects.forEach(project => {
+                        if (!projectsManager.getProject(project.id!)) {
+                            projectsManager.newProject(project, project.id);
+                        }
+                    });
+                    //updateOriginalProjects(projects);
+                    return;
+                }
+
+            
+                // Mostrar loading solo si no hay caché
+                if (!hasCache) {
+                    setIsInitialLoading(true);
+                } else {
+                    setIsSyncing(true);
+                }
+                
                 const firebaseProjects = await getProjectsFromDB()
 
+                // // Actualizar solo si hay cambios
+                // const currentProjects = projectsManager.list;
+                // const hasChanges = JSON.stringify(firebaseProjects) !== JSON.stringify(currentProjects);
+
                 // Create Project instances using ProjectManager for each project from Firebase
-                firebaseProjects.forEach(projectData => {
-                    projectsManager.newProject(projectData, projectData.id);
-                })
-
-                const currentProjects = projectsManager.list
-
-                //Update cache and local state
-                updateCache(currentProjects)
-                updateOriginalProjects(currentProjects)
-                setOriginalProjectsRef(currentProjects)
+                // if (hasChanges) {
+                    firebaseProjects.forEach(projectData => {
+                        projectsManager.newProject(projectData, projectData.id);
+                    })
                 
-                console.log('Projects loaded:', {
-                    count: currentProjects.length,
-                    projects: currentProjects
-                })
+                
+                    const currentProjects = projectsManager.list
+
+                    //Update cache and local state
+                    updateCache(currentProjects)
+                    //updateOriginalProjects(currentProjects)
+                
+                    console.log('Projects loaded:', {
+                        count: currentProjects.length,                        
+                        timestamp: new Date().toISOString()
+                    })
+                // }
+                // Actualizar timestamp de última sincronización
+                lastSyncRef.current = Date.now();
+ 
 
             } catch (error) {
                 console.error("Error loading projects:", error);
                 // Handle error appropriately - maybe set an error state
             } finally {
-                setIsLoading(false);
+                setIsInitialLoading(false);
+                setIsSyncing(false)
             }
         }
-        loadProjects();
-    }, [])
+        syncWithDatabase();
+    }, [hasCache, isStale, projects.length])
 
 
-    //Suscription to ProjectsManager events
+    //Suscription to ProjectsManager events with control of refreshing
     React.useEffect(() => {
+        const handleProjectsUpdate = async() => {
+            //const updatedProjects = [...projectsManager.list];
+            const updatedProjects = projectsManager.list.map(project => ({
+                ...project,
+                todoList: project.todoList.map(todo => ({
+                    ...todo,
+                    dueDate: todo.dueDate instanceof Date
+                        ? todo.dueDate
+                        : new Date(todo.dueDate),
+                    createdDate: todo.createdDate instanceof Date
+                        ? todo.createdDate
+                        : new Date(todo.createdDate)
+                }))
+            }))
+
+
+
+            //update cache and localStorage
+            await updateCache(updatedProjects);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
+            localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());            
+            //updateOriginalProjects([...projectsManager.list])
+            lastSyncRef.current = Date.now(); // Actualice timestamp
+
+            console.log('Projects cache updated with todos:', {
+                projectsCount: updatedProjects.length,
+                todosCount: updatedProjects.reduce((acc, p) => acc + p.todoList.length, 0)
+            });
+        };
+
+
+        //projectsManager.onProjectCreated = (newProject) => { updateCache([...projectsManager.list]) };
+
+        projectsManager.onProjectCreated = handleProjectsUpdate;
+        projectsManager.onProjectDeleted = handleProjectsUpdate;
+        // projectsManager.onProjectDeleted = (id: string) => {
+        //     const updatedProjects = projectsManager.list.filter(p => p.id !== id);
+        //     updateCache(updatedProjects); // <- Actualiza el cache y el estado
+        // };
+        projectsManager.onProjectUpdated = handleProjectsUpdate;
+        
+
     
-        projectsManager.onProjectCreated = (newProject) => { setProjects([...projectsManager.list]) }
-        projectsManager.onProjectDeleted = () => { setProjects([...projectsManager.list]) }
-        projectsManager.onProjectUpdated = () => { setProjects([...projectsManager.list]) }
+        // projectsManager.onProjectCreated = (newProject) => { updateCache([...projectsManager.list]) }
+        // projectsManager.onProjectDeleted = () => { updateCache([...projectsManager.list]) }
+        // projectsManager.onProjectUpdated = () => { updateCache([...projectsManager.list]) }
 
         return () => {
             projectsManager.onProjectCreated = () => { }
             projectsManager.onProjectDeleted = () => { }
             projectsManager.onProjectUpdated = () => { }
         }
-    }, [])
+    }, [updateCache, projectsManager])
 
 
-    React.useEffect(() => {
-        console.log("Projects state update", projects)
-    }, [projects])
+    // React.useEffect(() => {
+    //     console.log("Projects state update", projects)
+    // }, [projects])
 
 
     //Handlers
@@ -213,9 +291,24 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                             ? projects.length
                             : 0}
                     />
-
+                    <div>
+                        {isSyncing && (
+                            <small style={{
+                                //color: 'var(--color-text-secondary)',
+                                fontSize: 'var(--font-base)',
+                                color: 'var(--color-fontbase-dark)',
+                                position: 'absolute',
+                                margin: 'auto',
+                            }}>
+                                Syncing...
+                            </small>
+                        )}
+                    </div>
                 </h2>
+                
+                
                 <div style={{ display: "flex", alignItems: "center", columnGap: 5 }}>
+                    
                     <div>
                         <button
                             title="Export project/s"
@@ -251,11 +344,11 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                     </button>
                 </div>
             </header>
-            {isLoading ? (
+            {isInitialLoading ? (
                 <LoadingIcon/>
             ) : (
-                <div id="project-list">
-                        {filteredProjects.length > 0 ? projectCardsList : <p>No projects found</p>}
+                <div id="project-list">                    
+                    {filteredProjects.length > 0 ? projectCardsList : <p>No projects found</p>}
                 </div>
             )}
             {/*  Render the form if  isNewProjectFormOpen = true  */}
