@@ -41,7 +41,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
         projects,
         updateCache,
         hasCache,
-        isStale 
+        isStale
     } = useProjectsCache()
 
     const {
@@ -62,7 +62,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
     React.useEffect(() => {
         const syncWithDatabase = async () => {
             try {
-            // Si hay caché válido, y no ha pasado el intervalo, no hacer nada
+                // Si hay caché válido, y no ha pasado el intervalo, no hacer nada
                 if (hasCache && !isStale && projects.length > 0) {
                     console.log('Using cached projects, next sync in:', {
                         minutes: Math.round((SYNC_INTERVAL - (Date.now() - lastSyncRef.current)) / 60000)
@@ -77,14 +77,14 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                     return;
                 }
 
-            
+
                 // Mostrar loading solo si no hay caché
                 if (!hasCache) {
                     setIsInitialLoading(true);
                 } else {
                     setIsSyncing(true);
                 }
-                
+
                 const firebaseProjects = await getProjectsFromDB()
 
                 // // Actualizar solo si hay cambios
@@ -93,25 +93,25 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
                 // Create Project instances using ProjectManager for each project from Firebase
                 // if (hasChanges) {
-                    firebaseProjects.forEach(projectData => {
-                        projectsManager.newProject(projectData, projectData.id);
-                    })
-                
-                
-                    const currentProjects = projectsManager.list
+                firebaseProjects.forEach(projectData => {
+                    projectsManager.newProject(projectData, projectData.id);
+                })
 
-                    //Update cache and local state
-                    updateCache(currentProjects)
-                    //updateOriginalProjects(currentProjects)
-                
-                    console.log('Projects loaded:', {
-                        count: currentProjects.length,                        
-                        timestamp: new Date().toISOString()
-                    })
+
+                const currentProjects = projectsManager.list
+
+                //Update cache and local state
+                updateCache(currentProjects)
+                //updateOriginalProjects(currentProjects)
+
+                console.log('Projects loaded:', {
+                    count: currentProjects.length,
+                    timestamp: new Date().toISOString()
+                })
                 // }
                 // Actualizar timestamp de última sincronización
                 lastSyncRef.current = Date.now();
- 
+
 
             } catch (error) {
                 console.error("Error loading projects:", error);
@@ -137,7 +137,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                         ? new Date(todo.dueDate.getTime())
                         : new Date(todo.dueDate),
                     createdDate: todo.createdDate instanceof Date
-                        ? new Date(todo.createdDate.getTime()) 
+                        ? new Date(todo.createdDate.getTime())
                         : new Date(todo.createdDate)
                 }))
             }))
@@ -167,9 +167,9 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
         //     updateCache(updatedProjects); // <- Actualiza el cache y el estado
         // };
         projectsManager.onProjectUpdated = handleProjectsUpdate;
-        
 
-    
+
+
         // projectsManager.onProjectCreated = (newProject) => { updateCache([...projectsManager.list]) }
         // projectsManager.onProjectDeleted = () => { updateCache([...projectsManager.list]) }
         // projectsManager.onProjectUpdated = () => { updateCache([...projectsManager.list]) }
@@ -305,10 +305,10 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                         )}
                     </div>
                 </h2>
-                
-                
+
+
                 <div style={{ display: "flex", alignItems: "center", columnGap: 5 }}>
-                    
+
                     <div>
                         <button
                             title="Export project/s"
@@ -345,14 +345,14 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                 </div>
             </header>
             {isInitialLoading ? (
-                <LoadingIcon/>
+                <LoadingIcon />
             ) : (
-                <div id="project-list">                    
+                <div id="project-list">
                     {filteredProjects.length > 0 ? projectCardsList : <p>No projects found</p>}
                 </div>
             )}
             {/*  Render the form if  isNewProjectFormOpen = true  */}
-            {newProjectForm}
+            {newProjectForm}            
 
         </section>
     )

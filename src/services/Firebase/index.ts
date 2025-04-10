@@ -4,8 +4,8 @@ import { getAuth, signInAnonymously } from "firebase/auth";
 import { IProject, Project } from "../../classes/Project";
 import { ToDoIssue } from "../../classes/ToDoIssue";
 import { ProjectsManager } from "../../classes/ProjectsManager";
-import { IAssignedUsers, ITag, IToDoIssue } from '../../Types'
-
+import { IAssignedUsers, ITag, IToDoIssue } from '../../types'
+import { toast } from 'sonner'
 
 type SubcollectionType = 'todoList' | 'tags' | 'assignedUsers';
 
@@ -299,18 +299,26 @@ export async function deleteDocument(
                 const docRef = Firestore.doc(firestoreDB, `${path}/${docId}`)
 
                 await Firestore.deleteDoc(docRef)
+
                 console.log(`Document deleted successfully at ${path}/${docId}`);
+                toast.success(`Document deleted successfully at ${path}/${docId}`)
                 return docId
             }
+            toast.success('Document deleted successfully', {
+                description: `ID: ${querySnapshot.docs[0].id} at ${path}`
+            })
             console.log(`No document found with name: ${name} in ${path}`);
             return null;
         } catch (error) {
+            toast.error('Error deleting document. Try again later.', {
+                description: error.message
+            })
             console.error("Error deleting document:", error);
             throw new Error(`Failed to delete document: ${error.message}`);
         }
     }, {
         maxRetries: 3,
-        timeout: 5000,
+        timeout: 3000,
         baseDelay: 500
     });
 }
@@ -333,14 +341,21 @@ export async function deleteDocumentByID(
             }
 
             await Firestore.deleteDoc(docRef)
-            console.log(`Document deleted successfully at ${path}/${id}`);
+
+            toast.success('Document deleted successfully', {
+                description: `ID: ${id} at ${path}`
+            })
+            console.log(`Document deleted successfully at ${path}/${id}`) 
         } catch (error) {
+            toast.error('Error deleting document. Try again later.', {
+                description: error.message
+            })
             console.error("Error deleting document by ID:", error);
             throw new Error(`Failed to delete document: ${error.message}`);
         }
     }, {
         maxRetries: 3,
-        timeout: 5000,
+        timeout: 3000,
         baseDelay: 500
     })
 }
@@ -389,9 +404,14 @@ export async function deleteProjectWithSubcollections(projectId: string): Promis
             //await Firestore.deleteDoc(projectRef)
             await deleteDocumentByID(`projects`, projectId);
 
-
+            toast.success('Proyect deleted successfully', {
+                description: `ID: ${projectId} at projects/`
+            })
 
         } catch (error) {
+            toast.error('Error deleting project and subcollections. Try again later.', {
+                description: error.message
+            })
             console.error("Error deleting project and subcollections:", error);
             throw new Error(`Failed to delete project: ${error.message}`);
         }
@@ -430,9 +450,16 @@ export async function deleteToDoWithSubcollections(
 
             // Finally delete the todo document
             await Firestore.deleteDoc(todoDocRef);
+
+            toast.success('To-Do deleted successfully', {
+                description: `ID: ${todoId} at projects/${projectId}/todoList/${todoId}`
+            })
             console.log(`Todo and its subcollections deleted successfully at projects/${projectId}/todoList/${todoId}`);
 
         } catch (error) {
+            toast.error('Error deleting To-Do and subcollections. Try again later.', {
+                description: error.message
+            })
             console.error("Error deleting todo and subcollections:", error);
             throw new Error(`Failed to delete todo: ${error.message}`);
         }
@@ -524,13 +551,25 @@ export async function createDocument<T extends Record<string, any>>(
             throw new Error(`Collection not found at path: ${path}`);
         }
 
-        const createdDoc = await Firestore.addDoc(collectionRef, dataToSave)
-        console.log(`Document created at ${path} with ID:`, createdDoc.id);
-        return createdDoc
+        try {
+
+            const createdDoc = await Firestore.addDoc(collectionRef, dataToSave)
+
+            toast.success('Document created successfully ', {
+                description: `ID: ${createdDoc.id} en ${path}`
+            });
+            console.log(`Document created at ${path} with ID:`, createdDoc.id);
+            return createdDoc
+        } catch (error) {
+            toast.error('Error creating the document. Try again later', {
+                description: error.message
+            });
+            throw error;
+        }
 
     }, {
         maxRetries: 3,
-        timeout: 5000,
+        timeout: 3000,
         baseDelay: 500
     });
 }
@@ -614,108 +653,120 @@ export async function updateDocument<T extends Record<string, any> | Array<any>>
     options: UpdateDocumentOptions = {}
 ): Promise<boolean> {
     return withRetry(async () => {
+        try {
+            const {
+                basePath = 'projects',
+                subcollection,
+                parentId,
+                todoId,
+                isArrayCollection = false
+            } = options
 
-        const {
-            basePath = 'projects',
-            subcollection,
-            parentId,
-            todoId,
-            isArrayCollection = false
-        } = options
+            // Build the document path
+            let fullPath = '';
 
-        // Build the document path
-        let fullPath = '';
+            if (!subcollection) {
+                // Updating project document
+                fullPath = `${basePath}/${id}`;
+            } else if (subcollection === 'todoList') {
+                // Updating todo document
+                fullPath = `${basePath}/${parentId}/${subcollection}/${id}`;
+            } else if (subcollection === 'tags' || subcollection === 'assignedUsers') {
+                // Updating tags or assignedUsers subcollections within a todo
+                if (!todoId) {
+                    throw new Error(`todoId is required for updating ${subcollection}`);
+                }
+                // Handle tags and assignedUsers subcollections
+                const subcollectionPath = `${basePath}/${parentId}/todoList/${todoId}/${subcollection}`;
+                const newItems = data as (ITag | IAssignedUsers)[];
 
-        if (!subcollection) {
-            // Updating project document
-            fullPath = `${basePath}/${id}`;
-        } else if (subcollection === 'todoList') {
-            // Updating todo document
-            fullPath = `${basePath}/${parentId}/${subcollection}/${id}`;
-        } else if (subcollection === 'tags' || subcollection === 'assignedUsers') {
-            // Updating tags or assignedUsers subcollections within a todo
-            if (!todoId) {
-                throw new Error(`todoId is required for updating ${subcollection}`);
-            }
-            // Handle tags and assignedUsers subcollections
-            const subcollectionPath = `${basePath}/${parentId}/todoList/${todoId}/${subcollection}`;
-            const newItems = data as (ITag | IAssignedUsers)[];
+                // Delete all existing documents in the subcollection
+                const currentItems = await getSubcollectionItems(subcollectionPath);
+                await Promise.all(currentItems.map(item => deleteDocumentByID(subcollectionPath, item.id)));
 
-            // Delete all existing documents in the subcollection
-            const currentItems = await getSubcollectionItems(subcollectionPath);
-            await Promise.all(currentItems.map(item => deleteDocumentByID(subcollectionPath, item.id)));
+                // Create new documents for each item in the array
+                const createPromises = newItems.map(async (item) => {
+                    const newDocData = 'title' in item
+                        ? { title: item.title }
+                        : { name: item.name };
 
-            // Create new documents for each item in the array
-            const createPromises = newItems.map(async (item) => {
-                const newDocData = 'title' in item
-                    ? { title: item.title }
-                    : { name: item.name };
+                    const createdDoc = await createDocument(subcollectionPath, newDocData);
+                    // Replace the temporary ID with the real ID
+                    item.id = createdDoc.id;
+                    return item;
+                });
 
-                const createdDoc = await createDocument(subcollectionPath, newDocData);
-                // Replace the temporary ID with the real ID
-                item.id = createdDoc.id;
-                return item;
-            });
+                // Wait for all new documents to be created
+                await Promise.all(createPromises);
 
-            // Wait for all new documents to be created
-            await Promise.all(createPromises);
-
-            console.log(`Subcollection ${subcollection} updated successfully at ${subcollectionPath}`);
-            return true;
+                console.log(`Subcollection ${subcollection} updated successfully at ${subcollectionPath}`);
+                return true;
             
+            }
+
+
+            console.log('Updating document at path:', fullPath);
+            const docRef = Firestore.doc(firestoreDB, fullPath);
+
+
+            // Process the data before updating for solving date issues
+            let processedData: Record<string, any>;
+
+            if (isArrayCollection && Array.isArray(data)) {
+                // Handle array collections (tags, assignedUsers)
+                processedData = {
+                    items: data.map(item => ({
+                        ...item,
+                        createdAt: item.createdAt instanceof Date
+                            ? Firestore.Timestamp.fromDate(item.createdAt)
+                            : item.createdAt
+                    }))
+                };
+            } else if (Array.isArray(data)) {
+                // Handle regular arrays
+                processedData = data.map(item =>
+                    item instanceof Date ? Firestore.Timestamp.fromDate(item) : item
+                );
+            } else {
+                // Handle regular objects
+                processedData = Object.entries(data).reduce<Record<string, any>>(
+                    (acc, [key, value]) => {
+                        if (value instanceof Date) {
+                            acc[key] = Firestore.Timestamp.fromDate(value);
+                        } else if (Array.isArray(value)) {
+                            acc[key] = value.map(item =>
+                                item instanceof Date
+                                    ? Firestore.Timestamp.fromDate(item)
+                                    : item
+                            );
+                        } else {
+                            acc[key] = value;
+                        }
+                        return acc;
+                    },
+                    {}
+                );
+            }
+
+            // Add updatedAt timestamp
+            processedData.updatedAt = Firestore.Timestamp.fromDate(new Date())
+
+            await Firestore.updateDoc(docRef, processedData);
+
+            toast.success('Document updated successfully', {
+                description: `ID: ${id} at ${fullPath}`
+            })
+            console.log(`Document updated successfully at ${fullPath}`);
+
+            return true
+        } catch (error) {
+            toast.error('Error creating the document. Try again later', {
+                description: error.message,
+                duration:6000,
+            })
+            console.error("Error updating document:", error);
+            throw error
         }
-
-
-        console.log('Updating document at path:', fullPath);
-        const docRef = Firestore.doc(firestoreDB, fullPath);
-
-
-        // Process the data before updating for solving date issues
-        let processedData: Record<string, any>;
-
-        if (isArrayCollection && Array.isArray(data)) {
-            // Handle array collections (tags, assignedUsers)
-            processedData = {
-                items: data.map(item => ({
-                    ...item,
-                    createdAt: item.createdAt instanceof Date
-                        ? Firestore.Timestamp.fromDate(item.createdAt)
-                        : item.createdAt
-                }))
-            };
-        } else if (Array.isArray(data)) {
-            // Handle regular arrays
-            processedData = data.map(item =>
-                item instanceof Date ? Firestore.Timestamp.fromDate(item) : item
-            );
-        } else {
-            // Handle regular objects
-            processedData = Object.entries(data).reduce<Record<string, any>>(
-                (acc, [key, value]) => {
-                    if (value instanceof Date) {
-                        acc[key] = Firestore.Timestamp.fromDate(value);
-                    } else if (Array.isArray(value)) {
-                        acc[key] = value.map(item =>
-                            item instanceof Date
-                                ? Firestore.Timestamp.fromDate(item)
-                                : item
-                        );
-                    } else {
-                        acc[key] = value;
-                    }
-                    return acc;
-                },
-                {}
-            );
-        }
-
-        // Add updatedAt timestamp
-        processedData.updatedAt = Firestore.Timestamp.fromDate(new Date())
-
-        await Firestore.updateDoc(docRef, processedData);
-        console.log(`Document updated successfully at ${fullPath}`);
-
-        return true
         // After successful update, get the full updated document
         //const docSnap = await Firestore.getDoc(docRef);
         //if (docSnap.exists()) {

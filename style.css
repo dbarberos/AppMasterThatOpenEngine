@@ -346,6 +346,58 @@
     }
 }
 
+/* Notification footer toaster styling */
+
+.custom-sonner .custom-toast {
+    display: flex !important;
+    align-items: center !important;
+    width: 110% !important;
+    min-height: 60px !important;
+    transform: scale(1.1) !important;
+    transform-origin: bottom right !important;
+    font-size: 'var(--font-base)' !important;
+    /* gap: 20px !important; */
+    /* padding:15px 15px 5px 15px !important; */
+
+}
+
+.custom-sonner .custom-description {
+    font-size:'var(--font-base)' !important;
+    /* padding: 0px 15px 15px 15px !important; */
+    display: block !important;
+    flex-direction: row !important;
+    align-items: center !important;
+}
+
+/* Contenedor de icono */
+.custom-sonner .custom-toast [data-icon] {
+    margin-left: 4px !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
+    
+}
+
+/* Contenedor de texto (title + description) */
+.custom-sonner .custom-toast>div:first-of-type {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    column-gap: 5px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    
+}
+
+
+
+
+
+
+
+
+
+/* Ligth Mode Theme Values */
+
 .light-mode {
 
 
@@ -762,7 +814,7 @@ button:active {
 .page {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 100vh;
 }
 
 

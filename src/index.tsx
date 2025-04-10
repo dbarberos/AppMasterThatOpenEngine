@@ -1,9 +1,10 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
+
 import { Sidebar, ProjectsPage, ProjectDetailsPage } from './react-components';
 //import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
-
+import { CheckCircleIcon, NotificationsActiveIcon, WarningIcon, ReportIcon, UpdateIcon } from './react-components/icons.tsx'
 
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project.ts";
 import { IToDoIssue, ToDoIssue } from "./classes/ToDoIssue.ts"
@@ -18,6 +19,7 @@ import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManag
 import "./classes/DragAndDropManager.ts";
 import { setUpUserPage } from "./classes/UsersManager.ts";
 import { ErrorBoundary } from 'react-error-boundary';
+import { Toaster } from 'sonner'
 //import "./classes/VisorModelManager.ts";
 
 const projectsManager = new ProjectsManager();
@@ -101,7 +103,32 @@ const App = () => {
                 </Router.Routes>
 
             </Router.BrowserRouter>
-
+            <Toaster                
+                className="custom-sonner"
+                expand={true}
+                //visibleToasts={9}
+                duration={6500}
+                icons={{
+                    success: <CheckCircleIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    info: <NotificationsActiveIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    warning: <WarningIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    error: <ReportIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    loading: <UpdateIcon size = { 30 } className = "todo-icon" color = "var(--color-fontbase)" />,
+                }}
+                toastOptions={{
+                    classNames: {
+                        toast: 'custom-toast',
+                        description: 'custom-description'
+                    },
+                    style: {
+                        //opacity: '75%',
+                        background: 'var(--background-200)',
+                        color: 'var(--fontbase)',
+                        //fontSize: 'var(--font-lg)',
+                    },
+                }}
+                richColors
+            />
         </>
         //</ProjectsManagerProvider>
 
