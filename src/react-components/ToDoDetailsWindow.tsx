@@ -167,6 +167,16 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
         }
     }
 
+    const handleEditQuillContentStart = React.useCallback(() => {
+        console.log('Setting editingField to description');
+        setEditingField((prev) => prev === 'description' ? prev : 'description');
+    }, []); // Sin dependencias: siempre misma referencia
+
+    const handleEditQuillContentEnd = React.useCallback(() => {
+        console.log('Setting editingField to null');
+        setEditingField((prev) => prev === 'description' ? null : prev);
+    }, []); // Actualización funcional del estado
+
 
     // Helper function to format the date
     const formatDate = (date: Date): string => {
@@ -339,15 +349,11 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                             fieldName="description"
                             value={currentToDoIssue.description}
                             onSave={handleToDoFieldSave}
-                            type="textarea"
+                            type="textRich"
+                            //type="textarea"
                             style={{ marginTop: 25, width: "100%" }}
-                            onEditStart={() => {
-                                setEditingField('description')
-                                console.log('Setting editingField to description', editingField)
-                            }} onEditEnd={() => {
-                                setEditingField(null)
-                                console.log('Setting editingField to null', editingField)
-                            }}
+                            onEditStart={ handleEditQuillContentStart }
+                            onEditEnd={ handleEditQuillContentEnd }
                             toDoIssue={currentToDoIssue}
                         />
                     </div>

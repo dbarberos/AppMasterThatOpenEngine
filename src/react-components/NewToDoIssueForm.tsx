@@ -10,6 +10,9 @@ import {  ToDoIssue } from '../classes/ToDoIssue';
 import { getToDoIssueByTitle, newToDoIssue } from '../classes/ToDoManager';
 import { IToDoIssue, ITag, IAssignedUsers, StatusColumnKey } from '../types';
 
+import { QuillEditor, QuillEditorRef } from './QuillEditor'
+
+
 interface NewToDoIssueFormProps {
     onClose: () => void;
     project: Project;
@@ -30,9 +33,17 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
     const [toDoDetailsToRename, setToDoDetailsToRename] = React.useState<IToDoIssue | null>(null);
     const [isRenaming, setIsRenaming] = React.useState(false);
     const [currentToDoTitle, setCurrentToDoTitle] = React.useState('');
-
+    //Managing the QuillEditor text
+    const [descriptionToDoContent, setDescriptionToDoContent] = React.useState<string>('')
+    const editorRef = React.useRef<QuillEditorRef | null>(null) //Referecnce to QuillEditor component
 
     usePrepareToDoForm(project)
+
+
+    const handleDescriptionChange = (content: { html: string; delta: any }) => {
+        setDescriptionToDoContent(content.html); // Actualiza el estado con el contenido HTML
+    };
+
 
 
     const onCloseNewToDoIssueForm = (e: React.FormEvent) => {
@@ -300,7 +311,7 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
 
             const toDoIssueDetails: IToDoIssue = {
                 title: formToDoData.get("title") as string,
-                description: formToDoData.get("description") as string,
+                description: descriptionToDoContent, //Take the value of the useState
                 statusColumn: statusColumnValue,
                 tags: tags,
                 assignedUsers: assignedUsers,
@@ -586,8 +597,24 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                                 }}
                             >
                                 <legend>Issue notes and comments</legend>
-                                <div className="form-field-container">
-                                    <textarea
+                                <div
+                                    className="form-field-container"
+                                    style={{
+                                        resize: "vertical",
+                                        //scrollbarWidth: "none",
+                                        height: 'auto', 
+                                        maxHeight: '30vh',
+                                        overflowY: 'auto',
+                                        scrollbarWidth: 'thin',
+                                        scrollbarColor: 'var(--primary-200)',
+                                    }}
+                                >
+                                    <QuillEditor
+                                        ref={editorRef} 
+                                        initialValue={descriptionToDoContent} // Bind the editor value to the state
+                                        onContentChange={handleDescriptionChange} // Handle changes
+                                    />
+                                    {/* <textarea
                                         data-form-todo-value="description"
                                         name="description"
                                         id="textarea-editor"
@@ -596,7 +623,7 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                                         rows={22}
                                         placeholder="Leave a comment"
                                         defaultValue={""}
-                                    />
+                                    /> */}
                                 </div>
                                 <div
                                 style={{

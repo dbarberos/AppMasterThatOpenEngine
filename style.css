@@ -3601,8 +3601,8 @@ button .btn-popup {
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    #appearance: none;
-    -webkit-#appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .lil-gui {
@@ -3631,3 +3631,219 @@ button .btn-popup {
     }
 
 }
+
+/* --- Estilos Específicos para QuillEditor --- */
+
+/* Contenedor principal del editor (opcional, si necesitas estilos para él) */
+.quill-container {
+    /* Estilos si necesitas algo para el contenedor general */
+    /* border: 1px solid #d1d1d1; */
+    /* Ejemplo: borde diferente al global */
+    /* border-radius: 5px; */
+    border: none;
+    overflow: hidden;
+    /* Para contener los bordes redondeados */
+}
+
+/* Estilo base para la barra de herramientas DENTRO de .quill-container */
+.quill-container .ql-toolbar {
+    background-color: var(--color-grey-light);
+    text-shadow: none;
+    /* Fondo específico para la toolbar */
+    border: none;
+    /* Quitar borde global si existe */
+    border-bottom: 1px solid #d1d1d1;
+    /* Borde inferior específico */
+    padding: 8px;
+    border-radius: 5px 5px 0 0;
+    /* Redondear esquinas superiores */
+    box-sizing: border-box;
+    /* Asegurar que padding/border no afecten el tamaño total */
+
+
+}
+
+
+/* Estilos para los botones DENTRO de la toolbar específica */
+.quill-container .ql-toolbar button {
+    background-color: var(--background-300);
+    /* Fondo blanco para botones */
+    border: 1px solid #ced4da;
+    /* Borde específico */
+    color:red !important;
+    /* Color de texto específico */
+    /* padding: 4px 6px!important; */
+    /* Padding específico */
+    margin: 2px!important;
+    /* Margen específico */
+    border-radius: 3px!important;
+    /* Bordes redondeados específicos */
+    cursor: pointer;
+    /* transition: background-color 0.2s ease, border-color 0.2s ease!important; */
+    float: none!important;
+    /* Asegurar que no floten si hay estilos globales */
+    width: auto!important;
+    /* Resetear ancho si hay estilos globales */
+    height: auto!important;
+    /* Resetear altura si hay estilos globales */
+    /* font-size: 1rem; */
+    /* Tamaño de fuente específico si es necesario */
+    line-height: 1!important;
+    /* Altura de línea específica */
+    box-shadow: none;
+        background-color: inherit;
+        color: var(--color-fontbase-dark)!important;
+        fill: var(--color-fontbase)!important;
+        
+}
+
+.quill-container svg {
+    box-shadow: none;
+    background-color: var(--color-grey-light);
+}
+
+.quill-contain scrollbar {
+    background-color: transparent;
+            scrollbar-gutter: stable;
+            scroll-snap-type: mandatory;
+            scrollbar-width: thin;
+}
+
+/* Estilos para los iconos SVG dentro de los botones */
+.quill-container .ql-toolbar button svg {
+    width: 18px;
+    /* Tamaño específico del icono */
+    height: 18px;
+    stroke: white !important;
+    /* Color específico del trazo del icono */
+    vertical-align: middle;
+    /* Alinear icono verticalmente */
+    box-shadow: none;
+        background-color: inherit;
+        color: var(--color-fontbase) !important;
+        fill: var(--color-fontbase) !important;
+}
+
+.quill-container .ql-toolbar button:hover svg {
+    stroke: #0056b3;
+    /* Color del icono al pasar el ratón */
+}
+
+.quill-container .ql-toolbar button.ql-active svg {
+    stroke: #0056b3;
+    /* Color del icono cuando está activo */
+}
+
+
+/* Hover state para botones */
+.quill-container .ql-toolbar button:hover {
+    background-color: #e9ecef;
+    /* Color de fondo al pasar el ratón */
+    border-color: #adb5bd;
+}
+
+/* Estado activo para botones (cuando una opción está seleccionada) */
+.quill-container .ql-toolbar button.ql-active {
+    background-color: #cfe2ff;
+    /* Fondo azul claro para botón activo */
+    border-color: #9ec5fe;
+    color: #0056b3;
+    /* Color de texto azul */
+}
+
+/* Estilos para los desplegables (pickers) */
+.quill-container .ql-toolbar .ql-picker {
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    color: #495057;
+    height: auto;
+    /* Resetear altura */
+    font-size: 0.9rem;
+    /* Tamaño de fuente específico */
+    margin: 2px;
+    padding: 0;
+    /* Resetear padding */
+}
+
+.quill-container .ql-toolbar .ql-picker-label {
+    padding: 4px 6px;
+    /* Padding interno del label del desplegable */
+}
+
+/* Estilos para las opciones dentro de los desplegables */
+.quill-container .ql-toolbar .ql-picker-options {
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 5px 0;
+}
+
+.quill-container .ql-toolbar .ql-picker-item {
+    color: #495057;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+}
+
+.quill-container .ql-toolbar .ql-picker-item:hover {
+    background-color: #e9ecef;
+}
+
+.quill-container .ql-toolbar .ql-picker-item.ql-selected {
+    background-color: #cfe2ff;
+    color: #0056b3;
+}
+
+/* Estilos para el área de edición (opcional, si también necesitas aislarla) */
+.quill-container .ql-container {
+    
+
+    border: none;
+    /* Quitar borde si la toolbar ya lo tiene */
+    border-radius: 0 0 5px 5px;
+    /* Redondear esquinas inferiores */
+}
+
+.quill-container .ql-editor {
+    background-color: var(--color-bg);
+    text-shadow:none;
+    min-height: 200px;
+    /* Asegurar altura mínima */
+    height: 100%;
+    /* Permitir que crezca */
+    font-size: var(--font-base);
+    /* Tamaño de fuente base para el editor */
+    /* line-height: 1.6; */
+    /* padding: 12px 15px; */
+    /* background-color: #ffffff; */
+    /* Fondo específico para el área de edición */
+    color: var(--color-fontbase);
+    /* Color de texto específico */
+    border: none;
+}
+
+.quill-container .ql-editor.ql-blank::before {
+    color: #6c757d;
+    /* Color específico para el placeholder */
+    font-style: normal;
+    /* Estilo normal para el placeholder */
+    left: 15px;
+    /* Ajustar posición si es necesario */
+    right: 15px;
+}
+
+[data-readonly="true"] .ql-toolbar {
+    display: none !important;
+}
+
+.ql-toolbar:not(:first-child) {
+    display: none !important;
+}
+
+/* Eliminar bordes en modo lectura */
+[data-readonly="true"] .ql-container {
+    border: none !important;
+}
+
+
+/* --- Fin de Estilos Específicos para QuillEditor --- */

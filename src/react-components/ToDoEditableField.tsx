@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { MessagePopUp, MessagePopUpProps } from '../react-components';
+import { MessagePopUp, MessagePopUpProps, QuillEditorRef, QuillEditor } from '../react-components';
 
 import {EditIcon, ReportIcon, SaveIcon } from './icons'
 import { ToDoIssue } from '../classes/ToDoIssue'
@@ -10,14 +10,14 @@ import { ToDoFieldSelect } from './ToDoFieldSelect'
 import { ToDoFieldArray, IToDoFieldArrayRef } from './ToDoFieldArray'
 import { IAssignedUsers, ITag, StatusColumnKey } from '../types'
 import { ToDoFieldDate } from './ToDoFieldDate'
-
+import { ToDoFieldTextQuill } from './ToDoFieldTextQuill'
 
 
 interface Props {    
     fieldName: keyof ToDoIssue
     value: string | Date | ITag[] | IAssignedUsers[];
-    type: 'text' | 'textarea' | 'array' | 'date' | 'select'
-    onSave: ( fieldDataName: string, newValueDataField: any ) => void
+    type: 'text' | 'textarea' | 'textRich' | 'array' | 'date' | 'select'
+    onSave: (fieldDataName: string, newValueDataField: any) => Promise<void>
     style?: React.CSSProperties
     options?: string[]
     onEditStart?: () => void
@@ -49,6 +49,9 @@ export function ToDoEditableField({
     const arrayRef = React.useRef < { handleSave: () => void, setIsValid: React.Dispatch<React.SetStateAction<boolean>> }>(null)
     const dateRef = React.useRef<{ handleSave: () => void, setIsValid: React.Dispatch<React.SetStateAction<boolean>> }>(null)
 
+    const quillRef = React.useRef<{ handleSave: () => void, setIsValid: React.Dispatch<React.SetStateAction<boolean>>}>(null);
+    
+
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
@@ -69,6 +72,9 @@ export function ToDoEditableField({
             //const updatedValue = toDoIssue[fieldName]
             setCurrentValue(initialValue)
             setIsValid(true)
+        } else {
+            setCurrentValue(initialValue);
+            setIsValid(false);
         }
     }, [initialValue, isEditing]) 
 
@@ -76,6 +82,7 @@ export function ToDoEditableField({
 
 
     const handleEditClikBtn = () => {
+        console.log("ToDoEditableField: handleEditClikBtn - Setting isEditing to true")
         setIsEditing(true)
         setIsValid(false)
     }
@@ -128,6 +135,20 @@ export function ToDoEditableField({
                         setCurrentValue(savedValue);
                     }
                     break;
+                
+                
+                
+                case 'textRich':
+                    console.log("ToDoEditableField: Calling textAreaRef.current?.handleSave()");
+
+                    savedValue = await quillRef.current?.handleSave()
+                    if (typeof savedValue === 'string') {
+                        setCurrentValue(savedValue);
+                    }
+                    break;
+                
+                
+                
                 case 'select':
                     console.log("ToDoEditableField: Calling selectRef.current?.handleSave()");
 
@@ -163,7 +184,7 @@ export function ToDoEditableField({
             }
 
         } catch (error) {
-            console.error('Error in field update:', error)
+            console.error('Error during save process in ToDoEditableField:', error)
         } 
 
     }
@@ -223,6 +244,24 @@ export function ToDoEditableField({
                         placeholder={`Leave a comment. Enter ${fieldName}...`}
                     />
                 )
+            case 'textRich':
+                return ( 
+                <ToDoFieldTextQuill
+                    ref={ quillRef} 
+                    value={currentValue as string}
+                    isEditing={isEditing}
+                    setIsEditing={setIsEditing} 
+                    onSave={(newValue) => {
+                        console.log("ToDoEditableField: onSave callback from ToDoFieldQuill", { newValue });
+                        return onSave(fieldName, newValue); // Asegúrate de retornar la promesa si onSave es async
+                    }}
+                    onCancel={handleCancelClickBtn} 
+                    onInvalid={() => setIsValid(false)}
+                    setIsValid={setIsValid} 
+                    isValid={isValid} 
+                    placeholder={`Enter ${fieldName}...`}
+                    />
+                )            
             case 'select':
                 return (
                     <ToDoFieldSelect
@@ -315,7 +354,7 @@ export function ToDoEditableField({
                         <button
                             className={`todo-icon-edit ${isEditing ? 'svg-save' : 'svg-edit'}`}
                             onClick={handleSaveClickBtn}
-                            disabled={!isValid}
+                            disabled={!isValid }
                             style={{
                                 display: "flex",
                                 borderRadius: "var(--br-circle)",
