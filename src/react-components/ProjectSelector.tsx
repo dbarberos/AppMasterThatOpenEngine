@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as Router from 'react-router-dom';
 
 import { Project } from '../classes/Project';
-
+import { useStickyState } from '../hooks'
 
 interface ProjectSelectorProps {
     currentProject: Project
@@ -19,15 +19,34 @@ export const ProjectSelector = ({
     const selectRef = React.useRef<HTMLSelectElement>(null)
     const containerRef = React.useRef<HTMLDivElement>(null)
 
+    const [activeProject, setActiveProject] = useStickyState<string | null>(
+        currentProject.id ?? null,
+        'selectedProjectId'
+    );
+
+    // Asegúrar que el estado local se actualice si currentProject.id cambia desde fuera
+    // y no coincide con el estado pegajoso (por ejemplo, al cargar la página por primera vez
+    // con un ID diferente en la URL).
+    React.useEffect(() => {
+        // Si currentProject existe, usa su id. Si id es undefined o currentProject no existe, usa null.
+        const projectIdToSet = currentProject?.id ?? null;
+
+        if (projectIdToSet !== activeProject) {
+            setActiveProject(projectIdToSet);
+        }
+    }, [currentProject.id, activeProject, setActiveProject]);
+
+
 
     // Filter out current project from options
     const availableProjects = projectsList.filter(project =>
-        project.id !== currentProject.id
+        project.id !== activeProject
     )
 
     const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedProjectId = e.target.value;
-        if (selectedProjectId !== currentProject.id) {
+        if (selectedProjectId !== activeProject) {
+            setActiveProject(selectedProjectId);
             navigateTo(`/project/${selectedProjectId}`)
             setIsSelectVisible(false)
         }
@@ -73,18 +92,13 @@ export const ProjectSelector = ({
                 </button>
             ) : (
                 <>
-                        <p style={{ paddingLeft: 20 }}>Swap project:</p>
+                    <p style={{ paddingLeft: 20 }}>Swap project:</p>
                     <select
                         ref={selectRef}
                         id="projectSelectedProjectDetailPage"
-                        value={currentProject.id}
+                        value={activeProject ?? ''}
                         onChange={handleProjectChange}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                                setIsSelectVisible(false);
-                                e.preventDefault();
-                            }
-                        }}
+                        onKeyDown={handleKeyDown}
                         onBlur={() => setIsSelectVisible(false)}
                         style={{
                             padding: 10,
@@ -103,11 +117,11 @@ export const ProjectSelector = ({
                                 <option
                                     key={project.id}
                                     value={project.id}
-                                    disabled={project.id === currentProject.id}
+                                    disabled={project.id === activeProject}
                                     style={{
-                                        opacity: project.id === currentProject.id ? 0.5 : 1,
-                                        fontStyle: project.id === currentProject.id ? 'italic' : 'normal',
-                                        color: project.id === currentProject.id ? 'var(--color-fontbase-dark)' : 'inherit'
+                                        opacity: project.id === activeProject ? 0.5 : 1,
+                                        fontStyle: project.id === activeProject ? 'italic' : 'normal',
+                                        color: project.id === activeProject ? 'var(--color-fontbase-dark)' : 'inherit'
                                     }}
                                 >
                                     {project.name}
@@ -119,3 +133,7 @@ export const ProjectSelector = ({
         </div>
     );
 };
+
+
+// Add display name for debugging purposes
+ProjectSelector.displayName = 'ProjectSelector'

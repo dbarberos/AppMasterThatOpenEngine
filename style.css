@@ -155,6 +155,12 @@
     --input-shadow: rgba(0, 0, 0, 0.2);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        interpolate-size: allow-keywords;
+    }
+}
+
 /* Notification styling */
 
 .toast.toast-popup-info {
@@ -881,10 +887,26 @@ button:active {
     justify-content: start;
     padding-left: 30px;
     user-select: none;
+    padding: 10px 15px;
+    transition: color 0.2s ease-in-out, box-shadow 0.2s ease-in-out
 }
 
-.nav-button:hover,
-svg {
+.nav-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+
+.nav-button svg {
+    fill: currentColor;    
+    background-color: transparent;    
+    box-shadow: none;    
+    transition: fill 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+
+.nav-button:hover {
     /* background-color: var(--primary-400); */
 
     box-shadow: -2px -2px 5px var(--color-light), 2px 2px 5px var(--color-shadow);
@@ -893,9 +915,24 @@ svg {
 
 }
 
+.nav-button:hover svg{
+    fill: var(--primary);        
+        background-color: transparent !important;        
+        box-shadow: none !important;        
+        color: inherit;        
+        transition: fill 0.2s ease-in-out;
+
+}
+
 .nav-button:active {
     background: linear-gradient(to left, var(--color-shadow), var(--primary));
     color: var(--color-fontbase-dark);
+}
+
+.nav-button:active svg {
+    fill: var(--color-fontbase-dark);    
+    background-color: transparent !important;    
+    box-shadow: none !important;    
 }
 
 #sidebar-checkbox-switch {
@@ -2094,17 +2131,17 @@ progress::-moz-progress-bar {
     grid-template-rows: auto 1fr;
     /* full height of parent element */
     grid-template-areas:
-        "head "
+        "head"
         "content";
     justify-content: center;
     max-width: 100%;
 
 }
 
-#todo-page,
+/* #todo-page,
 header {
     grid-area: head;
-}
+} */
 
 #todo-content {
     display: flex;
@@ -2602,6 +2639,7 @@ header {
     align-items: center;
     justify-items: center;
     column-gap: 0px;
+    box-shadow: none;
 
     /* transition: all 0.02s ease-in-out; */
     user-select: none;
@@ -3062,6 +3100,8 @@ header {
 
 /* Notification Pop Up */
 
+
+
 .popup-success,
 .popup-warning,
 .popup-error,
@@ -3090,26 +3130,36 @@ header {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    right: 0;
+    bottom: 0;
+
+    width: 100vw;
+    height: 100vh;
     backdrop-filter: blur(2px) brightness(1.1);
     -webkit-backdrop-filter: blur(2.5px) brightness(0.8);
     
-    z-index: 999;
+    z-index: 1000;
+    /* display: block; */
     
 }
 
+/* Deshabilitar scroll del body cuando el popup está abierto */
+body.popup-open {
+    overflow: hidden;
+}
 
+/* 
 .message-popup,
 .message-content {
     display: flex;
     flex-direction: row;
-    /* width: 100%; */
-    /* height: auto */
-}
+} 
+*/
 
 .message-popup,
 .message-content {
+    display: flex;
+        flex-direction: row;
     align-items: center;
     justify-content: space-between;
     column-gap: var(--gap-lg);
@@ -3118,10 +3168,11 @@ header {
 .message-popup {
     border-radius: 0.75em;
     height: auto;
-    overflow: hidden;
+    overflow: auto;
     width: 100%;
     cursor: default;
-    z-index: 1000;
+
+    z-index: 1010;
 }
 
 .message-content {
@@ -3268,11 +3319,12 @@ header {
     border-radius: 15px;
     position: fixed;
     top: 50%;
-    left: 50%;
+    left: 50%;    
     transform: translate(-50%, -50%);
-    z-index: 1000;
+    z-index: 1001;
     backdrop-filter: blur(2.5px) brightness(0.8);
     -webkit-backdrop-filter: blur(2.5px) brightness(0.8);
+    overflow: auto;
 
 }
 

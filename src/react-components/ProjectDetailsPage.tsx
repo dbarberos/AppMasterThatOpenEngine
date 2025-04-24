@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 import { ProjectDetailsCard, ProjectDetailsToDoList, ThreeJSViewer, ProjectSelector } from '../react-components';
+import { updateDocument} from '../services/firebase';
 
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { type ToDoIssue } from '../classes/ToDoIssue';
@@ -147,10 +148,87 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                 projectsManager.updateReactProjects(updatedProject);
             }
         }
-
         //*****???????? */
 
     }
+
+
+
+    //  HANDLER para el reordenamiento
+    const handleTodoListReordered = async (reorderedList: ToDoIssue[]) => {
+        if (!currentProject?.id) return;
+
+        console.log("ProjectDetailsPage: Handling reordered list", reorderedList.map(t => t.id));
+
+
+        // --- Identificar el ToDo que cambió su sortOrder ---
+        // Compara la nueva lista con la lista original (antes del D&D)
+        // ¡OJO! Necesitamos la lista ANTES del D&D para comparar.
+        // Podríamos pasarla desde ProjectDetailsToDoList o buscarla en currentProject *antes* de actualizarlo.
+        // Asumamos que `currentProject.todoList` tiene el estado *antes* del D&D aquí.
+        let movedTodo: ToDoIssue | undefined;
+        const originalListMap = new Map(currentProject.todoList.map(t => [t.id, t.sortOrder]));
+
+        for (const todo of reorderedList) {
+            const originalSortOrder = originalListMap.get(todo.id);
+            if (originalSortOrder !== todo.sortOrder) {
+                movedTodo = todo;
+                break; // Encontramos el que cambió
+            }
+        }
+        // --- Fin Identificar ---
+
+
+        // Crear una nueva instancia del proyecto con la lista reordenada
+        const updatedProjectData = {
+            ...currentProject,
+            todoList: reorderedList, // La lista ya viene ordenada y con el sortOrder actualizado
+        };
+        const updatedProjectInstance = new Project(updatedProjectData)
+
+
+        // Actualizar el estado local de ProjectDetailsPage
+        setCurrentProject(updatedProjectInstance);
+
+        // Actualizar el proyecto en ProjectsManager (importante para consistencia)
+        projectsManager.updateReactProjects(updatedProjectInstance);
+
+        // Notificar al componente App (index.tsx) para actualizar el estado global si es necesario
+        // y potencialmente guardar el nuevo orden en la base de datos.
+        onProjectUpdate(updatedProjectInstance);
+
+        // --- Actualizar SOLO el sortOrder en Firebase ---
+        if (movedTodo && movedTodo.id) {
+            try {
+                await updateDocument(
+                    movedTodo.id, // ID del documento ToDo a actualizar
+                    { sortOrder: movedTodo.sortOrder }, // Solo actualizar el campo sortOrder
+                    {
+                        basePath: 'projects',
+                        subcollection: 'todoList',
+                        parentId: currentProject.id,
+                        todoId: movedTodo.id,
+                        isArrayCollection: false
+                    }
+                )
+                console.log("Firebase sortOrder updated successfully.")
+
+            } catch (error) {
+                // Manejo de errores
+                console.error("Error updating sortOrder in Firebase:", error);
+                setCurrentProject(currentProject); // Revertir estado local
+                projectsManager.updateReactProjects(currentProject); // Revertir en manager
+                onProjectUpdate(currentProject);// Notificar al padre del rollback
+                // Mostrar un mensaje de error al usuario gestionado desde services\firebase
+            }
+        } else {
+            console.warn("Could not identify the moved ToDo or its ID for Firebase update.")
+        }
+
+    };
+
+
+
 
 
     // If project is not found (after checking), return null.
@@ -232,6 +310,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                             onUpdatedProject={handleUpdatedProject}
                             onCreatedToDoIssue={handleToDoCreated}
                             onUpdatedToDoIssue={handleUpdatedToDo}
+                            onTodoListReordered={handleTodoListReordered}
                         />
                 </div>
                 <ThreeJSViewer />

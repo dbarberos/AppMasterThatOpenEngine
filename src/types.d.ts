@@ -32,9 +32,10 @@ export interface IToDoIssue {
     tags: ITag[]
     assignedUsers: IAssignedUsers[]
     dueDate: Date | string | number | Firestore.Timestamp
-    todoProject: string
+    todoProject: string // ID del proyecto al que pertenece
     createdDate: Date | string | number | Firestore.Timestamp
-    todoUserOrigin: string
-    id?: string
+    todoUserOrigin: string // ID o nombre del usuario creador
+    id?: string // ID de Firebase
     backgroundColorColumn?: string
+    sortOrder: number;
 }

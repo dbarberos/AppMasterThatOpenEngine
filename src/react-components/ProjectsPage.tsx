@@ -4,11 +4,11 @@ import * as Firestore from 'firebase/firestore';
 
 
 import { LoadingIcon, SearchProjectBox, ProjectCard, CounterBox } from '../react-components';
-import { useProjectsCache, useProjectSearch } from '../hooks'
+import { useProjectsCache, useProjectSearch, useStickyState, useDebounce } from '../hooks'
 import { STORAGE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL } from '../const';
 
 import { useProjectsManager, NewProjectForm } from './index.tsx';
-import { firebaseDB, getProjectsFromDB } from '../services/firebase/index.ts'
+import { getProjectsFromDB } from '../services/firebase/index.ts'
 import { getCollection } from '../services/firebase/index.ts'
 
 //import NewProjectForm from './NewProjectForm.tsx';
@@ -50,6 +50,11 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
         filteredProjects,
         // updateOriginalProjects
     } = useProjectSearch(projects)
+
+
+    const [, setSelectedProjectId] = useStickyState<string | null>(null, 'selectedProjectId')
+
+
 
     // Verificar si necesitamos sincronizar
     const shouldSync = React.useCallback(() => {
@@ -237,10 +242,20 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
     // }
 
 
+    // Función para manejar el clic en el Link
+    const handleProjectLinkClick = (projectId: string) => {
+        console.log('Setting selectedProjectId using useStickyState:', projectId);
+        setSelectedProjectId(projectId); // Usa el setter del hook
+    };
+
     // Memorizar lista de ProjectCards
     const projectCardsList = React.useMemo(() =>
         filteredProjects.map((project) => (
-            <Router.Link to={`/project/${project.id}`} key={project.id}>
+            <Router.Link
+                to={`/project/${project.id}`}
+                key={project.id}
+                onClick={() => handleProjectLinkClick(project.id!)}
+                >
                 <ProjectCard project={project} />
             </Router.Link>
         )),

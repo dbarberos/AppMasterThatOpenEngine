@@ -1,34 +1,71 @@
 import * as React from 'react';
-import * as Router from 'react-router-dom';
+//import * as Router from 'react-router-dom';
 
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { ChatBubbleIcon, DragIndicatorIcon, FlagIcon } from './icons';
 
-import { ToDoIssue, IToDoIssue } from '../classes/ToDoIssue';
-import { Project } from '../classes/Project';
+import { ToDoIssue } from '../classes/ToDoIssue';
+//import { Project } from '../classes/Project';
 
 interface Props {   
     toDoIssue: ToDoIssue
-    onClickOpenToDoDetailsWindow: (todoIssue: ToDoIssue) => void    
+    onClickOpenToDoDetailsWindow: (todoIssue: ToDoIssue) => void
+    isSortable?: boolean; // <-- NUEVA PROP: Indica si la tarjeta debe ser sorteable
 }
 interface Tag {
     title: string
 }
 
-export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow }: Props) {
+export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow, isSortable = false }: Props) {
+
+
+    // --- Lógica de dnd-kit (condicional) ---
+    const {
+        attributes,
+        listeners, // Estos son los listeners para el drag handle
+        setNodeRef,
+        transform,
+        transition,
+        isDragging // Útil para estilizar mientras se arrastra
+    } = useSortable({
+        id: toDoIssue.id,
+        disabled: !isSortable // <-- Deshabilita el hook si no es sorteable
+    });
+    
+    // Estilos para dnd-kit (solo si es sorteable)
+    const sortableStyle: React.CSSProperties = isSortable ?{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.7 : 1,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        zIndex: isDragging ? 10 : 'auto',
+        userSelect: 'none',// Evita selección de texto al arrastrar
+        // Asegúrar que el elemento pueda ser posicionado (ej. position: 'relative') si es necesario
+    } : {}; // Objeto vacío si no es sorteable
+    
+    
+    // Props para el drag handle (solo si es sorteable)
+    const dragHandleProps = isSortable ? listeners : undefined;
+    
+
     // Console.log wrapped in useEffect
     React.useEffect(() => {
         console.log('ToDoCard rendering with:', toDoIssue);
     }, [toDoIssue]);
     
 
-    const handleClickOverToDoCard = React.useCallback(() => {
+    const handleClickOverToDoCard = React.useCallback((event: React.MouseEvent) => {
+        event.preventDefault(); // Evita el comportamiento por defecto del click
+        // Evita abrir detalles si se está interactuando con el drag handle
+        const target = event.target as HTMLElement;
+        if (target.closest('.handler-move')) {
+            return;
+        }
         onClickOpenToDoDetailsWindow(toDoIssue);
     }, [toDoIssue, onClickOpenToDoDetailsWindow]);
 
-    // const handleClickOverToDoCard = (e: React.MouseEvent) => {
-    //     e.preventDefault();
-    //     onClickOpenToDoDetailsWindow(toDoIssue);
-    // }
+
 
     // Convert Firebase timestamp to Date object
     const formatDueDate = (date: Date | string |number|undefined) => {
@@ -62,18 +99,23 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow }: Props) {
         return formatDueDate(toDoIssue.dueDate);
         }, [toDoIssue.dueDate]);
 
-    const todoTagsList = toDoIssue.tags.map((tag, index) => (
+    const todoTagsList = toDoIssue.tags?.map((tag, index) => (
         <span key={index} className="todo-tags">
-            {typeof tag === 'object' && 'title' in tag
+            {typeof tag === 'object' && tag !== null &&'title' in tag
                 ? (tag as Tag).title
-                : tag}
-        </span>));
+                : String(tag)}
+        </span>)) || []; // Default to empty array if undefined
 
 
     return (
+        // El div exterior es el nodo sorteable
         <div
+            ref={isSortable ? setNodeRef : undefined} // <-- Aplica ref condicionalmente
+            style={sortableStyle} // <-- Aplica estilos sorteables
+            
             className="todo-item"
             onClick={handleClickOverToDoCard}
+            {...(isSortable ? attributes : {})} // <-- Aplica atributos sorteables
         >
             <div
                 className="todo-color-column"
@@ -91,7 +133,20 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow }: Props) {
                     <div className="todo-tags-list">
                         {todoTagsList} {/* Array of JSX elements */}
                     </div>
-                    <button className="todo-task-move handler-move">
+                    {/* Botón Drag Handle: aplica listeners condicionalmente */}
+                    <button
+                        {...dragHandleProps} // <-- Aplica listeners sorteables
+                        className="todo-task-move handler-move"
+                        style={{
+                            cursor: isSortable ? (isDragging ? 'grabbing' : 'grab') : 'auto', // Cursor solo si es sorteable
+                            touchAction: isSortable ? 'none' : 'auto' // Mejora experiencia táctil
+                        }}
+                        // Evita que el click en el handle propague al onClick de la card
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={isSortable ? "Drag ToDo Item" : undefined} // Accesibilidad
+                        disabled={!isSortable} // Deshabilita si no es sorteable
+                        title={isSortable ? "Drag to reorder" : ""}
+                    >
                         <DragIndicatorIcon size={24} className="todo-icon" color="var(--color-fontbase)" />                        
                     </button>
                 </div>
@@ -120,7 +175,7 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow }: Props) {
                         className="todo-task-move"
                     >
                         <ChatBubbleIcon size={24} className="todo-icon" color="var(--color-fontbase)" />
-                        {`${toDoIssue.assignedUsers.length}`} assigned
+                        {`${toDoIssue.assignedUsers.length || 0 }`} assigned
                     </span>
                     <span
                         className="todo-task-move todo-tags"
@@ -136,6 +191,9 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow }: Props) {
                     </span>
                 </div>
             </div>
-            </div>
+        </div>
     )
 }
+
+// Add display name for debugging purposes
+ToDoCard.displayName = 'ToDoCard'

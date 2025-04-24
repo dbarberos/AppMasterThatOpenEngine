@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
 
-import { Sidebar, ProjectsPage, ProjectDetailsPage } from './react-components';
+import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage } from './react-components';
 //import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
 import { CheckCircleIcon, NotificationsActiveIcon, WarningIcon, ReportIcon, UpdateIcon } from './react-components/icons.tsx'
 
@@ -98,7 +98,25 @@ const App = () => {
                         // </ErrorBoundary>
                     } />
 
+                    <Router.Route path="/project/todoBoard/:id" element={
+                        // <ErrorBoundary fallback="Error"> 
+                        <ToDoBoardPage
+                            projectsManager={projectsManager}
+                            // onProjectCreate={handleProjectCreate}
+                            onProjectUpdate={handleProjectUpdate}
+                            onToDoIssueCreated={handleToDoIssueCreated}
+                            onToDoIssueUpdated={handleToDoIssueUpdated}
+                        />
+                        // </ErrorBoundary>
+                    } />
+
+
+
+
+
+
                     {/* <Router.Route path="/project/:id/todo/:todoId" element={<TodoDetailsPage projectsManager={projectsManager} onProjectCreate={handleProjectCreate} onProjectUpdate={handleProjectUpdate} />} /> */}
+                    <Router.Route path="*" element={<>Eror 404</>} />
 
                 </Router.Routes>
 

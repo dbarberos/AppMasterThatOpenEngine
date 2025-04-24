@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Firestore from 'firebase/firestore'
 import { IAssignedUsers, ITag, IToDoIssue, type StatusColumnKey } from '../types'
+import { TODO_STATUSCOLUMN } from '../const'
 
 export class ToDoIssue implements IToDoIssue {
     title: string
@@ -12,6 +13,7 @@ export class ToDoIssue implements IToDoIssue {
     todoProject: string
     createdDate: Date
     todoUserOrigin: string
+    sortOrder: number;
 
     // Class internals
     id: string
@@ -22,12 +24,12 @@ export class ToDoIssue implements IToDoIssue {
     constructor(data: IToDoIssue, idString?: string) {
         for (const key in data) {
 
-            if (key === "createdDate") {                
+            if (key === "createdDate") {
                 this[key] = this.parseAndValidateDate(data.createdDate)
                 // this[key] = data.createdDate instanceof Date
                 //     ? data.createdDate
                 //     : new Date(data.createdDate)
-            }else if (key === "dueDate") {
+            } else if (key === "dueDate") {
                 this[key] = this.parseAndValidateDate(data.dueDate)
             } else if (key === "statusColumn") {
                 this[key] = data.statusColumn || "notassigned"
@@ -35,6 +37,8 @@ export class ToDoIssue implements IToDoIssue {
                 this.tags = data.tags || []
             } else if (key === "assignedUsers") {
                 this.assignedUsers = data.assignedUsers || []
+            } else if (key === "sortOrder") {
+                this.sortOrder = data.sortOrder ?? 0
             } else {
                 this[key] = data[key]
             }
@@ -88,20 +92,28 @@ export class ToDoIssue implements IToDoIssue {
         }
     }
 
-    static getStatusColumnText(statusColumn: StatusColumnKey): string {
-        switch (statusColumn) {
-            case "backlog":
-                return "Task Ready"
-            case "wip":
-                return "In Progress"
-            case "qa":
-                return "In Review"
-            case "completed":
-                return "Done"
-            default:
-                return "Not Assigned"
-        }
+    // static getStatusColumnText(statusColumn: StatusColumnKey): string {
+    //     switch (statusColumn) {
+    //         case "backlog":
+    //             return "Task Ready"
+    //         case "wip":
+    //             return "In Progress"
+    //         case "qa":
+    //             return "In Review"
+    //         case "completed":
+    //             return "Done"
+    //         default:
+    //             return "Not Assigned"
+    //     }
+    // }
+
+    // Método estático para obtener el texto del estado
+    static getStatusColumnText(status: StatusColumnKey): string {
+        return TODO_STATUSCOLUMN[status] || 'Not Assigned';
     }
+
+
+
 
     static createFromData(data: ToDoIssue) {
         const todoIssue = new ToDoIssue({
@@ -115,7 +127,8 @@ export class ToDoIssue implements IToDoIssue {
             createdDate: data.createdDate,
             todoUserOrigin: data.todoUserOrigin,
             id: data.id,
-            backgroundColorColumn: data.backgroundColorColumn
+            backgroundColorColumn: data.backgroundColorColumn,
+            sortOrder: data.sortOrder
         });
 
         return todoIssue;

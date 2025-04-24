@@ -781,3 +781,66 @@ export async function updateDocument<T extends Record<string, any> | Array<any>>
     });
 }
 
+// CONSULTA PARA EL TODO KANBAN
+export async function getSortedTodosForColumn(projectId: string, status: string): Promise<IToDoIssue[]> {
+    return withRetry(async () => { // Usando tu helper withRetry
+        try {
+            const todoListPath = `projects/${projectId}/todoList`;
+            const todoListRef = collection(firestoreDB, todoListPath);
+
+            // --- AQUÍ ES DONDE USARÍAS LA CONSULTA COMBINADA ---
+
+            //  consulta útil para optimizar la carga de datos, especialmente para vistas tipo Kanban.En lugar de cargar todos los ToDos de un proyecto y luego filtrarlos / ordenarlos en el cliente, podrías hacer consultas separadas a Firebase para cada columna.
+            const q = query(
+                todoListRef,
+                where("statusColumn", "==", status), // Filtra por la columna específica
+                orderBy("sortOrder", "asc")         // Ordena por sortOrder ascendente
+            );
+            // ----------------------------------------------------
+
+            const querySnapshot = await getDocs(q);
+
+            const todos: IToDoIssue[] = [];
+            for (const todoDoc of querySnapshot.docs) {
+                const todoData = todoDoc.data();
+                // ... (tu lógica para convertir Timestamps a Date, etc.)
+                const dueDateFormatted = todoData.dueDate instanceof Firestore.Timestamp
+                    ? todoData.dueDate.toDate()
+                    : new Date(todoData.dueDate);
+                const createdDateFormatted = todoData.createdDate instanceof Firestore.Timestamp
+                    ? todoData.createdDate.toDate()
+                    : new Date(todoData.createdDate);
+
+                // ¡OJO! Necesitarías cargar tags y assignedUsers si los necesitas aquí también
+                // const [tags, assignedUsers] = await Promise.all([ ... ]);
+
+                todos.push({
+                    ...todoData,
+                    id: todoDoc.id,
+                    dueDate: dueDateFormatted,
+                    createdDate: createdDateFormatted,
+                    // tags: tags, // Descomentar si cargas subcolecciones
+                    // assignedUsers: assignedUsers // Descomentar si cargas subcolecciones
+                } as IToDoIssue); // Asegúrate que el tipo coincida
+            }
+            console.log(`Fetched ${todos.length} todos for project ${projectId}, column ${status}`);
+            return todos;
+
+        } catch (error) {
+            console.error(`Error fetching todos for column ${status}:`, error);
+            toast.error(`Error fetching To-Dos for column ${status}.`, {
+                description: error.message
+            });
+            throw new Error(`Failed to load todos for column ${status}: ${error.message}`);
+        }
+    });
+}
+
+// El Índice Compuesto:
+
+// Cuándo se necesita: Precisamente cuando ejecutas una consulta como la del ejemplo anterior, que tiene una cláusula where sobre un campo(statusColumn) y una cláusula orderBy sobre otro campo(sortOrder).
+// Por qué: Firestore necesita un índice especial(compuesto) para poder realizar eficientemente este tipo de consultas combinadas.Sin él, la consulta fallaría o sería muy lenta.
+// Cómo se crea: La primera vez que tu aplicación intente ejecutar esa consulta combinada(por ejemplo, llamando a la función getSortedTodosForColumn del ejemplo), Firestore detectará que falta el índice.En la consola de errores de tu navegador(o en los logs si es backend), verás un mensaje de error de Firestore que incluirá un enlace directo a la consola de Firebase para crear el índice necesario automáticamente.Solo tienes que hacer clic en ese enlace y confirmar la creación.
+// Conclusión para tu caso: Como tu código actual no ejecuta esa consulta combinada específica para los ToDos, no has olvidado incluir nada respecto al índice compuesto en tus archivos.El índice se crea en la consola de Firebase, no en tu código TypeScript.Solo necesitarás crearlo si decides implementar una estrategia de carga de datos más granular como la del ejemplo getSortedTodosForColumn.
+// En resumen: la consulta combinada where / orderBy se aplicaría en funciones que buscan obtener listas de ToDos ya filtradas y ordenadas desde Firebase(lo cual no haces actualmente para los ToDos).Si implementas eso, Firebase te pedirá crear el índice compuesto necesario a través de un enlace en el mensaje de error.
+

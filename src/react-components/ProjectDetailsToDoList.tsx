@@ -6,11 +6,30 @@ import { AddIcon, SearchIcon } from './icons';
 
 import { type Project } from '../classes/Project';
 import { ToDoIssue, } from '../classes/ToDoIssue';
-import { type IToDoIssue } from '../Types';
+import { type IToDoIssue } from '../types';
 import { log } from 'three/examples/jsm/nodes/Nodes.js';
 //import { ProjectsManager } from '../classes/ProjectsManager';
 //import { ToDoManager } from '../classes/ToDoManager';
 //import { showModal } from '../classes/UiManager';
+
+import {
+    DndContext,
+    closestCorners, // O considera rectIntersection según tu layout
+    PointerSensor,
+    KeyboardSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+    type DragStartEvent,
+    type DragEndEvent,
+    closestCenter
+} from '@dnd-kit/core'
+import {
+    sortableKeyboardCoordinates,
+    arrayMove,
+    SortableContext,
+    verticalListSortingStrategy
+} from '@dnd-kit/sortable'
 
 
 
@@ -20,7 +39,70 @@ interface Props {
     onCreatedToDoIssue: (createdNewToDoIssue: ToDoIssue) => void
     onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
     //onDeletedToDoIssue: (deletedTodo: ToDoIssue) => void
+    onTodoListReordered: (reorderedList: ToDoIssue[]) => void
 }
+
+
+
+// --- FUNCIÓN HELPER PARA CALCULAR sortOrder ---
+function calculateNewSortOrder(
+    list: ToDoIssue[],
+    oldIndex: number,
+    newIndex: number
+): number | null {
+    if (oldIndex === newIndex) return null; // No change
+
+    // Crear una copia temporal de la lista *antes* del movimiento para obtener vecinos correctos
+    const currentList = [...list];
+    const movedItem = currentList[oldIndex]; // El item que se mueve
+
+    let beforeSortOrder: number | null = null;
+    let afterSortOrder: number | null = null;
+
+    if (newIndex === 0) {
+        // Mover al principio
+        const firstItem = currentList.find((_, i) => i !== oldIndex); // Encuentra el primer item *que no sea el movido*
+        afterSortOrder = firstItem ? firstItem.sortOrder : null;
+    } else if (newIndex >= currentList.length - 1) { // >= para cubrir el caso de mover al final desde cualquier posición
+        // Mover al final
+        // Encuentra el último item *que no sea el movido*
+        const potentialLastItems = currentList.filter((_, i) => i !== oldIndex);
+        beforeSortOrder = potentialLastItems.length > 0 ? potentialLastItems[potentialLastItems.length - 1].sortOrder : null;
+
+    } else {
+        // Mover entre dos items
+        // Necesitamos encontrar los vecinos en la lista *como quedaría después del movimiento*
+        // Es más fácil obtener los índices de los vecinos en la lista *original*
+        const itemBeforeIndex = newIndex > oldIndex ? newIndex : newIndex - 1;
+        const itemAfterIndex = newIndex < oldIndex ? newIndex : newIndex + 1;
+
+        // Asegurarse de que los índices no sean el del item movido
+        const realItemBefore = currentList[itemBeforeIndex === oldIndex ? itemBeforeIndex - 1 : itemBeforeIndex];
+        const realItemAfter = currentList[itemAfterIndex === oldIndex ? itemAfterIndex + 1 : itemAfterIndex];
+
+
+        beforeSortOrder = realItemBefore ? realItemBefore.sortOrder : null;
+        afterSortOrder = realItemAfter ? realItemAfter.sortOrder : null;
+    }
+
+
+    // --- Cálculo del nuevo sortOrder ---
+    if (beforeSortOrder !== null && afterSortOrder !== null) {
+        // Entre dos items
+        return (beforeSortOrder + afterSortOrder) / 2;
+    } else if (beforeSortOrder !== null) {
+        // Al final
+        return beforeSortOrder + 1.0; // Añadir incremento
+    } else if (afterSortOrder !== null) {
+        // Al principio
+        return afterSortOrder / 2; // Dividir por 2
+    } else {
+        // Lista vacía o solo un elemento (este caso no debería ocurrir si hay drag)
+        return 1.0; // Valor base
+    }
+}
+
+
 
 export function ProjectDetailsToDoList({
     project,
@@ -28,6 +110,7 @@ export function ProjectDetailsToDoList({
     onCreatedToDoIssue,
     onUpdatedToDoIssue,
     //onDeletedToDoIssue
+    onTodoListReordered
 }: Props) {
     
     const [isNewToDoIssueFormOpen, setIsNewToDoIssueFormOpen] = React.useState(false)
@@ -36,8 +119,29 @@ export function ProjectDetailsToDoList({
 
     // TodoList state to track changes
     const [todoList, setTodoList] = React.useState<ToDoIssue[]>(project.todoList)
-    const originalTodoListRef = React.useRef<ToDoIssue[]>([])
+    const originalTodoListRef = React.useRef<ToDoIssue[]>(project.todoList)
     const [searchTerm, setSearchTerm] = React.useState('')
+
+
+    const [activeTodo, setActiveTodo] = React.useState<ToDoIssue | null>(null) // Para DragOverlay
+
+    // Sensores para dnd-kit
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+            delay: 250,
+            tolerance: 5
+            }
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    //  Ref para trackear si el reordenamiento fue iniciado por el usuario para evitar loops de useEffect en el renderizado inicial
+    const isUserReordering = React.useRef(false)
+    
+    
 
 
     // Update useEffect to sync with project changes
@@ -47,10 +151,17 @@ export function ProjectDetailsToDoList({
             todoListLength: project.todoList.length,
             todoListIds: todoList.map(todo => todo.id)
         })
+        const sortedList = [...project.todoList].sort((a, b) => a.sortOrder - b.sortOrder)
         // Update both the current todoList and the original reference
-        originalTodoListRef.current = project.todoList
-        setTodoList(project.todoList)   
-    }, [project.todoList])
+        originalTodoListRef.current = sortedList
+        // Solo actualiza si no hay término de búsqueda activo
+        if (!searchTerm.trim()) {
+            setTodoList(sortedList)
+        }
+        // Resetear el flag al recibir nuevas props
+        isUserReordering.current = false
+        // Si hay búsqueda, la lista filtrada se maneja en el otro useEffect
+    }, [project.todoList, , searchTerm])
 
   
 
@@ -195,7 +306,90 @@ export function ProjectDetailsToDoList({
 
         console.log('Filtered results:', filtered.length);
         setTodoList(filtered);
-    }, [searchTerm]);
+    }, [searchTerm, originalTodoListRef.current]);
+
+
+
+    // --- Lógica de Drag and Drop ---
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        const todo = todoList.find(t => t.id === active.id);
+        setActiveTodo(todo || null);
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        setActiveTodo(null); // Limpiar el overlay
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            isUserReordering.current = true // Marcar como reordenamiento real
+            setTodoList((currentList) => {
+                // Usar una función de actualización para obtener el estado más reciente
+                const oldIndex = currentList.findIndex((item) => item.id === active.id);
+                const newIndex = currentList.findIndex((item) => item.id === over.id);
+
+                if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+                    return currentList; // No hacer nada si no se encuentran los índices
+                }
+
+                // --- Calcular el nuevo sortOrder ANTES de mover ---
+                const newSortOrder = calculateNewSortOrder(currentList, oldIndex, newIndex);
+
+                if (newSortOrder === null) {
+                    console.warn("Sort order calculation resulted in no change.");
+                    return currentList; // No hubo cambio real de orden
+                }
+
+                // Mover el elemento en el array
+                const reorderedListIntermediate = arrayMove(currentList, oldIndex, newIndex);
+
+                // --- Actualizar el sortOrder del elemento movido ---
+                const finalReorderedList = reorderedListIntermediate.map(todo => {
+                    if (todo.id === active.id) {
+                        // Crear una nueva instancia o clonar para inmutabilidad
+                        return new ToDoIssue({ ...todo, sortOrder: newSortOrder });
+                        // O si ToDoIssue no es una clase:
+                        // return { ...todo, sortOrder: newSortOrder };
+                    }
+                    return todo;
+                })
+
+
+
+                //// Notificar al padre sobre el nuevo orden (con el sortOrder actualizado)
+                //onTodoListReordered(finalReorderedList);
+                // Desplazado a su propio useEffect para evitar el error de intentar renderizarse el padre antes de que termine el hijo. Mirar el use effect debajo de este.
+
+                return finalReorderedList; // Actualizar el estado local
+            });
+        }
+    };
+
+    // --- NUEVO useEffect para notificar al padre DESPUÉS de actualizar el estado local ---
+    React.useEffect(() => {
+        if (!isUserReordering.current) return; // Solo procesar si fue un reordenamiento real
+
+        // Comprobar si la lista local es diferente de la original que vino del proyecto
+        // Esto evita llamadas innecesarias en la carga inicial o si no hubo cambios reales.
+        // Puedría hacer una comparación más robusta si es necesario (ej. comparar IDs y sortOrders)
+        const originalIds = originalTodoListRef.current.map(t => t.id).join(',');
+        const currentIds = todoList.map(t => t.id).join(',');
+        const originalSortOrders = originalTodoListRef.current.map(t => t.sortOrder).join(',');
+        const currentSortOrders = todoList.map(t => t.sortOrder).join(',');
+
+        // Solo notificar si el orden de IDs o los sortOrders han cambiado respecto a la lista original
+        if (originalIds !== currentIds || originalSortOrders !== currentSortOrders) {
+            console.log("ProjectDetailsToDoList: useEffect detecting change, calling onTodoListReordered");
+            onTodoListReordered(todoList); // Llama a la prop del padre
+            // Actualizar la referencia original para la próxima comparación
+            originalTodoListRef.current = todoList;
+
+            isUserReordering.current = false;// *** Resetea el flag DESPUÉS de notificar ***
+        }
+    }, [todoList, onTodoListReordered]); // Dependencias: el estado local y la función prop
+    
+
+    // --- Fin Lógica de Drag and Drop ---
 
 
 
@@ -209,13 +403,14 @@ export function ProjectDetailsToDoList({
 
             return (
                 <ToDoCard
-                    key={todoInstance.id}
+                    key={todoInstance.id} //La key va en el elemento raíz del map
                     toDoIssue={todoInstance}
-                    onClickOpenToDoDetailsWindow={ handleClickOpenToDo } 
+                    onClickOpenToDoDetailsWindow={handleClickOpenToDo} 
+                    isSortable={!searchTerm.trim()} // <-- Solo sorteable si no hay búsqueda activa
                 />
             )
         }),
-        [todoList] // Dependency on local todoList state
+        [todoList, searchTerm, handleClickOpenToDo] // Dependency on local todoList state
     )
 
 
@@ -355,17 +550,43 @@ export function ProjectDetailsToDoList({
             </div>
             <div id="details-page-todo-maincontainer">
                 <div id="details-page-todo-secondcontainer">
-                    <div
-                        id="details-page-todo-list"
-                        style={{
-                            padding: "10px 7px 5px 7px",
-                            display: "flex",
-                            flexDirection: "column",
-                            rowGap: 15,
-                            alignContent: "center"
-                        }}>
-                        {toDoCardsList}
-                    </div>
+                    {/* ENVOLVER LA LISTA CON DndContext y SortableContext */}
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter} //o closestCorners
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext
+                            items={todoList.map(t => t.id!)} // Array de IDs para la estrategia
+                            strategy={verticalListSortingStrategy}
+                            disabled={!!searchTerm.trim()} // Deshabilitar contexto si hay búsqueda
+                        >
+                            <div
+                                id="details-page-todo-list"
+                                style={{
+                                    padding: "10px 7px 5px 7px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    rowGap: 15,
+                                    alignContent: "center",
+                                    overflowY: 'auto', // Permitir scroll si la lista es larga
+                                }}>
+                                {toDoCardsList.length > 0 ? toDoCardsList : <h5 style={{ padding: 10 }}>No To-Do Issues</h5>}
+                            </div>
+                        </SortableContext>
+                        {/* Opcional: Overlay para una mejor experiencia visual */}
+                        <DragOverlay>
+                            {activeTodo ? (
+                                // Renderiza una ToDoCard normal, no la sortable, para el overlay
+                                <ToDoCard
+                                    toDoIssue={activeTodo}
+                                    onClickOpenToDoDetailsWindow={() => { }} 
+                                    isSortable={false} // El overlay nunca es sorteable
+                                />
+                            ) : null}
+                        </DragOverlay>
+                    </DndContext>
                 </div>
             </div>
             {newToDoIssueForm}
@@ -374,3 +595,7 @@ export function ProjectDetailsToDoList({
         </div>
     )
 }
+
+
+// Add display name for debugging purposes
+ProjectDetailsToDoList.displayName = 'ProjectDetailsToDoList'

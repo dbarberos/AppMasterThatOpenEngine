@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Construction company</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round">
 </head>
 
@@ -1836,7 +1836,7 @@
             </div>
         </section>
 
-        <section class="page todo-page" id="todo-page" data-page style="height:100vh; display: ">
+        <!-- <section class="page todo-page" id="todo-page" data-page style="height:100vh; display: ">
             <header style="display: flex; align-items: center; align-content: space-between; flex-wrap: wrap; gap:20px; user-select: none;">
                 <div style="display: flex;column-gap: 20px">
                     <h2 style=" display:flex; align-items: center; column-gap: 20px;">To-Do Board
@@ -2129,9 +2129,9 @@
                 </div>
             
             </div>
-        </section>
+        </section> -->
 
-        <section class="half-page" id="todo-details" data-page style="display: none ">
+        <!-- <section class="half-page" id="todo-details" data-page style="display: ">
             <div class="sliding-panel-todoIssue open-panel ">
                 <div>
                     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
@@ -2267,7 +2267,7 @@
                     </button>
                     <select data-todo-info-origin="statusColumn" name="statusColumn" id="todo-stagecolumn-detail-select"
                         style="height: 20px; font-size: var(--font-lg); transform: translateY(0px) translateX(40px); ; background-color: var(--color-bg1); opacity: 0.5; display: none;">
-                        <!-- <option value="" disabled selected hidden>Select a stage</option> -->
+                        
                         <option label="Task ready" value="backlog" style="color:var(--background-100)"></option>
                         <option label="In progress" value="wip" sstyle="color:var(--background-100)"></option>
                         <option label="In review" value="qa" style="color:var(--background-100)"></option>
@@ -2275,7 +2275,7 @@
                     </select>
                     <p> 
                         <span class="todo-task-move todo-tags"
-                        style="textwrap: nowrap; margin-left:5px; color: var(--background) !important; font-size: var(--font-base); margin-left: 25px" data-todo-info="statusColumn">Column stage To-Do Issue
+                        style="text-wrap: nowrap; margin-left:5px; color: var(--background) !important; font-size: var(--font-base); margin-left: 25px" data-todo-info="statusColumn">Column stage To-Do Issue
                         </span>
                     </p>
                 </div>
@@ -2309,7 +2309,7 @@
                         <ul data-todo-info="assignedUsers" class="todo-tags-list todo-form-field-container" name="assignedUsers" id="todo-assignedUsers-list-detail-page" style="padding-left:20px; position:relative; margin-left: 25px; list-style: none;">
                             <li class="todo-tags">WIP_1</li>
                             <li class="todo-tags">WIP_2</li>
-                            <!-- ${toDoIssue.tags.map(tag => `<span class="todo-tags">${tag}</span>`).join('')} -->
+                            
                         </ul>
                     </div>
                 </div>
@@ -2374,10 +2374,12 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </section> -->
 
-
+        
     </main>
+    
+
     <script type="module" src="./src/index.tsx" defer></script>
 </body>
 </html>

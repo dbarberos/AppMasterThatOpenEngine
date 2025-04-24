@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import * as Icons from '../react-components/icons'
 
 
@@ -77,11 +78,26 @@ export const MessagePopUp: React.FC<MessagePopUpProps> = ({ type, title, message
 
 
 
+    React.useEffect(() => {
+        console.log("MessagePopUp montado");
+        // Opcional: Añadir una clase al body mientras el popup está abierto para deshabilitar scroll
+        document.body.style.overflow = "hidden";
+        return () => {
+            console.log("MessagePopUp desmontado");
+            // Limpiar la clase del body al cerrar
+            document.body.style.overflow = "auto";
+        };
+    }, []);
 
-    return (
+
+
+
+
+    return ReactDOM.createPortal (
+    
         <>
             <div className= "message-popup-backdrop"/>
-            <dialog className={`${nameClass} popup`} id="message-error-popup">
+        <dialog className={`${nameClass} popup`} id="message-error-popup" open>
                 <div className="message-popup" >
                     <div className={`message-content toast toast-${nameClass}`} style={{ height: messageHeight }}>
                         <div id="message-popup-icon" className="message-icon toast-icon" >
@@ -100,8 +116,17 @@ export const MessagePopUp: React.FC<MessagePopUpProps> = ({ type, title, message
                     </div>
                 </div>
             </dialog>
-        </>
-    );
+        </>,
+        document.body
+    )
+
 };
 
+// Add display name for debugging purposes
+MessagePopUp.displayName = 'MessagePopUp'
 
+
+
+//https://www.joshwcomeau.com/snippets/react-components/in-portal/
+//InPortal_React Portals_MessagePopUp aparece centrado en toda la pantalla y por encima de todo lo demás.
+//Un Portal te permite renderizar un componente hijo en un nodo DOM diferente, fuera de la jerarquía del componente padre. Normalmente, se renderiza directamente en document.body

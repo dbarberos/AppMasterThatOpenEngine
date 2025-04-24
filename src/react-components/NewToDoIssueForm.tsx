@@ -95,6 +95,22 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
     
 
 
+    // --- FUNCIÓN PARA CALCULAR EL SIGUIENTE sortOrder ---
+    const calculateInitialSortOrder = (status: StatusColumnKey): number => {
+        // Obtener los ToDos actuales del proyecto que están en la misma columna
+        const todosInColumn = project.todoList
+            .filter(todo => todo.statusColumn === status)
+
+        if (todosInColumn.length === 0) {
+            // Si la columna está vacía, empezar con un valor base (ej: 1000)
+            return 1.0;
+        } else {
+            // Obtener el sortOrder del último ítem y añadir un incremento
+            const maxSortOrder = Math.max(...todosInColumn.map(todo => todo.sortOrder));
+            return maxSortOrder + 1.0;  // Usar un incremento grande para dejar espacio
+        }
+    };
+
 
     async function handleCreateTodoIssueInDB(project: Project, toDoIssueDetails: IToDoIssue) {
         
@@ -104,17 +120,24 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
             const todoPath = `projects/${project.id}/todoList`
             //console.log(ToDoIssueCreated)
 
+            const detailsWithSortOrder = {
+                ...toDoIssueDetails,
+                sortOrder: toDoIssueDetails.sortOrder 
+            };
+
+
+
             // Create the todo document and get its ID
-            const newToDoIssueDoc = await createDocument(todoPath, toDoIssueDetails)
+            const newToDoIssueDoc = await createDocument(todoPath, detailsWithSortOrder)
             const todoId = newToDoIssueDoc.id
             console.log("data transfered to DB", newToDoIssueDoc)
             
             
             // Create subcollections
             // Create tags and get their Firebase IDs
-            const createdTags = await createTodoTags(todoPath, todoId, toDoIssueDetails.tags.map(t => t.title))
+            const createdTags = await createTodoTags(todoPath, todoId, detailsWithSortOrder.tags.map(t => t.title))
             
-            const createdUsers = await createTodoAssignedUsers(todoPath, todoId, toDoIssueDetails.assignedUsers.map(u => u.name))
+            const createdUsers = await createTodoAssignedUsers(todoPath, todoId, detailsWithSortOrder.assignedUsers.map(u => u.name))
 
             
             // await Promise.all([
@@ -125,7 +148,7 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
 
             // Create ToDoIssue instance with the new ID and created tags
             const ToDoIssueCreated = new ToDoIssue({
-                ...toDoIssueDetails,
+                ...detailsWithSortOrder,
                 id: todoId,
                 tags: createdTags, // Use the tags with Firebase IDs
                 assignedUsers: createdUsers
@@ -250,10 +273,6 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
     }
 
 
-
-
-
-
     const handleNewToDoIssueFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         e.stopPropagation() // Prevent event from bubbling up
@@ -306,8 +325,9 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
             // Get the current Date as the Created Date
             const currentDate = new Date();
             //Get the value of the statusColumn and assign a default value if necessary.
-            const statusColumnValue = formToDoData.get("statusColumn") as StatusColumnKey
-
+            const statusColumnValue = formToDoData.get("statusColumn") as StatusColumnKey || 'notassigned';
+            // --- CALCULAR sortOrder ANTES de crear el objeto ---
+            const initialSortOrder = calculateInitialSortOrder(statusColumnValue);
 
             const toDoIssueDetails: IToDoIssue = {
                 title: formToDoData.get("title") as string,
@@ -319,6 +339,8 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                 todoProject: checkProjectId as string,
                 createdDate: currentDate,
                 todoUserOrigin: formToDoData.get("todoUserOrigin") as string,
+                sortOrder: initialSortOrder,
+                 
             }
             
             const ToDoExistingTitles = project.todoList.map(todoIssue => todoIssue.title);
@@ -358,18 +380,31 @@ export function NewToDoIssueForm({ onClose, project, onCreatedNewToDo }: NewToDo
                                 //We will keep the logic of deleting a ToDo with an existing title and creating a new one inside newToDoIssue
                                 
                                 const originalDataToDoIssue = getToDoIssueByTitle(project.todoList, toDoIssueDetails.title)
+                               
 
                                 console.log("originalDataToDoIssue", originalDataToDoIssue);
 
                                 if (!originalDataToDoIssue) return
-                                // const newToDoIssueCreated = new ToDoIssue({
+                                
+
+                                // Recalcular (Que vaya al final de su nueva columna)
+                                const detailsForOverwrite = {
+                                    ...toDoIssueDetails,
+                                    sortOrder: calculateInitialSortOrder(toDoIssueDetails.statusColumn!)
+                                }
+
+                                // Opción : Mantener el sortOrder original
+                                // const detailsForOverwrite = {
                                 //     ...toDoIssueDetails,
-                                //     id: originalDataToDoIssue.id,
-                                // })
-                                // console.log(newToDoIssueCreated);
+                                //     sortOrder: originalDataToDoIssue.sortOrder // Mantener el orden existente
+                                // };
+
+
+
+
 
                                 await deleteDocument(`/projects/${originalDataToDoIssue.id}/todoList`, originalDataToDoIssue.id)
-                                await handleCreateTodoIssueInDB(project, toDoIssueDetails);
+                                await handleCreateTodoIssueInDB(project, detailsForOverwrite);
                                 //await createDocument(`/projects/${originalDataToDoIssue.id}/todoList`, toDoIssueDetails)
                                 console.log("data transfered to DB created")
 
