@@ -129,7 +129,7 @@ export function ProjectDetailsToDoList({
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-            delay: 250,
+            delay: 400,
             tolerance: 5
             }
         }),
@@ -354,8 +354,6 @@ export function ProjectDetailsToDoList({
                     return todo;
                 })
 
-
-
                 //// Notificar al padre sobre el nuevo orden (con el sortOrder actualizado)
                 //onTodoListReordered(finalReorderedList);
                 // Desplazado a su propio useEffect para evitar el error de intentar renderizarse el padre antes de que termine el hijo. Mirar el use effect debajo de este.
@@ -407,6 +405,7 @@ export function ProjectDetailsToDoList({
                     toDoIssue={todoInstance}
                     onClickOpenToDoDetailsWindow={handleClickOpenToDo} 
                     isSortable={!searchTerm.trim()} // <-- Solo sorteable si no hay búsqueda activa
+                    isDndEnabled={!searchTerm.trim()} // <-- Solo dnd si no hay búsqueda activa
                 />
             )
         }),
@@ -424,7 +423,6 @@ export function ProjectDetailsToDoList({
     }, [isTodoDetailsWindowOpen, selectedToDo, project.todoList]);
 
 
-
     //Open the form for a new todo issue
     const newToDoIssueForm = isNewToDoIssueFormOpen ? (
         <NewToDoIssueForm
@@ -432,6 +430,7 @@ export function ProjectDetailsToDoList({
             project={project}
             onCreatedNewToDo={handleCreatedToDoIssue} />
     ) : null;
+    
 
     //Open the detail page of an existing todo issue 
     const updateToDoDetailsWindow = isTodoDetailsWindowOpen && selectedToDo
@@ -583,6 +582,7 @@ export function ProjectDetailsToDoList({
                                     toDoIssue={activeTodo}
                                     onClickOpenToDoDetailsWindow={() => { }} 
                                     isSortable={false} // El overlay nunca es sorteable
+                                    isDndEnabled={false} // El overlay nunca es dnd
                                 />
                             ) : null}
                         </DragOverlay>
@@ -591,7 +591,7 @@ export function ProjectDetailsToDoList({
             </div>
             {newToDoIssueForm}
             {updateToDoDetailsWindow}
-            {}
+            
         </div>
     )
 }

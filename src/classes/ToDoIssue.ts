@@ -7,13 +7,13 @@ export class ToDoIssue implements IToDoIssue {
     title: string
     description: string
     statusColumn: StatusColumnKey
-    tags: ITag[]
-    assignedUsers: IAssignedUsers[]
+    tags: ITag[] = [] // Initialize with default empty array
+    assignedUsers: IAssignedUsers[] = [] // Initialize with default empty array
     dueDate: Date
     todoProject: string
     createdDate: Date
     todoUserOrigin: string
-    sortOrder: number;
+    sortOrder: number = 0; // Initialize with default
 
     // Class internals
     id: string
@@ -34,11 +34,18 @@ export class ToDoIssue implements IToDoIssue {
             } else if (key === "statusColumn") {
                 this[key] = data.statusColumn || "notassigned"
             } else if (key === "tags") {
-                this.tags = data.tags || []
+
+                this.tags = Array.isArray(data.tags) ? data.tags : []
+                //this.tags = data.tags || [] // If data.tags exists and is an array, use it. Else, default to [].
             } else if (key === "assignedUsers") {
-                this.assignedUsers = data.assignedUsers || []
+
+                this.assignedUsers = Array.isArray(data.assignedUsers) ? data.assignedUsers : []
+                //this.assignedUsers = data.assignedUsers || []
             } else if (key === "sortOrder") {
                 this.sortOrder = data.sortOrder ?? 0
+            } else if (key === "description") {
+                this.description = data.description || '' // Asegurar que description no sea undefined
+                
             } else {
                 this[key] = data[key]
             }
@@ -50,7 +57,8 @@ export class ToDoIssue implements IToDoIssue {
 
         if (idString) {
             this.id = idString
-            }
+        } 
+        
         //if (!this.id) { this.id = uuidv4() } //In order to not change the ID if the option of import toDoIssues is implemented        
     }
 

@@ -5,22 +5,24 @@ import { Project } from '../classes/Project';
 import { useStickyState } from '../hooks'
 
 interface ProjectSelectorProps {
-    currentProject: Project
+    currentProject: Project |null
     projectsList: Project[]
+    onProjectSelect: (projectId: string | null) => void
 }
 
 export const ProjectSelector = ({
     currentProject,
-    projectsList
+    projectsList,
+    onProjectSelect
 }: ProjectSelectorProps) => {
-    const navigateTo = Router.useNavigate();   
+    //const navigateTo = Router.useNavigate();   
     const [isSelectVisible, setIsSelectVisible] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false);
     const selectRef = React.useRef<HTMLSelectElement>(null)
     const containerRef = React.useRef<HTMLDivElement>(null)
 
     const [activeProject, setActiveProject] = useStickyState<string | null>(
-        currentProject.id ?? null,
+        currentProject?.id ?? null,
         'selectedProjectId'
     );
 
@@ -34,7 +36,7 @@ export const ProjectSelector = ({
         if (projectIdToSet !== activeProject) {
             setActiveProject(projectIdToSet);
         }
-    }, [currentProject.id, activeProject, setActiveProject]);
+    }, [currentProject?.id, activeProject, setActiveProject]);
 
 
 
@@ -46,8 +48,9 @@ export const ProjectSelector = ({
     const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedProjectId = e.target.value;
         if (selectedProjectId !== activeProject) {
-            setActiveProject(selectedProjectId);
-            navigateTo(`/project/${selectedProjectId}`)
+            setActiveProject(selectedProjectId);// Actualiza el estado local y el sticky state
+            onProjectSelect(selectedProjectId); // Llama al callback del padre
+            //navigateTo(`/project/${selectedProjectId}`)
             setIsSelectVisible(false)
         }
     }

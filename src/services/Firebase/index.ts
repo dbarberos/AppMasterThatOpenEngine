@@ -786,19 +786,19 @@ export async function getSortedTodosForColumn(projectId: string, status: string)
     return withRetry(async () => { // Usando tu helper withRetry
         try {
             const todoListPath = `projects/${projectId}/todoList`;
-            const todoListRef = collection(firestoreDB, todoListPath);
+            const todoListRef = Firestore.collection(firestoreDB, todoListPath);
 
             // --- AQUÍ ES DONDE USARÍAS LA CONSULTA COMBINADA ---
 
             //  consulta útil para optimizar la carga de datos, especialmente para vistas tipo Kanban.En lugar de cargar todos los ToDos de un proyecto y luego filtrarlos / ordenarlos en el cliente, podrías hacer consultas separadas a Firebase para cada columna.
-            const q = query(
+            const q = Firestore.query(
                 todoListRef,
-                where("statusColumn", "==", status), // Filtra por la columna específica
-                orderBy("sortOrder", "asc")         // Ordena por sortOrder ascendente
+                Firestore.where("statusColumn", "==", status), // Filtra por la columna específica
+                Firestore.orderBy("sortOrder", "asc")         // Ordena por sortOrder ascendente
             );
             // ----------------------------------------------------
 
-            const querySnapshot = await getDocs(q);
+            const querySnapshot = await Firestore.getDocs(q);
 
             const todos: IToDoIssue[] = [];
             for (const todoDoc of querySnapshot.docs) {
@@ -813,14 +813,23 @@ export async function getSortedTodosForColumn(projectId: string, status: string)
 
                 // ¡OJO! Necesitarías cargar tags y assignedUsers si los necesitas aquí también
                 // const [tags, assignedUsers] = await Promise.all([ ... ]);
+                // Fetch tags and assignedUsers for this todo. SI QUE LOS NECESITO
+                const [tags, assignedUsers] = await Promise.all([
+                    getTodoTags(todoDoc),
+                    getTodoAssignedUsers(todoDoc)
+                ])
 
                 todos.push({
                     ...todoData,
                     id: todoDoc.id,
                     dueDate: dueDateFormatted,
                     createdDate: createdDateFormatted,
+                    tags: tags,
+                    assignedUsers: assignedUsers
                     // tags: tags, // Descomentar si cargas subcolecciones
                     // assignedUsers: assignedUsers // Descomentar si cargas subcolecciones
+                    
+
                 } as IToDoIssue); // Asegúrate que el tipo coincida
             }
             console.log(`Fetched ${todos.length} todos for project ${projectId}, column ${status}`);

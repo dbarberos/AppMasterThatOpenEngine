@@ -122,7 +122,25 @@ export function Sidebar() {
                     </Router.Link >
 
                     {/* Button Project Details */}
-                    {isProjectSelected
+
+                            <Router.Link to={`/project/${selectedProjectId}`}>
+                                <li
+                                    id="asideBtnProjectDetails"
+                                    className="nav-button"
+                                    title="Project Details"
+                                >
+                                    <MainProjectDetails size={37}
+                                        className="todo-icon-edit"
+                                        color="var(--color-fontbase)"
+                                    />
+                                    Project Details
+                                </li>
+                            </Router.Link>
+
+
+
+
+                    {/* {isProjectSelected
                         ? (
                             <Router.Link to={`/project/${selectedProjectId}`}>
                                 <li
@@ -150,7 +168,7 @@ export function Sidebar() {
                                 Project Details
                             </li>
                         )
-                    }
+                    } */}
 
                     {/* Button To-Do Boards  */}
                     <Router.Link to={toDoBoardPath}>

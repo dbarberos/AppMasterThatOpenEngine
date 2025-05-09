@@ -153,6 +153,16 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
     }
 
 
+        const handleProjectSelectionInDetails = (newProjectId: string | null) => {
+        if (newProjectId && newProjectId !== projectId) {
+            navigateTo(`/project/${newProjectId}`);
+        } else if (!newProjectId) {
+            // Opcional: manejar el caso donde no se selecciona ningún proyecto
+            // navigateTo('/'); 
+        }
+    };
+
+
 
     //  HANDLER para el reordenamiento
     const handleTodoListReordered = async (reorderedList: ToDoIssue[]) => {
@@ -275,6 +285,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                         <ProjectSelector
                             currentProject={currentProject}
                             projectsList={projectsManager.list}
+                            onProjectSelect={handleProjectSelectionInDetails}
                         />
                         {/* <select
                         id="projectSelectedProjectDetailPage"

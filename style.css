@@ -24,10 +24,14 @@
     --font-icon-lg: 50px;
     /* Colors */
     --primary: #029AE0;
-    --primary-l00: #073044;
-    --primary-200: #415A66;
-    --primary-300: #017CB3;
-    --primary-400: #50B6E6;
+    --primary-l00: rgb(7, 48, 68);
+    --primary-100-rgb: 7, 48, 68; /* solo rgb, sin # ni alfa */
+    --primary-200: rgb(65, 90, 102);
+    --primary-200-rgb: 65, 90, 102;
+    --primary-300: rgb(1, 124, 179);
+    --primary-300-rgb: 1, 124, 179;
+    --primary-400: rgb(80, 182, 230);
+    --primary-400-rgb: 80, 182, 230;
     --secundary: #176304;
     --secundary-100: #30A912;
     --secundary-200: #96e682;
@@ -1804,7 +1808,8 @@ input[type="number"]::-webkit-outer-spin-button {
 
 }
 
-.radio .checkmark:after {
+/* Style for the checkmark symbol (::after pseudo-element), hidden by default */
+.radio .checkmark::after {
     content: "";
     position: absolute;
     left: 8px;
@@ -1816,9 +1821,12 @@ input[type="number"]::-webkit-outer-spin-button {
     transform: rotate(45deg);
     opacity: 0;
     transition: 0.3s;
+
+    display: none;
 }
 
-.radio input[type="checkbox"]:checked+.checkmark {
+/* When the hidden input is checked, change the background of our custom checkmark */
+.radio input[type="checkbox"]:checked+ .checkmark {
     background-color: linear-gradient(145deg, var(--background), var(--color-bg1));
     box-shadow: 5px 5px 15px 2.5px var(--color-shadow),
         -5px -5px 10px 2.5px var(--color-light),
@@ -1826,7 +1834,10 @@ input[type="number"]::-webkit-outer-spin-button {
 
 }
 
-.radio input[type="checkbox"]:checked+.checkmark:after {
+/* When the hidden input is checked, display the checkmark symbol */
+.radio input[type="checkbox"]:checked+ .checkmark::after {
+    display:block;
+    
     opacity: 1;
     z-index: 1;
 }
@@ -1971,7 +1982,90 @@ progress::-moz-progress-bar {
     min-width: 250px;
     scroll-snap-align: start;
 
+
+    position: relative; /* Asegura que el posicionamiento absoluto del ::before funcione */
+    overflow: hidden; /* Evita que el ::before se salga si hay border-radius */
+
 }
+
+
+.todo-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Cubre todo el elemento padre */
+    background-color: var(--color-primary-300,rgba(1, 124, 179, 0.80));
+    /* background-color: var(--color-primary-light, rgba(0, 123, 255, 0.3)); */
+    /* Color de relleno (ajusta variable/color) */
+    transform: scaleX(0);
+    /* Empieza sin ancho */
+    transform-origin: left;
+    /* La animación empieza desde la izquierda */
+    transition: transform 0s;
+    /* Sin transición por defecto */
+    z-index: 10;
+    /* Detrás del contenido principal (asegúrate que el contenido tenga z-index > 0 si es necesario) */
+    pointer-events: none;
+    /* No interfiere con clics */
+}
+
+.todo-item.todo-item--dragging::before {
+    transform: scaleX(1);
+    /* Rellena completamente */
+    /* La duración DEBE coincidir con el 'delay' del PointerSensor */
+    transition: transform 400ms linear;
+    /* Usa 'linear' para un relleno constante */
+}
+
+/* Estilos para el contenido de la tarjeta para que esté sobre el ::before */
+.todo-item>.todo-color-column,
+.todo-item>.todo-card {
+    position: relative;
+    
+    z-index: 0;
+    background-color: inherit;
+    
+}
+
+
+/* Ajustes opcionales para el cursor del handle */
+.handler-move {
+    cursor: auto;
+    /* Por defecto */
+}
+
+.todo-item[style*="cursor: pointer"] .handler-move:not([disabled]) {
+    /* Si el item es sorteable */
+    cursor: grab;
+}
+
+.todo-item[style*="cursor: grabbing"] .handler-move:not([disabled]) {
+    /* Si se está arrastrando */
+    cursor: grabbing;
+}
+
+/* O simplificado si 'isSortable' controla el disabled del botón */
+.handler-move:not([disabled]) {
+    cursor: grab;
+}
+
+.handler-move:not([disabled]):active {
+    /* Mientras se presiona */
+    cursor: grabbing;
+}
+
+/* EXPLICACION DE LA JUSTIFICACION DE LOS ESTILOS SUPERIORES PARA ANUMAR EL TODOCARD 
+Cuando presionas (onPointerDown) el botón del handle,
+isActivating se pone a true. Esto añade la clase todo-item--dragging al div principal. El CSS detecta esta clase y anima la propiedad transform: scaleX(1) del pseudo-elemento ::before durante el tiempo especificado (¡asegúrate que coincida con tu delay de 250ms !). Si sueltas el botón (onPointerUp) antes de que termine el delay,
+isActivating se pone a false,
+la clase se quita y la animación se interrumpe (o revierte si transform: scaleX(0) tiene transición). Si mantienes presionado y el delay (y tolerance) se cumplen,
+dnd-kit internamente hará que isDragging se vuelva true. El useEffect detecta isDragging como true,
+pone isActivating a false,
+quitando la clase todo-item--dragging y deteniendo/revirtiendo la animación del ::before. El elemento ahora se está arrastrando con los estilos de isDragging. 
+*/
+
+
+
 
 .todo-button {
     padding: 0px;
@@ -2127,13 +2221,13 @@ progress::-moz-progress-bar {
 
     background-color: var(--color-bg1);
 
-    display: grid;
-    grid-template-rows: auto 1fr;
+    /*display: grid;*/
+    /*grid-template-rows: auto 1fr;*/
     /* full height of parent element */
     grid-template-areas:
         "head"
         "content";
-    justify-content: center;
+    /*justify-content: center;*/
     max-width: 100%;
 
 }
@@ -2172,6 +2266,7 @@ header {
     min-width: 300px;
     max-width: 450px;
     flex-wrap: nowrap;
+    min-height: 25vh;
 
     & .todo-column-head {
         display: flex;
@@ -2184,29 +2279,31 @@ header {
         z-index: 100;
         backdrop-filter: blur(8px) saturate(200%);
         -webkit-backdrop-filter: blur(12px) saturate(200%);
-        /* background-color: rgba(50, 50, 50, 0.55);
-        background: var(--color-bg1);      */
-        /* pweor */
+
     }
 
     & .todo-column-list {
         border: 1px solid var(--color-bg1);
-        /* box-shadow: 3px 5px 12px var(--color-shadow),
-                -9px -9px 20px var(--color-light); */
+
         padding: 25px;
         border-radius: 10px;
-        min-height: 5%;
+        min-height: 25vh;
 
         display: flex;
         flex-direction: column;
         row-gap: 25px;
 
-        /*pattern*/
-
         background-image: radial-gradient(var(--line-color) 2px, transparent 2px), radial-gradient(var(--line-color) 2px, transparent 2px);
         background-size: 10px 10px;
         background-position: 0 0, 5px 5px;
         background-color: var(--color-bg1);
+
+
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: calc(96vh - 150px);
+
+            
     }
 
     & #todo-column-backlog {
@@ -2230,6 +2327,58 @@ header {
     }
 
 }
+
+.todo-column[data-is-empty="true"] {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.todo-column.column-is-over {
+    border-color: var(--color-primary);
+    background-color: rgba(0, 120, 255, 0.1);
+}
+
+.todo-column[data-is-empty="true"].column-is-over {
+    background-color: rgba(0, 120, 255, 0.15);
+}
+
+ 
+/*
+ Estilos de depuración para columnas 
+.todo-column {
+    Estilos existentes 
+    min-height: 200px;
+    border: 2px dashed rgba(255, 0, 0, 0.5) !important;
+    background-color: rgba(255, 0, 0, 0.05) !important;
+    position: relative;
+    Asegura que sea un contenedor posicionado 
+}
+
+.todo-column-list {
+    min-height: 150px;
+    border: 1px solid rgba(0, 0, 255, 0.3) !important;
+    background-color: rgba(0, 0, 255, 0.05) !important;
+    flex-grow: 1;
+}
+
+ Indicador visual para columnas droppable activas 
+.todo-column[data-droppable="true"] {
+    border-color: rgba(0, 255, 0, 0.5) !important;
+    background-color: rgba(0, 255, 0, 0.05) !important;
+}
+ Estilos para el elemento que se está arrastrando 
+.todo-card[data-dragging="true"] {
+    opacity: 0.5;
+     El original se vuelve semitransparente 
+}
+
+ Estilos para el overlay mientras se arrastra 
+.todo-card[data-is-overlay="true"] {
+    transform: rotate(3deg);
+    cursor: grabbing;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+*/
 
 
 .todo-column-list .todo-issue-card {
@@ -2288,7 +2437,11 @@ header {
 
 }
 
-#details-page-todo-maincontainer {
+#todo-board-column-backlog, 
+#todo-board-column-wip,
+#todo-board-column-qa,
+#todo-board-column-completed,
+#todo-board-column-notassigned {
     flex-grow: 1;
     overflow-y: auto;
     max-height: 100%;
@@ -2344,12 +2497,26 @@ header {
 
 }
 
-#details-page-todo-maincontainer:hover {
+#todo-board-column-backlog:hover,
+#todo-board-column-wip:hover,
+#todo-board-column-qa:hover,
+#todo-board-column-completed:hover,
+#todo-board-column-notassigned:hover {
+    
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
+    
 }
+/* #details-page-todo-maincontainer:hover {
+    scrollbar-color: var(--primary-200) transparent;
+    scrollbar-width: thin;
+} */
 
-#details-page-todo-secondcontainer {
+#details-page-todo-secondcontainer-backlog,
+#details-page-todo-secondcontainer-wip,
+#details-page-todo-secondcontainer-qa,
+#details-page-todo-secondcontainer-completed,
+#details-page-todo-secondcontainer-notassigned {
     background-color: transparent;
     height: 80%;
 }
@@ -2734,6 +2901,212 @@ header {
         border-radius: 100px;
     }
 }
+
+
+
+/* INSIDE TODO BOARD PAGE. KANBAN*/
+
+
+.delete-zone {
+    position: relative;
+    overflow: hidden;
+
+    top: 0;
+    /* left: 50%; */
+    /* transform: translateX(-50%); */
+    width: 200px;
+    height: 100%;
+    background-color: var(--bg-secondary);
+    border: 2px dashed var(--color-error);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+/* .delete-zone-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--color-fontbase);
+} */
+
+
+/* .delete-zone.active {
+    opacity: 1;
+    pointer-events: all;
+} */
+
+
+.delete-zone.can-drop {
+    animation: pulse 1.5s infinite;
+    background-color: var(--color-error-light);
+    border-style: solid;
+}
+.delete-zone .text-error {
+    color: var(--color-error);
+}
+
+.delete-zone-text {
+    transition: color 0.2s ease;
+}
+
+.delete-confirmation-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 0, 0, 0.1);
+    pointer-events: none;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+
+
+
+.board-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+    height: calc(100vh - 100px);
+    overflow: hidden;
+}
+
+/* .todo-column {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: calc(100vh - 120px);
+}
+
+.todo-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+} */
+
+
+/* Custom cursor styles */
+.custom-cursor {
+    position: fixed;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    z-index: 9999;
+    will-change: transform;
+}
+
+.custom-cursor.hover {
+    background: var(--primary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: var(--font-xs);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-cursor.follow {
+    background: var(--bg-secondary);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: var(--font-sm);
+}
+
+.cursor-content {
+    white-space: nowrap;
+    font-size: var(--font-sm);
+}
+
+/* Animaciones de hold-to-drag */
+.todo-item--dragging::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--primary);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 250ms linear;
+}
+
+.todo-item--dragging.activated::before {
+    transform: scaleX(1);
+    opacity: 0.2;
+}
+
+/* Hold to drag progress indicator */
+.hold-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+    transform-origin: left;
+}
+
+/* Animation states */
+.todo-item {
+    transition: background-color 0.2s ease;
+}
+
+.todo-item--dragging {
+    background-color: var(--bg-hover);
+}
+
+.todo-item--dragging {
+    cursor: grabbing;
+}
+
+/* Column transition animations */
+.todo-column-list {
+    transition: min-height 0.2s ease;
+}
+
+.todo-column-list.is-over {
+    background-color: var(--bg-hover);
+}
+
+/* Drop preview animation */
+.drop-preview {
+    border: 2px dashed var(--primary);
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: 8px;
+    margin: 0.5rem 0;
+    height: 80px;
+    transition: all 0.2s ease;
+}
+
+
+
+
+
+
+
 
 
 /* User page management */

@@ -24,6 +24,8 @@
 
     "firebase": "10.5.2",
 
+    "motion": "^12.9.7",
+
     "nanoid": "3.3.7",
 
     "picocolors": "1.0.1",
