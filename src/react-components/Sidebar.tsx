@@ -3,97 +3,125 @@ import * as Router from 'react-router-dom';
 
 import { MainProjectCatalog, MainProjectDetails, MainToDoBoard, MainUsersIndex } from './icons';
 import { useStickyState } from '../hooks'
+import {ProjectsManager } from '../classes/ProjectsManager'
 
 
-// export const toggleSidebar = {
-//     collapse: () => {
-//         const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-//         if (sidebarCheckbox) {
-//             sidebarCheckbox.checked = true;
-//         }
-//     },
-//     expand: () => {
-//         const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-//         if (sidebarCheckbox) {
-//             sidebarCheckbox.checked = false;
-//         }
-//     },
-//     getState: (): boolean => {
-//         const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-//         return sidebarCheckbox?.checked || false;
-//     },
-//     setState: (state: boolean) => {
-//         const sidebarCheckbox = document.getElementById('sidebar-checkbox-switch') as HTMLInputElement;
-//         if (sidebarCheckbox) {
-//             sidebarCheckbox.checked = state;
-//         }
-//     }
-// };
+interface SidebarProps { // Añadir props
+    projectsManager: ProjectsManager;
+}
 
-export function Sidebar() {
+export function Sidebar({ projectsManager }: SidebarProps) {
+    console.log('Sidebar: Component rendering / re-rendering TOP');
+    // Usamos useStickyState para gestionar el estado principal y su persistencia
     const [selectedProjectId, setSelectedProjectId] = useStickyState<string | null>(null, 'selectedProjectId');
+
     const location = Router.useLocation(); // Hook para obtener la ubicación actual
 
-//Ya se encarga useStickyState de estas funciones
-    // // Efecto para leer localStorage y actualizar el estado cuando cambia la ruta
-    // React.useEffect(() => {
-    //     const storedId = localStorage.getItem('selectedProjectId');
-    //     setSelectedProjectId(storedId);
-
-    //     // Si estamos en la página principal, asegurarnos de que el ID esté limpio
-    //     // (esto añade robustez por si se navega a '/' manualmente)
-    //     if (location.pathname === '/') {
-    //         if (storedId) {
-    //             localStorage.removeItem('selectedProjectId');
-    //             setSelectedProjectId(null); // Actualiza el estado también
-    //         }
-    //     }
-    //     console.log('Sidebar useEffect - Location changed:', location.pathname, 'Stored ID:', storedId);
-
-    // }, [location, selectedProjectId, setSelectedProjectId]); // Se ejecuta cada vez que cambia la ubicación (navegación)
-
+    const navigate = Router.useNavigate();
 
 
     // Función para manejar el clic en el botón "Projects Catalog"
     const handleCatalogClick = () => {
-        console.log('Clearing selectedProjectId using useStickyState');
+        console.log('Sidebar: Clearing selectedProjectId using useStickyState setter');
         //localStorage.removeItem('selectedProjectId');
         setSelectedProjectId(null); // Actualiza el estado inmediatamente
+
+        // Eliminación directa para casos donde el estado no cambia
+        window.localStorage.removeItem('selectedProjectId');
+
+        // Añadir navegación para forzar actualización
+        navigate('/', { replace: true }); 
     };
 
 
 
 
     React.useEffect(() => {
-        // Si navegamos a la página principal, limpiamos el ID seleccionado
-        if (location.pathname === '/') {
-            // Solo actualiza si el estado actual no es null
+
+        const currentPath = location.pathname;
+        console.log('Sidebar: location effect running.', {
+            pathname: currentPath,
+            currentSelectedProjectId: selectedProjectId
+        });
+
+        let extractedProjectId: string | null = null;
+        const parts = currentPath.split('/'); // e.g., ["", "project", "ID"] or ["", "project", "todoBoard", "ID"]
+
+
+        if (currentPath === '/') {
+            
             if (selectedProjectId !== null) {
+                console.log('Sidebar: Navigated to home. Clearing selectedProjectId.');
                 setSelectedProjectId(null);
             }
+            return  // Early exit for home page
         }
-        // Opcional: Si necesitas cargar el ID desde la URL en otras rutas,
-        // podrías hacerlo aquí, pero parece que ya lo haces en ProjectDetailsPage.
-        // console.log('Sidebar location changed:', location.pathname, 'Current selectedProjectId:', selectedProjectId);
-
-    }, [location, setSelectedProjectId, selectedProjectId]); // Depende de location y del setter/valor para lógica condicional
 
 
+        // Palabras clave que indican segmentos de ruta que NO son IDs de proyecto por sí mismos
+        // cuando aparecen como el último segmento de una ruta que no termina en un ID.
+        // Ejemplos: /project, /project/todoBoard, /users
+        // Asegúrate de incluir aquí cualquier segmento que pueda ser el último en una URL
+        // donde quieras que el selectedProjectId se mantenga "sticky" en lugar de intentar
+        // extraer un ID.
+        const pathKeywords = ["project", "todoBoard", "users", "settings"]; // Añade más según sea necesario
+
+        let potentialProjectId = parts[parts.length - 1];
+
+        // Si el último segmento está vacío (ej: URL termina en '/'), o es una palabra clave conocida.
+        if (!potentialProjectId || pathKeywords.includes(potentialProjectId)) {
+            // Estamos en una ruta como /project/ o /project/todoBoard (sin ID al final), o /users.
+            // En estos casos, selectedProjectId mantiene su valor "sticky".
+            // Si selectedProjectId era null, seguirá siendo null.
+            // Si selectedProjectId tenía un valor, lo conservará.
+            // Esto permite que si navegas de /project/ID_VALIDO a /project/todoBoard (sin ID en la URL),
+            // el botón "Project Details" siga activo con ID_VALIDO.
+            // Si luego navegas a /project/todoBoard/NUEVO_ID_VALIDO, la siguiente condición (else) lo capturará.
+            console.log('Sidebar: Last segment is empty or a keyword. selectedProjectId remains sticky:', selectedProjectId);
+        } else {
+            // El último segmento no está vacío y no es una palabra clave conocida.
+            // VERIFICAR SI EL ID EXTRAÍDO DE LA URL EXISTE EN ProjectsManager
+        if (projectsManager.getProject(potentialProjectId)) {
+            extractedProjectId = potentialProjectId;
+        } else {
+            // El ID extraído de la URL no corresponde a un proyecto conocido.
+            // No actualizaremos selectedProjectId con este ID inválido, manteniendo el valor "sticky" anterior.
+            console.warn(`Sidebar: Project ID "${potentialProjectId}" from URL not found in ProjectsManager. Keeping sticky ID: ${selectedProjectId}`);
+            // extractedProjectId permanece null, por lo que selectedProjectId no se cambiará a este ID inválido.
+        }
+        }
 
 
+
+
+        // If a project ID was extracted from the URL
+        if (extractedProjectId) {
+            if (extractedProjectId !== selectedProjectId) {
+                console.log('Sidebar: Syncing selectedProjectId with extracted URL Project ID:', extractedProjectId);
+                setSelectedProjectId(extractedProjectId);
+            }
+        } else {
+            // Si no se extrajo un ID válido de la URL (o la URL era '/', o era una página no específica de proyecto)
+            // selectedProjectId mantiene su valor "sticky".
+            // Si currentPath es '/', selectedProjectId ya se habrá puesto a null antes.
+            if (currentPath !== '/') {
+                console.log('Sidebar: No valid project ID extracted from URL or on non-project page. selectedProjectId remains sticky:', selectedProjectId);
+            }
+        }
+
+
+    }, [location.pathname, selectedProjectId, setSelectedProjectId]);
+
+
+    // This is the crucial part for rendering the button.
+    // It uses `selectedProjectId` which is the state managed by `useStickyState` in THIS component.
     const isProjectSelected = !!selectedProjectId; // Booleano para saber si hay un proyecto seleccionado
+    console.log('Sidebar RENDER: selectedProjectId for button logic:', selectedProjectId, 'isProjectSelected:', isProjectSelected);
 
 
-    // Si no hay ID, usa '0' como placeholder. Si hay ID, úsalo.
+    //Si no hay ID, usa '0' como placeholder. Si hay ID, úsalo.
     const toDoBoardPath = selectedProjectId ? `/project/todoBoard/${selectedProjectId}` : '/project/todoBoard/0';
-
-    // // Estilos condicionales para botones deshabilitados
-    // const disabledStyle: React.CSSProperties = {
-    //     opacity: 0.5,
-    //     cursor: 'not-allowed',
-    //     pointerEvents: 'none' // Evita clics
-    // }
-
+    
 
 
     return (
@@ -123,7 +151,7 @@ export function Sidebar() {
 
                     {/* Button Project Details */}
 
-                            <Router.Link to={`/project/${selectedProjectId}`}>
+                            {/* <Router.Link to={`/project/${selectedProjectId}`}>
                                 <li
                                     id="asideBtnProjectDetails"
                                     className="nav-button"
@@ -135,12 +163,12 @@ export function Sidebar() {
                                     />
                                     Project Details
                                 </li>
-                            </Router.Link>
+                            </Router.Link> */}
 
 
 
 
-                    {/* {isProjectSelected
+                    {isProjectSelected
                         ? (
                             <Router.Link to={`/project/${selectedProjectId}`}>
                                 <li
@@ -168,7 +196,9 @@ export function Sidebar() {
                                 Project Details
                             </li>
                         )
-                    } */}
+                    } 
+
+
 
                     {/* Button To-Do Boards  */}
                     <Router.Link to={toDoBoardPath}>

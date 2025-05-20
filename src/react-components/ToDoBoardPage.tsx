@@ -3,7 +3,7 @@ import * as Router from 'react-router-dom';
 import { deleteToDoWithSubcollections, getSortedTodosForColumn, updateDocument, type UpdateDocumentOptions } from '../services/firebase'
 
 
-import { ToDoBoardColumn, ToDoCard, ToDoBoardSwitchDnD, ToDoBoardDeleteArea, MessagePopUp, type MessagePopUpProps, ToDoBoardCursor, SearchToDoBox, CounterBox, SearchIcon, ProjectSelector, LoadingIcon, AddIcon, NewToDoIssueForm, ToDoDetailsWindow } from '../react-components'
+import { ToDoBoardColumn, ToDoCard, ToDoBoardSwitchDnD, ToDoBoardDeleteArea, MessagePopUp, type MessagePopUpProps, ToDoBoardCursor, SearchToDoBox, CounterBox, SearchIcon, ProjectSelector, LoadingIcon, AddIcon, NewToDoIssueForm, ToDoDetailsWindow, ArrowLeftIcon } from '../react-components'
 import { useStickyState } from '../hooks'
 
 
@@ -113,6 +113,9 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
   const [isNewToDoIssueFormOpen, setIsNewToDoIssueFormOpen] = React.useState(false)
   const [isTodoDetailsWindowOpen, setIsTodoDetailsWindowOpen] = React.useState(false)
   const [selectedToDo, setSelectedToDo] = React.useState<ToDoIssue | null>(null)
+
+  const routeParams = Router.useParams<{ id: string }>();
+  const currentUrlProjectId = routeParams.id;
 
   // Sensores para dnd-kit
   const sensors = useSensors(
@@ -535,17 +538,31 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
 
   React.useEffect(() => {
     // This effect now primarily reacts to changes in initialProjectIdFromStorage
-    // or when projectsManager becomes available.
-    const fetchData = async () => {      
+    // It will also navigate if the sticky ID doesn't match the URL ID.
+    const fetchDataAndNavigateIfNeeded = async () => {
       if (!initialProjectIdFromStorage) {
         console.warn("ToDoBoardPage: Project ID not available or invalid.")
         setIsLoading(false);
         setCurrentProject(null);
         setTodosByColumn(Object.fromEntries(BOARD_COLUMNS.map(col => [col, []])) as Record<string, ToDoIssue[]>); // Resetear
-        return
+        // Si la URL todavía tiene un ID, podríamos considerar navegar para limpiarla.
+        // if (currentUrlProjectId) {
+        //   navigateTo('/project/todoBoard/0', { replace: true }); // O a una ruta sin ID
+        // }
+        return;
       }
 
-      //setProjectId(initialProjectIdFromStorage); // No es necesario si usamos initialProjectIdFromStorage directamente
+      // Navegar si el ID del sticky state (que pudo haber cambiado por ProjectSelector)
+      // no coincide con el ID de la URL actual.
+      if (initialProjectIdFromStorage !== currentUrlProjectId) {
+        console.log(`ToDoBoardPage: Navigating due to projectId mismatch. URL: ${currentUrlProjectId}, Sticky: ${initialProjectIdFromStorage}`);
+        navigateTo(`/project/todoBoard/${initialProjectIdFromStorage}`, { replace: true });
+        // La navegación causará un re-render, y este efecto se re-ejecutará.
+        // En la siguiente ejecución, currentUrlProjectId debería coincidir con initialProjectIdFromStorage.
+        return; // Salir después de navegar para evitar cargar datos con el ID antiguo.
+      }
+
+      // Si llegamos aquí, initialProjectIdFromStorage SÍ coincide con currentUrlProjectId y no es null.
       setIsLoading(true);
       console.log(`TodoBoardPage: Fetching data for project ID: ${initialProjectIdFromStorage}`)
 
@@ -553,11 +570,12 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
         const projectObject = projectsManager.getProject(initialProjectIdFromStorage);
         if (projectObject) {
           setCurrentProject(projectObject);
-          // Crear un array de promesas, una para cada columna
+          
           const promises = BOARD_COLUMNS.map(status =>
             getSortedTodosForColumn(initialProjectIdFromStorage, status)
           );
-          const results = await Promise.all(promises); // Espera a que todas las consultas terminen
+
+          const results = await Promise.all(promises);
 
           // Construir el nuevo estado
           const newTodosByColumnState = {} as Record<StatusColumnKey, ToDoIssue[]>;
@@ -566,29 +584,30 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
               todoData instanceof ToDoIssue ? todoData : new ToDoIssue(todoData)
             );
           });
-          console.log("TodoBoardPage: Fetched todos by column:", newTodosByColumnState);
           setTodosByColumn(newTodosByColumnState);
 
 
         } else {
-          console.error(`Project with ID ${initialProjectIdFromStorage} not found in ProjectsManager.`);          
+          console.error(`Project with ID ${initialProjectIdFromStorage} not found in ProjectsManager.`);
           setCurrentProject(null);
           setTodosByColumn(Object.fromEntries(BOARD_COLUMNS.map(col => [col, []])) as Record<string, ToDoIssue[]>)
-          // navigateTo('/'); // Opcional: redirigir si el proyecto no se encuentra
+          // Considerar si se debe navegar a una página de error o a la lista de proyectos
+          // si el ID de la URL (que ahora coincide con el sticky) no es válido.
+          // Por ahora, simplemente no se carga nada.
         }
 
 
       } catch (error) {
         console.error("TodoBoardPage: Error fetching todos:", error);
-        // Manejar el error (mostrar mensaje al usuario, etc.) YA se ejecuta desde 
+        
       } finally {
         setIsLoading(false);
       }
     }
-    fetchData();
+    fetchDataAndNavigateIfNeeded();
 
 
-  }, [initialProjectIdFromStorage, projectsManager, navigateTo, BOARD_COLUMNS, currentProject]);
+  }, [initialProjectIdFromStorage, projectsManager, navigateTo, BOARD_COLUMNS, currentUrlProjectId]); // currentUrlProjectId es crucial aquí
 
 
 
@@ -982,7 +1001,7 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
             alignItems: "center",
             // alignContent: "space-between",
             justifyContent: "space-between",
-            flexWrap: "wrap",
+            // flexWrap: "wrap",
             gap: 20,
             userSelect: "none",
             position: "relative", // Importante para el posicionamiento
@@ -991,8 +1010,16 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
 
           {/* Primera sección: Título y selector de proyecto ********************************/}
           <div style={{ display: "flex", columnGap: 20,  }}>
-            <h2 style={{ display: "flex",  columnGap: 20, alignItems: "center" }}>
+            <h2 style={{ display: "flex",  columnGap: 20, alignItems: "center", whiteSpace: "nowrap" }}>
               To-Do Board
+              {currentProject && (
+                <>
+                  <span style={{ margin: "0 2px" }}>:</span>
+                  <span style={{ color: 'var(--color-accent)', fontWeight: 'normal' }}>
+                    {currentProject.name}
+                  </span>
+                </>
+              )}
               <span className="todo-task-move">
                 <svg
                   className="todo-task-move"
@@ -1031,21 +1058,38 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
 
           {/* Segunda sección: Controles centrales *****************************************/}
 
-          <div style={{ display: "flex", columnGap: 20, alignItems: "center",  justifyContent: "center", height: "100%", width: "500px" }}>
-            {/* Área de borrado */}
-            {isDndEnabled && !isSearching && (
-              <ToDoBoardDeleteArea 
-                isVisible={true}
-                style={{
-                  position: 'relative', // Cambiado de fixed a relative
-                  transform: 'none',   // Eliminar transform
-                  margin: '0 20px',
-                  alignSelf: 'center',
-                  width: '100%',
-                }} 
-              />
+        <div style={{ display: "flex", columnGap: 20, alignItems: "center", justifyContent: "center", height: "100%", width: "500px", minWidth: "200px" }}>
+            {!isSearching ? ( // Solo mostrar algo si no se está buscando
+              isDndEnabled ? (
+                // Área de borrado cuando DnD está habilitado
+                <ToDoBoardDeleteArea
+                  isVisible={true} // isVisible ya está implícito por la condición externa
+                  style={{
+                    position: 'relative',
+                    transform: 'none',
+                    margin: '0 20px',
+                    alignSelf: 'center',
+                    width: '100%',
+                  }}
+                />
+              ) : (
+                // Mensaje cuando DnD está deshabilitado
+                <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-fontbase-dark)', textAlign: 'center', padding: '10px', whiteSpace: 'nowrap',fontSize: 'var(--font-lg)', }}>
+                  
+                  <span >
+                    Drag & Drop is disabled. Activate it using the switch.
+                  </span>
+                </div>
+              )
+            ) : (
+              // No mostrar nada en esta sección si se está buscando,
+              // ya que el switch de DnD también está deshabilitado.
+              null
             )}
           </div>
+
+          
+
 
 
 

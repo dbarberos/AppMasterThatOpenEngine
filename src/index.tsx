@@ -75,7 +75,7 @@ const App = () => {
         //<ProjectsManagerProvider>        
         <>
             <Router.BrowserRouter>
-                <Sidebar />
+                <Sidebar projectsManager={projectsManager} />
                 <Router.Routes>
 
                     <Router.Route path="/" element={
@@ -102,7 +102,7 @@ const App = () => {
                         // <ErrorBoundary fallback="Error"> 
                         <ToDoBoardPage
                             projectsManager={projectsManager}
-                            // onProjectCreate={handleProjectCreate}
+                            onProjectCreate={handleProjectCreate}
                             onProjectUpdate={handleProjectUpdate}
                             onToDoIssueCreated={handleToDoIssueCreated}
                             onToDoIssueUpdated={handleToDoIssueUpdated}

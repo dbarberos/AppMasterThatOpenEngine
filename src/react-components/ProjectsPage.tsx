@@ -52,7 +52,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
     } = useProjectSearch(projects)
 
 
-    const [, setSelectedProjectId] = useStickyState<string | null>(null, 'selectedProjectId')
+    const [selectedProjectId, setSelectedProjectId] = useStickyState<string | null>(null, 'selectedProjectId')
 
 
 

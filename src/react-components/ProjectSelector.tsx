@@ -47,7 +47,9 @@ export const ProjectSelector = ({
 
     const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedProjectId = e.target.value;
-        if (selectedProjectId !== activeProject) {
+        const projectIdToSet = selectedProjectId === '' ? null : selectedProjectId;
+
+        if (projectIdToSet !== activeProject) {
             setActiveProject(selectedProjectId);// Actualiza el estado local y el sticky state
             onProjectSelect(selectedProjectId); // Llama al callback del padre
             //navigateTo(`/project/${selectedProjectId}`)
@@ -88,7 +90,7 @@ export const ProjectSelector = ({
 
 
     return (
-        <div ref={containerRef}  style={{ display: "flex", alignItems: "center", columnGap: 10 }}>
+        <div ref={containerRef}  style={{ display: "flex", alignItems: "center", columnGap: 10, whiteSpace: "nowrap" }}>
             {!isSelectVisible ? (
                 <button onClick={toggleSelect}>
                     Swap Project
