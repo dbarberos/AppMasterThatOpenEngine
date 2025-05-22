@@ -1,14 +1,18 @@
-import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from "./Project"
-import { showModal, closeModal, toggleModal, closeModalProject, changePageContent } from "./UiManager"
-import { MessagePopUp } from "./MessagePopUp"
+import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from './Project'
+import { showModal, closeModal, toggleModal, closeModalProject, changePageContent } from './UiManager'
+import { MessagePopUp } from './MessagePopUp'
 import { v4 as uuidv4 } from 'uuid'
-import { IToDoIssue, ToDoIssue } from "./ToDoIssue"
-import { newToDoIssue, clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState, setupProjectDetailsSearch } from "./ToDoManager"
+import {  ToDoIssue } from "./ToDoIssue"
+import { IToDoIssue, ITag, IAssignedUsers } from '../types'
+import { newToDoIssue, clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState, setupProjectDetailsSearch } from './ToDoManager'
+import { toast } from 'sonner'
 
-import { updateAsideButtonsState } from "./HTMLUtilities.ts"
+import { updateAsideButtonsState } from './HTMLUtilities.ts'
 
 import { useProjectsManager } from '../react-components/ProjectsManagerContext'
-import { CACHE_TIMESTAMP_KEY, STORAGE_KEY } from "../const.ts"
+import { CACHE_TIMESTAMP_KEY, STORAGE_KEY, TODO_STATUSCOLUMN  } from '../const.ts'
+import { createDocument, deleteToDoWithSubcollections, updateDocument, deleteAllTodosInProject } from '../services/firebase'
+import * as Firestore from 'firebase/firestore'
 
 export class ProjectsManager {
 
@@ -786,7 +790,7 @@ export class ProjectsManager {
 
 
 
-    //FOR UPDATING THE TODO LIST INSIDE DE PROHJECTS.MANAGER WHEN IT SHOULD BE UPDATED
+    //FOR UPDATING THE TODO LIST INSIDE DE PROJECTS.MANAGER WHEN IT SHOULD BE UPDATED
     updateProjectToDoList(projectId: string, todo: ToDoIssue) {
         console.log(`PM.updateProjectToDoList ENTERED at ${Date.now()} for todo ID ${todo.id}`)
         const projectIndex = this.list.findIndex(p => p.id === projectId);
@@ -1264,6 +1268,29 @@ export class ProjectsManager {
     cancelImportProjectBtnClickListener: EventListener | null = null
     cancelExportProjectBtnClickListener: EventListener | null = null
 
+    private serializeProjectForFirebase(project: Project) {
+        const serializedProject = {
+            ...project,
+            // Convertir fechas a Timestamp
+            finishDate: project.finishDate instanceof Date 
+                ? Firestore.Timestamp.fromDate(project.finishDate)
+                : project.finishDate,
+            createdAt: project.createdAt instanceof Date
+                ? Firestore.Timestamp.fromDate(project.createdAt)
+                : project.createdAt,
+            updatedAt: Firestore.Timestamp.fromDate(new Date()),
+            // Excluir todoList ya que se maneja como subcollección
+            todoList: undefined
+        };
+    
+        // Verificación adicional de datos
+        if (!serializedProject.createdAt) {
+            serializedProject.createdAt = Firestore.Timestamp.fromDate(new Date());
+        }
+    
+        return serializedProject;
+    }
+
     showImportJSONModal(projects: IProject[]) {
         // Create a modal dialog element
         const modalListOfProjectsJson = document.getElementById("modal-list-of-projects-json")
@@ -1440,27 +1467,196 @@ export class ProjectsManager {
 
             //Check whether any project is selecter before confirm
             //if none project is selected, close the modal the same way cancel button
-            if (selectedProjects.length > 0) {
+            if (selectedProjects.length > 0) { 
+                // const importToastId = toast.loading(`Importando ${selectedProjects.length} proyecto${selectedProjects.length > 1 ? 's' : ''}...`);
                 console.log(selectedProjects);
 
 
                 //Import the selected projects
                 for (const project of selectedProjects) {
                     try {
-                        const newProjectResult = await this.newProject(project); // Wait for the Promise
+
+                        // check if the project already exist locally before call to this.newProject
+                        const existingProjectInList = this.list.find(p => p.name === project.name);
+                        const wasOverwrite = !!existingProjectInList;
+
+                        // Update local state
+                        const newProjectResult = await this.newProject(project as Project); // Wait for the Promise
+                        
                         if (newProjectResult) { // Check if a project was created (not skipped)
+                            // Sincronize with Firebase
                             console.log("Project imported successfully:", newProjectResult.name);
+
+                            // Persist in Firebase the main document of the project
+                            try {
+                                if (wasOverwrite) {
+                                    console.log(`Updating project "${newProjectResult.name}" (ID: ${newProjectResult.id}) in Firebase...`);
+
+                                    // Serializar el proyecto antes de enviarlo a Firebase
+                                    const serializedProject = this.serializeProjectForFirebase(newProjectResult);
+                                    
+                                    await updateDocument(newProjectResult.id!, serializedProject, { basePath: 'projects' });
+
+                                    // toast.success(`Proyect "${newProjectResult.name}" updated  in Firebase.`, { id: `firebase-${newProjectResult.id}` });
+
+                                    // If overwriting, delete the existing todoList in Firebase before adding the new one
+                                    await deleteAllTodosInProject(newProjectResult.id!);
+
+
+                                } else {
+                                    console.log(`Adding new project "${newProjectResult.name}" (ID: ${newProjectResult.id}) to Firebase...`);
+
+                                    // Serializar el proyecto antes de enviarlo a Firebase
+                                    const serializedProject = this.serializeProjectForFirebase(newProjectResult);
+                                    // createDocument no necesita el ID como argumento separado si está en el objeto
+                                    await createDocument('projects', serializedProject, newProjectResult.id);
+                                    // toast.success(`Proyecto "${newProjectResult.name}" añadido a Firebase.`, { id: `firebase-${newProjectResult.id}` });
+                                }
+
+                                // Process ToDoList whether exists
+                                if (newProjectResult.todoList && newProjectResult.todoList.length > 0) {
+                                    console.log(`Firebase: Processing ${newProjectResult.todoList.length} todos for project ${newProjectResult.id}`);
+
+                                    for (const todo of newProjectResult.todoList) {
+
+                                        const todoPath = `projects/${newProjectResult.id}/todoList`;
+
+                                        // Extraer tags y assignedUsers para guardarlos como subcolecciones
+                                        const { tags, assignedUsers, ...todoDataForFirebase } = todo;
+                                        const serializedTodo = {
+                                            ...todoDataForFirebase,
+                                            dueDate: todo.dueDate instanceof Date
+                                                ? Firestore.Timestamp.fromDate(todo.dueDate)
+                                                : todo.dueDate,
+                                            createdDate: todo.createdDate instanceof Date
+                                                ? Firestore.Timestamp.fromDate(todo.createdDate)
+                                                : todo.createdDate
+                                        };
+
+
+                                        // Grant we have a ID from the ToDo (could come from JSON o generating now)
+                                        if (!todoDataForFirebase.id) {
+                                            console.warn('Todo missing ID, generating new one');
+                                            todoDataForFirebase.id = uuidv4();
+                                        }
+
+                                        
+
+                                        const todoDocRef = await createDocument(
+                                            todoPath,
+                                            serializedTodo,
+                                            todoDataForFirebase.id // ID del ToDoIssue en Firebase
+
+                                        )
+                                        const todoIdFirebase = todoDocRef.id; // ID del ToDoIssue en Firebase
+
+                                        // Process tags
+                                        if (tags && tags.length > 0) {
+                                            const tagsPath = `${todoPath}/${todoDataForFirebase.id}/tags`;
+                                            console.log(`Firebase: Creating ${tags.length} tags at ${tagsPath}`);
+
+                                            await Promise.all(tags.map(tag =>
+                                                createDocument(
+                                                    tagsPath,
+                                                    {
+                                                        title: tag.title,
+                                                        createdAt: tag.createdAt instanceof Date
+                                                            ? Firestore.Timestamp.fromDate(tag.createdAt)
+                                                            : tag.createdAt
+                                                    },
+                                                    tag.id
+                                                )
+                                            ));
+                                            console.log(`Firebase: Successfully created ${tags.length} tags`);
+                                        }
+
+                                        // Process assignedUsers
+                                        if (assignedUsers && assignedUsers.length > 0) {
+                                            const usersPath = `${todoPath}/${todoDataForFirebase.id}/assignedUsers`;
+                                            console.log(`Firebase: Creating ${assignedUsers.length} users at ${usersPath}`);
+
+
+                                            await Promise.all(assignedUsers.map(user =>
+                                                createDocument(
+                                                    usersPath,
+                                                    {
+                                                        name: user.name,
+                                                        createdAt: user.createdAt instanceof Date
+                                                            ? Firestore.Timestamp.fromDate(user.createdAt)
+                                                            : user.createdAt
+                                                    },
+                                                    user.id
+                                                )
+                                            ));
+                                        }
+                                        console.log(`ToDoIssue "${todo.title}" (ID: ${todoIdFirebase}) and its subcollections imported to project ${newProjectResult.name}`);
+
+                                    }
+
+                                    // Toast solo cuando todo el proceso se completa
+                                    toast.success(
+                                        wasOverwrite 
+                                            ? `Project "${newProjectResult.name}" updated with ${newProjectResult.todoList.length} todos`
+                                            : `Project "${newProjectResult.name}" created with ${newProjectResult.todoList.length} todos`,
+                                        { 
+                                            id: `firebase-${newProjectResult.id}`,
+                                            description: 'All todos, tags and assignments imported successfully',
+                                            style: {
+                                                zIndex: 2000,
+                                                position: 'relative'
+                                            }
+                                        }
+                                    );
+
+                                } else {
+                                
+                                // return true; // Indicate that the project was imported successfully
+
+                                // Toast para proyectos sin todos
+                                    toast.success(
+                                        wasOverwrite
+                                            ? `Project "${newProjectResult.name}" updated with ${newProjectResult.todoList.length} todos`
+                                            : `Project "${newProjectResult.name}" created with ${newProjectResult.todoList.length} todos`,
+                                        {
+                                            id: `firebase-${newProjectResult.id}`,
+                                            description: 'All todos, tags and assignments imported successfully',
+                                            style: {
+                                                zIndex: 2000,
+                                                position: 'relative'
+                                            }
+                                        }
+                                    );
+                                }
+
+                            } catch (firebaseError) {
+                                console.error(`Error saving project "${newProjectResult.name}" in Firebase:`, firebaseError);
+                                toast.error(`Error saving project "${newProjectResult.name}" in Firebase:`, {
+                                    id: `firebase-error-${newProjectResult.id}`,
+                                    description: "Check console for details. Please, try again later.",
+                                    style: {
+                                        zIndex: 2000,
+                                        position: 'relative'
+                                    }
+                                });
+                            }
+
                         } else {
                             console.log("Project import skipped:", project.name);
                         }
                     } catch (error) {
                         console.error("Error importing project:", project.name, error);
+                        toast.error(`Error importing project: "${project.name}" `, {
+                            id: `import-process-error-${project.name || 'unknown'}`
+                        });
+                    
                     }
                 }
+                // toast.dismiss(importToastId);
 
             }
-            this.clearProjectCheckList("#json-projects-list")
             closeModalProject("modal-list-of-projects-json", this)
+            this.clearProjectCheckList("#json-projects-list")
+            
         }
 
         const cancelImportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
@@ -1472,8 +1668,8 @@ export class ProjectsManager {
         cancelImportProjectBtn.textContent = cancelSymbol
         this.cancelImportProjectBtnClickListener = (e: Event) => {
             e.preventDefault()
-            this.clearProjectCheckList("#json-project-list")
             closeModalProject("modal-list-of-projects-json", this)
+            this.clearProjectCheckList("#json-project-list")
         }
 
         //Remove existing event listener
@@ -1484,6 +1680,7 @@ export class ProjectsManager {
         confirmBtn.addEventListener("click", this.confirmBtnClickListener)
         cancelImportProjectBtn?.addEventListener("click", this.cancelImportProjectBtnClickListener)
     }
+
 
     showExportJSONModal(projects: IProject[], fileName: string) {
 
@@ -1574,33 +1771,57 @@ export class ProjectsManager {
 
                 // Export the selected projects
 
-                //function for the second argument of the STRINGIFY
-                function removeUIfromExport(key, value) {
-                    if (key === "ui") {
-                        return undefined
+                // //function for the second argument of the STRINGIFY
+                // function removeUIfromExport(key, value) {
+                //     if (key === "ui") {
+                //         return undefined
+                //     }
+                //     return value
+                // }
+
+                //const json = JSON.stringify(selectedProjects, removeUIfromExport, 2) //remove null from the second argument
+                try {
+                    // The 'ui' property is no longer part of Project instances, so the replacer function is not needed.
+                    const json = JSON.stringify(selectedProjects, null, 2)
+                    const blob = new Blob([json], { type: "application/json" })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement("a")
+                    a.href = url
+                    a.download = `${fileName}_${new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    })}.json`
+                    a.click()
+                    URL.revokeObjectURL(url)  // Release the blob URL
+                    toast.success("Exportación completada", {
+                        description: `Se ${selectedProjects.length === 1 ? '1 Project has been exported' : selectedProjects.length + ' Projects have been exported'} to '${a.download}' successfully.`,
+                    });
+
+                } catch (error) {
+                    console.error("Error exporting projects:", error)
+                    let errorMessage = "An unexpected error occurred during the export.";
+                    if (error instanceof Error) {
+                        // You might want to log error.message to the console or a logging system,
+                        // but for the user, it's better to provide a generic message.
                     }
-                    return value
+                    toast.error("Export Error", {
+                        description: `${errorMessage} Please try again later.`,
+                    });
+                } finally {
+                    closeModalProject("modal-list-of-projects-json", this)
+                    this.clearProjectCheckList("#json-projects-list")
                 }
-
-                const json = JSON.stringify(selectedProjects, removeUIfromExport, 2) //remove null from the second argument
-                const blob = new Blob([json], { type: "application/json" })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement("a")
-                a.href = url
-                a.download = `${fileName}_${new Date().toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                })}.json`
-                a.click()
-                URL.revokeObjectURL(url)
+                
+            } else {
+                console.log("PM: showExportJSONModal - No projects selected. Closing modal.");                
+                closeModalProject("modal-list-of-projects-json", this)
+                this.clearProjectCheckList("#json-projects-list")
             }
-            this.clearProjectCheckList("#json-projects-list")
-            closeModalProject("modal-list-of-projects-json", this)
-
+            
         }
 
         const cancelExportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
@@ -1610,9 +1831,9 @@ export class ProjectsManager {
         const cancelSymbol = String.fromCharCode(0x274C)
         cancelExportProjectBtn.textContent = cancelSymbol
         this.cancelExportProjectBtnClickListener = (e: Event) => {
-            e.preventDefault()
-            this.clearProjectCheckList("#json-projects-list")
+            e.preventDefault()            
             closeModalProject("modal-list-of-projects-json", this)
+            this.clearProjectCheckList("#json-projects-list")
         }
         // cancelExportProjectBtn.removeEventListener("click", cancelExportProjectBtnClickListener)
 
@@ -1717,16 +1938,6 @@ export class ProjectsManager {
         })
         return selectedProjects
     }
-
-
-
-
-
-
-
-
-
-
 }
 
 

@@ -472,6 +472,47 @@ export async function deleteToDoWithSubcollections(
 
 
 
+// Delete all todos and their subcollections for a given project
+export async function deleteAllTodosInProject(projectId: string): Promise<void> {
+    return withRetry(async () => {
+        try {
+            const todoListPath = `projects/${projectId}/todoList`;
+            // Use getCollection to get a reference to the todoList subcollection
+            const todoListCollection = await getCollection(todoListPath);
+            const existingTodosSnapshot = await Firestore.getDocs(todoListCollection);
+
+            if (existingTodosSnapshot.empty) {
+                console.log(`No existing todos to delete for project ${projectId}.`);
+                return;
+            }
+
+            const deletePromises = existingTodosSnapshot.docs.map(todoDoc =>
+                // Call deleteToDoWithSubcollections for each todo document
+                deleteToDoWithSubcollections(projectId, todoDoc.id)
+            );
+            await Promise.all(deletePromises);
+
+            console.log(`Successfully deleted all todos and their subcollections for project ${projectId}.`);
+            toast.success(`Existing To-Dos for project "${projectId}" cleared from Firebase.`);
+
+        } catch (error) {
+            console.error(`Error deleting all todos for project ${projectId}:`, error);
+            toast.error(`Error clearing existing To-Dos for project "${projectId}" from Firebase.`, {
+                description: (error as Error).message
+            });
+            throw new Error(`Failed to delete all todos for project ${projectId}: ${(error as Error).message}`);
+        }
+    }, {
+        maxRetries: 2,
+        timeout: 5000,
+        baseDelay: 500
+    });
+}
+
+
+
+
+
 
 
 //Get a document from Firebase knowing its name.
@@ -505,7 +546,8 @@ export async function getDocumentIdByName(
 
 export async function createDocument<T extends Record<string, any>>(
     path: string,
-    data: T
+    data: T,
+    id?: string //Personaliced Id when import projects from JSON
 ) {
     return withRetry(async () => {
 
@@ -534,37 +576,71 @@ export async function createDocument<T extends Record<string, any>>(
             return acc;
         }, {})
 
-
-
-        const collectionRef = await getCollection(path);
-
-        // Only add createdAt if it's not already present and not a subcollection document
-
+        // Add timestamps if not present
         if (!dataToSave.createdAt && !path.includes('/tags') && !path.includes('/assignedUsers')) {
             dataToSave.createdAt = Firestore.Timestamp.fromDate(new Date());
         }
+        dataToSave.updatedAt = Firestore.Timestamp.fromDate(new Date());
 
-        // Verify collection exists
-        try {
-            await Firestore.getDocs(collectionRef);
-        } catch (error) {
-            throw new Error(`Collection not found at path: ${path}`);
-        }
+
 
         try {
+            const collectionRef = await getCollection(path);
+            
+            let docRef;
+            if (id) {
+                // Create/Update document with specific ID
+                docRef = Firestore.doc(firestoreDB, `${path}/${id}`);
+                
+                // Check if document already exists
+                const docSnap = await Firestore.getDoc(docRef);
+                if (docSnap.exists()) {
+                    console.log(`Firebase: Document ${id} already exists in ${path}, updating...`);
+                }
+                
+                await Firestore.setDoc(docRef, dataToSave);
+                console.log(`Firebase: Document ${id} created/updated in ${path}`);
 
-            const createdDoc = await Firestore.addDoc(collectionRef, dataToSave)
+        // // Only add createdAt if it's not already present and not a subcollection document
 
-            toast.success('Document created successfully ', {
-                description: `ID: ${createdDoc.id} en ${path}`
+        // if (!dataToSave.createdAt && !path.includes('/tags') && !path.includes('/assignedUsers')) {
+        //     dataToSave.createdAt = Firestore.Timestamp.fromDate(new Date());
+        // }
+
+        // // Verify collection exists
+        // try {
+        //     await Firestore.getDocs(collectionRef);
+        // } catch (error) {
+        //     throw new Error(`Collection not found at path: ${path}`);
+        // }
+
+            } else {
+                // Auto-generate ID
+                docRef = await Firestore.addDoc(collectionRef, dataToSave);
+                console.log(`Firebase: New document created in ${path} with auto-generated ID:`, docRef.id);
+            }
+
+            toast.success('Document created successfully', {
+                description: `ID: ${docRef.id} in ${path}`
             });
-            console.log(`Document created at ${path} with ID:`, createdDoc.id);
-            return createdDoc
+
+            return docRef;
+                
+
+            // const createdDoc = await Firestore.addDoc(collectionRef, dataToSave)
+
+            // toast.success('Document created successfully ', {
+            //     description: `ID: ${createdDoc.id} en ${path}`
+            // });
+            // console.log(`Document created at ${path} with ID:`, createdDoc.id);
+            // return createdDoc
         } catch (error) {
+            console.error('Firebase: Error creating document:', error);
+
             toast.error('Error creating the document. Try again later', {
-                description: error.message
+                description: error instanceof Error ? error.message : 'Unknown error occurred'
             });
-            throw error;
+            throw new Error(`Failed to create document in ${path}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
 
     }, {

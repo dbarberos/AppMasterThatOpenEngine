@@ -65,6 +65,9 @@ export class ToDoIssue implements IToDoIssue {
     private parseAndValidateDate(rawValue: any): Date {
         let dateValue: Date;
 
+        if (rawValue instanceof Firestore.Timestamp) {
+            return rawValue.toDate();        }
+
         if (rawValue instanceof Date) {
             dateValue = rawValue;
         } else if (rawValue instanceof Firestore.Timestamp) {

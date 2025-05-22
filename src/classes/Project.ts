@@ -7,6 +7,11 @@ import * as Firestore from 'firebase/firestore'
 export type ProjectStatus = "Pending" | "Active" | "Finished"
 export type UserRole = "Architect" | "Engineer" | "Developer"
 
+interface FirebaseTimestamp {
+    seconds: number;
+    nanoseconds: number;
+}
+
 export interface IProject {
     name: string
     acronym: string
@@ -20,7 +25,8 @@ export interface IProject {
     //todoList: IToDoIssue[]
     id?: string
     todoList?: IToDoIssue[]
-    
+    createdAt?: Date | FirebaseTimestamp; // Añadir esta línea
+    updatedAt?: Date | FirebaseTimestamp; // Añadir esta línea
 }
 
 export enum BusinessUnit {
@@ -39,7 +45,7 @@ export class Project implements IProject {
     description: string
     status: "Pending" | "Active" | "Finished"
     userRole: "Architect" | "Engineer" | "Developer"
-    finishDate: Date
+    finishDate: Date 
     cost: number = 0
     progress?: number = 0
     
@@ -49,7 +55,8 @@ export class Project implements IProject {
     id?: string
     //ui: HTMLDivElement    
     backgroundColorAcronym?: string
-    
+    createdAt: Date;
+    updatedAt: Date;
 
     
 
@@ -91,6 +98,15 @@ export class Project implements IProject {
                 //     console.error("Invalid date provided for finishDate:", data.finishDate);
                 //     this.finishDate = new Date(); // Set a default valid date
                 // }
+
+            } else if (key === "createdAt") {
+                this.createdAt = data.createdAt instanceof Date
+                    ? data.createdAt
+                    : new Date();
+            } else if (key === "updatedAt") {
+                this.updatedAt = data.updatedAt instanceof Date
+                    ? data.updatedAt
+                    : new Date();
 
             } else {
                 this[key] = data[key]
