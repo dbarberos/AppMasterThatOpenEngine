@@ -55,6 +55,19 @@ export function ToDoEditableField({
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
+
+    // UseEffect para actualizar el valor cuando cambia el todo
+    React.useEffect(() => {
+        if (fieldName === 'statusColumn') {
+            console.log('ToDoEditableField: Status column update:', {
+                current: currentValue,
+                new: initialValue
+            });
+        }
+        setCurrentValue(initialValue);
+    }, [initialValue, fieldName, toDoIssue.id]); 
+
+
     // Notificar al padre cuando cambia el estado local
     React.useEffect(() => {
         if (isEditing ) {

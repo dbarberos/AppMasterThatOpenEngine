@@ -37,6 +37,53 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
 
 
     React.useEffect(() => {
+        
+        // This effect will run every time the `toDoIssue` prop changes.
+        // This is crucial for updating the window when a new ToDo is selected
+        // from outside while the window is already open.
+
+        const hasChanged = compareToDoIssues(currentToDoIssue, toDoIssue);
+
+        if (hasChanged) {
+            console.log('ToDoDetailsWindow: Updating state due to changes:', {
+                field: hasChanged.field,
+                from: hasChanged.from,
+                to: hasChanged.to
+            });
+        
+            setCurrentToDoIssue(toDoIssue); // Update the local state with the new ToDo
+            setPreviousValue(toDoIssue);    // Update the rollback value
+            setEditingField(null);          // Exit any active editing mode
+        }
+    }, [toDoIssue]); 
+
+
+
+
+    // Hlper function for comparing todos
+    const compareToDoIssues = (current: ToDoIssue, next: ToDoIssue) => {
+        const relevantFields = [
+            { field: 'statusColumn', getValue: (todo: ToDoIssue) => todo.statusColumn },
+            { field: 'title', getValue: (todo: ToDoIssue) => todo.title },
+            { field: 'description', getValue: (todo: ToDoIssue) => todo.description },
+            { field: 'dueDate', getValue: (todo: ToDoIssue) => todo.dueDate?.getTime() },
+            { field: 'tags', getValue: (todo: ToDoIssue) => JSON.stringify(todo.tags) },
+            { field: 'assignedUsers', getValue: (todo: ToDoIssue) => JSON.stringify(todo.assignedUsers) }
+        ];
+
+        for (const { field, getValue } of relevantFields) {
+            const currentValue = getValue(current);
+            const nextValue = getValue(next);
+
+            if (currentValue !== nextValue) {
+                return { field, from: currentValue, to: nextValue };
+            }
+        }
+
+        return false;
+    };
+
+    React.useEffect(() => {
         storeSidebarState();
         return () => {
             restoreSidebarState();

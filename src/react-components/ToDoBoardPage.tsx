@@ -46,6 +46,8 @@ import {
   restrictToWindowEdges // Modificador útil
 } from '@dnd-kit/modifiers';
 
+import { toast } from 'sonner';
+
 
 
 // Configuración de la animación de drop
@@ -522,11 +524,6 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
 
 
 
-
-
-
-
-
 const handleProjectSelectionInBoard = (newProjectId: string | null) => {
     if (newProjectId !== initialProjectIdFromStorage) {
       setInitialProjectIdFromStorage(newProjectId);
@@ -841,35 +838,159 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
     }
   };
 
-  const handleCloseToDoDetailsWindow = () => {
+  // Memorized handleClose for avoiding unnecessary re rendering
+  const handleCloseToDoDetailsWindow = React.useCallback(() => {
     console.log('ToDoBoardPage: Closing ToDoDetailsWindow');
     setIsTodoDetailsWindowOpen(false);
     setSelectedToDo(null);
-  };
+  }, []);
 
-  const handleUpdateToDoIssue = (updatedTodo: ToDoIssue) => {
+
+  // Efecto para mantener selectedTodo sincronizado con currentProject
+  React.useEffect(() => {
+    if (!currentProject || !selectedToDo?.id) return;
+
+    const freshSelectedTodo = currentProject.todoList.find(t => t.id === selectedToDo.id);
+
+    if (freshSelectedTodo) {
+        const hasRelevantChanges = 
+            freshSelectedTodo !== selectedToDo || 
+            freshSelectedTodo.statusColumn !== selectedToDo.statusColumn ||
+            freshSelectedTodo.sortOrder !== selectedToDo.sortOrder;
+
+        if (hasRelevantChanges) {
+            console.log('ToDoBoardPage: Updating selectedTodo due to changes:', {
+                todoId: selectedToDo.id,
+                oldStatus: selectedToDo.statusColumn,
+                newStatus: freshSelectedTodo.statusColumn
+            });
+            setSelectedToDo(freshSelectedTodo);
+        }
+    } else {
+        console.log('ToDoBoardPage: Selected todo no longer exists, closing window');
+        handleCloseToDoDetailsWindow();
+    }
+  }, [currentProject, selectedToDo?.id, handleCloseToDoDetailsWindow]);
+
+
+
+
+
+
+
+  const handleUpdateToDoIssue = async (updatedTodo: ToDoIssue) => {
     console.log('ToDoBoardPage: handleUpdateToDoIssue called with:', updatedTodo);
-    if (!currentProject) return;
 
-    // Actualizar el estado local de todosByColumn
-    setTodosByColumn(prev => {
-      const newTodos = { ...prev };
-      const columnId = updatedTodo.statusColumn;
-      if (newTodos[columnId]) {
-        newTodos[columnId] = newTodos[columnId].map(t => t.id === updatedTodo.id ? updatedTodo : t);
+    if (!currentProject) {
+      console.error("ToDoBoardPage: currentProject is null in handleUpdateToDoIssue");
+      return;
+    }
+    
+    // Capture previous state for potential rollback
+    const previousTodosByColumnState = JSON.parse(JSON.stringify(todosByColumn));
+
+    try {
+      // Find original todo and its column
+      let oldStatusColumn: StatusColumnKey | null = null;
+      let originalTodoInBoard: ToDoIssue | undefined;
+
+      for (const colId of BOARD_COLUMNS) {
+          const todoInCol = todosByColumn[colId]?.find(t => t.id === updatedTodo.id);
+          if (todoInCol) {
+              originalTodoInBoard = todoInCol;
+              oldStatusColumn = colId as StatusColumnKey;
+              break;
+          }
       }
-      return newTodos;
-    });
 
-    // Actualizar el currentProject local y notificar al padre
-    const updatedProjectTodoList = currentProject.todoList.map(t =>
-      t.id === updatedTodo.id ? updatedTodo : t
-    );
-    const updatedProjectInstance = new Project({ ...currentProject, todoList: updatedProjectTodoList });
-    setCurrentProject(updatedProjectInstance);
-    onProjectUpdate(updatedProjectInstance); // Notifica a ProjectDetailsPage
-    onToDoIssueUpdated(updatedTodo); // Notifica para cualquier otra lógica específica del ToDo
-  };
+      const newStatusColumn = updatedTodo.statusColumn;
+      let todoForBoardUpdate = updatedTodo;
+
+      // Handle column change
+      if (newStatusColumn && oldStatusColumn !== newStatusColumn) {
+        console.log(`ToDoBoardPage: StatusColumn changing from ${oldStatusColumn} to ${newStatusColumn}`);
+        
+        const destinationList = [...(todosByColumn[newStatusColumn] || [])];
+        const newSortOrder = calculateNewSortOrderForColumnMove(
+          destinationList.filter(t => t.id !== updatedTodo.id),
+          destinationList.length
+        );
+
+        todoForBoardUpdate = new ToDoIssue({
+          ...updatedTodo,
+          sortOrder: newSortOrder
+        });
+
+        // Update Firebase
+        await updateDocument(
+          todoForBoardUpdate.id!,
+          { sortOrder: newSortOrder },
+          {
+            basePath: 'projects',
+            subcollection: 'todoList',
+            parentId: todoForBoardUpdate.todoProject!,
+            todoId: todoForBoardUpdate.id!,
+            isArrayCollection: false
+          }
+        );
+
+        // Update board state
+        setTodosByColumn(prev => {
+          const newState = { ...prev };
+          // Remove from old column
+          if (oldStatusColumn) {
+            newState[oldStatusColumn] = newState[oldStatusColumn]
+              .filter(t => t.id !== todoForBoardUpdate.id);
+          }
+          // Add to new column
+          if (!newState[newStatusColumn]) {
+            newState[newStatusColumn] = [];
+          }
+          newState[newStatusColumn] = [
+            ...newState[newStatusColumn].filter(t => t.id !== todoForBoardUpdate.id),
+            todoForBoardUpdate
+          ].sort((a, b) => a.sortOrder - b.sortOrder);
+          return newState;
+        });
+
+      } else {
+        // Simple update local state todosByColumn without column change      
+        setTodosByColumn(prev => {
+          const newState = { ...prev };
+          if (oldStatusColumn) {
+              newState[oldStatusColumn] = newState[oldStatusColumn]
+                  .map(t => t.id === updatedTodo.id ? updatedTodo : t)
+                  .sort((a, b) => a.sortOrder - b.sortOrder);
+          }
+          return newState;
+      });
+      }
+
+      // Update project state currentProject (local) & notify father components
+      const updatedProjectTodoList = currentProject.todoList
+        .map(t => t.id === todoForBoardUpdate.id ? todoForBoardUpdate : t);
+      
+      if (!updatedProjectTodoList.some(t => t.id === todoForBoardUpdate.id)) {
+        updatedProjectTodoList.push(todoForBoardUpdate);
+      }
+      
+      const updatedProjectInstance = new Project({
+        ...currentProject,
+        todoList: updatedProjectTodoList
+      });
+      
+      setCurrentProject(updatedProjectInstance);
+      onProjectUpdate(updatedProjectInstance); // Notifica a ProjectDetailsPage
+      onToDoIssueUpdated(updatedTodo); // Notifica para cualquier otra lógica específica del ToDo
+    
+    
+    } catch (error) {
+      console.error('ToDoBoardPage: Error updating todo:', error);
+      // Rollback on error
+      setTodosByColumn(previousTodosByColumnState);
+      toast.error('Failed to update todo. Changes reverted.');
+    }
+  }
 
   
   const handleDeleteToDoIssue = async (projectId: string, todoId: string) => {
