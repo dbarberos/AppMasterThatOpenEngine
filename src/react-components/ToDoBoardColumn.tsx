@@ -242,7 +242,13 @@ export function ToDoBoardColumn({
             }}
 
         >
-            <div id={`details-page-todo-secondcontainer-${columnId}`}>
+            <div
+                id={`details-page-todo-secondcontainer-${columnId}`}
+                    // style={{
+                    //     overflowY: 'auto', // Permitir scroll si hay muchas tareas
+                    // }}
+                
+                >
                 <div
                     className="todo-column-head"
                     style={{
@@ -250,7 +256,8 @@ export function ToDoBoardColumn({
                         backgroundImage: 'radial-gradient(var(--color-light) 2px, transparent 2px), radial-gradient(var(--color-light) 2px, transparent 2px)',
                         backgroundPosition: '2 2, 20px 20px',             // offset the two gradients
                         backgroundSize: '7px 7px',                      // define pattern size to show repeated pattern
-                        margin: '15px 0',
+                        margin: '0 0 15px 0',
+                        
                     }}
                 >
                     {/* <h4>{columnId.charAt(0).toUpperCase() + columnId.slice(1)}</h4> */}
@@ -269,7 +276,20 @@ export function ToDoBoardColumn({
                             display: "flex",
                             flexDirection: "column",
                             rowGap: 15,
-                            alignContent: "center"
+                            alignContent: "center",
+                            //overflow: 'visible', // Permitir que los elementos se desborden si es necesario
+
+                            //minHeight: '100%', // Asegura altura mínima
+                            height: 'fit-content',    // Permite crecer según el contenido
+                            flex: 1,          // Toma el espacio disponible
+                            overflow: 'visible',
+
+                            backgroundAttachment: 'local', // Importante: hace que el background se desplace con el contenido
+                            scrollSnapType: 'y mandatory', // Para snap de los TodoCards
+
+
+
+
                     }}>
                         {toDoCardsList.length > 0 ? (
                             toDoCardsList
@@ -282,6 +302,7 @@ export function ToDoBoardColumn({
                                         backdropFilter: 'blur(2px) saturate(150%)',
                                         backgroundColor: 'rgba(17, 25, 40, 0.01)',
                                         borderRadius: '20px',
+                                        height: 'auto',
                                         
                                         // backgroundColor: 'var(--color-bg)',
                                         // backdropFilter: 'blur(0.5px)',

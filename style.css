@@ -2001,11 +2001,13 @@ progress::-moz-progress-bar {
     grid-template-areas: "color content";
     border-radius: 10px;
     min-width: 250px;
-    scroll-snap-align: start;
 
+    scroll-snap-align: end;
+    /* break-inside: avoid; */
+    scroll-margin: 8px;
 
     position: relative; /* Asegura que el posicionamiento absoluto del ::before funcione */
-    overflow: hidden; /* Evita que el ::before se salga si hay border-radius */
+    /* overflow: hidden; Evita que el ::before se salga si hay border-radius */
 
 }
 
@@ -2325,7 +2327,8 @@ header {
 
         overflow-y: auto;
         overflow-x: hidden;
-        max-height: calc(96vh - 150px);
+        max-height: auto;
+        /* max-height: calc(96vh - 150px); */
 
             
     }
@@ -2492,12 +2495,27 @@ header {
     
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
-    
+
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
 }
-/* #details-page-todo-maincontainer:hover {
+
+#details-page-todo-maincontainer {
+    overflow-y: overlay;
+    scrollbar-width: none;
+}
+
+#details-page-todo-maincontainer:hover {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
-} */
+} 
+
+
+
+
+
 
 #details-page-todo-secondcontainer-backlog,
 #details-page-todo-secondcontainer-wip,
@@ -2505,8 +2523,28 @@ header {
 #details-page-todo-secondcontainer-completed,
 #details-page-todo-secondcontainer-notassigned {
     background-color: transparent;
-    height: 80%;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
 }
+
+#details-page-todo-secondcontainer-backlog:hover,
+#details-page-todo-secondcontainer-wip:hover,
+#details-page-todo-secondcontainer-qa:hover,
+#details-page-todo-secondcontainer-completed:hover,
+#details-page-todo-secondcontainer-notassigned:hover {
+    scrollbar-color: var(--primary-200) transparent;
+    scrollbar-width: thin;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}
+
+
+
+
+
 
 /* INSIDE DETAILS TODO HALF-WINDOW */
 
