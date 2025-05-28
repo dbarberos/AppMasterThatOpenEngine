@@ -1283,7 +1283,15 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
 
         {!isLoading && currentProject && (
 
-          <div id="todo-content" className="board-container" style={{overflowX: 'auto', height: "calc(100vh - 100px)" }}>
+          <div
+            id="todo-content"
+            className="board-container"
+            style={{
+              overflowX: 'auto',
+              height: "calc(100vh - 100px)",
+              position: 'relative',
+            }}
+          >
             {BOARD_COLUMNS.map((columnId) => (
               <SortableContext
                 key={columnId}
@@ -1300,10 +1308,11 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
                   // todos={todosByColumn[columnId] || []}}
                   project={currentProject}
                   onUpdatedProject={onProjectUpdate}
-                  isDndEnabled={isDndEnabled && !isSearching}
+                  isDndEnabled={isDndEnabled && !isSearching}                  
                   onCreatedToDoIssue={onToDoIssueCreated}
                   onUpdatedToDoIssue={onToDoIssueUpdated}
                   onClickOpenToDoDetailsWindow={handleClickOpenToDo}
+                  isDetailsWindowOpen={isTodoDetailsWindowOpen}
                 />
               </SortableContext>
             ))}
@@ -1318,6 +1327,7 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
               isDndEnabled={true}
               isSortable={false} // El overlay nunca es sortable              
               onClickOpenToDoDetailsWindow={() => { }} // No-op
+              isDragged={isDragging}
               
             />
           ) : null}

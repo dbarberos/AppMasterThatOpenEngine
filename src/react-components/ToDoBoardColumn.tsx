@@ -129,28 +129,28 @@ export function ToDoBoardColumn({
     //     setSelectedToDo(null)
     // }
 
-    const handleDeleteToDoIssue = async (projectId: string, todoId: string) => {
-        console.log("Delete ToDo Issue funtion launched for  todo:", selectedToDo!.id)
-        if (!project) { // <-- Comprobar si el proyecto existe
-            console.error("Cannot delete ToDo: Project data is not available.");
-            return;
-        }
-        try {
-            // Update the local data project  removing the todo
-            const updatedTodoList = todos.filter(todo => todo.id !== todoId)
+    // const handleDeleteToDoIssue = async (projectId: string, todoId: string) => {
+    //     console.log("Delete ToDo Issue funtion launched for  todo:", selectedToDo!.id)
+    //     if (!project) { // <-- Comprobar si el proyecto existe
+    //         console.error("Cannot delete ToDo: Project data is not available.");
+    //         return;
+    //     }
+    //     try {
+    //         // Update the local data project  removing the todo
+    //         const updatedTodoList = todos.filter(todo => todo.id !== todoId)
             
-            const updatedProject = { ...project, todoList: updatedTodoList }
+    //         const updatedProject = { ...project, todoList: updatedTodoList }
 
-            // Notifica al componente padre del cambio
-            onUpdatedProject(updatedProject);
+    //         // Notifica al componente padre del cambio
+    //         onUpdatedProject(updatedProject);
 
-            setIsTodoDetailsWindowOpen(false)
-            setSelectedToDo(null)
-        } catch (error) {
-            console.error('ProjectDetailsTodOList: Error deleting todo from projects.Manager:', error);
-        }
+    //         setIsTodoDetailsWindowOpen(false)
+    //         setSelectedToDo(null)
+    //     } catch (error) {
+    //         console.error('ProjectDetailsTodOList: Error deleting todo from projects.Manager:', error);
+    //     }
 
-    }
+    // }
 
     // const handleUpdateToDoIssue = (updatedTodo: ToDoIssue) => {
     //     if (!project) { // <-- Comprobar si el proyecto existe
@@ -223,7 +223,7 @@ export function ToDoBoardColumn({
             ref={setNodeRef} // Importante para que dnd-kit reconozca esta columna como "droppable"
             id={`todo-board-column-${columnId}`} // ID más específico y único por columna
             //id="details-page-todo-maincontainer"
-            className={`todo-column ${isOver ? 'column-is-over' : ''}`}
+            className={`board-column todo-column ${isOver ? 'column-is-over' : ''}`}
             data-column-id={columnId} // Para depuración o estilos
             data-droppable={isDndEnabled}
             data-is-empty={todos.length === 0}
@@ -231,6 +231,7 @@ export function ToDoBoardColumn({
                 minHeight: '200px', // Asegurar altura mínima
                 backgroundColor: isOver ? 'rgba(0, 120, 255, 0.1)' : undefined,
                 transition: 'background-color 0.2s',
+                overflow: 'visible',
                 // display: 'flex',
                 // flexDirection: 'column',
 

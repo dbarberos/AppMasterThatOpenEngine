@@ -122,6 +122,7 @@ export function ProjectDetailsToDoList({
     const originalTodoListRef = React.useRef<ToDoIssue[]>(project.todoList)
     const [searchTerm, setSearchTerm] = React.useState('')
 
+    const [isDragging, setIsDragging] = React.useState(false);
 
     const [activeTodo, setActiveTodo] = React.useState<ToDoIssue | null>(null) // Para DragOverlay
 
@@ -315,10 +316,12 @@ export function ProjectDetailsToDoList({
         const { active } = event;
         const todo = todoList.find(t => t.id === active.id);
         setActiveTodo(todo || null);
-    };
+        setIsDragging(true);
+    }
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd =(event: DragEndEvent) => {
         setActiveTodo(null); // Limpiar el overlay
+        setIsDragging(false)
         const { active, over } = event;
 
         if (over && active.id !== over.id) {
@@ -361,7 +364,8 @@ export function ProjectDetailsToDoList({
                 return finalReorderedList; // Actualizar el estado local
             });
         }
-    };
+    }
+
 
     // --- NUEVO useEffect para notificar al padre DESPUÉS de actualizar el estado local ---
     React.useEffect(() => {
@@ -406,10 +410,11 @@ export function ProjectDetailsToDoList({
                     onClickOpenToDoDetailsWindow={handleClickOpenToDo} 
                     isSortable={!searchTerm.trim()} // <-- Solo sorteable si no hay búsqueda activa
                     isDndEnabled={!searchTerm.trim()} // <-- Solo dnd si no hay búsqueda activa
+                    isDragged={isDragging}
                 />
             )
         }),
-        [todoList, searchTerm, handleClickOpenToDo] // Dependency on local todoList state
+        [todoList, searchTerm, handleClickOpenToDo, isDragging, selectedToDo, isTodoDetailsWindowOpen] // Dependency on local todoList state
     )
 
 
@@ -569,7 +574,7 @@ export function ProjectDetailsToDoList({
                                     flexDirection: "column",
                                     rowGap: 15,
                                     alignContent: "center",
-                                    overflowY: 'auto', // Permitir scroll si la lista es larga
+                                    overflowY: 'auto', // 'auto' Permitir scroll si la lista es larga
                                 }}>
                                 {toDoCardsList.length > 0 ? toDoCardsList : <h5 style={{ padding: 10 }}>No To-Do Issues</h5>}
                             </div>
@@ -583,6 +588,7 @@ export function ProjectDetailsToDoList({
                                     onClickOpenToDoDetailsWindow={() => { }} 
                                     isSortable={false} // El overlay nunca es sorteable
                                     isDndEnabled={false} // El overlay nunca es dnd
+                                    isDragged={isDragging} // Para aplicar estilos de arrastre
                                 />
                             ) : null}
                         </DragOverlay>

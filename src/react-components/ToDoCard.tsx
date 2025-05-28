@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChatBubbleIcon, DragIndicatorIcon, FlagIcon } from './icons';
 
 import { ToDoIssue } from '../classes/ToDoIssue';
+import { ToDoCardHoverInformation } from '../react-components'
 //import { Project } from '../classes/Project';
 
 interface Props {   
@@ -13,13 +14,25 @@ interface Props {
     isSortable?: boolean; // <-- NUEVA PROP: Indica si la tarjeta debe ser sorteable
     isDndEnabled: boolean;
     onClickOpenToDoDetailsWindow: (todoIssue: ToDoIssue) => void
+    isDetailsWindowOpen?: boolean;
+    isDragged?: boolean;
 }
 interface Tag {
     title: string
 }
 
-export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow, isSortable = false, isDndEnabled }: Props) {
+export function ToDoCard({
+    toDoIssue,
+    onClickOpenToDoDetailsWindow,
+    isSortable = false,
+    isDndEnabled,
+    isDetailsWindowOpen = false,
+    isDragged = false}: Props) {
 
+    const [isHovered, setIsHovered] = React.useState(false);
+    const cardRef = React.useRef<HTMLDivElement>(null);
+    
+    
 
     // --- Lógica de dnd-kit (condicional) ---
     const {
@@ -39,13 +52,14 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow, isSortable =
         } //Pasa el objeto toDoIssue completo en data.current.todo. Esto es crucial para onDragStart y el Overlay.
     });
 
-    // --- DEBUGGING ---
-    console.log(`ToDoCard [${toDoIssue.id}] Props & Sortable State:`, {
-        isDndEnabledProp: isDndEnabled, // Prop recibida
-        isSortableProp: isSortable,     // Prop recibida
-        useSortableIsDisabled: !isSortable || !isDndEnabled, // Cálculo de disabled para useSortable
-        isDraggingHook: isDragging      // Estado de isDragging del hook useSortable
-    });
+    // Efecto para gestionar el estado de hover cuando se arrastra
+
+    React.useEffect(() => {
+        if (isDragged) {            
+            setIsHovered(false); // Forzar hover a false
+        } 
+    }, [isDragged]);
+
     
     // Estilos para dnd-kit (solo si es sorteable)
     const sortableStyle: React.CSSProperties = isSortable ?{
@@ -61,12 +75,6 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow, isSortable =
 
  
 
-    // Console.log wrapped in useEffect
-    React.useEffect(() => {
-        console.log('ToDoCard rendering with:', toDoIssue);
-    }, [toDoIssue]);
-    
-
     const handleClickOverToDoCard = React.useCallback((event: React.MouseEvent) => {
         event.preventDefault(); // Evita el comportamiento por defecto del click
         // Evita abrir detalles si se está interactuando con el drag handle
@@ -76,6 +84,22 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow, isSortable =
         }
         onClickOpenToDoDetailsWindow(toDoIssue);
     }, [toDoIssue, onClickOpenToDoDetailsWindow]);
+
+
+    const handleMouseEnter = React.useCallback(() => {
+        if (isDragging) return; // Si se está arrastrando, no activar el hover.
+        if (!isDetailsWindowOpen && cardRef.current ) {            
+            setIsHovered(true);
+        }
+    }, [isDetailsWindowOpen, isDragging, cardRef])
+
+    
+
+    const handleMouseLeave = React.useCallback(() => {
+        if (isDragging) return; // Si se está arrastrando, no desactivar el hover por mouseleave.
+                                // El useEffect [isDragging] ya lo puso a false.
+        setIsHovered(false);
+    },[isDragging])
 
 
 
@@ -118,7 +142,9 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow, isSortable =
                 : String(tag)}
         </span>)) || []; // Default to empty array if undefined
 
-
+    // Calcular shouldShowBanner usando la prop isDragging
+    const shouldShowBanner = isHovered && !isDetailsWindowOpen && !isDragged && !isDragged;
+    
     return (
         // El div exterior es el nodo sorteable
         <div
@@ -143,87 +169,98 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow, isSortable =
                 className="todo-color-column"
                 style={{ backgroundColor: toDoIssue.backgroundColorColumn }}
             />
+
             <div
-                className="todo-card"
-                style={{
-                display: "flex",
-                flexDirection: "column",
-                borderLeftColor: toDoIssue.backgroundColorColumn
-                }}
+                ref={cardRef}
+                className='todo-card-container'
+                style={{ position: 'relative' }} 
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
             >
-                <div className="todo-taks">
-                    <div className="todo-tags-list">
-                        {todoTagsList} {/* Array of JSX elements */}
-                    </div>
-                    {/* Botón Drag Handle: aplica combined listeners condicionalmente */}
-                    <button
-                        {...(isSortable ? listeners : {})} // Aplicar listeners de dnd-kit directamente si es sorteable
-                        className="todo-task-move handler-move"
-                        style={{
-                            cursor: isSortable ? (isDragging ? 'grabbing' : 'grab') : 'auto', // Cursor solo si es sorteable
-                            touchAction: isSortable ? 'none' : 'auto' // Mejora experiencia táctil
-                        }}
-                        // Evita que el click en el handle propague al onClick de la card
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={isSortable ? "Drag ToDo Item" : undefined} // Accesibilidad
-                        disabled={!isSortable} // Deshabilita si no es sorteable
-                        title={isSortable ? "Drag to reorder" : ""}
-                        // Añadir onPointerUp aquí también para asegurar limpieza si se suelta sobre el botón
-                        // onPointerUp={handlePointerUp} No es necesario porque ahora se gestino global en window
-                    >
-                        <DragIndicatorIcon size={24} className="todo-icon" color="var(--color-fontbase)" />                        
-                    </button>
-                </div>
-                <div className="todo-title">
-                <h5
+
+                <div
+                    className="todo-card"
                     style={{
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    marginLeft: 15
+                    display: "flex",
+                    flexDirection: "column",
+                    borderLeftColor: toDoIssue.backgroundColorColumn
                     }}
                 >
-                    {toDoIssue.title}
-                </h5>
-                </div>
-                <div className="todo-stats">
-                    <span
-                        style={{ textWrap: "nowrap", marginLeft: 10 }}
-                        className="todo-task-move"
-                    >
-                        <FlagIcon size={24} className="todo-icon" color="var(--color-fontbase)" />
-                        {formattedDate}
-                    </span>
-                    <span
-                        style={{ textWrap: "nowrap", marginLeft: 5 }}
-                        className="todo-task-move"
-                    >
-                        <ChatBubbleIcon size={24} className="todo-icon" color="var(--color-fontbase)" />
-                        {`${toDoIssue.assignedUsers.length || 0 }`} assigned
-                    </span>
-                    <span
-                        className="todo-task-move todo-tags"
+                    <div className="todo-taks">
+                        <div className="todo-tags-list">
+                            {todoTagsList} {/* Array of JSX elements */}
+                        </div>
+                        {/* Botón Drag Handle: aplica combined listeners condicionalmente */}
+                        <button
+                            {...(isSortable ? listeners : {})} // Aplicar listeners de dnd-kit directamente si es sorteable
+                            className="todo-task-move handler-move"
+                            style={{
+                                cursor: isSortable ? (isDragging ? 'grabbing' : 'grab') : 'auto', // Cursor solo si es sorteable
+                                touchAction: isSortable ? 'none' : 'auto' // Mejora experiencia táctil
+                            }}
+                            // Evita que el click en el handle propague al onClick de la card
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={isSortable ? "Drag ToDo Item" : undefined} // Accesibilidad
+                            disabled={!isSortable} // Deshabilita si no es sorteable
+                            title={isSortable ? "Drag to reorder" : ""}
+                            // Añadir onPointerUp aquí también para asegurar limpieza si se suelta sobre el botón
+                            // onPointerUp={handlePointerUp} No es necesario porque ahora se gestino global en window
+                        >
+                            <DragIndicatorIcon size={24} className="todo-icon" color="var(--color-fontbase)" />                        
+                        </button>
+                    </div>
+                    <div className="todo-title">
+                    <h5
                         style={{
-                            whiteSpace: "nowrap",
-                            margin: 5,
-                            marginTop: 15,
-                            marginBottom:10,
-                            color: "var(--color-fontbase) !important",
-                            textShadow:` 
-                                -2px 2px 1px var(--background-300),
-                                2px -2px 1px var(--background-300),
-                                -2px -2px 1px var(--background-300),
-                                0px 2px 1px var(--background-300),
-                                0px -2px 1px var(--background-300),
-                                2px 0px 1px var(--background-300),
-                                -2px 0px 1px var(--background-300) `, 
-                            backgroundColor: `${toDoIssue.backgroundColorColumn}`,
-                            fontSize: "var(--font-base)"
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        marginLeft: 15
                         }}
                     >
-                        {`${ToDoIssue.getStatusColumnText(toDoIssue.statusColumn || "Not Assigned")}`}
-                    </span>
+                        {toDoIssue.title}
+                    </h5>
+                    </div>
+                    <div className="todo-stats">
+                        <span
+                            style={{ textWrap: "nowrap", marginLeft: 10 }}
+                            className="todo-task-move"
+                        >
+                            <FlagIcon size={24} className="todo-icon" color="var(--color-fontbase)" />
+                            {formattedDate}
+                        </span>
+                        <span
+                            style={{ textWrap: "nowrap", marginLeft: 5 }}
+                            className="todo-task-move"
+                        >
+                            <ChatBubbleIcon size={24} className="todo-icon" color="var(--color-fontbase)" />
+                            {`${toDoIssue.assignedUsers.length || 0 }`} assigned
+                        </span>
+                        <span
+                            className="todo-task-move todo-tags"
+                            style={{
+                                whiteSpace: "nowrap",
+                                margin: 5,
+                                marginTop: 15,
+                                marginBottom:10,
+                                color: "var(--color-fontbase) !important",
+                                textShadow:` 
+                                    -2px 2px 1px var(--background-300),
+                                    2px -2px 1px var(--background-300),
+                                    -2px -2px 1px var(--background-300),
+                                    0px 2px 1px var(--background-300),
+                                    0px -2px 1px var(--background-300),
+                                    2px 0px 1px var(--background-300),
+                                    -2px 0px 1px var(--background-300) `, 
+                                backgroundColor: `${toDoIssue.backgroundColorColumn}`,
+                                fontSize: "var(--font-base)"
+                            }}
+                        >
+                            {`${ToDoIssue.getStatusColumnText(toDoIssue.statusColumn || "Not Assigned")}`}
+                        </span>
+                    </div>
                 </div>
+                
             </div>
             {/* Removida la indicación visual de isDragActivating para simplificar */}
             {/* {isDragActivating && (
@@ -234,6 +271,29 @@ export function ToDoCard({ toDoIssue, onClickOpenToDoDetailsWindow, isSortable =
                     transition={{ duration: 0.25, ease: "linear" }}
                 />
             )} */}
+            {shouldShowBanner && (
+            // {isHovered && !isDetailsWindowOpen && !isDragging && (
+                // <div
+                //     className="hover-banner-container"                        
+                //     style={{
+                //         position: 'absolute',
+                //         top: '100%',
+                //         left: 0,
+                //         width: '100%',
+                //         zIndex: 1500,
+                //         pointerEvents: 'none',
+                //         overflow: 'visible',
+                //         backgroundColor: 'rgba(255, 0, 0, 0.2)' 
+                //     }}
+                //>
+                    <ToDoCardHoverInformation
+                        todo={toDoIssue}
+                        isVisible={isHovered && !isDragging}
+                        containerRef={cardRef}
+                        isDragging={ isDragged }
+                    />
+                // </div>
+            )}
         </div>
     )
 }
