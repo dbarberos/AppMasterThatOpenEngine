@@ -1317,6 +1317,7 @@ form .input-list {
 .user-form {
     width: fit-content;
     min-width: 800px;
+    
 
     & .user-input-list {
 
@@ -1327,6 +1328,8 @@ form .input-list {
         padding: 20px;
         gap: 10px;
         align-items: start;
+        width: 100%;
+        margin-bottom: 25px;
 
         & input {
             width: 90%;
@@ -1342,10 +1345,12 @@ form .input-list {
 
         & .data-optional {
             display: grid;
-            grid-area: mandatory;
+            grid-area: optional;
             grid-column-start: 2;
             grid-column-end: 3;
             grid-row-gap: 20px;
+            margin-right: 40px;
+            height: 100%
         }
     }
 }
@@ -1431,6 +1436,8 @@ label {
 }
 
 input[type="text"],
+input[type="tel"],
+input[type="email"],
 textarea,
 select,
 input[type="date"],
@@ -3486,11 +3493,11 @@ header {
 .user-container-header {
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 50px repeat(4, minmax(175px, 500px))100px 100px;
+    grid-template-columns: 50px repeat(4, minmax(150px, 500px)) 125px 100px 100px;
     grid-template-areas:
-        "checkbox name email phone company status edit" "details details details details details details details";
+        "checkbox name email phone company projects status edit" "details details details details details details details details";
     column-gap: 20xp;
-    align-items: center;
+    align-items: end;
     height: 75px;
     border-radius: var(--br-5xs);
     border-bottom: 1px solid var(--background-l00);
@@ -3502,9 +3509,9 @@ header {
 .user-container {
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 50px repeat(4, minmax(175px, 500px))100px 100px;
+    grid-template-columns: 50px repeat(4, minmax(150px, 500px)) 125px 100px 100px;
     grid-template-rows: 75px 200px;
-    grid-template-areas: "checkbox name email phone company status edit" ". details details details details details details";
+    grid-template-areas: "checkbox name email phone company projects status edit" ". details details details details details details details";
     column-gap: 20xp;
     align-items: center;
     height: 75px;
@@ -3519,22 +3526,33 @@ header {
     scroll-snap-align: start;
     scroll-margin: 15px;
 
-    &:hover {
+
+    position: relative;
+    /* overflow: hidden; */
+    transition: height 0.3s ease-in-out;
+;
+
+    /* &:hover {
         background-color: var(--background-200);
         height: 275px;
-    }
+    } */
 
-
+    
     & .user-details1 {
         display: grid;
         grid-area: details;
         grid-row-start: 2;
         grid-column: 2 / 4;
-        opacity: 0;
+        opacity: 1;
         transition: 0.3s ease-in-out;
         grid-template-columns: 1fr;
         grid-row-gap: var(--gap-xs);
         padding: 30px;
+        width: 100%;
+        /* visibility: hidden; */
+        transition: all 0.3s ease-in-out;
+        transform: translateY(-20px);
+        
 
     }
 
@@ -3543,15 +3561,19 @@ header {
         grid-area: details;
         grid-row-start: 2;
         grid-column: 4 / 8;
-        opacity: 0;
+        opacity: 1;
         transition: 0.3s ease-in-out;
         grid-template-columns: 1fr;
         grid-row-gap: var(--gap-xl);
         padding: 30px;
+        /* visibility: hidden; */
+        transition: all 0.3s ease-in-out;
+        transform: translateY(-20px);
+        
 
     }
 
-
+/* 
     &:hover .user-details1 {
         opacity: 1;
         margin-top: 0px;
@@ -3562,7 +3584,7 @@ header {
         opacity: 1;
         margin-top: 0px;
         transition-delay: 0.2s;
-    }
+    } */
 
     & .user-details-column {
         display: flex;
@@ -3590,6 +3612,24 @@ header {
         }
     }
 }
+
+
+.user-container.expanded {
+    height: 275px;
+    overflow: visible;
+    /* Altura cuando está expandido */
+}
+
+/* Cuando el contenedor está expandido, mostrar los detalles con animación */
+.user-container.expanded .user-details1,
+.user-container.expanded .user-details2 {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    overflow: visible;
+}
+
+
 
 .user-team-container {
     box-sizing: border-box;
@@ -3685,7 +3725,7 @@ header {
     overflow: hidden;
 
     object-fit: cover;
-    border: solid 12px var(--background-200);
+    border: solid 12px var(--color-bg1);
 
     & img {
         width: 100%;
@@ -3716,6 +3756,8 @@ header {
 
     }
 }
+
+
 
 /* Notification Pop Up */
 
@@ -4519,3 +4561,137 @@ button .btn-popup {
 
 /* --- Fin de Estilos Específicos para QuillEditor --- */
 
+
+
+/* --- Inicio de Estilos Específicos para login,logout, signup, etc --- */
+.login-container {
+    display: flex;
+    width: 100%;
+    max-width: 24rem;
+    margin: 0 auto;
+    overflow: hidden;
+    background-color: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+
+.login-image {
+    display: none;
+    background-size: cover;
+    background-position: center;
+    background-image: url('https://images.unsplash.com/photo-1606660265514-358ebbadc80d?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1575&q=80');
+}
+
+
+
+.google-login-button {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.google-login-button:hover {
+    background-color: #f3f4f6;
+}
+
+.input-field {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: #4b5563;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+}
+
+.login-button {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    text-transform: capitalize;
+    color: #fff;
+    background-color: #1f2937;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: #374151;
+}
+
+.divider-line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: #e5e7eb; }
+
+
+/* --- Fin de Estilos Específicos para login,logout, signup, etc --- */
+
+
+/* --- Inicio de Estilos para User menu accion --- */
+
+.user-actions-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: var(--color-tododetails-bg);
+    border: 3px solid var(--color-bg1);
+    border-radius: var(--br-base);
+    box-shadow: 4px 4px 20px var(--color-shadow),
+            -4px -4px 20px var(--color-light),
+            4px -4px 20px var(--color-shadow),
+            -4px 4px 20px var(--color-light);
+    z-index: 1500;
+    padding: 12px;
+    min-width: fit-content;
+
+}
+
+
+.menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.action-button {
+    /* display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    width: 100%;
+    text-align: left;
+    background: none; */
+    border: var(--color-bg1) solid 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: fit-content;
+}
+
+.action-button:hover {
+    background-color: var(--color-background-light);
+}
+
+.action-button.delete {
+    color: var(--color-warning); 
+}

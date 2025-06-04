@@ -8,7 +8,7 @@ import {parseDate} from '../utils/DateUtils';
 
 import { BusinessUnit, IProject, Project, ProjectStatus, UserRole } from '../classes/Project';
 import { ProjectsManager } from '../classes/ProjectsManager';
-import { log } from 'three/examples/jsm/nodes/Nodes.js';
+
 
 interface NewProjectFormProps {
     onClose: () => void;
@@ -45,7 +45,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
         if (projectForm) {
             projectForm.reset()
         }
-        onClose() // Close the form after the accept button is clicked
+        onClose() // Close the form after the accept/close button is clicked
     }
 
 
@@ -180,6 +180,13 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
 
 
+    
+    
+    
+    
+    
+    
+    
     async function handleNewProjectFormSubmit(e: React.FormEvent) {
         e.preventDefault()
         const projectForm = document.getElementById("new-project-form")

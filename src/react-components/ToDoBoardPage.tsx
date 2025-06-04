@@ -4,6 +4,7 @@ import { deleteToDoWithSubcollections, getSortedTodosForColumn, updateDocument, 
 
 
 import { ToDoBoardColumn, ToDoCard, ToDoBoardSwitchDnD, ToDoBoardDeleteArea, MessagePopUp, type MessagePopUpProps, ToDoBoardCursor, SearchToDoBox, CounterBox, SearchIcon, ProjectSelector, LoadingIcon, AddIcon, NewToDoIssueForm, ToDoDetailsWindow, ArrowLeftIcon } from '../react-components'
+import {KanbanIcon} from './icons'
 import { useStickyState } from '../hooks'
 
 
@@ -1141,17 +1142,11 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
                   </span>
                 </>
               )}
-              <span className="todo-task-move">
-                <svg
-                  className="todo-task-move"
-                  role="img"
-                  aria-label="edit"
-                  width={32}
-                  height={40}
-                >
-                  <use href="#kanban" />
-                </svg>
-              </span>
+               
+              <KanbanIcon size={24}
+                className="todo-icon-edit"
+                color="var(--color-fontbase)"
+              />              
             </h2>
             <div style={{ display: "flex", alignItems: "center", columnGap: 10 }}>
               {/* Reemplazar el select con ProjectSelector */}
@@ -1207,9 +1202,7 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
               // ya que el switch de DnD también está deshabilitado.
               null
             )}
-          </div>
-
-          
+          </div>          
 
 
 
@@ -1227,7 +1220,7 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
             >
               <div style={{ display: "flex", alignItems: "center", columnGap: 15 }}>
                 <SearchIcon size={24} className="todo-icon-plain" color="var(--color-fontbase)" />
-                <SearchToDoBox onChange={handleSearchChange} />              
+                <SearchToDoBox onChange={handleSearchChange} />
               </div>
               {/* Componente Contador */}
               <div

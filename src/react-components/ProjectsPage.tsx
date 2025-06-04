@@ -3,7 +3,8 @@ import * as Router from 'react-router-dom';
 import * as Firestore from 'firebase/firestore';
 
 
-import { LoadingIcon, SearchProjectBox, ProjectCard, CounterBox } from '../react-components';
+import { LoadingIcon, SearchProjectBox, ProjectCard, CounterBox} from '../react-components';
+import { AddIcon } from './icons.tsx'
 import { useProjectsCache, useProjectSearch, useStickyState, useDebounce } from '../hooks'
 import { STORAGE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL } from '../const';
 
@@ -354,8 +355,8 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                             <span onClick={handleImportProjectsBtnClick} className="material-icons-round">file_download</span>
                         </button>
                     </div>
-                    <button onClick={onNewProjectClick} id="new-project-btn">
-                        <span className="material-icons-round">add</span>New Project
+                    <button onClick={onNewProjectClick} id="new-project-btn" style={{whiteSpace: 'nowrap'}}>
+                        <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase)" />New Project
                     </button>
                 </div>
             </header>
@@ -367,7 +368,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                 </div>
             )}
             {/*  Render the form if  isNewProjectFormOpen = true  */}
-            {newProjectForm}            
+            {newProjectForm}
 
         </section>
     )

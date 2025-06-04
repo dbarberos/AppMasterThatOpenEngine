@@ -6,7 +6,7 @@ import { usePrepareToDoForm } from '../hooks';
 
 
 import { Project } from '../classes/Project';
-import {  ToDoIssue } from '../classes/ToDoIssue';
+import { ToDoIssue } from '../classes/ToDoIssue';
 import { getToDoIssueByTitle, newToDoIssue } from '../classes/ToDoManager';
 import { IToDoIssue, ITag, IAssignedUsers, StatusColumnKey } from '../types';
 

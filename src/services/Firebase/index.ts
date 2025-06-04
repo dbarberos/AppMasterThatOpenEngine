@@ -1,6 +1,8 @@
 import * as Firestore from "firebase/firestore"
-import { initializeApp } from "firebase/app";
-import { getAuth, signInAnonymously } from "firebase/auth";
+import { getStorage, ref, uploadBytes, getDownloadURL,FirebaseStorage } from "firebase/storage"
+import { initializeApp, FirebaseApp } from "firebase/app";
+import { Auth, getAuth } from "firebase/auth"; // Import Auth and getAuth
+
 import { IProject, Project } from "../../classes/Project";
 import { ToDoIssue } from "../../classes/ToDoIssue";
 import { ProjectsManager } from "../../classes/ProjectsManager";
@@ -95,13 +97,15 @@ const firebaseConfig = {
 export async function initializeFirebase() {
     return withRetry(async () => {
         try {
-            const app = initializeApp(firebaseConfig);
-            const db = Firestore.getFirestore();
+            const app:FirebaseApp = initializeApp(firebaseConfig);
+            const dbInstance: Firestore.Firestore = Firestore.getFirestore(app); // Pass app to getFirestore
+            const authInstance: Auth = getAuth(app); // Initialize Firebase Auth
+            const storageInstance: FirebaseStorage = getStorage(app)
 
             // Test connection
-            await Firestore.getDocs(Firestore.collection(db, 'projects'));
+            await Firestore.getDocs(Firestore.collection(dbInstance, 'projects'));
 
-            return { app, db };
+            return { app, db: dbInstance, auth: authInstance, storage: storageInstance };
         } catch (error) {
             console.error("Failed to initialize Firebase:", error);
             throw new Error('Could not initialize Firebase connection');
@@ -114,17 +118,25 @@ export async function initializeFirebase() {
 }
 
 let firestoreDB: Firestore.Firestore;
+let authInstanceGlobal: Auth; // Declare a module-scope variable for Auth
+let storageGlobal: FirebaseStorage; // Declare a module-scope variable for Storage
+
 
 try {
-    const { db } = await initializeFirebase();
-    firestoreDB = db;
+    const {  db: initializedDb, auth: initializedAuth, storage:initializedStorage } = await initializeFirebase();  // Destructure db and auth
+    firestoreDB = initializedDb;
+    authInstanceGlobal = initializedAuth; // Assign the initialized auth instance
+    storageGlobal = initializedStorage
 } catch (error) {
     console.error("Failed to initialize Firebase:", error);
-
     throw new Error('Could not establish connection to Firebase');
 }
 
-
+// Export firestoreDB for use within this module and potentially others
+// Export authInstanceGlobal as 'auth' for FirebaseAuth.ts and other auth-related services
+export { firestoreDB, authInstanceGlobal as auth, storageGlobal };
+    
+    
 // const app = initializeApp(firebaseConfig);
 // export const firestoreDB = Firestore.getFirestore()
 
@@ -929,3 +941,122 @@ export async function getSortedTodosForColumn(projectId: string, status: string)
 // Conclusión para tu caso: Como tu código actual no ejecuta esa consulta combinada específica para los ToDos, no has olvidado incluir nada respecto al índice compuesto en tus archivos.El índice se crea en la consola de Firebase, no en tu código TypeScript.Solo necesitarás crearlo si decides implementar una estrategia de carga de datos más granular como la del ejemplo getSortedTodosForColumn.
 // En resumen: la consulta combinada where / orderBy se aplicaría en funciones que buscan obtener listas de ToDos ya filtradas y ordenadas desde Firebase(lo cual no haces actualmente para los ToDos).Si implementas eso, Firebase te pedirá crear el índice compuesto necesario a través de un enlace en el mensaje de error.
 
+
+export async function uploadProfilePicture(file: File): Promise<string | undefined> { 
+    const user = authInstanceGlobal.currentUser;
+    if (!user) {
+        console.error("Usuario no autenticado");
+        return;
+    }
+
+    // --- Validación en el cliente ---
+    const MAX_SIZE_MB = 2;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+    if (!allowedTypes.includes(file.type)) {
+        console.error('Tipo de archivo no permitido:', file.type);
+        toast.error('File type not allowed. Please upload a JPG, PNG, or GIF image.');
+        return;
+    }
+
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        console.error('La imagen es demasiado grande:', file.size, 'bytes');
+        toast.error(`Image is too large. Maximum size allowed is ${MAX_SIZE_MB}MB.`);
+        return
+    }
+    // --- Fin Validación en el cliente ---
+    
+    
+        // Define la ruta en Storage: users/{userId}/profilePicture.jpg (o usar el nombre original del archivo si prefieres)
+    // Usar un nombre fijo como 'profilePicture.jpg' simplifica la gestión si solo permites una imagen de perfil.
+    const storageRef = ref(storageGlobal, `users/${user.uid}/profilePicture.jpg`);
+    
+    try {
+        // Sube el archivo
+        console.log(`Uploading file ${file.name} to ${storageRef.fullPath}...`);
+        const snapshot = await uploadBytes(storageRef, file);
+        console.log('Imagen subida con éxito!', snapshot);
+        toast.success('Profile picture uploaded successfully!');
+
+        // Obtiene la URL de descarga
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        console.log('URL de descarga:', downloadURL);
+
+        // Guarda la URL en el documento del usuario en Firestore
+        // Asume que tienes una colección 'users' y que el ID del documento del usuario es su UID de Auth.
+        const userDocRef = Firestore.doc(firestoreDB, "users", user.uid);
+        Firestore.updateDoc(userDocRef, { 
+            photoURL: downloadURL // Actualiza el campo 'photoURL' con la nueva URL
+        });
+        
+    //Guardar URL en Firestore:
+        
+    // const saveUserData = async (userId, imageUrl) => {
+    //     const db = getFirestore();
+    //     await updateDoc(doc(db, "users", userId), {
+    //       avatarUrl: imageUrl
+    //     });
+        //   };
+        
+        console.log('URL de la imagen guardada en Firestore.');
+        toast.success('Profile picture URL saved to user profile.');
+
+        return downloadURL; // Retorna la URL para usarla inmediatamente en la UI si es necesario
+
+        // Ahora puedes usar 'downloadURL' para mostrar la imagen en tu UI
+        // Por ejemplo, actualizando el src de una etiqueta <img>
+        // document.getElementById('user-profile-img').src = downloadURL;
+
+    } catch (error) {
+        console.error("Error al subir la imagen o guardar la URL:", error);
+        toast.error('Error uploading profile picture. Please try again.');
+        // Puedes lanzar el error si quieres que el componente que llama lo maneje
+        // throw error;
+        return undefined;
+    }
+}
+    
+  // Ejemplo de cómo llamar a esta función desde un input file:
+  // <input type="file" id="profile-picture-input" accept="image/*">
+  // document.getElementById('profile-picture-input').addEventListener('change', (event) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     uploadProfilePicture(file);
+  //   }
+// });
+
+
+//OPTIMIZACIÓN DE IMAGENES
+async function optimizeImage(file: File): Promise<Blob> {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > MAX_WIDTH) {
+                height = height * (MAX_WIDTH / width);
+                width = MAX_WIDTH;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d')!;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(resolve, 'image/jpeg', 0.8);
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+
+//GESTION DE VERSIONES
+const getImageVersion = (url: string, version: 'thumbnail' | 'full' = 'full'): string => {
+    if (version === 'thumbnail') {
+        return url.replace('/profile/', '/profile/thumbs/');
+    }
+    return url;
+};

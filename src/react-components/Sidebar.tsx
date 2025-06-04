@@ -60,11 +60,11 @@ export function Sidebar({ projectsManager }: SidebarProps) {
 
         // Palabras clave que indican segmentos de ruta que NO son IDs de proyecto por sí mismos
         // cuando aparecen como el último segmento de una ruta que no termina en un ID.
-        // Ejemplos: /project, /project/todoBoard, /users
+        // Ejemplos: /project, /project/todoBoard, /usersBoard
         // Asegúrate de incluir aquí cualquier segmento que pueda ser el último en una URL
         // donde quieras que el selectedProjectId se mantenga "sticky" en lugar de intentar
         // extraer un ID.
-        const pathKeywords = ["project", "todoBoard", "users", "settings"]; // Añade más según sea necesario
+        const pathKeywords = ["project", "todoBoard", "usersBoard", "settings"]; // Añade más según sea necesario
 
         let potentialProjectId = parts[parts.length - 1];
 
@@ -166,8 +166,6 @@ export function Sidebar({ projectsManager }: SidebarProps) {
                             </Router.Link> */}
 
 
-
-
                     {isProjectSelected
                         ? (
                             <Router.Link to={`/project/${selectedProjectId}`}>
@@ -217,11 +215,11 @@ export function Sidebar({ projectsManager }: SidebarProps) {
 
 
                     {/* Botón Users Index */}
-                    <Router.Link to={toDoBoardPath}>
+                    <Router.Link to='/usersBoard'>
                         <li
                             id="asideBtnUsers"
                             className="nav-button"
-                            title="index Users"
+                            title="Index Users"
                         >
                             <MainUsersIndex size={37}
                                 className="todo-icon-edit"

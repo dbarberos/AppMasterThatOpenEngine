@@ -2,12 +2,13 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
 
-import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage } from './react-components';
+import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, User } from './react-components';
 //import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
 import { CheckCircleIcon, NotificationsActiveIcon, WarningIcon, ReportIcon, UpdateIcon } from './react-components/icons.tsx'
 
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project.ts";
-import { IToDoIssue, ToDoIssue } from "./classes/ToDoIssue.ts"
+import { ToDoIssue } from "./classes/ToDoIssue.ts"
+import type { IToDoIssue, IUser } from './types.d.ts';
 import { ProjectsManager } from "./classes/ProjectsManager.ts";
 import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager.ts";
 //import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
@@ -17,7 +18,7 @@ import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueD
 
 import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManager.ts";
 import "./classes/DragAndDropManager.ts";
-import { setUpUserPage } from "./classes/UsersManager.ts";
+//import { setUpUserPage } from "./classes/UsersManager.ts";
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'sonner'
 //import "./classes/VisorModelManager.ts";
@@ -71,6 +72,14 @@ const App = () => {
     }
 
 
+    function handleUserCreate(newUserCreate: User): void {
+        throw new Error('Function not implemented.');
+    }
+
+    function handleUserUpdate(newUserCreate: User): void {
+        throw new Error('Function not implemented.');
+    }
+
     return (
         //<ProjectsManagerProvider>        
         <>
@@ -78,7 +87,7 @@ const App = () => {
                 <Sidebar projectsManager={projectsManager} />
                 <Router.Routes>
 
-                    <Router.Route path="/" element={
+                    <Router.Route path='/' element={
                         <ProjectsPage
                             projectsManager={projectsManager}
                             onProjectUpdate={handleProjectCreate}
@@ -86,7 +95,7 @@ const App = () => {
                         />
                     } />
 
-                    <Router.Route path="/project/:id" element={
+                    <Router.Route path='/project/:id' element={
                         // <ErrorBoundary fallback="Error"> 
                             <ProjectDetailsPage
                                 projectsManager={projectsManager}
@@ -98,7 +107,7 @@ const App = () => {
                         // </ErrorBoundary>
                     } />
 
-                    <Router.Route path="/project/todoBoard/:id" element={
+                    <Router.Route path='/project/todoBoard/:id' element={
                         // <ErrorBoundary fallback="Error"> 
                         <ToDoBoardPage
                             projectsManager={projectsManager}
@@ -110,12 +119,13 @@ const App = () => {
                         // </ErrorBoundary>
                     } />
 
-
-
-
-
-
-                    {/* <Router.Route path="/project/:id/todo/:todoId" element={<TodoDetailsPage projectsManager={projectsManager} onProjectCreate={handleProjectCreate} onProjectUpdate={handleProjectUpdate} />} /> */}
+                    <Router.Route path='/usersBoard' element={
+                        <UsersBoardPage
+                            projectsManager = { projectsManager }
+                            onUserCreate={handleUserCreate}
+                            onUserUpdate={handleUserUpdate}
+                        />
+                    } />
                     <Router.Route path="*" element={<>Eror 404</>} />
 
                 </Router.Routes>
