@@ -2,14 +2,16 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
 
-import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, User } from './react-components';
+import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage } from './react-components';
+import { User as AppUserClass } from './classes/User'; // Renombrado para evitar conflicto
+
 //import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
 import { CheckCircleIcon, NotificationsActiveIcon, WarningIcon, ReportIcon, UpdateIcon } from './react-components/icons.tsx'
-
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project.ts";
 import { ToDoIssue } from "./classes/ToDoIssue.ts"
 import type { IToDoIssue, IUser } from './types.d.ts';
 import { ProjectsManager } from "./classes/ProjectsManager.ts";
+import { UsersManager } from "./classes/UsersManager.ts";
 import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager.ts";
 //import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
 import "./classes/LightMode.ts";
@@ -22,8 +24,18 @@ import "./classes/DragAndDropManager.ts";
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'sonner'
 //import "./classes/VisorModelManager.ts";
+import { AuthProvider, useAuth } from './Auth/react-components/AuthContext.tsx'; // Usar el AuthContext que creamos
+import { AuthForm } from './Auth/react-components/AuthForm.tsx';
+import { NewUserForm } from './react-components/NewUserForm.tsx'; // Tu NewUserForm adaptado
+import { ChangePasswordForm } from './Auth/react-components/ChangePasswordForm.tsx';
+import { LoadingIcon } from './react-components/icons.tsx';
+import { signOut } from './services/firebase/firebaseAuth.ts'; // Para el logout
+import { auth } from './services/firebase/index.ts'
+import { UserRoleInAppKey } from './types.ts';
+
 
 const projectsManager = new ProjectsManager();
+const usersManager = new UsersManager()
 
 const App = () => {
     const [projects, setProjects] = React.useState(projectsManager.list);
@@ -72,19 +84,22 @@ const App = () => {
     }
 
 
-    function handleUserCreate(newUserCreate: User): void {
-        throw new Error('Function not implemented.');
+    function handleUserCreate(newUserCreate: AppUserClass): void {
+        // Lógica para manejar la creación de un usuario si es necesario a nivel de App
+        console.log("App: User created", newUserCreate);
+        usersManager.newUser(newUserCreate, newUserCreate.id!); // Actualizar UsersManager
     }
 
-    function handleUserUpdate(newUserCreate: User): void {
-        throw new Error('Function not implemented.');
+    function handleUserUpdate(updatedUser: AppUserClass): void {
+        // Lógica para manejar la actualización de un usuario si es necesario a nivel de App
+        console.log("App: User updated", updatedUser);
+        usersManager.updateUser(updatedUser.id!, updatedUser); // Actualizar UsersManager
     }
 
-    return (
-        //<ProjectsManagerProvider>        
-        <>
+    return ( 
+        <AuthProvider>
             <Router.BrowserRouter>
-                <Sidebar projectsManager={projectsManager} />
+                {/* <Sidebar projectsManager={projectsManager} />
                 <Router.Routes>
 
                     <Router.Route path='/' element={
@@ -121,6 +136,7 @@ const App = () => {
 
                     <Router.Route path='/usersBoard' element={
                         <UsersBoardPage
+                            usersManager={usersManager}
                             projectsManager = { projectsManager }
                             onUserCreate={handleUserCreate}
                             onUserUpdate={handleUserUpdate}
@@ -128,7 +144,23 @@ const App = () => {
                     } />
                     <Router.Route path="*" element={<>Eror 404</>} />
 
-                </Router.Routes>
+                </Router.Routes> */}
+                <Sidebar
+                    projectsManager={projectsManager}
+                    // currentUser y userProfile se obtienen dentro de Sidebar con useAuth()
+                />
+                {/* MainLayout contiene el área principal con las rutas */}
+                <MainLayout
+                    projectsManager={projectsManager}
+                    usersManager={usersManager}
+                    onNewProject={handleNewProject}
+                    onProjectCreate={handleProjectCreate}
+                    onProjectUpdate={handleProjectUpdate}
+                    onToDoIssueCreated={handleToDoIssueCreated}
+                    onToDoIssueUpdated={handleToDoIssueUpdated}
+                    onUserCreate={handleUserCreate}
+                    onUserUpdate={handleUserUpdate}
+                />
 
             </Router.BrowserRouter>
             <Toaster                
@@ -157,17 +189,153 @@ const App = () => {
                 }}
                 richColors
             />
-        </>
-        //</ProjectsManagerProvider>
+        </AuthProvider>
 
+
+    )
+}
+
+interface MainLayoutProps {
+    projectsManager: ProjectsManager;
+    usersManager: UsersManager;
+    onNewProject: (newProject: Project) => void;
+    onProjectCreate: (createProject: Project) => void;
+    onProjectUpdate: (updatedProject: Project) => void;
+    onToDoIssueCreated: (todoIssueCreated: ToDoIssue) => void;
+    onToDoIssueUpdated: (updatedTodo: ToDoIssue) => void;
+    onUserCreate: (newUserCreate: AppUserClass) => void;
+    onUserUpdate: (updatedUser: AppUserClass) => void;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = (props) => {
+    const { currentUser, userProfile, loading } = useAuth();
+    const navigate = Router.useNavigate();
+
+    // Redirigir si no autenticado
+    React.useEffect(() => {
+        // Solo redirigir si la autenticación ha terminado de cargar Y no hay usuario autenticado
+        if (!loading && !currentUser && location.pathname !== '/auth' && location.pathname !== '/change-password') { // Añadir /change-password para permitir acceso si se llega por reset de password (aunque no implementado aún)
+        navigate('/auth');
+        }
+    }, [currentUser, loading, location.pathname])
+
+
+    // const handleSidebarNavigation = (path: 'profile' | 'signin' | 'change-password') => {
+    //     if (path === 'profile') {
+    //         navigate('/profile');
+    //     } else if (path === 'signin') {
+    //         if (currentUser) { // "Cambiar Cuenta"
+    //             signOut().then(() => {
+    //                 navigate('/auth');
+    //             }).catch(console.error);
+    //         } else { // Botón inicial "Sign Up / Sign In"
+    //             navigate('/auth');
+    //         }
+    //     } else if (path === 'change-password') {
+    //         navigate('/change-password');
+    //     }
+    // };
+
+        // Si la autenticación está cargando, muestra el icono de carga global
+    // Esto se muestra ANTES de renderizar el grid, ocupando toda la pantalla.
+    // Una vez que loading es false, el grid se renderiza.
+    if (loading) {
+        return <LoadingIcon />;
+    }
+
+
+    console.log("🔄 Current path:", location.pathname, 
+        "| Authenticated:", !!currentUser,
+        "| Loading:", loading);
+
+
+    return (        
+        <main style={{ flexGrow: 1, padding: '1rem' }}>
+            <Router.Routes>
+                <Router.Route path="/auth" element={
+                    currentUser ? <Router.Navigate to="/" /> : <AuthForm onUserAuthenticated={() => navigate('/')} initialMode="signUp" />
+                } />
+
+                <Router.Route path="/" element={
+                    currentUser
+                        ? <ProjectsPage
+                            projectsManager={props.projectsManager}
+                            onNewProjectCreated={props.onNewProject}
+                            onProjectUpdate={props.onProjectUpdate}
+                        />
+                        : <Router.Navigate to="/auth" />
+                } />
+
+                <Router.Route path="/project/:id" element={
+                    currentUser
+                        ? <ProjectDetailsPage
+                            projectsManager={props.projectsManager}
+                            onProjectCreate={props.onProjectCreate}
+                            onProjectUpdate={props.onProjectUpdate}
+                            onToDoIssueCreated={props.onToDoIssueCreated}
+                            onToDoIssueUpdated={props.onToDoIssueUpdated}
+                        />
+                        : <Router.Navigate to="/auth" />
+                } />
+
+                <Router.Route path="/project/todoBoard/:id" element={
+                    currentUser
+                        ? <ToDoBoardPage
+                            projectsManager={props.projectsManager}
+                            onProjectCreate={props.onProjectCreate}
+                            onProjectUpdate={props.onProjectUpdate}
+                            onToDoIssueCreated={props.onToDoIssueCreated}
+                            onToDoIssueUpdated={props.onToDoIssueUpdated}
+                        />
+                        : <Router.Navigate to="/auth" />
+                } />
+
+                <Router.Route path="/usersBoard" element={
+                    currentUser
+                        ? <UsersBoardPage
+                            usersManager={props.usersManager}
+                            projectsManager={props.projectsManager}
+                            onUserCreate={props.onUserCreate}
+                            onUserUpdate={props.onUserUpdate}
+                        />
+                        : <Router.Navigate to="/auth" />
+                } />
+
+                <Router.Route path="/profile" element={
+                    currentUser && userProfile
+                        ? <NewUserForm
+                            onProfileUpdate={() => navigate('/')}
+                            authCurrentUserRole={userProfile.roleInApp as UserRoleInAppKey | undefined}
+                            onClose={() => navigate('/')}
+                        />
+                        : <Router.Navigate to="/auth" />
+                } />
+
+                <Router.Route path="/change-password" element={
+                    currentUser
+                        ? <ChangePasswordForm
+                            onPasswordChanged={() => navigate('/profile')}
+                            onCancel={() => navigate('/profile')}
+                        />
+                        : <Router.Navigate to="/auth" />
+                } />
+
+                <Router.Route path="*"
+                    element={
+                        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+                            <h2>Error 404 - Page Not Found</h2>
+                            <p>The page you are looking for does not exist.</p>
+                            <Router.Link to="/">Go to Homepage</Router.Link>
+                        </div>} />
+            </Router.Routes>
+        </main>
+        
     )
 }
 
 const rootElement = document.getElementById('app') as HTMLElement;
 const appRoot = ReactDOM.createRoot(rootElement)
 appRoot.render(<App />)
-
-
 
 
 
@@ -891,63 +1059,70 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
 }
 
 
-//Main button of Project Details(aside) open the Project Details
-const btnProjectDetailsAside = document.querySelector("#asideBtnProjectDetails")
-btnProjectDetailsAside?.addEventListener("click", (e) => {
-    e.preventDefault()
-    changePageContent("project-details", "flex")
-    // Set the localStorage value for pageWIP to "todo-page"
-    localStorage.setItem("pageWIP", "project-details")
-    updateAsideButtonsState()
-
-    //Set the funcionality of search between todoIssues
-    setupProjectDetailsSearch()
+// /* *** ELIMINADO POR ESTAR EN DESUSO UPDATEASIDEBUTTONSSTATE ******* */
 
 
-    const storedProjectId = localStorage.getItem("selectedProjectId");
-    const projectManager = ProjectsManager.getInstance()
-    const projectsList = projectManager.list
-    const selectedProject = projectsList.find(project => project.id === storedProjectId)
+// //Main button of Project Details(aside) open the Project Details
+// const btnProjectDetailsAside = document.querySelector("#asideBtnProjectDetails")
+// btnProjectDetailsAside?.addEventListener("click", (e) => {
+//     e.preventDefault()
+//     changePageContent("project-details", "flex")
+//     // Set the localStorage value for pageWIP to "todo-page"
+//     localStorage.setItem("pageWIP", "project-details")
+//     updateAsideButtonsState()
+
+//     //Set the funcionality of search between todoIssues
+//     setupProjectDetailsSearch()
 
 
-    if (storedProjectId && selectedProject) {
-        ProjectsManager.setDetailsPage(selectedProject)
-    }
+//     const storedProjectId = localStorage.getItem("selectedProjectId");
+//     const projectManager = ProjectsManager.getInstance()
+//     const projectsList = projectManager.list
+//     const selectedProject = projectsList.find(project => project.id === storedProjectId)
+
+
+//     if (storedProjectId && selectedProject) {
+//         ProjectsManager.setDetailsPage(selectedProject)
+//     }
+
+// })
 
 
 
-})
+
+// /* *** ELIMINADO POR ESTAR EN DESUSO UPDATEASIDEBUTTONSSTATE ******* */
+
+// // Call the update function updateAsideButtonsState when the page loads
+// document.addEventListener('DOMContentLoaded', () => {
+//     updateAsideButtonsState();
+// })
 
 
-// Call the update function updateAsideButtonsState when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    updateAsideButtonsState();
-})
+// /* *** ELIMINADO POR ESTAR EN DESUSO UPDATEASIDEBUTTONSSTATE ******* */
 
+// //Main button of To-Do Board(aside) open the To-Do Board
+// const btnToDoIssueBoard = document.querySelector("#asideBtnToDoBoards")
+// if (btnToDoIssueBoard) {
+//     btnToDoIssueBoard?.addEventListener("click", async (e) => {
+//         e.preventDefault()
+//         const selectedProjectId = localStorage.getItem("selectedProjectId")
+//         const counterElement = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement
 
-//Main button of To-Do Board(aside) open the To-Do Board
-const btnToDoIssueBoard = document.querySelector("#asideBtnToDoBoards")
-if (btnToDoIssueBoard) {
-    btnToDoIssueBoard?.addEventListener("click", async (e) => {
-        e.preventDefault()
-        const selectedProjectId = localStorage.getItem("selectedProjectId")
-        const counterElement = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement
+//         if (selectedProjectId) {
+//             changePageContent("todo-page", "block");
+//             // Set the localStorage value for pageWIP to "todo-page"
+//             localStorage.setItem("pageWIP", "todo-page");
+//             updateAsideButtonsState()
 
-        if (selectedProjectId) {
-            changePageContent("todo-page", "block");
-            // Set the localStorage value for pageWIP to "todo-page"
-            localStorage.setItem("pageWIP", "todo-page");
-            updateAsideButtonsState()
+//             await setUpToDoBoard(selectedProjectId);
+//             resetSearchState(counterElement)
 
-            await setUpToDoBoard(selectedProjectId);
-            resetSearchState(counterElement)
-
-        } else {
-            await setUpToDoBoard()
-            resetSearchState(counterElement)
-        }
-    })
-}
+//         } else {
+//             await setUpToDoBoard()
+//             resetSearchState(counterElement)
+//         }
+//     })
+// }
 
 
 /* Diferents Buttons inside the To-Do Board for create a new ToDoIssue
@@ -1230,38 +1405,42 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
 }
 */
 
-//Main button of Users(aside) open the Users board
-const btnUsersBoard = document.querySelector("#asideBtnUsers")
-if (btnUsersBoard) {
-    btnUsersBoard?.addEventListener("click", async (e) => {
-        e.preventDefault()
-        const selectedProjectId = localStorage.getItem("selectedProjectId")
-        console.log("Btn Users clicked")
 
-        changePageContent("users-page", "flex");
+// /* *** ELIMINADO POR ESTAR EN DESUSO UPDATEASIDEBUTTONSSTATE ******* */
 
-        //Show the default content of href = "#/users"(users - index)
-        const defaultUsersIndex = document.querySelector("#users-index") as HTMLElement | null;
-        const teamsPage = document.querySelector("#teams-page") as HTMLElement | null;
 
-        if (defaultUsersIndex) {
-            defaultUsersIndex.style.display = "flex";
+// //Main button of Users(aside) open the Users board
+// const btnUsersBoard = document.querySelector("#asideBtnUsers")
+// if (btnUsersBoard) {
+//     btnUsersBoard?.addEventListener("click", async (e) => {
+//         e.preventDefault()
+//         const selectedProjectId = localStorage.getItem("selectedProjectId")
+//         console.log("Btn Users clicked")
 
-            if (teamsPage) {
-                teamsPage.style.display = "none";
-            }
+//         changePageContent("users-page", "flex");
 
-            console.log("Upload Users page")
-            // Set the localStorage value for pageWIP to "todo-page"
-            localStorage.setItem("pageWIP", "users-page");
-            updateAsideButtonsState()
-        }
+//         //Show the default content of href = "#/users"(users - index)
+//         const defaultUsersIndex = document.querySelector("#users-index") as HTMLElement | null;
+//         const teamsPage = document.querySelector("#teams-page") as HTMLElement | null;
 
-        //Set up the select project Element inside the header
-        if (selectedProjectId) {
-            await setUpUserPage(selectedProjectId)
-        } else {
-            await setUpUserPage()
-        }
-    })
-}
+//         if (defaultUsersIndex) {
+//             defaultUsersIndex.style.display = "flex";
+
+//             if (teamsPage) {
+//                 teamsPage.style.display = "none";
+//             }
+
+//             console.log("Upload Users page")
+//             // Set the localStorage value for pageWIP to "todo-page"
+//             localStorage.setItem("pageWIP", "users-page");
+//             updateAsideButtonsState()
+//         }
+
+//         //Set up the select project Element inside the header
+//         if (selectedProjectId) {
+//             await setUpUserPage(selectedProjectId)
+//         } else {
+//             await setUpUserPage()
+//         }
+//     })
+// }

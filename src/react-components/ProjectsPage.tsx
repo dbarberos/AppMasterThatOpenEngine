@@ -12,6 +12,8 @@ import { useProjectsManager, NewProjectForm } from './index.tsx';
 import { getProjectsFromDB } from '../services/firebase/index.ts'
 import { getCollection } from '../services/firebase/index.ts'
 
+import { useAuth } from '../Auth/react-components/AuthContext.tsx'; 
+
 //import NewProjectForm from './NewProjectForm.tsx';
 //import { ProjectCard } from './ProjectCard.tsx';
 //import { useProjectsManager } from './ProjectsManagerContext';
@@ -27,9 +29,12 @@ interface Props {
     onProjectUpdate: (updatedProject: Project) => void
     onNewProjectCreated: (newProjectCreated: Project) => void
 }
-const projectsCollection = getCollection<IProject>("/projects")
+//const projectsCollection = getCollection<IProject>("/projects")
 
 export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCreated }: Props) {
+
+    const { currentUser, loading: authLoading } = useAuth(); // Obtener estado de autenticación
+
 
     const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
     const [isInitialLoading, setIsInitialLoading] = React.useState(false);
@@ -53,7 +58,11 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
     } = useProjectSearch(projects)
 
 
-    const [selectedProjectId, setSelectedProjectId] = useStickyState<string | null>(null, 'selectedProjectId')
+
+    // Clave para useStickyState: específica del usuario o genérica si no hay usuario.
+    const selectedProjectIdKey = currentUser ? `selectedProjectId_${currentUser.uid}` : 'selectedProjectId_guest';
+    const [selectedProjectId, setSelectedProjectId] = useStickyState<string | null>(null, selectedProjectIdKey);
+    //const [selectedProjectId, setSelectedProjectId] = useStickyState<string | null>(null, 'selectedProjectId')
 
 
 
@@ -66,11 +75,19 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
     //Loading projects at the beginnig
     React.useEffect(() => {
-        const syncWithDatabase = async () => {
-            try {
+        // Solo intentar sincronizar si la autenticación ha terminado de cargar y hay un usuario autenticado
+        if (authLoading || !currentUser) {
+            console.log('[ProjectsPage] Skipping sync. Auth loading:', authLoading, 'CurrentUser:', !!currentUser);
+            setIsInitialLoading(false); // Asegurarse de que no se quede en estado de carga si no hay usuario
+            return;
+        }
+
+
+
+        const syncWithDatabase = async () => {            
                 // Si hay caché válido, y no ha pasado el intervalo, no hacer nada
                 if (hasCache && !isStale && projects.length > 0) {
-                    console.log('Using cached projects, next sync in:', {
+                    console.log('[ProjectsPage] Using cached projects, next sync in:', {
                         minutes: Math.round((SYNC_INTERVAL - (Date.now() - lastSyncRef.current)) / 60000)
                     });
                     // Ensure ProjectManager and search state are in sync with cache
@@ -83,7 +100,8 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                     return;
                 }
 
-
+            try {
+                console.log('[ProjectsPage] Starting database sync. HasCache:', hasCache);
                 // Mostrar loading solo si no hay caché
                 if (!hasCache) {
                     setIsInitialLoading(true);
@@ -91,6 +109,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                     setIsSyncing(true);
                 }
 
+                console.log('[ProjectsPage] Calling getProjectsFromDB...');
                 const firebaseProjects = await getProjectsFromDB()
 
                 // // Actualizar solo si hay cambios
@@ -107,16 +126,17 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
                 const currentProjects = projectsManager.list
 
                 //Update cache and local state
-                updateCache(currentProjects)
-                //updateOriginalProjects(currentProjects)
+                updateCache(currentProjects)                
 
-                console.log('Projects loaded:', {
+                console.log('[ProjectsPage] Projects loaded/synced:', {
                     count: currentProjects.length,
                     timestamp: new Date().toISOString()
                 })
                 // }
                 // Actualizar timestamp de última sincronización
                 lastSyncRef.current = Date.now();
+
+                console.log('[ProjectsPage] Sync finished.');
 
 
             } catch (error) {
@@ -128,7 +148,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
             }
         }
         syncWithDatabase();
-    }, [hasCache, isStale, projects.length])
+    }, [authLoading, currentUser, hasCache, isStale, projects.length, projectsManager, updateCache ])
 
 
     //Suscription to ProjectsManager events with control of refreshing
@@ -262,6 +282,12 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
         )),
         [filteredProjects]
     )
+
+    // Mostrar LoadingIcon si la autenticación está cargando ó si la carga inicial de proyectos está en curso
+    if (authLoading || isInitialLoading) {
+        return <LoadingIcon />;
+    }
+
     // const projectCardsList = projects.map((project) => {
     //     return (
     //         <Router.Link to={`/project/${project.id}`} key={project.id}>

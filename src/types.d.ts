@@ -65,6 +65,7 @@ export interface IUser {
     status: UserStatusKey | UserStatusValue; // Estado del usuario: activo, pendiente, deshabilitado
     // La subcolección 'projectsAssigned' se manejará por separado o se podría cargar bajo demanda.
     projectsAssigned?: IProjectAssignment[]; // Opcional si decides cargarla siempre con el usuario
+    descriptionUser?: string
 }
 
 export interface IProjectAssignment {

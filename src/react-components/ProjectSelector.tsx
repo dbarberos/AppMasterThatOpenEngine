@@ -3,6 +3,7 @@ import * as Router from 'react-router-dom';
 
 import { Project } from '../classes/Project';
 import { useStickyState } from '../hooks'
+import { useAuth } from '../Auth/react-components/AuthContext.tsx';
 
 interface ProjectSelectorProps {
     currentProject: Project |null
@@ -16,14 +17,20 @@ export const ProjectSelector = ({
     onProjectSelect
 }: ProjectSelectorProps) => {
     //const navigateTo = Router.useNavigate();   
+    const { currentUser } = useAuth();
     const [isSelectVisible, setIsSelectVisible] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false);
     const selectRef = React.useRef<HTMLSelectElement>(null)
     const containerRef = React.useRef<HTMLDivElement>(null)
 
+
+    // Clave para useStickyState: específica del usuario o genérica si no hay usuario.
+    const selectedProjectIdKey = currentUser ? `selectedProjectId_${currentUser.uid}` : 'selectedProjectId_guest';
+
+    
     const [activeProject, setActiveProject] = useStickyState<string | null>(
         currentProject?.id ?? null,
-        'selectedProjectId'
+        selectedProjectIdKey // Clave dinámica
     );
 
     // Asegúrar que el estado local se actualice si currentProject.id cambia desde fuera
@@ -36,7 +43,7 @@ export const ProjectSelector = ({
         if (projectIdToSet !== activeProject) {
             setActiveProject(projectIdToSet);
         }
-    }, [currentProject?.id, activeProject, setActiveProject]);
+    }, [currentProject?.id, activeProject, setActiveProject, selectedProjectIdKey]);
 
 
 

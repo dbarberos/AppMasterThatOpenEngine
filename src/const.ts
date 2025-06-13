@@ -24,6 +24,7 @@ export const SYNC_INTERVAL = 5 * 60 * 1000;
 
 
 export const USER_STATUS = {
+    admin: "Administrator",
     active: "Active",
     pending: "PendingValidation",
     disable: "Disable"

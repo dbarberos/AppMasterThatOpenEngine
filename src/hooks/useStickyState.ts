@@ -10,12 +10,21 @@ import * as React from 'react';
  */
 
 export function useStickyState<T>(defaultValue: T, key: string): [T, React.Dispatch<React.SetStateAction<T>>] {
+    console.log('🔄 useStickyState init:', { key, defaultValue });
+
+    // Validar que la key no esté vacía
+    if (!key) {
+        console.error('useStickyState: key cannot be empty');
+        return React.useState<T>(defaultValue);
+    }
+
     const [value, setValue] = React.useState<T>(() => {
         if (typeof window === "undefined") {
             return defaultValue; // Manejar Server-Side Rendering
         }
         const stickyValue = window.localStorage.getItem(key);
         if (stickyValue !== null) { // Comprobar si el ítem existe
+            console.log('useStickyState: Using default value', { key, defaultValue });
             if (stickyValue === "") { // Manejo explícito de cadena vacía
                 console.warn(`useStickyState: Found empty string for key "${key}". Treating as defaultValue and cleaning up.`);
                 window.localStorage.removeItem(key); // Limpiar la cadena vacía
@@ -27,7 +36,7 @@ export function useStickyState<T>(defaultValue: T, key: string): [T, React.Dispa
                 // Siempre parsear. JSON.parse maneja "null", "true", números y cadenas entrecomilladas correctamente.
                 // Por ejemplo, JSON.parse('"null"') devuelve null. JSON.parse('""abc""') devuelve "abc".
                 console.log(`useStickyState: Attempting to parse localStorage key “${key}” (raw value: "${stickyValue}")`);
-                return JSON.parse(stickyValue) as T;
+                return JSON.parse(stickyValue) as T || defaultValue;
             } catch (error) {
                 console.error(`useStickyState: Error parsing localStorage key “${key}” (value: "${stickyValue}"). Falling back to defaultValue.`, error);
                 // Si el parseo falla (ej. JSON malformado), retornar defaultValue.

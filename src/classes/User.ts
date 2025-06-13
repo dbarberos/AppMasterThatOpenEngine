@@ -21,8 +21,9 @@ export class User implements IUser {
     lastLoginAt?: Firestore.Timestamp | Date;
     status: UserStatusKey | UserStatusValue
 
+    projectsAssigned: IProjectAssignment[] = [] 
     // Nuevas propiedades
-    projectsAssigned: IProjectAssignment[] = []    
+    descriptionUser?: string;
 
 
     constructor(data: Partial<IUser>, idString?: string) {

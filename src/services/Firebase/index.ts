@@ -96,18 +96,22 @@ const firebaseConfig = {
 // Initialize Firebase with retry
 export async function initializeFirebase() {
     return withRetry(async () => {
+        console.log('[Firebase/index.ts] Attempting to initialize Firebase...');
         try {
             const app:FirebaseApp = initializeApp(firebaseConfig);
             const dbInstance: Firestore.Firestore = Firestore.getFirestore(app); // Pass app to getFirestore
             const authInstance: Auth = getAuth(app); // Initialize Firebase Auth
             const storageInstance: FirebaseStorage = getStorage(app)
 
-            // Test connection
-            await Firestore.getDocs(Firestore.collection(dbInstance, 'projects'));
+            // Test connection - ESTA LÍNEA CAUSA EL ERROR DE PERMISOS AL INICIO
+            // Se ejecuta antes de que el usuario esté autenticado, y las reglas para 'projects' requieren autenticación.
+            // Comentarla o eliminarla. La "prueba" real ocurrirá cuando intentes leer datos después de la autenticación.
+            // await Firestore.getDocs(Firestore.collection(dbInstance, 'projects'));
+            console.log('[Firebase/index.ts] Firebase app, db, auth, storage instances initialized.');
 
             return { app, db: dbInstance, auth: authInstance, storage: storageInstance };
         } catch (error) {
-            console.error("Failed to initialize Firebase:", error);
+            console.error("[Firebase/index.ts] Failed to initialize Firebase during attempt:", error);
             throw new Error('Could not initialize Firebase connection');
         }
     }, {
@@ -123,12 +127,13 @@ let storageGlobal: FirebaseStorage; // Declare a module-scope variable for Stora
 
 
 try {
+    console.log('[Firebase/index.ts] Calling initializeFirebase...');
     const {  db: initializedDb, auth: initializedAuth, storage:initializedStorage } = await initializeFirebase();  // Destructure db and auth
     firestoreDB = initializedDb;
     authInstanceGlobal = initializedAuth; // Assign the initialized auth instance
     storageGlobal = initializedStorage
 } catch (error) {
-    console.error("Failed to initialize Firebase:", error);
+    console.error("[Firebase/index.ts] Final error after retries during Firebase initialization:", error);
     throw new Error('Could not establish connection to Firebase');
 }
 
@@ -522,6 +527,36 @@ export async function deleteAllTodosInProject(projectId: string): Promise<void> 
 }
 
 
+//Get a document from Firebase knowing its id.
+export async function getDocumentById<T>(
+    collectionPath: string,
+    id: string
+): Promise<T | null> {
+    return withRetry(async () => {
+        try{
+            const docRef = Firestore.doc(firestoreDB, `${collectionPath}/${id}`) as Firestore.DocumentReference;
+            const docSnap = await Firestore.getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                return {
+                    ...docSnap.data(),
+                    id: docSnap.id
+                } as T;
+            }
+            return null;
+        }catch (error) {
+            console.error("Error fetching document:", error);
+            toast.error('Error fetching document', {
+                description: error.message
+            });
+            throw new Error(`Failed to fetch document: ${error.message}`);
+        }
+    }, {
+        maxRetries: 3,
+        timeout: 5000,
+        baseDelay: 500
+    });
+}
 
 
 
@@ -942,6 +977,8 @@ export async function getSortedTodosForColumn(projectId: string, status: string)
 // En resumen: la consulta combinada where / orderBy se aplicaría en funciones que buscan obtener listas de ToDos ya filtradas y ordenadas desde Firebase(lo cual no haces actualmente para los ToDos).Si implementas eso, Firebase te pedirá crear el índice compuesto necesario a través de un enlace en el mensaje de error.
 
 
+
+
 export async function uploadProfilePicture(file: File): Promise<string | undefined> { 
     const user = authInstanceGlobal.currentUser;
     if (!user) {
@@ -983,11 +1020,11 @@ export async function uploadProfilePicture(file: File): Promise<string | undefin
         console.log('URL de descarga:', downloadURL);
 
         // Guarda la URL en el documento del usuario en Firestore
-        // Asume que tienes una colección 'users' y que el ID del documento del usuario es su UID de Auth.
-        const userDocRef = Firestore.doc(firestoreDB, "users", user.uid);
-        Firestore.updateDoc(userDocRef, { 
-            photoURL: downloadURL // Actualiza el campo 'photoURL' con la nueva URL
-        });
+        await updateDocument(
+            user.uid,
+            { photoURL: downloadURL },
+            { basePath: 'users' } // Especificar que estamos actualizando la colección 'users'
+        );
         
     //Guardar URL en Firestore:
         

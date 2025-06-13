@@ -49,7 +49,7 @@ import {
 
 import { toast } from 'sonner';
 
-
+import { useAuth } from '../Auth/react-components/AuthContext'; 
 
 // Configuración de la animación de drop
 const dropAnimation: DropAnimation = {
@@ -62,12 +62,6 @@ const dropAnimation: DropAnimation = {
   })
 };
 
-// // Actualizar los modificadores
-// const modifiers = [
-//   restrictToParentElement,
-//   restrictToVerticalAxis,
-//   restrictToWindowEdges
-// ];
 
 
 interface Props {
@@ -83,6 +77,7 @@ const BOARD_COLUMNS = Object.keys(TODO_STATUS_MAP_TEXT) as StatusColumnKey[];
 
 
 export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdate, onToDoIssueCreated, onToDoIssueUpdated }: Props) {
+  const { currentUser, loading: authLoading } = useAuth();
 
   console.log('DEBUG: Contenido del array columns:', BOARD_COLUMNS);
 
@@ -111,7 +106,10 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
   const [cursorType, setCursorType] = React.useState<'hover' | 'follow'>('hover');
   const [isDragging, setIsDragging] = React.useState(false);
 
-  const [initialProjectIdFromStorage, setInitialProjectIdFromStorage] = useStickyState<string | null>(null, 'selectedProjectId')
+  // Clave para useStickyState: específica del usuario o genérica si no hay usuario.
+  const selectedProjectIdKey = currentUser ? `selectedProjectId_${currentUser.uid}` : 'selectedProjectId_guest';
+  const [initialProjectIdFromStorage, setInitialProjectIdFromStorage] = useStickyState<string | null>(null, selectedProjectIdKey);
+  //const [initialProjectIdFromStorage, setInitialProjectIdFromStorage] = useStickyState<string | null>(null, 'selectedProjectId')
 
   const [isNewToDoIssueFormOpen, setIsNewToDoIssueFormOpen] = React.useState(false)
   const [isTodoDetailsWindowOpen, setIsTodoDetailsWindowOpen] = React.useState(false)
@@ -459,6 +457,12 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
 
 
 
+
+
+
+
+
+
   // Helper para actualizar Firebase y el estado del proyecto
   async function updateFirebaseAndProject(
     updates: Partial<IToDoIssue>,
@@ -529,7 +533,7 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
     if (newProjectId !== initialProjectIdFromStorage) {
       setInitialProjectIdFromStorage(newProjectId);
       // El useEffect que depende de initialProjectIdFromStorage se encargará de recargar los datos.
-    }
+    } // Faltaba el selectedProjectIdKey en las dependencias del useEffect que usa este estado. Se añade abajo.
   };
 
 
@@ -537,6 +541,14 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
   React.useEffect(() => {
     // This effect now primarily reacts to changes in initialProjectIdFromStorage
     // It will also navigate if the sticky ID doesn't match the URL ID.
+
+    // Solo intentar cargar datos si la autenticación ha terminado y hay un usuario
+    if (authLoading || !currentUser) {
+      console.log('ToDoBoardPage: Skipping data fetch, auth loading or no user.');
+      setIsLoading(false); // Asegurarse de que no se quede en estado de carga si no hay usuario
+      return;
+  }
+
     const fetchDataAndNavigateIfNeeded = async () => {
       if (!initialProjectIdFromStorage) {
         console.warn("ToDoBoardPage: Project ID not available or invalid.")
@@ -605,8 +617,7 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
     fetchDataAndNavigateIfNeeded();
 
 
-  }, [initialProjectIdFromStorage, projectsManager, navigateTo, BOARD_COLUMNS, currentUrlProjectId]); // currentUrlProjectId es crucial aquí
-
+  }, [initialProjectIdFromStorage, projectsManager, navigateTo, BOARD_COLUMNS, currentUrlProjectId, authLoading, currentUser, selectedProjectIdKey]);
 
 
 
@@ -666,13 +677,9 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
     [filteredTodosByColumn, BOARD_COLUMNS]
   );
 
-
-
-
-
-
-
   const isSearching = !!searchTerm.trim(); // Flag para saber si se está buscando
+
+  
 
 
   // --- Helpers para calcular sortOrder ---
@@ -1070,6 +1077,8 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
   
 
 
+  if (authLoading || isLoading) return <LoadingIcon />; // Mostrar loading si auth está cargando O si la carga de ToDos está en curso
+
 
 
   
@@ -1262,7 +1271,7 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
           </div>
         </header>
 
-        {isLoading && <LoadingIcon />}
+        {/* {isLoading && <LoadingIcon />} */} {/* El loading se maneja ahora al inicio del componente */}
       
 
 

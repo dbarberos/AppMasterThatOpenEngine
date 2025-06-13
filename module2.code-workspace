@@ -2,12 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../../../../SPAIN/FORMACION/PYTHON_IBM/AVANZADO BACK-END/5_DJANGO"
-		},
-		{
-			"path": "../../../../SPAIN/FORMACION/PYTHON_IBM/AVANZADO BACK-END/PRACTICA_FINAL/mapa_reseñas"
 		}
 	],
 	"settings": {}

@@ -7,7 +7,7 @@ import { IToDoIssue, ITag, IAssignedUsers } from '../types'
 import { newToDoIssue, clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState, setupProjectDetailsSearch } from './ToDoManager'
 import { toast } from 'sonner'
 
-import { updateAsideButtonsState } from './HTMLUtilities.ts'
+//import { updateAsideButtonsState } from './HTMLUtilities.ts'
 
 import { useProjectsManager } from '../react-components/ProjectsManagerContext'
 import { CACHE_TIMESTAMP_KEY, STORAGE_KEY, TODO_STATUSCOLUMN  } from '../const.ts'
@@ -1046,39 +1046,46 @@ export class ProjectsManager {
     };
 
 
-    renderProjectList(): void {
-        const projectListUiElements = document.getElementById('project-list');
-        if (projectListUiElements) {
+// /* ********* REMOVED BECAUSE IS USED REACT FOR MANAGING UI INTERFACES ******** */
 
-            // Clear the existing elements inside the #project-list div
-            projectListUiElements.innerHTML = ""
+    // renderProjectList(): void {
+    //     const projectListUiElements = document.getElementById('project-list');
+    //     if (projectListUiElements) {
 
-            // Re-render the project list with the updated data
-            this.list.forEach(project => {
-                const projectUiElement = this.updateProjectUi(project);
-                projectListUiElements.appendChild(projectUiElement);
+    //         // Clear the existing elements inside the #project-list div
+    //         projectListUiElements.innerHTML = ""
 
-                // // Remove any existing click listeners (optional but recommended)
-                // projectUiElement.removeEventListener("click", this.handleProjectClick);
+    //         // Re-render the project list with the updated data
+    //         this.list.forEach(project => {
+    //             const projectUiElement = this.updateProjectUi(project);
+    //             projectListUiElements.appendChild(projectUiElement);
 
-                // Attach the click listener 
-                projectUiElement.addEventListener("click", () => {
-                    changePageContent("project-details", "flex");
+    //             // // Remove any existing click listeners (optional but recommended)
+    //             // projectUiElement.removeEventListener("click", this.handleProjectClick);
 
-                    //Set the funcionality of search between todoIssues
-                    setupProjectDetailsSearch()
-                    localStorage.setItem("selectedProjectId", project.id)
+    //             // Attach the click listener 
+    //             projectUiElement.addEventListener("click", () => {
+    //                 changePageContent("project-details", "flex");
 
-                    ProjectsManager.setDetailsPage(project);
-                    console.log("Details page set in a new window");
+    //                 //Set the funcionality of search between todoIssues
+    //                 setupProjectDetailsSearch()
+    //                 localStorage.setItem("selectedProjectId", project.id)
 
-                    updateAsideButtonsState()
-                });
+    //                 ProjectsManager.setDetailsPage(project);
+    //                 console.log("Details page set in a new window");
+
+    //                 updateAsideButtonsState()
+    //             });
 
 
-            });
-        }
-    }
+    //         });
+    //     }
+    // }
+
+
+
+
+
 
     /*REMOVED THE CREATION OF DEFAULT PROJECT
     createDefaultProject() {

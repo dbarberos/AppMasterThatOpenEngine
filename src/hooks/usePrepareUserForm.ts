@@ -5,6 +5,7 @@ import {UsersManager } from '../classes/UsersManager'
 
 interface Props {
     userToBeUpdated: User | null, 
+    usersManager: UsersManager | undefined
 }
 
 export function usePrepareUserForm({ userToBeUpdated, usersManager }: Props) {
@@ -27,7 +28,7 @@ export function usePrepareUserForm({ userToBeUpdated, usersManager }: Props) {
             })
 
             // Populate the form fields with project data
-            UsersManager.populateProjectDetailsForm(userToBeUpdated);
+            UsersManager.populateUserDetailsForm(userToBeUpdated);
         } else {
             setFormData(null);
 
@@ -48,7 +49,7 @@ export function usePrepareUserForm({ userToBeUpdated, usersManager }: Props) {
             });
             // Update modal elements
             const modalElements = {
-                title: { id: "modal-user-title", text: "New User" },
+                title: { id: "modal-user-title", text: "User's Data" },
                 acceptBtn: { id: "accept-user-btn", text: "Accept" },
                 cancelBtn: { id: "cancel-user-btn", text: "Cancel" }
             };
