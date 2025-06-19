@@ -3,7 +3,7 @@ import * as Firestore from 'firebase/firestore';
 import { getCollection } from '../services/Firebase';
 
 import { useRenameProject } from '../hooks'
-import { DiffContentProjectsMessage, MessagePopUp, MessagePopUpProps } from '../react-components'
+import { DiffContentMessage, MessagePopUp, MessagePopUpProps } from '../react-components'
 
 import { Project, IProject } from '../classes/Project'
 import { ProjectsManager } from '../classes/ProjectsManager'
@@ -28,7 +28,7 @@ const projectsCollection = getCollection<IProject>("/projects")
 //         const changesInProject = ProjectsManager.getChangedProjectDataForUpdate(existingProject, projectDetailsToUpdate)
 
 //         if (Object.keys(changesInProject).length > 0) {
-//             const messageContent = <DiffContentProjectsMessage changes={changesInProject} />
+//             const messageContent = <DiffContentMessage changes={changesInProject, 'project'} />
 //             // Calculate the number of rows in the messageContent table
 //             const messageRowsCount = Object.keys(changesInProject).length
 //             // Calculate the desired message height

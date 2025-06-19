@@ -19,6 +19,8 @@ export const TODO_STATUS_MAP_TEXT = {
 
 export const STORAGE_KEY = 'projectsCache';
 export const CACHE_TIMESTAMP_KEY = 'projectsCacheTimestamp';
+export const USERS_CACHE_KEY = 'usersCache';
+export const USERS_CACHE_TIMESTAMP_KEY = 'usersCacheTimestamp';
 
 export const SYNC_INTERVAL = 5 * 60 * 1000;
 
@@ -32,8 +34,9 @@ export const USER_STATUS = {
 
 
 export const USER_ROL_IN_APP = {
+    superadmin: "superadmin",
     admin: "admin",
-    editor: "editor",
+    user: "user",
     viewer: "viewer",
 
 } as const

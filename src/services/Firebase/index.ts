@@ -8,6 +8,7 @@ import { ToDoIssue } from "../../classes/ToDoIssue";
 import { ProjectsManager } from "../../classes/ProjectsManager";
 import { IAssignedUsers, ITag, IToDoIssue } from '../../types'
 import { toast } from 'sonner'
+import { IUser, User } from "../../classes/User";
 
 type SubcollectionType = 'todoList' | 'tags' | 'assignedUsers';
 
@@ -1097,3 +1098,110 @@ const getImageVersion = (url: string, version: 'thumbnail' | 'full' = 'full'): s
     }
     return url;
 };
+
+
+
+//Retrieve information from Firebase
+export const getUsersFromDB = async (): Promise<User[]> => {
+    return withRetry(async () => {
+
+        // await ensureFirebaseAuth();
+        try {
+            const usersCollection = await getCollection<IUser>("/users")
+            const q = Firestore.query(usersCollection, Firestore.orderBy('nickname', 'asc'))
+
+            // Add permission check
+            await Firestore.getDocs(usersCollection).catch(error => {
+                if (error.code === 'permission-denied') {
+                    throw new Error('Firebase: Access denied. Please check your authentication status and permissions.');
+                }
+                throw error;
+            });
+
+            const firebaseUsers = await Firestore.getDocs(q)
+
+            // Array to store all users with their nested data?
+            const users: User[] = []
+
+            firebaseUsers.forEach((doc) => {
+                const userData = doc.data();
+                // Ensure the ID from Firestore is used
+                const user = new User({
+                    ...userData,
+                    id: doc.id,
+                    createdAt: userData.createdAt?.toDate() || new Date(),
+                    updatedAt: userData.updatedAt?.toDate() || new Date()
+                });
+                users.push(user);
+            });
+
+
+
+
+            // // Fetch each project and its NESTED COLLECTIONS
+            // for (const userDoc of firebaseUsers.docs) {
+            //     const userData = userDoc.data()
+
+            //     // Fetch todoList collection for this project
+            //     const todoListRef = Firestore.collection(Firestore.doc(firestoreDB, 'users', userDoc.id), 'todoList')
+            //     const todoListSnapshot = await Firestore.getDocs(todoListRef)
+            //     const todoList: IToDoIssue[] = []
+
+            //     // Process each todo item and its nested collections
+            //     for (const todoDoc of todoListSnapshot.docs) {
+            //         const todoData = todoDoc.data()
+
+            //         // Convert Firestore timestamp to Date
+            //         const dueDateFormatted = todoData.dueDate instanceof Firestore.Timestamp
+            //             ? todoData.dueDate.toDate()
+            //             : new Date(todoData.dueDate);
+
+            //         const createdDateFormatted = todoData.createdDate instanceof Firestore.Timestamp
+            //             ? todoData.createdDate.toDate()
+            //             : new Date(todoData.createdDate);
+
+            //         // Fetch tags and assignedUsers collection for this todo
+            //         const [tags, assignedUsers] = await Promise.all([
+            //             getTodoTags(todoDoc),
+            //             getTodoAssignedUsers(todoDoc)
+            //         ])
+
+            //         // Combine todo data with its nested collections
+            //         todoList.push({
+            //             ...todoData,
+            //             id: todoDoc.id,
+            //             dueDate: dueDateFormatted,
+            //             createdDate: createdDateFormatted,
+            //             tags,
+            //             assignedUsers
+            //         } as unknown as IToDoIssue)
+            //     }
+
+            //     // Create the complete project object with nested data
+            //     const project: Project = {
+            //         ...projectData,
+            //         id: projectDoc.id,
+            //         todoList,
+            //         finishDate: (projectData.finishDate as unknown as Firestore.Timestamp).toDate()
+            //     }
+            //     projects.push(project)
+            // }
+
+
+            console.log('Users fetched from Firebase:', users.length);
+            return users
+
+        } catch (error) {
+            console.error("Error retrieving users:", {
+                message: error.message,
+                code: error.code,
+                stack: error.stack
+            });
+            throw new Error(`Failed to load users: ${error.message}`);
+        }
+    }, {
+        maxRetries: 3,
+        timeout: 5000, // Increased timeout due to nested data fetching
+        baseDelay: 1000
+    })
+}

@@ -1,25 +1,25 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 //import { db } from '../firebase-config'; // Asegúrate que esta ruta sea correcta
-import { firestoreDB as db } from '../services/firebase'; 
+import { firestoreDB as db, getUsersFromDB } from '../services/firebase'; 
 import { collection, getDocs, doc, setDoc, onSnapshot } from 'firebase/firestore';
+
+
 import { User } from '../classes/User'; // Necesitarás definir esta clase/interfaz
 //import { IProjectAssignment, } from '../types'; // Y esta
 import { IProjectAssignment, IUser } from '../types'; 
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { LoadingIcon, NewUserForm, UsersBoardList, ProjectSelector, SearchUserBox, MessagePopUp, type MessagePopUpProps, CounterBox, } from '../react-components'; // Asumiendo que estos componentes existen o se crearán
+
+
 import { MainUsersIndex, SearchIcon, AddIcon, }  from './icons';
 import { Project } from '../classes/Project';
-import { useUserSearch } from '../hooks';
+import { useUserSearch, useUsersCache, useStickyState, useDebounce } from '../hooks';
 import { UsersManager } from '../classes/UsersManager';
 import { useAuth } from '../Auth/react-components/AuthContext';
+import { USERS_CACHE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL } from '../const';
 
 
-// Importa tus componentes hijos aquí (los crearemos conceptualmente abajo)
-// import UsersBoardList from './UserList';
-// import NewUserForm from './NewUserModal';
-// import UserProjectAssignmentsForm from './UserProjectAssignmentsModal';
-// import UsersBoardProjectView from './ProjectUserView'; // Para la Parte 2
 
 interface Props {
     usersManager: UsersManager,
@@ -37,11 +37,18 @@ export function UsersBoardPage({
 }: Props) {
     const { currentUser, loading: authLoading } = useAuth();
     const [viewMode, setViewMode] = React.useState<'allUsers' | 'projectUsers'>('allUsers');
-    const [users, setUsers] = React.useState<User[]>([]);
-    const [projects, setProjects] = React.useState<Project[]>([]); // Deberías tener una lista de tus proyectos
+    //const [users, setUsers] = React.useState<User[]>([]);
+    //const [projects, setProjects] = React.useState<Project[]>([]); 
+
+    const projects = React.useMemo(() => {
+        return projectsManager?.list || [];
+      }, [projectsManager?.list]); // Solo cambia cuando cambia la lista
+
+
     const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
+    const [isSyncing, setIsSyncing] = React.useState(false)
 
     // Estado para el modal de nuevo usuario
     const [isNewUserFormOpen, setIsNewUserFormOpen] = React.useState(false);
@@ -56,13 +63,156 @@ export function UsersBoardPage({
     // Estado para el término de búsqueda global
     //const [userSearchTerm, setUserSearchTerm] = React.useState('');
 
+    const lastSyncRef = React.useRef<number>(Date.now());
+
+    const {
+        users,
+        setUsers,
+        updateCache,
+        hasCache,
+        isStale,        
+    } = useUsersCache()
+
     const {
         userSearchTerm, // Término de búsqueda actual
         setUserSearchTerm,
         filteredUsers, // Lista de usuarios filtrada 
         handleSearchChange: handleUserSearchChange // Función para actualizar el término de búsqueda
     } = useUserSearch(users)
+
+
+
+    // Verificar si necesitamos sincronizar
+    const shouldSync = React.useCallback(() => {
+        const now = Date.now();
+        return now - lastSyncRef.current > SYNC_INTERVAL;
+    }, []);
+
+
+
+    // //Loading Users at the beginnig
+    // React.useEffect(() => {
+    //     // Solo intentar sincronizar hay un usuario autenticado
+    //     if (!currentUser) {
+            
+    //         console.log('[ProjectsPage] Skipping sync. Auth loading:', authLoading, 'CurrentUser:', !!currentUser);
+    //         setIsLoading(false); // Asegurarse de que no se quede en estado de carga si no hay usuario
+    //         return;
+    //     }
+
+    //     const syncWithDatabase = async () => {
+    //                     // Si hay caché válido, y no ha pasado el intervalo, no hacer nada
+    //                     if (hasCache && !isStale && projects.length > 0) {
+    //                         console.log('[ProjectsPage] Using cached projects, next sync in:', {
+    //                             minutes: Math.round((SYNC_INTERVAL - (Date.now() - lastSyncRef.current)) / 60000)
+    //                         });
+    //                         // Ensure UsersManager and search state are in sync with cache
+    //                         users.forEach(user => {
+    //                             if (!usersManager.getUser(user.id!)) {
+    //                                 usersManager.newUser(user, user.id);
+    //                             }
+    //                         });
+    //                         return;
+    //                     }
+        
+    //                 try {
+    //                     console.log('[UserBoardPage] Starting database sync. HasCache:', hasCache);
+    //                     // Mostrar loading solo si no hay caché
+    //                     if (!hasCache) {
+    //                         setIsLoading(true);
+    //                     } else {
+    //                         setIsSyncing(true);
+    //                     }
+        
+    //                     console.log('[UserBoardPage] Calling getUsersFromDB...');
+    //                     const firebaseUsers = await getUsersFromDB()
+        
+    //                     // Create Project instances using ProjectManager for each project from Firebase
+    //                     firebaseUsers.forEach(userData => {
+    //                         usersManager.newUser(userData, userData.id);
+    //                     })        
+        
+        
+    //                     const currentUsers = usersManager.list
+        
+    //                     //Update cache and local state
+    //                     updateCache(currentUsers)                
+        
+    //                     console.log('[UsersBoardPage] Users loaded/synced:', {
+    //                         count: currentUsers.length,
+    //                         timestamp: new Date().toISOString()
+    //                     })
+    //                     // }
+    //                     // Actualizar timestamp de última sincronización
+    //                     lastSyncRef.current = Date.now();
+        
+    //                     console.log('[UsersBoardPage] Sync finished.');
+        
+        
+    //                 } catch (error) {
+    //                     console.error("Error loading users:", error);
+    //                     // Handle error appropriately - maybe set an error state
+    //                 } finally {
+    //                     setIsLoading(false);
+    //                     setIsSyncing(false)
+    //                 }
+    //             }
+    //             syncWithDatabase();
+
+
+    // },[authLoading, currentUser, hasCache, isStale, users.length, usersManager, updateCache ])
+
+
+    //Suscription to ProjectsManager events with control of refreshing
+        React.useEffect(() => {
+            const handleUsersUpdate = () => {
+                const updatedUsers = usersManager.list.map(user => ({
+                    ...user,
+                    accountCreatedAt: user.accountCreatedAt instanceof Date
+                        ? new Date(user.accountCreatedAt.getTime())
+                        : new Date(user.accountCreatedAt),
+                    lastLogin: user.lastLoginAt instanceof Date
+                        ? new Date(user.lastLoginAt.getTime())
+                        : new Date  (user.lastLoginAt),
+                    // projectsAssigned: user.projectsAssigned.map(project => ({
+                    //     ...project,
+                    //     startDate: project.startDate instanceof Date
+                    //         ? new Date(project.startDate.getTime())
+                    //         : new Date(project.startDate),
+                    //     endDate: project.endDate instanceof Date
+                    //         ? new Date(project.endDate.getTime())
+                    //         : new Date(project.endDate)
+                    // })),
+                }))
     
+    
+    
+                //update cache and localStorage
+                updateCache(updatedUsers);
+
+                lastSyncRef.current = Date.now(); // Actualice timestamp
+    
+                console.log('User cache updated with projectsAssigned:', {
+                    usersCount: updatedUsers.length,
+                    projectsAssigendCount: updatedUsers.reduce((acc, u) => acc + u.projectsAssigned.length, 0)
+                });
+            };
+    
+    
+            usersManager.onUserCreated = handleUsersUpdate;
+            usersManager.onUserDeleted = handleUsersUpdate;
+            usersManager.onUserUpdated = handleUsersUpdate;
+    
+
+    
+            return () => {
+                usersManager.onUserCreated = () => { }
+                usersManager.onUserDeleted = () => { }
+                usersManager.onUserUpdated = () => { }
+            }
+        }, [updateCache, usersManager])
+
+
 
     // ***************. useCallback para funciones  *******************
     const handleOpenNewUserModal = React.useCallback(() => {
@@ -142,39 +292,44 @@ export function UsersBoardPage({
         // Solo intentar cargar usuarios si la autenticación ha terminado y hay un usuario
         if (authLoading || !currentUser) {
             console.log('UsersBoardPage: Skipping user fetch, auth loading or no user.');
-            setIsLoading(false); // Asegurarse de que no se quede en estado de carga si no hay usuario
+            if (isLoading) setIsLoading(false); 
             return;
         }
 
 
-        setIsLoading(true);
+        // Set loading to true only if not already loading from a previous effect or initial state
+        if (!isLoading && !hasCache) { // Only set loading if truly starting fresh
+            setIsLoading(true);
+        }
         const usersCollectionRef = collection(db, 'users');
-        
+
+        console.log('[UsersBoardPage] Setting up onSnapshot listener for users.');
+
         // Usar onSnapshot para actualizaciones en tiempo real
         const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
             const usersData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as User)).map(userData => new User(userData)); // Convertir a instancias de User
-
             setUsers(usersData);
-            setIsLoading(false);
+            updateCache(usersData); // Ensure cache is also updated
+            if (isLoading) setIsLoading(false);
+            lastSyncRef.current = Date.now(); // Update sync timestamp
+            console.log('[UsersBoardPage] Users updated from onSnapshot.');
         }, (err) => {
             console.error("Error fetching users: ", err);
             setError("Failed to load users.");
             setIsLoading(false);
         });
 
-        // Cargar proyectos (necesitarás esto para la asignación)
-        // const projectsCollectionRef = collection(db, 'projects');
-        // getDocs(projectsCollectionRef).then(snapshot => {
-        //     setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        // });
-        // Obtener proyectos del manager
-        setProjects(projectsManager.list);
+
 
         return () => unsubscribe(); // Limpiar el listener al desmontar
-    }, [projectsManager]);
+    }, [authLoading, currentUser]); 
+  //}, [authLoading, currentUser, projectsManager, setUsers, updateCache, isLoading, hasCache]); 
+    // Added dependencies: setUsers, updateCache, isLoading, hasCache
+    // authLoading and currentUser trigger re-evaluation.
+    // isLoading and hasCache help manage the setIsLoading(true) call.
 
 
 
@@ -413,1382 +568,8 @@ export function UsersBoardPage({
             
             </div>
 
-            <div className="users-page-content" id="users-index" style={{ display: "" }}>
-                <div className="header-user-page-content">
-                    <div style={{ display: "flex", flexDirection: "row", columnGap: 10 }}>
-                        <button
-                            style={{ borderRadius: 10, width: "auto" }}
-                            className="btn-secondary"
-                        >
-                            <span className="material-icons-round">swap_vert</span>
-                            <p>Sort By</p>
-                            <span className="material-icons-round">expand_more</span>
-                        </button>
-                        <button style={{ borderRadius: 10 }}>
-                            <span className="material-icons-round">add</span>
-                            <p>Add New User</p>
-                        </button>
-                    </div>
-                </div>
-                <div
-                    className="user-container-header"
-                    style={{ border: "none", backgroundColor: "transparent" }}
-                >
-                    <div>
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "left",
-                                columnGap: 10
-                            }}
-                        >
-                            {/* <label for=""></label> */}
-                            <input
-                                name="bulk-checkbox"
-                                type="checkbox"
-                                defaultValue="all-selected"
-                                className="checkbox"
-                                style={{ width: 17, height: 17 }}
-                            />
-                            <div>
-                                <button
-                                    style={{ borderRadius: 10, width: "auto" }}
-                                    className="btn-secondary"
-                                >
-                                    Bulk Actions
-                                    <label>
-                                        <span className="material-icons-round">expand_more</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <h5 />
-                    <h5>EMAIL</h5>
-                    <h5>PHONE</h5>
-                    <h5>ORGANIZATION / ROL</h5>
-                    <h5>STATUS</h5>
-                    <h5 className="users-edit">ACTIONS</h5>
-                </div>
-                <div className="users-list">
-                    <div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/OFFICE1.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Chris</div>
-                            </div>
-                            <p>christina@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>BDP</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Project Manager
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p
-                                            style={{
-                                                fontSize: "var(--font-xl)",
-                                                backgroundColor: "#ca8134",
-                                                padding: 10,
-                                                borderRadius: "var(--br-circle)",
-                                                aspectRatio: 1,
-                                                color: "var(--background)"
-                                            }}
-                                        >
-                                            HC
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/constructor.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>D Harrison</div>
-                            </div>
-                            <p>david@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>Dragados</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    BIM Manager
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>David Harrison </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p
-                                            style={{
-                                                fontSize: "var(--font-xl)",
-                                                backgroundColor: "#ca8134",
-                                                padding: 10,
-                                                borderRadius: "var(--br-circle)",
-                                                aspectRatio: 1,
-                                                color: "var(--background)"
-                                            }}
-                                        >
-                                            HC
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/EDIF1.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Anne</div>
-                            </div>
-                            <p>anne@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>FCC</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Site Manager
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Anne Richard</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p
-                                            style={{
-                                                fontSize: "var(--font-xl)",
-                                                backgroundColor: "#ca8134",
-                                                padding: 10,
-                                                borderRadius: "var(--br-circle)",
-                                                aspectRatio: 1,
-                                                color: "var(--background)"
-                                            }}
-                                        >
-                                            HC
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/OFFICE6.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Mrs Samia</div>
-                            </div>
-                            <p>samia@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>Acciona</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Document Controller
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Samia Kartoon</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/OBRAS2.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Mr Clerk</div>
-                            </div>
-                            <p>andy@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>Ferrovial</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    MEP Engineer
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Andy Clerk</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/Architect.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Sir Halligan</div>
-                            </div>
-                            <p>brian@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>Sacyr</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Architect
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Brian Halligan</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/OFFICE4.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Bart</div>
-                            </div>
-                            <p>barto@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>OHLA</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Building Surveyor
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Bartolome Simpson</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/INGENIERA2.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Cami</div>
-                            </div>
-                            <p>cwelt@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>ARUP</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Structural Engineer
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Camila Welters</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/OBRA5.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Oliver</div>
-                            </div>
-                            <p>oliver@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>AECOM</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    BIM Coordinator
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Activer</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Oliver Schevich</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-container">
-                            <div className="users-checkbox">
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name">
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/COMPANY2.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>JW</div>
-                            </div>
-                            <p>myhairisred@site.com</p>
-                            <div>
-                                <p>666 666 66 66</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Spain +34
-                                </p>
-                            </div>
-                            <div>
-                                <p>dBASE</p>
-                                <p
-                                    style={{
-                                        fontSize: "var(--font-base)",
-                                        color: "var(--color-grey)"
-                                    }}
-                                >
-                                    Full Stack Soft. developer
-                                </p>
-                            </div>
-                            <div className="users-status">
-                                <p>Active</p>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                <option value="Asign proyect">Asign proyect</option>
-                                                <option value="Remove all projects">Remove all projects</option>
-                                                <option value="Remove all project roles">Remove all roles</option>
-                                                <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                                <option value="Disable account">Disable account</option>
-                                                <option value="Delete users">Delete users</option>
-                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="user-details1">
-                                <div className="user-data">
-                                    <p>FULL NAME:</p>
-                                    <p>Jessica Williams</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ADDRESS:</p>
-                                    <p>Trump tower. New York </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ACCOUNT CREATED ON:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>CREATED BY:</p>
-                                    <p>Christina Bersh </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>LAST LOGIN:</p>
-                                    <p>30/05/2024 </p>
-                                </div>
-                            </div>
-                            <div className="user-details2">
-                                <div className="user-data" style={{ justifyContent: "flex-start" }}>
-                                    <div>
-                                        <p>PROYECTS TEAMS:</p>
-                                    </div>
-                                    <div>
-                                        <p />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className="users-page-content" id="teams-page" style={{ display: "none" }}
-            >
-                <div className="header-user-page-content">
-                    <div style={{ display: "flex", flexDirection: "row", columnGap: 10 }}>
-                        <button
-                            style={{ borderRadius: 10, width: "auto" }}
-                            className="btn-secondary"
-                        >
-                            <span className="material-icons-round">swap_vert</span>
-                            <p>Sort By</p>
-                            <span className="material-icons-round">expand_more</span>
-                        </button>
-                        <button style={{ borderRadius: 10 }}>
-                            <span className="material-icons-round">add</span>
-                            <p>Add New User To Team</p>
-                        </button>
-                    </div>
-                </div>
-                <div
-                    className="user-container-header"
-                    style={{ border: "none", backgroundColor: "transparent" }}
-                >
-                    <div>
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "left",
-                                columnGap: 10
-                            }}
-                        >
-                            {/* <label for=""></label> */}
-                            <input
-                                name="bulk-checkbox"
-                                type="checkbox"
-                                defaultValue="all-selected"
-                                className="checkbox"
-                                style={{ width: 17, height: 17 }}
-                            />
-                            <div>
-                                <button
-                                    style={{ borderRadius: 10, width: "auto" }}
-                                    className="btn-secondary"
-                                >
-                                    Bulk Actions
-                                    <label>
-                                        <span className="material-icons-round">expand_more</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                        <option value="Remove from the Team">Remove from</option>
-                                                        <option value="Email Validation Team Project">Email Validation Team</option>
-                                                        <option value="Disable for de team">Disable team</option>
-                                                        <option value="Delete users">Delete users</option>
-                                                        
-                                                    </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <h5 />
-                    <h5>DATA</h5>
-                    <h5 />
-                    <h5>PERMISSIONS</h5>
-                    <h5 />
-                    <h5 className="users-edit">ACTIONS</h5>
-                </div>
-                <div className="users-list">
-                    <div>
-                        <div className="user-team-container">
-                            <div className="users-checkbox" style={{ marginTop: "-75px" }}>
-                                {/* <label for=""></label> */}
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name" style={{ marginTop: "-75px" }}>
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/OFFICE1.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Chris</div>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                                <option value="Remove from the Team">Remove from</option>
-                                                                <option value="Email Validation Team Project">Email Validation Team</option>
-                                                                <option value="Disable for de team">Disable team</option>
-                                                                <option value="Delete users">Delete users</option>
-                                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="team-data">
-                                <div className="user-data">
-                                    <p>EMAIL:</p>
-                                    <p>christina@site.com </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>PHONE:</p>
-                                    <p>666 666 66 66</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ORGANIZATION:</p>
-                                    <p>BDP</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ROLE:</p>
-                                    <p>Project Manager </p>
-                                </div>
-                            </div>
-                            <div className="team-permissions">
-                                <div
-                                    className="user-data"
-                                    style={{ justifyContent: "flex-start" }}
-                                ></div>
-                                <div
-                                    className="user-data"
-                                    style={{ justifyContent: "flex-start", alignItems: "center" }}
-                                >
-                                    <div style={{ width: 75 }}>
-                                        <p>TO-DO LIST:</p>
-                                    </div>
-                                    <div style={{ display: "flex", columnGap: "var(--gap-base)" }}>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            add
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            visibility
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            drive_file_rename_outline
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            delete_outline
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-team-container">
-                            <div className="users-checkbox" style={{ marginTop: "-75px" }}>
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name" style={{ marginTop: "-75px" }}>
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/constructor.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>D Harrison</div>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                                <option value="Remove from the Team">Remove from</option>
-                                                                <option value="Email Validation Team Project">Email Validation Team</option>
-                                                                <option value="Disable for de team">Disable team</option>
-                                                                <option value="Delete users">Delete users</option>
-                                                            </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="team-data">
-                                <div className="user-data">
-                                    <p>EMAIL:</p>
-                                    <p>david@site.com </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>PHONE:</p>
-                                    <p>666 666 66 66</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ORGANIZATION:</p>
-                                    <p>Dragados</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ROLE:</p>
-                                    <p>BIM ManagerProject Manager </p>
-                                </div>
-                            </div>
-                            <div className="team-permissions">
-                                <div
-                                    className="user-data"
-                                    style={{ justifyContent: "flex-start" }}
-                                ></div>
-                                <div
-                                    className="user-data"
-                                    style={{ justifyContent: "flex-start", alignItems: "center" }}
-                                >
-                                    <div style={{ width: 75 }}>
-                                        <p>TO-DO LIST:</p>
-                                    </div>
-                                    <div style={{ display: "flex", columnGap: "var(--gap-base)" }}>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            add
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            visibility
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            drive_file_rename_outline
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            delete_outline
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="user-team-container">
-                            <div className="users-checkbox" style={{ marginTop: "-75px" }}>
-                                <input
-                                    name="bulk-checkbox"
-                                    type="checkbox"
-                                    className="checkbox"
-                                    defaultValue="all-selected"
-                                />
-                            </div>
-                            <div className="users-name" style={{ marginTop: "-75px" }}>
-                                <div className="users-photo">
-                                    <img
-                                        src="./assets/photo-users/SELECTED/EDIF1.jpg"
-                                        alt="PROJECT MANAGER"
-                                    />
-                                </div>
-                                <div>Anne</div>
-                            </div>
-                            <div className="users-edit">
-                                <button className="btn-secondary">
-                                    <label>
-                                        <span className="material-icons-round">more_horiz</span>
-                                        {/* <select name="" id="" style="appearance: none;">
-                                                                    <option value="Remove from the Team">Remove from</option>
-                                                                    <option value="Email Validation Team Project">Email Validation Team</option>
-                                                                    <option value="Disable for de team">Disable team</option>
-                                                                    <option value="Delete users">Delete users</option>
-                                                                </select> */}
-                                    </label>
-                                </button>
-                            </div>
-                            <div className="team-data">
-                                <div className="user-data">
-                                    <p>EMAIL:</p>
-                                    <p>christina@site.com </p>
-                                </div>
-                                <div className="user-data">
-                                    <p>PHONE:</p>
-                                    <p>666 666 66 66</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ORGANIZATION:</p>
-                                    <p>FCC</p>
-                                </div>
-                                <div className="user-data">
-                                    <p>ROLE:</p>
-                                    <p>Site Manager </p>
-                                </div>
-                            </div>
-                            <div className="team-permissions">
-                                <div
-                                    className="user-data"
-                                    style={{ justifyContent: "flex-start" }}
-                                ></div>
-                                <div
-                                    className="user-data"
-                                    style={{ justifyContent: "flex-start", alignItems: "center" }}
-                                >
-                                    <div style={{ width: 75 }}>
-                                        <p>TO-DO LIST:</p>
-                                    </div>
-                                    <div style={{ display: "flex", columnGap: "var(--gap-base)" }}>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            add
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            visibility
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            drive_file_rename_outline
-                                        </span>
-                                        <span
-                                            style={{ fontSize: "2em" }}
-                                            className="material-icons-round"
-                                        >
-                                            delete_outline
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
+
 
             {/* {isAssignFormOpen && currentUserForAssignment && (
             <UserProjectAssignmentsModal
@@ -1800,13 +581,13 @@ export function UsersBoardPage({
             />
             )} */ }
             
-            {isLoading ? (
+            {/* {isLoading ? (
                             <LoadingIcon />
                         ) : (
                             <div id="project-list">
                                 {filteredUsers.length > 0 ? usersListFiltered  : <p>No projects found</p>}
                             </div>
-            )}
+            )} */}
             {/* Render the NewUserForm conditionally */}
             {isNewUserFormOpen &&
                 <NewUserForm                        

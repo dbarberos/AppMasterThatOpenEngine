@@ -1083,10 +1083,6 @@ export class ProjectsManager {
     // }
 
 
-
-
-
-
     /*REMOVED THE CREATION OF DEFAULT PROJECT
     createDefaultProject() {
         if (this.defaultProjectCreated) { return }

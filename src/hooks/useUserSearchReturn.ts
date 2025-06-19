@@ -1,8 +1,10 @@
 import * as React from 'react'
 
 import { User } from '../classes/User'
+import { UsersManager } from '../classes/UsersManager';
 import { debounce } from '../utils'
-
+import { IUser, UserProfile } from '../types'; 
+import { USERS_CACHE_KEY }  from '../const'
 interface UseUserSearchReturn {
     userSearchTerm: string
     setUserSearchTerm: (term: string) => void

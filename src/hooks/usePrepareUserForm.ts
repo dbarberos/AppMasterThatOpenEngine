@@ -35,7 +35,7 @@ export function usePrepareUserForm({ userToBeUpdated, usersManager }: Props) {
             // *** RESET THE FORM ***
             // 1. Target specific input types
             const userForm = document.getElementById("new-user-form") as HTMLFormElement;
-            const inputsToReset = userForm.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, select');
+            const inputsToReset = userForm.querySelectorAll('input[type="text"], input[type="email"],  input[type="tel"], input[type="number"], textarea, select');
 
             // 2. Loop through and reset each element
             inputsToReset.forEach(element => {
@@ -47,17 +47,17 @@ export function usePrepareUserForm({ userToBeUpdated, usersManager }: Props) {
                     (element as HTMLInputElement).value = '' // Reset to empty string
                 }
             });
-            // Update modal elements
-            const modalElements = {
-                title: { id: "modal-user-title", text: "User's Data" },
-                acceptBtn: { id: "accept-user-btn", text: "Accept" },
-                cancelBtn: { id: "cancel-user-btn", text: "Cancel" }
-            };
+            // // Update modal elementsno es necesario todo es para actualizar
+            // const modalElements = {
+            //     title: { id: "modal-user-title", text: "User's Data" },
+            //     acceptBtn: { id: "accept-user-btn", text: "Accept" },
+            //     cancelBtn: { id: "cancel-user-btn", text: "Cancel" }
+            // };
 
-            Object.values(modalElements).forEach(({ id, text }) => {
-                const element = document.getElementById(id);
-                if (element) element.textContent = text;
-            })
+            // Object.values(modalElements).forEach(({ id, text }) => {
+            //     const element = document.getElementById(id);
+            //     if (element) element.textContent = text;
+            // })
         }
     }, [userToBeUpdated, usersManager]);
 }

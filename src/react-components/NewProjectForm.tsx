@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import * as Router from 'react-router-dom';
 import { createDocument, updateDocument, deleteDocument } from '../services/firebase';
 
-import { DeleteProjectBtn, RenameElementMessage, DiffContentProjectsMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
+import { DeleteProjectBtn, RenameElementMessage, DiffContentMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
 import { usePrepareProjectForm, useProjectsCache } from '../hooks';
 import {parseDate} from '../utils/DateUtils';
 
@@ -356,7 +356,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                 console.log("simplifiedChanges for DB", simplifiedChanges)
 
                 if (Object.keys(simplifiedChanges).length > 0) {
-                    const messageContent = <DiffContentProjectsMessage changes={changesInProject} />
+                    const messageContent = <DiffContentMessage changes={changesInProject, 'project'} />
                     // Calculate the number of rows in the messageContent table
                     const messageRowsCount = Object.keys(simplifiedChanges).length
                     // Calculate the desired message height

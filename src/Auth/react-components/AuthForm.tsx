@@ -28,7 +28,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState(''); // Para el registro
-    const [nickname, setNickname] = React.useState(''); // Para el registro
+    const [nickName, setNickName] = React.useState(''); // Para el registro
     //const [firstName, setFirstName] = React.useState(''); // Para el registro
     //const [lastName, setLastName] = React.useState(''); // Para el registro
     const [error, setError] = React.useState<string | null>(null);
@@ -72,7 +72,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
                 setIsLoading(false);
                 return;
             }
-            if (!nickname) {
+            if (!nickName) {
                 setError("Nickname, is required to register.");
                 setIsLoading(false);
                 return;
@@ -81,9 +81,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
                 const user = await signUpWithEmail({
                     email,
                     password_DO_NOT_STORE_THIS_PLAINTEXT: password,
-                    nickname,                    
+                    nickName,                    
                 });
-                toast.success(`¡Welcome ${nickname}! Account successfully created.`);
+                toast.success(`¡Welcome ${nickName}! Account successfully created.`);
                 onUserAuthenticated(user);
             } catch (err: any) {
                 const authError = err as AuthError;
@@ -172,8 +172,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
                             {isSignUp && (
                                 <>
                                     <div className="auth-input-group">
-                                        <label htmlFor="nickname">Nickname</label>
-                                        <input type="text" id="nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} required minLength={3} />
+                                        <label htmlFor="nickName">Nickname</label>
+                                        <input type="text" id="nickName" value={nickName} onChange={(e) => setNickName(e.target.value)} required minLength={3} />
                                     </div>
                                 </>
                             )}
@@ -236,11 +236,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
                                     type="button"
                                     onClick={() =>
                                         handleOAuthSignIn(() =>
-                                            signInWithGoogle(isSignUp && nickname.trim() ? nickname.trim() : undefined)
+                                            signInWithGoogle(isSignUp && nickName.trim() ? nickName.trim() : undefined)
                                         )
                                     }
                                     className="button"
-                                    disabled={isLoading || (isSignUp && !nickname.trim())} // Deshabilitado si está cargando o (si es sign-up y no hay nickname)
+                                    disabled={isLoading || (isSignUp && !nickName.trim())} // Deshabilitado si está cargando o (si es sign-up y no hay nickname)
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -248,7 +248,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
                                         borderRadius: 'var(--br-2xs)',
                                         border: '1px solid var(--color-light)'
                                     }}
-                                    title={isSignUp && !nickname.trim() ? "Please enter a nickname first" : "Login with Google"}
+                                    title={isSignUp && !nickName.trim() ? "Please enter a nickname first" : "Login with Google"}
                                 >
                                     <GoogleIcon
                                         size={24}
@@ -260,11 +260,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
                                     type="button"
                                     onClick={() =>
                                         handleOAuthSignIn(() =>
-                                            signInWithGitHub(isSignUp && nickname.trim() ? nickname.trim() : undefined)
+                                            signInWithGitHub(isSignUp && nickName.trim() ? nickName.trim() : undefined)
                                         )
                                     }
                                     className="button"
-                                    disabled={isLoading || (isSignUp && !nickname.trim())} // Deshabilitado si está cargando o (si es sign-up y no hay nickname)
+                                    disabled={isLoading || (isSignUp && !nickName.trim())} // Deshabilitado si está cargando o (si es sign-up y no hay nickname)
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -272,7 +272,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
                                         borderRadius: 'var(--br-2xs)',
                                         border: '1px solid var(--color-light)'
                                     }}
-                                    title={isSignUp && !nickname.trim() ? "Please enter a nickname first" : "Login with GitHub"}
+                                    title={isSignUp && !nickName.trim() ? "Please enter a nickname first" : "Login with GitHub"}
                                 >
                                     <GithubIcon
                                         size={24}

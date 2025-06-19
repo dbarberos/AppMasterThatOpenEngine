@@ -76,5 +76,30 @@ export class User implements IUser {
     
             // Validación final: si es inválida, usar fecha actual
             return isNaN(dateValue.getTime()) ? new Date() : dateValue;
-        }
+    }
+    
+    // // Método para convertir a objeto plano si es necesario para guardar en DB o cache
+    // // Especialmente útil para serializar fechas a string ISO
+    // toPlainObject(): Omit<IUser, 'accountCreatedAt' | 'lastLoginAt'> & { accountCreatedAt: string; lastLoginAt: string; id: string; } {
+    //     return {
+    //         id: this.id,
+    //         nickName: this.nickName,
+    //         firstName: this.firstName,
+    //         lastName: this.lastName,
+    //         email: this.email,
+    //         phoneNumber: this.phoneNumber,
+    //         phoneCountryNumber: this.phoneCountryNumber,
+    //         organization: this.organization,
+    //         roleInApp: this.roleInApp,
+    //         photoURL: this.photoURL,
+    //         address: this.address,
+    //         descriptionUser: this.descriptionUser,
+    //         accountCreatedAt: this.accountCreatedAt.toString(),
+    //         lastLoginAt: this.lastLoginAt?.toString(),
+    //         status: this.status,
+    //         projectsAssigned: this.projectsAssigned,
+    //     };
+    // }
+
+
 }

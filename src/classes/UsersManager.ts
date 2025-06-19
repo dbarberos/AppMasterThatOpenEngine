@@ -274,37 +274,27 @@ export class UsersManager {
 
 
 
-    //  *** USED INSIDE NewProjectForm *** 
+    //  *** USED INSIDE NewUserForm *** 
     static populateUserDetailsForm (user: User) {
-        const projectDetailsForm = document.getElementById("new-project-form")
-        if (!projectDetailsForm) { return }
+        const userDetailsForm = document.getElementById("new-user-form")
+        if (!userDetailsForm) { return }
 
 
         for (const key in user) {
-            const inputField = projectDetailsForm.querySelectorAll(`[data-form-value="${key}"]`)
+            const inputField = userDetailsForm.querySelectorAll(`[data-form-value="${key}"]`)
             if (inputField.length > 0) {
-                if (key === "finishDate") {
-                    // Format date for input type="date"
-                    const date = new Date(user.finishDate);
-                    date.setHours(12, 0, 0, 0)
-                    const formattedDate = date.toISOString().split('T')[0]
-
-
-                    // const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
-
-                    inputField.forEach(element => {
-                        (element as HTMLInputElement).value = formattedDate
-                        console.log(`${user[key]}`);
-
-                    })
-                } else {
-                    inputField.forEach(element => {
-                        // Handle different input types                        
-                        if (element instanceof HTMLInputElement) {
+                inputField.forEach(element => {
+                    // Handle different input types                        
+                    if (element instanceof HTMLInputElement) {
+                        if (user[key] !== undefined && user[key] !== null) {
                             element.value = user[key] // For text, date inputs
-                        } else if (element instanceof HTMLTextAreaElement) {
+                        }
+                    } else if (element instanceof HTMLTextAreaElement) {
+                        if (user[key] !== undefined && user[key] !== null) {
                             element.value = user[key] // For textareas
-                        } else if (element instanceof HTMLSelectElement) {
+                        }
+                    } else if (element instanceof HTMLSelectElement) {
+                        if (user[key] !== undefined && user[key] !== null) {
                             // For select elements, set the selected option
                             const options = element.options
                             for (let i = 0; i < options.length; i++) {
@@ -314,11 +304,29 @@ export class UsersManager {
                                 }
                             }
                         }
-                    })
-                }
+                    }
+                })
             }
-        }
-}
+        }        
+    }
+
+
+    getUser(id: string) {
+        const user = this.list.find((user) => {
+            return user.id === id
+        })
+        return user
+    }
+
+    getUserByNickname(nickname: string) {
+        const user = this.list.find((user) => {
+            return user.nickName.toLowerCase() === nickname.toLowerCase()
+        })
+        return user
+    }
+
+
+
     
 
 

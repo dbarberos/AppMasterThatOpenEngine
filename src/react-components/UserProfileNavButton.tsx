@@ -9,6 +9,7 @@ import {
     LoginIcon,
     LogoutIcon,
     LoadingIcon,
+    PasswordIcon,
 } from './icons'; // Asegúrate que estos iconos existan o créalos
 
 interface UserProfileNavButtonProps {
@@ -39,8 +40,8 @@ export const UserProfileNavButton: React.FC<UserProfileNavButtonProps> = ({
         if (firstName && lastName)
             return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
         if (firstName) return firstName.substring(0, 2).toUpperCase();
-        if (userProfile?.nickname)
-            return userProfile.nickname.substring(0, 2).toUpperCase();
+        if (userProfile?.nickName)
+            return userProfile.nickName.substring(0, 2).toUpperCase();
         if (currentUser?.email)
             return currentUser.email.substring(0, 2).toUpperCase();
         return '??';
@@ -128,28 +129,17 @@ export const UserProfileNavButton: React.FC<UserProfileNavButtonProps> = ({
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
-                    position: 'relative', // Para el posicionamiento del portal si fuera necesario dentro
+                    position: 'relative', 
+                    height: 'fit-content',
+                    padding: '20px 0 20px 10px',
+                    columnGap: '5px',
                 }}
                 onClick={togglePortal} // O solo el chevron: onClick en el span del chevron
-                title={userProfile.nickname || currentUser.email || 'User Profile'}
+                title={userProfile.nickName || currentUser.email || 'User Profile'}
             >
                 <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
                     <div
                         className="avatar"
-                        style={{
-                            width: '37px',
-                            height: '37px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--color-accent-light)', // Un color de fondo para las iniciales
-                            color: 'var(--color-accent-dark)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginRight: '10px', // Espacio entre avatar y texto
-                            fontSize: '0.9em',
-                            fontWeight: 'bold',
-                            flexShrink: 0,
-                        }}
                     >
                         {userProfile.photoURL ? (
                             <img
@@ -161,25 +151,19 @@ export const UserProfileNavButton: React.FC<UserProfileNavButtonProps> = ({
                             initials
                         )}
                     </div>
-                    <div className="user-nav-info" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', marginRight: '5px' }}>
+                    <div className="user-avatar-nav-info" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', marginRight: '5px' }}>
                         <span
                             style={{
                                 fontWeight: 600,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                fontSize: '0.9em',
+                                fontSize: 'var(--font-xl)',
                             }}
                         >
-                            {userProfile.nickname || 'User'}
+                            {userProfile.nickName || 'User'}
                         </span>
                         <span
                             style={{
-                                fontSize: '0.75em',
+                                fontSize: 'var(--font-base)',
                                 color: 'var(--color-fontbase-dark)',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
                             }}
                         >
                             {currentUser.email}
@@ -188,7 +172,7 @@ export const UserProfileNavButton: React.FC<UserProfileNavButtonProps> = ({
                 </div>
                 <span onClick={(e) => { e.stopPropagation(); togglePortal(); }} style={{ paddingLeft: '5px', display: 'flex', alignItems: 'center' }}>
                     <ChevronDownIcon
-                        size={20}
+                        size={30}
                         color="var(--color-fontbase)"
                         className="todo-icon-edit"
                     />
@@ -203,51 +187,49 @@ export const UserProfileNavButton: React.FC<UserProfileNavButtonProps> = ({
                         className="profile-dropdown-portal"
                         style={{
                             position: 'fixed',
-                            top: `${portalPosition.top}px`,
-                            left: `${portalPosition.left}px`,
-                            backgroundColor: 'var(--background-elevation-2)', // Usa variables CSS
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '8px',
-                            boxShadow:
-                                '0 4px 15px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)',
-                            zIndex: 1100, // Asegúrate que esté por encima del sidebar
-                            width: '230px',
-                            overflow: 'hidden',
-                            animation: 'fadeInDropdown 0.2s ease-out',
+                            top: `${(portalPosition.top)-80}px`,
+                            left: `${(portalPosition.left)+20}px`,
+                            // backgroundColor: 'var(--background-elevation-2)', // Usa variables CSS
+                            // border: '1px solid var(--color-border)',
+                            // borderRadius: '8px',
+                            // boxShadow:
+                            //     '0 4px 15px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)',
+                            // zIndex: 1100, // Asegúrate que esté por encima del sidebar
+                            // width: '230px',
+                            // overflow: 'hidden',
+                            // animation: 'fadeInDropdown 0.2s ease-out',
                         }}
                     >
                         <button
                             onClick={() => { onNavigate('profile'); setIsPortalOpen(false); }}
-                            className="portal-dropdown-item"
+                            className="portal-dropdown-item  buttonD"
                         >
-                            <ProfileIcon size={18} color="var(--color-fontbase)" />
+                            <ProfileIcon size={32} color="var(--color-fontbase)" className="todo-icon-plain"/>
                             Profile
                         </button>
                         <button
                             onClick={() => { onNavigate('change-password'); setIsPortalOpen(false); }}
-                            className="portal-dropdown-item"
+                            className="buttonD"
                         >
-                            <span className="material-icons-round" style={{ fontSize: '18px', marginRight: '8px' }}>key</span>
+                            <PasswordIcon size={32} color="var(--color-fontbase)" className="todo-icon-plain"/>
                             Change Password
                         </button>
+                        
                         <button
                             onClick={() => { onNavigate('auth'); setIsPortalOpen(false); }}
-                            className="portal-dropdown-item"
+                            className="buttonD"
                         >
-                            <LoginIcon size={18} color="var(--color-fontbase)" />
+                            <LoginIcon size={32} color="var(--color-fontbase)" className="todo-icon-plain" />
                             Change Account
                         </button>
-                        <div
-                            style={{
-                                borderTop: '1px solid var(--color-border-light)',
-                                margin: '4px 0',
-                            }}
-                        />
+                        
+
                         <button
                             onClick={() => { onNavigate('signout'); setIsPortalOpen(false); }}
-                            className="portal-dropdown-item portal-dropdown-item-danger"
+                            className=" buttonC"
+                            // className="portal-dropdown-item portal-dropdown-item-danger"
                         >
-                            <LogoutIcon size={18} color="var(--color-error)" />
+                            <LogoutIcon size={32} color="var(--color-error2)" className="todo-icon-plain"/>
                             Sign Out
                         </button>
                     </div>,
@@ -257,7 +239,6 @@ export const UserProfileNavButton: React.FC<UserProfileNavButtonProps> = ({
     );
 };
 
+// Add display name for debugging purposes
+UserProfileNavButton.displayName = 'UserProfileNavButton';
 
-    
-
-}

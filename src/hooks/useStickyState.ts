@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+const isDev = process.env.NODE_ENV === 'development'
 /**
  * Hook personalizado que persiste un estado en localStorage.
  * Utiliza JSON.stringify y JSON.parse para manejar diferentes tipos de datos.
@@ -10,8 +11,9 @@ import * as React from 'react';
  */
 
 export function useStickyState<T>(defaultValue: T, key: string): [T, React.Dispatch<React.SetStateAction<T>>] {
-    console.log('🔄 useStickyState init:', { key, defaultValue });
-
+    if (isDev) {
+        console.log('🔄 useStickyState init:', { key, defaultValue });
+    }
     // Validar que la key no esté vacía
     if (!key) {
         console.error('useStickyState: key cannot be empty');

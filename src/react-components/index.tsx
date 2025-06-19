@@ -14,7 +14,7 @@ export * from './ThreeJSViewer';
 export * from './DeleteProjectBtn';
 export * from './RenameElementMessage';
 export * from './icons';
-export * from './DiffContentProjectsMessage';
+export * from './DiffContentMessage';
 //export * from './LoadingIcon'
 export * from './ToDoDetailsWindow'
 export * from './ToDoEditableField'
@@ -44,3 +44,5 @@ export * from './UserCardRow'
 export * from './UserCardActionsMenu'
 //export * from './User'
 //export * from './UsersBoardProjectView'
+export * from './UserProfileNavButton'
+

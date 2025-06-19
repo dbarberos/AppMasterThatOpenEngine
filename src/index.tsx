@@ -99,54 +99,9 @@ const App = () => {
     return ( 
         <AuthProvider>
             <Router.BrowserRouter>
-                {/* <Sidebar projectsManager={projectsManager} />
-                <Router.Routes>
-
-                    <Router.Route path='/' element={
-                        <ProjectsPage
-                            projectsManager={projectsManager}
-                            onProjectUpdate={handleProjectCreate}
-                            onNewProjectCreated={handleNewProject}
-                        />
-                    } />
-
-                    <Router.Route path='/project/:id' element={
-                        // <ErrorBoundary fallback="Error"> 
-                            <ProjectDetailsPage
-                                projectsManager={projectsManager}
-                                onProjectCreate={handleProjectCreate}
-                                onProjectUpdate={handleProjectUpdate}
-                                onToDoIssueCreated={handleToDoIssueCreated}
-                                onToDoIssueUpdated={handleToDoIssueUpdated}
-                            />
-                        // </ErrorBoundary>
-                    } />
-
-                    <Router.Route path='/project/todoBoard/:id' element={
-                        // <ErrorBoundary fallback="Error"> 
-                        <ToDoBoardPage
-                            projectsManager={projectsManager}
-                            onProjectCreate={handleProjectCreate}
-                            onProjectUpdate={handleProjectUpdate}
-                            onToDoIssueCreated={handleToDoIssueCreated}
-                            onToDoIssueUpdated={handleToDoIssueUpdated}
-                        />
-                        // </ErrorBoundary>
-                    } />
-
-                    <Router.Route path='/usersBoard' element={
-                        <UsersBoardPage
-                            usersManager={usersManager}
-                            projectsManager = { projectsManager }
-                            onUserCreate={handleUserCreate}
-                            onUserUpdate={handleUserUpdate}
-                        />
-                    } />
-                    <Router.Route path="*" element={<>Eror 404</>} />
-
-                </Router.Routes> */}
                 <Sidebar
                     projectsManager={projectsManager}
+                    usersManager={usersManager}
                     // currentUser y userProfile se obtienen dentro de Sidebar con useAuth()
                 />
                 {/* MainLayout contiene el área principal con las rutas */}
@@ -297,16 +252,6 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
                             projectsManager={props.projectsManager}
                             onUserCreate={props.onUserCreate}
                             onUserUpdate={props.onUserUpdate}
-                        />
-                        : <Router.Navigate to="/auth" />
-                } />
-
-                <Router.Route path="/profile" element={
-                    currentUser && userProfile
-                        ? <NewUserForm
-                            onProfileUpdate={() => navigate('/')}
-                            authCurrentUserRole={userProfile.roleInApp as UserRoleInAppKey | undefined}
-                            onClose={() => navigate('/')}
                         />
                         : <Router.Navigate to="/auth" />
                 } />

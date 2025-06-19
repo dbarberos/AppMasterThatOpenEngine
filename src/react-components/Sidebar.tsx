@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
-import {User as FirebaseUser } from 'firebase/auth';
+import { User as FirebaseUser } from 'firebase/auth';
 
 import { LoadingIcon, MainProjectCatalog, MainProjectDetails, MainToDoBoard, MainUsersIndex } from './icons';
 import { useStickyState } from '../hooks'
@@ -11,7 +11,10 @@ import { ProjectsManager } from '../classes/ProjectsManager'
 import { useAuth } from '../Auth/react-components/AuthContext.tsx'; // Ajusta la ruta
 import { signOut } from '../services/firebase/firebaseAuth'; // Usamos nuestra función signOut centralizada
 import { UserIcon, ChevronDownIcon, ProfileIcon, LoginIcon, LogoutIcon } from './icons';
-
+import { NewUserForm } from './NewUserForm';
+import { UserProfileNavButton } from './UserProfileNavButton';
+import { UsersManager } from '../classes/UsersManager.ts';
+import { toast } from 'sonner';
 
 
 interface SidebarProps { // Añadir props
@@ -19,11 +22,12 @@ interface SidebarProps { // Añadir props
     // userProfile: any | null; // Recibir userProfile (usamos any por simplicidad, idealmente un tipo más específico)
     // onNavigate: (path: 'profile' | 'signin' | 'change-password') => void;
     projectsManager: ProjectsManager;
+    usersManager: UsersManager;
 }
 
 // Sidebar ahora obtiene currentUser y userProfile directamente del contexto
 
-export function Sidebar({ projectsManager }: SidebarProps) {
+export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
     console.log('Sidebar: Component rendering / re-rendering TOP');
     
     const location = Router.useLocation(); // Hook para obtener la ubicación actual
@@ -31,9 +35,13 @@ export function Sidebar({ projectsManager }: SidebarProps) {
     const navigate = Router.useNavigate();
     
 
-    const { currentUser, userProfile, loading } = useAuth();
-    const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
-    const dropdownRef = React.useRef<HTMLDivElement>(null);
+    // const { currentUser, userProfile, loading } = useAuth();
+    // const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+    // const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+    const { currentUser, userProfile, loading: authLoading } = useAuth(); // Renombrar loading para claridad
+    
+    const [isProfileFormModalOpen, setIsProfileFormModalOpen] = React.useState(false); // State for modal
 
     // Usamos useStickyState para gestionar el estado principal y su persistencia
     // Clave para useStickyState: específica del usuario o genérica si no hay usuario.
@@ -49,43 +57,40 @@ export function Sidebar({ projectsManager }: SidebarProps) {
         return '??';
     };
 
-    const handleLogout = async () => {
-        try {
-            await signOut(); // Llama a la función de signOut de firebaseAuth.ts
-            setIsDropdownOpen(false);
-          // AuthProvider detectará el cambio y la UI se actualizará.
-          // onNavigate('signin') podría ser llamado por el componente padre si es necesario forzar la vista.
-        } catch (error) {
-            console.error("Error al cerrar sesión:", error);
-            // Considera mostrar un toast o mensaje de error al usuario
-        }
-    };
+    // const handleLogout = async () => {
+    //     try {
+    //         await signOut(); // Llama a la función de signOut de firebaseAuth.ts
+    //         setIsDropdownOpen(false);
+    //       // AuthProvider detectará el cambio y la UI se actualizará.
+    //       // onNavigate('signin') podría ser llamado por el componente padre si es necesario forzar la vista.
+    //     } catch (error) {
+    //         console.error("Error al cerrar sesión:", error);
+    //         // Considera mostrar un toast o mensaje de error al usuario
+    //     }
+    // };
 
-    console.log('Sidebar: Current state', {
-        selectedProjectId,
-        pathname: location.pathname,
-        projectsCount: projectsManager?.list.length
-    });
-
-
-
-    React.useEffect(() => {
+    // console.log('Sidebar: Current state', {
+    //     selectedProjectId,
+    //     pathname: location.pathname,
+    //     projectsCount: projectsManager?.list.length
+    // });
 
 
 
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    // React.useEffect(() => {
+    //     const handleClickOutside = (event: MouseEvent) => {
+    //         if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    //             setIsDropdownOpen(false);
+    //         }
+    //     };
+    //     document.addEventListener('mousedown', handleClickOutside);
+    //     return () => document.removeEventListener('mousedown', handleClickOutside);
+    // }, []);
 
 
 // Efecto para sincronizar el estado cuando cambia el usuario
 React.useEffect(() => {
-    if (!loading && currentUser) {
+    if (!authLoading  && currentUser) {
         // Sincronizar selectedProjectId con la nueva clave de usuario
         const newKey = `selectedProjectId_${currentUser.uid}`;
         const stickyValue = window.localStorage.getItem(newKey);
@@ -104,12 +109,12 @@ React.useEffect(() => {
             // Limpiar estado si no hay valor para el nuevo usuario
             setSelectedProjectId(null);
         }
-    } else if (!loading && !currentUser) {
+    } else if (!authLoading  && !currentUser) {
         // Usuario invitado
         const guestValue = localStorage.getItem('selectedProjectId_guest');
         setSelectedProjectId(guestValue ? JSON.parse(guestValue) : null);
     }
-}, [currentUser, loading, setSelectedProjectId]);
+}, [currentUser, authLoading , setSelectedProjectId, selectedProjectIdKey]);
 
 
 
@@ -151,20 +156,28 @@ React.useEffect(() => {
 
 
     // Manejador de navegación interna del sidebar
-    const handleSidebarNavigation = (path: 'profile' | 'signin' | 'change-password') => {
-        setIsDropdownOpen(false); // Cerrar dropdown al navegar
-        if (path === 'profile') {
-            navigate('/profile');
-        } else if (path === 'signin') {
+    const handleUserProfileNavActions = async (action: 'profile' | 'auth' | 'change-password' | 'signout') => {
+        // El portal se cierra internamente en UserProfileNavButton
+        if (action === 'profile') {
+            // navigate('/profile');
+            // Open the modal instead of navigating
+            setIsProfileFormModalOpen(true);
+
+        } else if (action === 'auth') {
             if (currentUser) { // "Cambiar Cuenta" (Sign Out y luego a Auth)
-                signOut().then(() => {
-                    navigate('/auth');
-                }).catch(console.error);
-            } else { // Botón inicial "Sign Up / Sign In"
-                navigate('/auth');
+                await signOut();
             }
-        } else if (path === 'change-password') {
+            navigate('/auth'); // Navega a /auth si no hay usuario o después de cerrar sesión
+        } else if (action === 'change-password') {
             navigate('/change-password');
+        } else if (action === 'signout') {
+            await signOut();
+            if (location.pathname !== '/auth') { // Evitar navegación redundante si ya estamos en /auth
+                navigate('/auth'); // O a la página de inicio: navigate('/');
+            } else { 
+                // Si ya estamos en /auth, no es necesario navegar de nuevo.
+                // El AuthProvider se encargará de actualizar el estado.
+            }
         }
     };
 
@@ -206,7 +219,7 @@ React.useEffect(() => {
         // Asegúrate de incluir aquí cualquier segmento que pueda ser el último en una URL
         // donde quieras que el selectedProjectId se mantenga "sticky" en lugar de intentar
         // extraer un ID.
-        const pathKeywords = ["project", "todoBoard", "usersBoard", "settings",'auth', 'profile', 'change-password', 'signin', 'signup']; // Añade más según sea necesario
+        const pathKeywords = ["project", "todoboard", "usersboard", "settings",'auth', 'profile', 'change-password', 'signin', 'signup']; // Añade más según sea necesario
 
         let potentialProjectId = parts[parts.length - 1];
 
@@ -265,7 +278,7 @@ React.useEffect(() => {
         });
 
 
-    }, [location.pathname, selectedProjectId, setSelectedProjectId, , projectsManager]);
+    }, [location.pathname, selectedProjectId, setSelectedProjectId, projectsManager]);
 
 
     // This is the crucial part for rendering the button.
@@ -277,6 +290,19 @@ React.useEffect(() => {
     //Si no hay ID, usa '0' como placeholder. Si hay ID, úsalo.
     const toDoBoardPath = selectedProjectId ? `/project/todoBoard/${selectedProjectId}` : '/project/todoBoard/0';
     
+
+
+
+
+    // Handler to close the profile form modal
+    const handleCloseProfileFormModal = () => {
+        setIsProfileFormModalOpen(false);
+    };
+
+    const handleProfileUpdateSuccess = () => {
+        setIsProfileFormModalOpen(false);
+        toast.success('Profile updated successfully!');
+    };
 
 
 
@@ -352,9 +378,8 @@ React.useEffect(() => {
                                 Project Details
                             </li>
                         )
-                    } 
-
-
+                    }
+                    
 
                     {/* Button To-Do Boards  */}
                     <Router.Link to={toDoBoardPath}>
@@ -390,213 +415,36 @@ React.useEffect(() => {
 
 
                 {/* User Profile / Auth Section - Placed before sidebar controls */}
-                <div
-                    className="sidebar-user-auth-section"
+                {/* Nuevo UserProfileNavButton integrado como un elemento de la lista de navegación */}
+                <ul
                     style={{
-                        marginTop: 'auto',
-                        marginBottom: 150,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        //justifyContent: 'space-between',
-                    }}>
+                        listStyle: 'none',
+                        padding: 0,
+                        margin: 'auto -25px 150px 0' ,
+                        
+                    }}> {/* Contenedor para el botón de perfil */}
+                    <UserProfileNavButton
+                        currentUser={currentUser}
+                        userProfile={userProfile}
+                        authLoading={authLoading}
+                        onNavigate={handleUserProfileNavActions}
+                    />
+                </ul>
 
-                    {/* Mostrar LoadingIcon si la autenticación está cargando */}
-                    {loading
-                        ? (<div
-                            className="sidebar-user-profile-loading"
-                            style={{
-                                padding: '1rem',
-                                textAlign: 'center',
-                                color: '#777',
-                                marginTop: 'auto',
-                                borderTop: '1px solid #eee'
-                            }}>
-                            {/* Loading... */}
-                            <LoadingIcon/>
-                        </div>
-                            
-                        ) : currentUser && userProfile
-                        ? ( // Mostrar perfil de usuario si está autenticado (currentUser) y el perfil (userProfile) está cargado
-                                <div
-                                    className="sidebar-user-profile"
-                                    ref={dropdownRef}
-                                    style={{ marginTop: 'auto', borderTop: '1px solid #eee' }}
-                                >
-                                    <button
-                                        className="user-profile-button"
-                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            width: '100%',
-                                            background: 'none',
-                                            border: 'none',
-                                            padding: '1rem',
-                                            textAlign: 'left',
-                                            cursor: 'pointer',
-                                            borderRadius: '4px'
-                                        }}
-                                    >
-                                        <div
-                                            className="avatar"
-                                            style={{
-                                                width: '40px',
-                                                height: '40px',
-                                                borderRadius: '50%',
-                                                backgroundColor: '#ddd',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                marginRight: '1rem',
-                                                overflow: 'hidden',
-                                                color: '#fff',
-                                                fontWeight: 'bold',
-                                                fontSize: '1rem'
-                                            }}
-                                        >
-                                            {userProfile.photoURL
-                                                ? (<img
-                                                    src={userProfile.photoURL}
-                                                    alt="User avatar"
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                />)
-                                                : (<span>{initials}</span>
-                                                )}
-                                        </div>
-                                        <div className="user-info" style={{ flexGrow: 1 }}>
-                                            <span
-                                                className="nickname"
-                                                style={{ display: 'block', fontWeight: '600', fontSize: '0.95rem', color: '#333' }}
-                                            >
-                                                {userProfile.nickname || 'Usuario'}
-                                            </span>
-                                            <span
-                                                className="email"
-                                                style={{ display: 'block', fontSize: '0.8rem', color: '#777' }}
-                                            >
-                                                {currentUser.email}
-                                            </span>
-                                        </div>
-                                        <ChevronDownIcon size={16} color="var(--color-fontbase-dark)" className='todo-icon-plain' />
-                                    </button>
+                {/* Render the NewUserForm modal conditionally */}
+                {isProfileFormModalOpen && currentUser && userProfile && (
+                    <NewUserForm
+                        currentUserData={userProfile} // Pass the userProfile data
+                        usersManager={usersManager} // Pass the usersManager instance
+                        onClose={handleCloseProfileFormModal}
+                        onProfileUpdate={handleProfileUpdateSuccess}
+                        authCurrentUserRole={userProfile.roleInApp as any} // Pass the role if needed for form logic
+                    />
+                )}
+                
+                {/*  End of sidebar-user-auth-section */}
 
-                                    {isDropdownOpen &&
-                                        (<div
-                                            className="profile-dropdown"
-                                            style={{
-                                                position: 'absolute',
-                                                bottom: 'calc(100% + 10px)',
-                                                right: '10px',
-                                                backgroundColor: 'white',
-                                                border: '1px solid #ccc',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                                                zIndex: 1000,
-                                                width: '220px',
-                                                overflow: 'hidden'
-                                            }}
-                                        >
-                                            <button
-                                                onClick={() => { handleSidebarNavigation('profile'); setIsDropdownOpen(false); }}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    width: '100%',
-                                                    padding: '0.75rem 1rem',
-                                                    background: 'none',
-                                                    border: 'none',
-                                                    textAlign: 'left',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.9rem'
-                                                }}
-                                            >
-                                                <ProfileIcon size={16} color="var(--color-fontbase-dark)" className='todo-icon-plain'/>
-                                                Perfil
-                                            </button>
-                                            <button
-                                                onClick={() => { handleSidebarNavigation('change-password'); setIsDropdownOpen(false); }}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    width: '100%',
-                                                    padding: '0.75rem 1rem',
-                                                    background: 'none',
-                                                    border: 'none',
-                                                    textAlign: 'left',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.9rem'
-                                                }}
-                                            >
-                                                🔑 Cambiar Contraseña
-                                            </button>
-                                            <button
-                                                onClick={() => { handleSidebarNavigation('signin'); setIsDropdownOpen(false); }}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    width: '100%',
-                                                    padding: '0.75rem 1rem',
-                                                    background: 'none',
-                                                    border: 'none',
-                                                    textAlign: 'left',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.9rem'
-                                                }}
-                                            >
-                                                <LoginIcon size={16} color="var(--color-fontbase-dark)" className='todo-icon-plain' />
-                                                Cambiar Cuenta
-                                            </button>
-                                            <div
-                                                style={{ borderTop: '1px solid #eee', margin: '0.25rem 0' }}
-                                            >
-                                            </div>
-                                            <button
-                                                onClick={handleLogout}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    width: '100%',
-                                                    padding: '0.75rem 1rem',
-                                                    background: 'none',
-                                                    border: 'none',
-                                                    textAlign: 'left',
-                                                    cursor: 'pointer',
-                                                    color: '#dc3545',
-                                                    fontSize: '0.9rem'
-                                                }}
-                                            >
-                                                <LogoutIcon size={16} color="var(--color-fontbase-dark)" className='todo-icon-plain'/>
-                                                Cerrar Sesión
-                                            </button>
-                                        </div>
-                                        )}
-                                </div>
-                            )
-                            : (
-                                // Botón de Sign Up / Sign In si no hay usuario
-                                <div
-                                    className="sidebar-user-profile"
-                                    style={{ marginTop: 'auto' }}
-                                >
-                                    {/* <button
-                                        onClick={() => onNavigate('signin')}
-                                        className="button" // Puedes reutilizar este estilo o crear uno nuevo
-                                        
-                                    > */}
-                                        {/* Botón de Sign Up / Sign In si no hay usuario */}
-                                    <button onClick={() => handleSidebarNavigation('signin')} className="button">
-                                        Sign Up / Sign In
-                                        
-                                    </button>
-
-
-
-                                </div>
-                            )
-                    }
-                    
-                </div> {/* End of sidebar-user-auth-section */}
+                
                     
                 {/* Sidebar Controls Section (Toggle and Theme) */}
                 <div

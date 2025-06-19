@@ -47,7 +47,7 @@ import { IUser } from '../../types'
 export interface SignUpData {
     email: string;
     password_DO_NOT_STORE_THIS_PLAINTEXT: string; // Renombrado para enfatizar
-    nickname: string;
+    nickName: string;
 }
 
 export interface SignInData {
@@ -81,9 +81,9 @@ export interface SignInData {
 
 
 // Función para verificar si un nickname ya existe
-const isNicknameTaken = async (nickname: string): Promise<boolean> => {
+const isNicknameTaken = async (nickName: string): Promise<boolean> => {
     const usersRef = Firestore.collection(firestoreDB, "users");
-    const q = Firestore.query(usersRef, Firestore.where("nickname", "==", nickname));
+    const q = Firestore.query(usersRef, Firestore.where("nickname", "==", nickName));
     const querySnapshot = await Firestore.getDocs(q);
     return !querySnapshot.empty;
 };
@@ -93,10 +93,10 @@ const isNicknameTaken = async (nickname: string): Promise<boolean> => {
 export const signUpWithEmail = async ({
     email,
     password_DO_NOT_STORE_THIS_PLAINTEXT,
-    nickname,
+    nickName,
 }: SignUpData): Promise<firebaseUser> => {
     try {
-        const trimmedNickname = nickname.trim();
+        const trimmedNickname = nickName.trim();
 
         const normalizedEmail = email.toLowerCase();
         // const userByEmailRef = Firestore.doc(firestoreDB, `usersByEmail/${normalizedEmail}`);
@@ -119,7 +119,7 @@ export const signUpWithEmail = async ({
         const userProfileData: UserProfile = {
             uid: user.uid,
             email: user.email, 
-            nickname: trimmedNickname, // Ensure this matches UserProfile (lowercase 'n')
+            nickName: trimmedNickname, // Ensure this matches UserProfile (lowercase 'n')
             firstName: "",
             lastName: "",
             photoURL: user.photoURL || null, // Use undefined if null for optional fields
@@ -236,7 +236,7 @@ const handleOAuthSignIn = async (
             await Firestore.setDoc(userDocRef, {
                 uid: user.uid,
                 email: userEmail,
-                nickname: finalNickname,
+                nickName: finalNickname,
                 firstName: "", // Ya no se piden
                 lastName: "",  // Ya no se piden
                 photoURL: user.photoURL, // Guardar la foto de perfil del proveedor
@@ -323,17 +323,17 @@ export class FirebaseAuthService {
     }
 
     // Método para crear un usuario en Firebase Authentication y actualizar su perfil
-    static async signUpWithEmailPasswordNickname(email: string, password: string, nickname: string): Promise<UserCredential | null> {
+    static async signUpWithEmailPasswordNickname(email: string, password: string, nickName: string): Promise<UserCredential | null> {
         try {
             const userCredential = await createUserWithEmailAndPassword(this.authInstance, email, password);
             if (userCredential.user) {
                 await updateProfile(userCredential.user, {
-                    displayName: nickname,
+                    displayName: nickName,
                     // photoURL: "opcional_url_foto_default" 
                 });
                 // Después de crear en Auth y actualizar perfil, crea el documento en Firestore
-                await this.createUserInFirestore(userCredential.user, { nickName: nickname });
-                toast.success(`Account for ${nickname} created successfully!`);
+                await this.createUserInFirestore(userCredential.user, { nickName: nickName });
+                toast.success(`Account for ${nickName} created successfully!`);
                 return userCredential;
             }
             throw new Error("Login failed: No user credentials returned.");
@@ -513,7 +513,7 @@ export class FirebaseAuthService {
     static async  registerUserWithEmail(
         email: string,
         password_param: string,
-        profileData: UserProfileData
+        profileData: UserProfile
     ): Promise<firebaseUser> {
         try {
             const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');

@@ -5,12 +5,10 @@ import * as Firestore from 'firebase/firestore';
 
 import {  updateDocument } from '../services/firebase'
 
-
-import { MessagePopUp, MessagePopUpProps } from '../react-components';
 import { IUser, IProjectAssignment, UserStatusKey, UserRoleInAppKey,UserStatusValue} from '../types'; 
 import {  USER_ROLES_IN_PROJECT , USER_STATUS } from '../const'
 import { User } from '../classes/User'; 
-
+import { UsersManager } from '../classes/UsersManager'
 
 //import { ProjectsManager } from '../classes/ProjectsManager';
 //import { usePrepareUserForm } from '../hooks';
@@ -25,18 +23,18 @@ import { useAuth, UserProfile } from '../Auth/react-components/AuthContext'
 import { firestoreDB as db } from '../services/firebase/index'; 
 import { toast } from 'sonner'
 import { ChangePasswordForm } from '../Auth/react-components/ChangePasswordForm';
-
+import { DiffContentMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
+import { usePrepareUserForm, useUsersCache } from '../hooks';
 
 interface NewUserFormProps { 
-    authCurrentUserRole: UserRoleInAppKey | undefined; // Add prop for current user's role
+    currentUserData: UserProfile; // Datos del perfil del usuario actual
+    usersManager: UsersManager; // Instancia de UsersManager
+    authCurrentUserRole: UserRoleInAppKey | undefined; // Rol del usuario autenticado
     onClose: () => void;
-    //usersManager: UsersManager;  // No necesario para "Mi Perfil"
-    //projectsManager: ProjectsManager;   // No necesario para "Mi Perfil"
-    //updateUser?: User | null; // No necesario, siempre será el currentUser
+    onProfileUpdate: (updatedUser: UserProfile) => void; // Callback tras actualización exitosa
+    
+    //projectsManager: ProjectsManager;   // No necesario para "Mi Perfil"    
     //onAssignProjects: (user: User) => void;  // Esto iría en otra sección, no en "Mi Perfil" básico
-    //onCreateUser?: (createdUser: User) => void; // No se crea usuario aquí
-    //onUpdateUser?: (updatedUser: User) => void; // Se reemplaza por onProfileUpdate
-    onProfileUpdate: () => void; // Callback para cuando el perfil se actualiza, , puede ser para cerrar el modal o redirigir
 }
 
 interface Country {
@@ -44,34 +42,29 @@ interface Country {
     callingCode: string;
 }
 
-
-
 export function NewUserForm({
+    currentUserData,
+    usersManager,
     authCurrentUserRole,
     onClose,
-    //usersManager,
-    //projectsManager,
-    //updateUser = null, // Si se pasa este prop, estamos en modo edición
-    //onAssignProjects,
-    //onCreateUser,
-    //onUpdateUser,
-    onProfileUpdate
+    onProfileUpdate //Siempre se abre en modo edición. Se crea con el Auth.
 }: NewUserFormProps) {
-
-    const { currentUser, userProfile, loading: authLoading } = useAuth();
-
-    // Estados para los campos del formulario editables por el usuario
-    const [nickName, setNickName] = React.useState(userProfile?.nickName || '');
-    const [firstName, setFirstName] = React.useState(userProfile?.firstName || '');
-    const [lastName, setLastName] = React.useState(userProfile?.lastName || '');
-    const [phoneNumber, setPhoneNumber] = React.useState(userProfile?.phoneNumber || '');
-    const [address, setAddress] = React.useState(userProfile?.address || '');
-    const [descriptionUser, setDescriptionUser] = React.useState(userProfile?.descriptionUser || '');
-    // photoURL se manejaría con un input type="file" y lógica de subida a Firebase Storage (más complejo)
-    
-    
+        
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
+
+     const { currentUser, loading: authLoading, userProfile } = useAuth(); // userProfile vendrá de currentUserData
+
+    // Estados para los campos del formulario editables por el usuario
+    const [nickName, setNickName] = React.useState('');
+    const [firstName, setFirstName] = React.useState('');
+    const [lastName, setLastName] = React.useState('');
+    const [phoneNumber, setPhoneNumber] = React.useState('');
+    const [address, setAddress] = React.useState('');
+    const [descriptionUser, setDescriptionUser] = React.useState('');
+    // photoURL se manejaría con un input type="file" y lógica de subida a Firebase Storage (más complejo)
+    
+
 
     // const [formData, setFormData] = React.useState<Partial<IUser> | null>(null)
     // const [password, setPassword] = React.useState(''); // Estado separado para la contraseña
@@ -83,11 +76,6 @@ export function NewUserForm({
 
     //const [assignProjects, setAssignProjects] = React.useState<IProjectAssignment[]>([])
 
-    // const [newUsertName, setNewUserName] = React.useState<string | null>(null);
-    // const [userNameToConfirm, setUserNameToConfirm] = React.useState<string | null>(null);
-    // const [userDetailsToRename, setUserDetailsToRename] = React.useState<IUser | null>(null);
-    // const [isRenaming, setIsRenaming] = React.useState(false);
-    // const [currentUserName, setCurrentUserName] = React.useState('');
 
     // Add useUsersCache hook
     // For loading the Users from cache at the beggining as Projects
@@ -101,7 +89,7 @@ export function NewUserForm({
     const [showCountryList, setShowCountryList] = React.useState(false);
     const [countrySearchTerm, setCountrySearchTerm] = React.useState('');
 
-    // // Estados para la asignación de proyectos
+    // // Estados para la asignación de proyectos NO SE ASIGNAN DIRECTAMENTE AQUÍ SE HACE EN OTRA PARTE DE LA APP
     // const [selectedProjectId, setSelectedProjectId] = React.useState<string>('');
     // const [selectedProjectRole, setSelectedProjectRole] = React.useState<UserRoleInAppKey | ''>('');
 
@@ -111,38 +99,27 @@ export function NewUserForm({
     //Para cambiar el password
     const [showChangePasswordForm, setShowChangePasswordForm] = React.useState(false);
 
-
-    // useEffect TRASPASADO AL HOOK INFERIOR
-
-    // React.useEffect(() => {
-    //     if (isEditMode && updateUser) {
-    //         setFormData({ ...updateUser });
-    //         setProjectAssignments(updateUser.projectsAssigned || []);
-    //         // Aquí podrías también setear los campos del formulario si updateUser tiene valores
-    //     } else {
-    //         setFormData({}); // Para nuevo usuario
-    //         setProjectAssignments([]);
-    //         // Aquí podrías resetear los campos del formulario
-    //     }
-    // }, [isEditMode, updateUser]);
+    usePrepareUserForm({ userToBeUpdated: currentUser, usersManager })
 
 
 
-    //usePrepareUserForm({ userToBeUpdated: updateUser, usersManager });
-    // Inicializar el formulario con los datos del userProfile
-    React.useEffect(() => {
-        if (userProfile) {
-            setNickName(userProfile.nickName || '');
-            setFirstName(userProfile.firstName || '');
-            setLastName(userProfile.lastName || '');
-            setPhoneNumber(userProfile.phoneNumber || '');
-            setSelectedCountry(countries.find(c => c.callingCode === userProfile.phoneCountryNumber) || null);
-            setAddress(userProfile.address || '');
-            setDescriptionUser(userProfile.descriptionUser || '');
-            setProjectAssignments(userProfile.projectsAssigned || []);
+    // Inicializar el formulario con los datos del currentUserData
+    React.useEffect(() => {    
+        if (currentUserData) {
+            setNickName(currentUserData.nickName || '');
+            setFirstName(currentUserData.firstName || '');
+            setLastName(currentUserData.lastName || '');
+            setPhoneNumber(currentUserData.phoneNumber || '');
+            setSelectedCountry(countries.find(c => c.callingCode === currentUserData.phoneCountryNumber) || null);
+            setAddress(currentUserData.address || '');
+            setDescriptionUser(currentUserData.descriptionUser || '');
+            setProjectAssignments(currentUserData.projectsAssigned || []);
         }
-    }, [userProfile, countries]); // Añadir countries a las dependencias
-    
+    }, [currentUserData, countries]);
+
+
+
+
 
     const onCloseNewUserForm = () => {
         const userForm = document.getElementById("new-user-form") as HTMLFormElement
@@ -267,14 +244,13 @@ export function NewUserForm({
         setSuccess(null);
         setIsLoading(true);
 
-        if (!currentUser || !userProfile) {
+        if (!currentUser || !currentUserData) {
             setError("Debes estar autenticado para actualizar tu perfil.");
             toast.error("Debes estar autenticado para actualizar tu perfil.");
             setIsLoading(false);
             return;
         }
 
-        // Validaciones básicas (puedes añadir más)
         if (!firstName || !lastName || !nickName) {
             setError("Nombre, apellidos y nickname son requeridos.");
             toast.error("Nombre, apellidos y nickname son requeridos.");
@@ -282,31 +258,97 @@ export function NewUserForm({
             return;
         }
 
-        const dataToUpdate: Partial<UserProfile> = {
+        const currentProfileForDiff: Partial<UserProfile> = {
+            nickName: currentUserData.nickName,
+            firstName: currentUserData.firstName,
+            lastName: currentUserData.lastName,
+            phoneNumber: currentUserData.phoneNumber,
+            phoneCountryNumber: currentUserData.phoneCountryNumber,
+            address: currentUserData.address,
+            descriptionUser: currentUserData.descriptionUser,
+        };
+        
+        // Solo los admins pueden cambiar estos campos, así que los incluimos en el diff si el rol es admin
+        if (authCurrentUserRole === 'admin') {
+            // Aquí deberías obtener los valores de los campos de rol y status del formulario si son editables por el admin
+            // Por ahora, asumimos que no se cambian en este flujo simplificado o que se manejan de otra forma.
+            // currentProfileForDiff.roleInApp = currentUserData.roleInApp;
+            // currentProfileForDiff.status = currentUserData.status;
+        }
+        
+
+
+        const newProfileData: Partial<UserProfile> = {
+
             nickName,
             firstName,
             lastName,
             phoneNumber,
-            phoneCountryNumber: selectedCountry?.callingCode || userProfile.phoneCountryNumber,
+            phoneCountryNumber: selectedCountry?.callingCode || currentUserData.phoneCountryNumber,
             address,
             descriptionUser,
-            // No actualizamos email, roleInApp, status, projectsAssigned desde aquí
+            // Campos que solo un admin podría cambiar (si se implementa su edición en el form)
+            // roleInApp: (authCurrentUserRole === 'admin' ? formData.get("roleInApp") : currentUserData.roleInApp) as UserRoleInAppKey,
+            // status: (authCurrentUserRole === 'admin' ? formData.get("status") : currentUserData.status) as UserStatusKey,
         };
 
-
-        try {
-            const userDocRef = Firestore.doc(db, 'users', currentUser.uid);
-            await updateDocument(currentUser.uid, dataToUpdate, { basePath: 'users' }); // Usar la función de servicio
-            setSuccess("Perfil actualizado correctamente.");
-            toast.success("Perfil actualizado correctamente.");
-            onProfileUpdate(); // Llama al callback para cerrar el modal o redirigir
-        } catch (error) {
-            console.error("Error actualizando perfil:", error);
-            setError("No se pudo actualizar el perfil. Inténtalo de nuevo.");
-            toast.error("No se pudo actualizar el perfil. Inténtalo de nuevo.");
-        } finally {
-            setIsLoading(false);
+        // Calcular diferencias para la confirmación
+        const changes: Record<string, [any, any]> = {};
+        for (const key in newProfileData) {
+            if (newProfileData.hasOwnProperty(key) && currentProfileForDiff.hasOwnProperty(key)) {
+                if (newProfileData[key] !== currentProfileForDiff[key]) {
+                    changes[key] = [currentProfileForDiff[key] || "N/A", newProfileData[key] || "N/A"];
+                }
+            }
         }
+
+        if (Object.keys(changes).length === 0) {
+            toast.info("No se detectaron cambios en el perfil.");
+            setIsLoading(false);
+            onClose(); // Opcional: cerrar si no hay cambios
+            return;
+        }
+
+        // Mostrar MessagePopUp para confirmación
+        const messageContent = <DiffContentMessage changes={changes, 'user'} />; // Reutilizar o adaptar
+        const messageRowsCount = Object.keys(changes).length;
+        const messageHeight = `calc(${messageRowsCount} * 3.5rem + 7rem)`;
+
+        setMessagePopUpContent({
+            type: "info",
+            title: "Confirmar Actualización de Perfil",
+            message: messageContent,
+            messageHeight: messageHeight,
+            actions: ["Confirmar", "Cancelar"],
+            onActionClick: {
+                "Confirmar": async () => {
+                    setShowMessagePopUp(false);
+                    setIsLoading(true); // Re-establecer isLoading
+                    try {
+                        const updatedUser = await usersManager.updateUserProfile(currentUserData.uid, newProfileData);
+                        toast.success("Perfil actualizado correctamente.");
+                        onSuccess(updatedUser); // Llama al callback con el usuario actualizado
+                    } catch (err) {
+                        console.error("Error actualizando perfil:", err);
+                        const errorMessage = (err instanceof Error) ? err.message : "No se pudo actualizar el perfil.";
+                        setError(errorMessage);
+                        toast.error(errorMessage);
+                    } finally {
+                        setIsLoading(false);
+                    }
+                },
+                "Cancelar": () => {
+                    setShowMessagePopUp(false);
+                    setIsLoading(false);
+                }
+            },
+            onClose: () => {
+                setShowMessagePopUp(false);
+                setIsLoading(false);
+            }
+        });
+        setShowMessagePopUp(true);
+        // No establecer setIsLoading(false) aquí, se maneja en el MessagePopUp
     }
 
 
@@ -319,30 +361,24 @@ export function NewUserForm({
         setSuccess(null);
         setIsLoading(true);
 
-        if (!currentUser || !userProfile) {
+        if (!currentUser ||  !currentUserData) {
             setError("Debes estar autenticado para actualizar tu perfil.");
             setIsLoading(false);
             return;
         }
 
-
-        if (!firstName || !lastName || !nickname) {
+        if (!firstName || !lastName || !nickName) {
             setError("Nombre, apellidos y nickname son requeridos.");
             setIsLoading(false);
             return;
         }
 
+        // if (!isEditMode && password !== confirmPassword) {
+        //     setError("Passwords do not match.");
+        //     setIsLoading(false);
+        //     return;
+        // }
 
-
-
-
-
-
-        if (!isEditMode && password !== confirmPassword) {
-            setError("Passwords do not match.");
-            setIsLoading(false);
-            return;
-        }
 
         const userForm = document.getElementById("new-user-form")
 
@@ -366,8 +402,8 @@ export function NewUserForm({
             }
         } else {
             // Non-admin user, status is not editable via the form
-            userStatus = isEditMode && updateUser?.status
-                ? updateUser.status as UserStatusKey // Keep the existing status for updates
+            userStatus = currentUserData?.status
+                ? currentUserData.status as UserStatusKey // Keep the existing status for updates
                 : 'pending'; // For new users (non-admin), default to 'pending'
         }
 
@@ -383,7 +419,7 @@ export function NewUserForm({
             // Form is valid, proceed with data processing
             
             const userDetails: IUser = {                
-                nickName: formDataUser.get("nickName") as string,
+                nickName: formDataUser.get("nickname") as string,
                 firstName: formDataUser.get("firstName") as string,
                 lastName: formDataUser.get("lastName") as string,
                 email: formDataUser.get("email") as string,
@@ -396,8 +432,9 @@ export function NewUserForm({
                 
                 descriptionUser: formDataUser.get("descriptionUser") as string, // Assuming you have this field
 
-                accountCreatedAt: isEditMode && updateUser?.accountCreatedAt ? updateUser.accountCreatedAt : new Date(), // Preserve original date if editing
-                lastLoginAt: isEditMode && updateUser?.lastLoginAt ? updateUser.lastLoginAt : new Date(), // Preserve original date if editing or set new date
+                accountCreatedAt: currentUserData?.accountCreatedAt ? currentUserData.accountCreatedAt : new Date(), // Preserve original date if editing
+                lastLoginAt: currentUserData?.lastLoginAt ? currentUserData.lastLoginAt : new Date(), // Preserve original date if editing or set new date
+
                 status: userStatus, // Use the determined status
                 projectsAssigned: projectAssignments, // Include the project assignments
 
@@ -405,7 +442,7 @@ export function NewUserForm({
             if (updateUser === null) {
                 //When the form is for a NEW PROJECT
                 //createNewProject(projectDetails)
-                const usersEmails = usersManager.list.map(user => user.email);
+                const usersEmails = usersManager.list.map((user: User) => user.email);
                 const existingUser = usersEmails.find(existingEmail => existingEmail.toLowerCase() === userDetails.email.toLowerCase())
 
                 if (existingUser) {
@@ -439,7 +476,7 @@ export function NewUserForm({
                                 console.log("Overwrite button clicked!");
 
                                 //Logic inside newProject already delete if is found a project with the same name
-                                //so, we overwrite the project using create newProject
+                                //so, we overwrite the user using create newUser
                                 const originalDataProject = projectsManager.getProjectByName(userDetails.email)
                                 console.log("originalDataProject", originalDataProject);
 
@@ -450,14 +487,14 @@ export function NewUserForm({
                                 })
                                 console.log(newProject);
 
-                                await deleteDocument("/projects", originalDataProject.name)
-                                await createDocument("/projects", newProject)
+                                // await deleteDocument("/users", originalDataProject.id) // ADAPTAR
+                                // await createDocument("/users", newUser) // ADAPTAR
 
 
                                 // await updateDocument<Project>("/projects", originalDataProject.id, newProject)
                                 console.log("data transfered to DB created")
 
-                                onUpdatedProject && onUpdatedProject(newProject)
+                                // onUpdatedUser && onUpdatedUser(newUser) // ADAPTAR
                                 //Because newProject manage the overwrite as well
                                 projectsManager.newProject(newProject)
 
@@ -471,7 +508,7 @@ export function NewUserForm({
                             },
                             "Rename": () => {
                                 console.log("Rename button clicked!");
-                                setProjectDetailsToRename(projectDetails)
+                                // setProjectDetailsToRename(projectDetails) // ADAPTARsetProjectDetailsToRename(projectDetails)
 
                                 setCurrentProjectName(projectDetails.name);
                                 setIsRenaming(true)
@@ -494,7 +531,7 @@ export function NewUserForm({
                 } else {
                     // No duplicate, create the project
                     try {
-                        handleCreateUserInDB(userDetails)
+                        // handleCreateUserInDB(userDetails) // ADAPTAR O ELIMINAR SI NO ES PARA CREAR
                     } catch (error) {
                         console.error("Error creating project in DB:", error)
                         throw error
@@ -509,16 +546,16 @@ export function NewUserForm({
 
                 //HAY QUE COMPROBAR SI LOS DATOS QUE SE CAPTAN DEL FORMULARIO HAY QUE COGER LOS DATOS QUE NO ESTAN EN IProyect.
                 const projectDetailsToUpdate = new User({
-                    ...userDetails,
-                    id: updateUser.id,
+                    ...userDetails, // Esto es IUser, User espera IUser
+                    id: currentUserData.uid, // Usar el ID del usuario actual
                     //progress: updateProject.progress,
                     // backgroundColorAcronym: Project.calculateBackgroundColorAcronym(updateProject.businessUnit),
                     //todoList: updateProject.todoList,
                 })
 
 
-                const changesInUser = ProjectsManager.getChangedProjectDataForUpdate(updateProject, projectDetailsToUpdate)
-                const simplifiedChanges: Record<string, any> = {}
+                const changesInUser = usersManager.getChangedUserDataForUpdate(currentUserData, projectDetailsToUpdate) // Asumiendo que existe este método
+                const simplifiedChanges: Record<string, any> = {};
                 for (const key in changesInProject) {
                     if (changesInProject.hasOwnProperty(key)) { //Variant of the for...in loop that avoids iterating over inherited properties.
                         simplifiedChanges[key] = changesInProject[key][1]; // Onlytakes the second value
@@ -527,7 +564,7 @@ export function NewUserForm({
                 console.log("simplifiedChanges for DB", simplifiedChanges)
 
                 if (Object.keys(simplifiedChanges).length > 0) {
-                    const messageContent = <DiffContentProjectsMessage changes={changesInProject} />
+                    const messageContent = <DiffContentMessage changes={changesInProject, 'user'} />
                     // Calculate the number of rows in the messageContent table
                     const messageRowsCount = Object.keys(simplifiedChanges).length
                     // Calculate the desired message height
@@ -542,8 +579,8 @@ export function NewUserForm({
                         onActionClick: {
                             "Confirm update": async () => {
                                 try {
-                                    await handleUpdateDataProjectInDB(projectDetailsToUpdate, simplifiedChanges)
-                                    navigateTo("/")
+                                     // await handleUpdateDataUserInDB(projectDetailsToUpdate, simplifiedChanges) // ADAPTAR
+                                    // navigateTo("/") // No necesario en modal
 
                                     setShowMessagePopUp(false)
 
@@ -596,7 +633,7 @@ export function NewUserForm({
                     // }
                 }
                 onCloseNewProjectForm()
-            } else {
+            } else { // Este else corresponde a if (userForm.checkValidity())
                 // Form is invalid, let the browser handle the error display
                 projectForm.reportValidity();
             }
@@ -678,10 +715,10 @@ export function NewUserForm({
 
     if (authLoading) {
         return <p>Cargando perfil...</p>; // O un spinner
-    }
-    if (!currentUser || !userProfile) {
+    } // currentUserData ya se verifica arriba en el submit, aquí es para el render inicial
+    if (!currentUser || !currentUserData) {
         return <p>No se pudo cargar la información del perfil. Por favor, inicia sesión de nuevo.</p>;
-    }
+    } // Si currentUserData no está listo, el useEffect lo llenará.
 
 
 
@@ -718,7 +755,7 @@ export function NewUserForm({
 
                         <div className="user-input-list">
                             <fieldset className="data-mandatory">
-                                <legend>Please complete all required fields:</legend>
+                                <legend>Update the user here. Click save when you´re done. </legend>
                                 <div className="form-field-container">
                                     <label>
                                         <span className="material-icons-round">account_circle</span>Nick Name
@@ -733,6 +770,8 @@ export function NewUserForm({
                                         minLength={3}
                                         title="Please enter at least 3 characters"
                                         autoComplete="off"
+                                        value={nickName}
+                                        onChange={(e) => setNickName(e.target.value)}
                                     />
                                     <details>
                                         <summary>Tip</summary>
@@ -755,6 +794,7 @@ export function NewUserForm({
                                         maxLength={20}
                                         title= "Please enter your real name"
                                         autoComplete=""
+                                        
                                     />
                                 </div>
                                 <div className="form-field-container">
@@ -772,6 +812,7 @@ export function NewUserForm({
                                         maxLength={30}
                                         title= "Please enter your real name"
                                         autoComplete=""
+                                        onChange={(e) => setLastName(e.target.value)}
                                     />
                                 </div>
                                 <div className="form-field-container">
@@ -779,10 +820,11 @@ export function NewUserForm({
                                         <span className="material-icons-round">alternate_email</span>Work Email
                                     </label>
                                     <input
+                                        data-form-value="email"
                                         type="email"
                                         id='email'
                                         name='email' // El email no se edita aquí, se muestra
-                                        value={userProfile.email || ''}
+                                        value={currentUserData.email || ''}
                                         readOnly
                                         size={30}
                                         placeholder="Your Email is Your Key. Stay Connected."
@@ -794,9 +836,11 @@ export function NewUserForm({
                                         <span className="material-icons-round">phone</span>Work Phone
                                     </label>
                                     <input
+                                        data-form-value="phoneNumber"
                                         type="tel"
                                         id='phoneNumber'
                                         name='phoneNumber' // Editable
+                                        value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value)}
                                         placeholder="123-456-7890"
                                         inputMode="numeric"
@@ -809,6 +853,7 @@ export function NewUserForm({
                                     </label>
                                     <div style={{ position: 'relative' }}>
                                         <input
+                                            data-form-value="phoneCountryNumberlastName"
                                             type="text"
                                             value={selectedCountry ? `${selectedCountry.name} (+${selectedCountry.callingCode})` : ''}
                                             onClick={() => setShowCountryList(true)}
@@ -896,10 +941,11 @@ export function NewUserForm({
                                         <span className="material-icons-round">business</span>Organization
                                     </label>
                                     <input
+                                        data-form-value="organization"
                                         type="text"
                                         size={30}
                                         placeholder="Your Organization (Optional)"
-                                        value={userProfile.organization || ''} // No editable por el usuario directamente
+                                        value={currentUserData.organization || ''} // No editable por el usuario directamente
                                         readOnly
                                     />
                                 </div>
@@ -909,8 +955,9 @@ export function NewUserForm({
                                     </label>
                                     {/* Role in App Select - Always visible */}
                                     <input
+                                        data-form-value="roleInApp"
                                         type="text"
-                                        value={USER_ROLES_IN_PROJECT[userProfile.roleInApp as UserRoleInAppKey] || userProfile.roleInApp || 'N/A'}
+                                        value={USER_ROLES_IN_PROJECT[currentUserData.roleInApp as UserRoleInAppKey] || currentUserData.roleInApp || 'N/A'}
                                         readOnly
                                     />
                                     {/* <select
@@ -957,9 +1004,9 @@ export function NewUserForm({
                                         </select>
                                     ) : (
                                         // Non-admin user, just display status
-                                            <span className={`user-status-badge status-${isEditMode && updateUser?.status ? updateUser.status.toLowerCase() : 'pending'}`}>
-                                                {isEditMode && updateUser?.status
-                                                    ? USER_STATUS[updateUser.status as UserStatusKey] || updateUser.status
+                                            <span className={`user-status-badge status-${currentUserData?.status ? currentUserData.status.toLowerCase() : 'pending'}`}>
+                                                {currentUserData?.status
+                                                    ? USER_STATUS[currentUserData.status as UserStatusKey] || currentUserData.status
                                                     : USER_STATUS['pending']}
                                             </span>
                                     )}
@@ -998,6 +1045,7 @@ export function NewUserForm({
                                             Address
                                         </label>
                                         <input
+                                            data-form-value="address"
                                             type="text"
                                             size={30}
                                             value={address}
@@ -1018,11 +1066,13 @@ export function NewUserForm({
 
                                         <div className="fake-upload-button" onClick={handleFakeUploadClick} style={{ cursor: 'pointer' }}>
                                         <label htmlFor="profilePhotoUpload">Upload a user icon file</label>
-                                            <input type="file" accept=".jpg, .png, .jpeg" />
+                                            <input 
+                                                type="file"
+                                                accept=".jpg, .png, .jpeg" />
                                         </div>
                                         <div className="users-photo" style={{ border: "none" }}>
                                             <img
-                                            src={userProfile.photoURL || "./assets/photo-users/default-avatar.jpg"}
+                                            src={currentUserData.photoURL || "./assets/photo-users/default-avatar.jpg"}
                                             alt="User profile"
                                             onError={(e) => (e.target as HTMLImageElement).src = './assets/photo-users/default-avatar.jpg'}
                                             />
@@ -1034,7 +1084,7 @@ export function NewUserForm({
                                             <span className="material-icons-round">diversity_3</span>Projects
                                             Team
                                         </label>
-                                        {userProfile.projectsAssigned && userProfile.projectsAssigned.length > 0 ? (
+                                        {currentUserData.projectsAssigned && currentUserData.projectsAssigned.length > 0 ? (
                                             <div id="form-project-teams-included" style={{marginTop: "10px"}}>
                                                 <ul style={{
                                                     listStyleType: 'none', paddingLeft: 0, maxHeight: '250px', overflowY: 'auto', 
@@ -1049,7 +1099,7 @@ export function NewUserForm({
                                             </div>
                                         ) : (
                                                 <p style={{ fontSize: 'var(--font-base', color: 'var(--color-fontbase-dark)' }}>
-                                                    No projects assigned. Manage assignments in 'Project Teams' section.
+                                                    No projects assigned. Manage assignments inside 'Project Teams' section.
                                                 </p>
                                         ) }
                                     </div>
@@ -1082,7 +1132,7 @@ export function NewUserForm({
                                     Cancel
                                 </button>
                                 <button id="accept-profile-changes-btn" type="submit" className="buttonB" disabled={isLoading}>
-                                    {isLoading ? 'Guardando...' : 'Guardar Cambios'}
+                                    {isLoading ? 'Saving...' : 'Save changes'}
                                 </button>
                             </div>
                         </div>
