@@ -16,6 +16,7 @@ import { UserProfileNavButton } from './UserProfileNavButton';
 import { UsersManager } from '../classes/UsersManager.ts';
 import { toast } from 'sonner';
 
+import { ChangePasswordForm } from '../Auth/react-components/ChangePasswordForm';
 
 interface SidebarProps { // Añadir props
     // currentUser: FirebaseUser | null; // Recibir currentUser
@@ -48,6 +49,8 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
     const selectedProjectIdKey = currentUser ? `selectedProjectId_${currentUser.uid}` : 'selectedProjectId_guest';
     const [selectedProjectId, setSelectedProjectId] = useStickyState<string | null>(null, selectedProjectIdKey);
     //const [selectedProjectId, setSelectedProjectId] = useStickyState<string | null>(null,  currentUser ? 'selectedProjectId' : 'selectedProjectIdKey');
+
+    const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = React.useState(false); 
 
     const getInitials = (firstName?: string, lastName?: string): string => {
         if (firstName && lastName) return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -88,33 +91,55 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
     // }, []);
 
 
-// Efecto para sincronizar el estado cuando cambia el usuario
-React.useEffect(() => {
-    if (!authLoading  && currentUser) {
-        // Sincronizar selectedProjectId con la nueva clave de usuario
-        const newKey = `selectedProjectId_${currentUser.uid}`;
-        const stickyValue = window.localStorage.getItem(newKey);
-        
-        if (stickyValue !== null) {
-            try {
-                const parsedValue = JSON.parse(stickyValue);
-                if (parsedValue !== selectedProjectId) {
-                    setSelectedProjectId(parsedValue);
+    // Efecto para sincronizar el estado cuando cambia el usuario
+    React.useEffect(() => {
+        if (!authLoading  && currentUser) {
+            // Sincronizar selectedProjectId con la nueva clave de usuario
+            const newKey = `selectedProjectId_${currentUser.uid}`;
+            const stickyValue = window.localStorage.getItem(newKey);
+            
+            if (stickyValue !== null) {
+                try {
+                    const parsedValue = JSON.parse(stickyValue);
+                    if (parsedValue !== selectedProjectId) {
+                        setSelectedProjectId(parsedValue);
+                    }
+                } catch (error) {
+                    console.error("Error parsing sticky state", error);
+                    localStorage.removeItem(newKey);
                 }
-            } catch (error) {
-                console.error("Error parsing sticky state", error);
-                localStorage.removeItem(newKey);
+            } else {
+                // Limpiar estado si no hay valor para el nuevo usuario
+                setSelectedProjectId(null);
             }
-        } else {
-            // Limpiar estado si no hay valor para el nuevo usuario
-            setSelectedProjectId(null);
+        } else if (!authLoading  && !currentUser) {
+            // Usuario invitado
+            const guestValue = localStorage.getItem('selectedProjectId_guest');
+            setSelectedProjectId(guestValue ? JSON.parse(guestValue) : null);
         }
-    } else if (!authLoading  && !currentUser) {
-        // Usuario invitado
-        const guestValue = localStorage.getItem('selectedProjectId_guest');
-        setSelectedProjectId(guestValue ? JSON.parse(guestValue) : null);
-    }
-}, [currentUser, authLoading , setSelectedProjectId, selectedProjectIdKey]);
+    }, [currentUser, authLoading , setSelectedProjectId, selectedProjectIdKey]);
+
+
+
+    // Efecto para gestionar el ciclo de vida de los listeners de Firestore.
+    // Se asegura de que los listeners estén activos solo cuando hay un usuario autenticado.
+    React.useEffect(() => {
+        if (currentUser) {
+            // Si hay un usuario, nos aseguramos de que los listeners estén activos.
+            // Las clases Manager deberían ser idempotentes y no duplicar listeners si ya existen.
+            console.log("Sidebar Effect: User detected, ensuring listeners are active.");
+            projectsManager.init?.();
+            usersManager.init?.();
+        // } else {
+        //     // Si no hay usuario (se ha cerrado sesión), detenemos los listeners para evitar los errores de permisos.
+        //     console.log("Sidebar Effect: No user detected, stopping listeners.");
+        //     projectsManager.cleanup?.();
+        //     usersManager.cleanup?.();
+        } 
+        // La limpieza se manejará de forma imperativa en el sign-out para evitar race conditions.
+    }, [currentUser, projectsManager, usersManager]);
+
+
 
 
 
@@ -169,15 +194,22 @@ React.useEffect(() => {
             }
             navigate('/auth'); // Navega a /auth si no hay usuario o después de cerrar sesión
         } else if (action === 'change-password') {
-            navigate('/change-password');
+            //navigate('/change-password');
+            setIsChangePasswordModalOpen(true);
+            
         } else if (action === 'signout') {
+            projectsManager.cleanup?.();
+            usersManager.cleanup?.();
+            
             await signOut();
-            if (location.pathname !== '/auth') { // Evitar navegación redundante si ya estamos en /auth
-                navigate('/auth'); // O a la página de inicio: navigate('/');
-            } else { 
-                // Si ya estamos en /auth, no es necesario navegar de nuevo.
-                // El AuthProvider se encargará de actualizar el estado.
-            }
+
+            // if (location.pathname !== '/auth') { // Evitar navegación redundante si ya estamos en /auth
+            //     navigate('/auth'); // O a la página de inicio: navigate('/');
+            // } else { 
+            //     // Si ya estamos en /auth, no es necesario navegar de nuevo.
+            //     // El AuthProvider se encargará de actualizar el estado.
+            // }
+            
         }
     };
 
@@ -432,14 +464,21 @@ React.useEffect(() => {
                 </ul>
 
                 {/* Render the NewUserForm modal conditionally */}
-                {isProfileFormModalOpen && currentUser && userProfile && (
+                {/* {isProfileFormModalOpen && currentUser && userProfile && ( */}
+                {isProfileFormModalOpen && userProfile &&(
                     <NewUserForm
+                        key={userProfile.uid}
                         currentUserData={userProfile} // Pass the userProfile data
                         usersManager={usersManager} // Pass the usersManager instance
                         onClose={handleCloseProfileFormModal}
                         onProfileUpdate={handleProfileUpdateSuccess}
                         authCurrentUserRole={userProfile.roleInApp as any} // Pass the role if needed for form logic
+                        onTriggerChangePassword={() => setIsChangePasswordModalOpen(true)} 
                     />
+                )}
+
+                {isChangePasswordModalOpen && (
+                    <ChangePasswordForm onPasswordChanged={() => setIsChangePasswordModalOpen(false)} onCancel={() => setIsChangePasswordModalOpen(false)} />
                 )}
                 
                 {/*  End of sidebar-user-auth-section */}

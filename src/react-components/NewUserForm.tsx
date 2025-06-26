@@ -14,6 +14,7 @@ import { UsersManager } from '../classes/UsersManager'
 //import { usePrepareUserForm } from '../hooks';
 //import { UsersManager } from '../classes/UsersManager';
 //import { usePrepareUserForm } from '../hooks';
+import {parseDate} from '../utils/DateUtils'
 
 
 // Hook useUsersCache no existe en el contexto, lo comentamos por ahora.
@@ -32,6 +33,7 @@ interface NewUserFormProps {
     authCurrentUserRole: UserRoleInAppKey | undefined; // Rol del usuario autenticado
     onClose: () => void;
     onProfileUpdate: (updatedUser: UserProfile) => void; // Callback tras actualización exitosa
+    onTriggerChangePassword: () => void;
     
     //projectsManager: ProjectsManager;   // No necesario para "Mi Perfil"    
     //onAssignProjects: (user: User) => void;  // Esto iría en otra sección, no en "Mi Perfil" básico
@@ -47,13 +49,14 @@ export function NewUserForm({
     usersManager,
     authCurrentUserRole,
     onClose,
-    onProfileUpdate //Siempre se abre en modo edición. Se crea con el Auth.
+    onProfileUpdate, //Siempre se abre en modo edición. Se crea con el Auth.
+    onTriggerChangePassword
 }: NewUserFormProps) {
         
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
-     const { currentUser, loading: authLoading, userProfile } = useAuth(); // userProfile vendrá de currentUserData
+    const { currentUser, loading: authLoading, userProfile } = useAuth(); // userProfile vendrá de currentUserData
 
     // Estados para los campos del formulario editables por el usuario
     const [nickName, setNickName] = React.useState('');
@@ -62,6 +65,11 @@ export function NewUserForm({
     const [phoneNumber, setPhoneNumber] = React.useState('');
     const [address, setAddress] = React.useState('');
     const [descriptionUser, setDescriptionUser] = React.useState('');
+    const [organization, setOrganization] = React.useState('');
+    const [phoneCountryNumber, setPhoneCountryNumber] = React.useState('');
+    const [roleInApp, setRoleInApp] = React.useState<UserRoleInAppKey | ''>('');
+    const [status, setStatus] = React.useState<UserStatusKey | ''>('pending'); // Por defecto 'pending' para nuevos usuarios
+        
     // photoURL se manejaría con un input type="file" y lógica de subida a Firebase Storage (más complejo)
     
 
@@ -83,7 +91,7 @@ export function NewUserForm({
     
 
 
-  // Estados para manejar los países y la selección
+    // Estados para manejar los países y la selección
     const [countries, setCountries] = React.useState<Country[]>([]);
     const [selectedCountry, setSelectedCountry] = React.useState<Country | null>(null);
     const [showCountryList, setShowCountryList] = React.useState(false);
@@ -97,14 +105,15 @@ export function NewUserForm({
     const [projectAssignments, setProjectAssignments] = React.useState<IProjectAssignment[]>([]);
 
     //Para cambiar el password
-    const [showChangePasswordForm, setShowChangePasswordForm] = React.useState(false);
+    // Eliminado porque es mejor que lo muestre el componente padre se pasa por porp la order de mostrar el formulario de cambio de contraseña
+    //const [showChangePasswordForm, setShowChangePasswordForm] = React.useState(false);
 
     usePrepareUserForm({ userToBeUpdated: currentUser, usersManager })
 
 
 
     // Inicializar el formulario con los datos del currentUserData
-    React.useEffect(() => {    
+    React.useEffect(() => {
         if (currentUserData) {
             setNickName(currentUserData.nickName || '');
             setFirstName(currentUserData.firstName || '');
@@ -114,8 +123,14 @@ export function NewUserForm({
             setAddress(currentUserData.address || '');
             setDescriptionUser(currentUserData.descriptionUser || '');
             setProjectAssignments(currentUserData.projectsAssigned || []);
+            setRoleInApp(currentUserData.roleInApp || '');
+            setOrganization(currentUserData.organization || '');
+            setPhoneCountryNumber(currentUserData.phoneCountryNumber || '');
+            setStatus(currentUserData.status); // Por defecto 'pending' si no se especifica
+            ;
+
         }
-    }, [currentUserData, countries]);
+    }, [currentUserData, countries, authCurrentUserRole]);
 
 
 
@@ -133,77 +148,116 @@ export function NewUserForm({
     //CREO QUE NO SERÁ NECESARIO LA OPCIÓN DE RENOMBRAR PORQUE EL EMAIL ES ÚNICO Y NO SE PUEDE CAMBIAR Y VENDRÁ DESDE LA AUTENTIFICACIÓN Y SI UN USUARIO SE DA DE ALTA CON DOS CORREOS UNO PUEDE SER POR HABER ESTADO EN DIFERENTES EMPRESAS.
 
 
-///ELIMINAR HE CAMBIADO LA LÓGICA
-    async function handleUpdateDataUserInDB(userDetailsToUpdate: User, simplifiedChanges: Record<string, any>) {
+    /**
+     * Maneja la actualización del perfil de usuario en Firebase a través de UsersManager.
+     * @param {string} userId El ID del usuario a actualizar.
+     * @param {Partial<UserProfile>} newUpdatedProfileData Los datos parciales del perfil a actualizar.
+     * @returns {Promise<UserProfile>} El perfil de usuario actualizado.
+     * @throws {Error} Si el UsersManager no está listo o si falla la actualización.
+     */
+    async function handleUpdateProfileUserInDB(userId, newUpdatedProfileData: Partial<UserProfile>) {
 
-        if (!userDetailsToUpdate.id) {
-            throw new Error('Invalid user ID');
-            return
+        console.log("NewUserForm: handleUpdateProfileUserInDB called", { userId, newUpdatedProfileData });
+        
+        // 1. Verificar si UsersManager está listo
+        if (!usersManager.isReady) {
+            const errorMessage = "UsersManager no está listo. Los datos iniciales no se han cargado todavía.";
+            console.error(`NewUserForm: ${errorMessage}`);
+            throw new Error(errorMessage);
+        }
+
+        if (!userId) {
+            throw new Error('Invalid user ID');            
         }
         try {
-            const processedChanges = { ...simplifiedChanges };
+            const processedChanges = { ...newUpdatedProfileData };
 
-            // Convert the date string to a Date object
-            if (processedChanges.accountCreatedAt) {
-                const parsedDate = parseDate(processedChanges.accountCreatedAt);
-                console.log('Processing date:', {
-                    original: processedChanges.accountCreatedAt,
-                    parsed: parsedDate.toISOString()
-                });
-                processedChanges.accountCreatedAt = parsedDate;
-            } else if (processedChanges.lastLoginAt) {
-                const parsedDate = parseDate(processedChanges.lastLoginAt);
-                console.log('Processing date:', {
-                    original: processedChanges.lastLoginAt,
-                    parsed: parsedDate.toISOString()
-                });
-                processedChanges.lastLoginAt = parsedDate;
-            }
+            // // Convert the date string to a Date object
+            // if (processedChanges.accountCreatedAt) {
+            //     const parsedDate = parseDate(processedChanges.accountCreatedAt);
+            //     console.log('Processing date:', {
+            //         original: processedChanges.accountCreatedAt,
+            //         parsed: parsedDate.toISOString()
+            //     });
+            //     processedChanges.accountCreatedAt = parsedDate;
+
+            // } else if (processedChanges.lastLoginAt) {
+            //     const parsedDate = parseDate(processedChanges.lastLoginAt);
+            //     console.log('Processing date:', {
+            //         original: processedChanges.lastLoginAt,
+            //         parsed: parsedDate.toISOString()
+            //     });
+            //     processedChanges.lastLoginAt = parsedDate;
+
+            // }
 
 
             //update in Firebase
             const updatedData = await updateDocument<Partial<User>>(
-                userDetailsToUpdate.id,
-                processedChanges
+                userId,
+                processedChanges,
+                { basePath: 'users' }
             )
             
             console.log("data transfered to DB")
-            console.log("projectDetailsToUpdate.id", userDetailsToUpdate.id)
-            console.log("projectDetailsToUpdate", userDetailsToUpdate)
+            console.log("userId", userId)
+            console.log("newProfileData", processedChanges)
             //console.log("Projects in manager:", projectsManager.list.map(p => p.id))
             
 
-//SE DEBE CREAR LA ESTRUCTURA EN USERSMANAGER PARA QUE FUNCIONE
+            //SE DEBE CREAR LA ESTRUCTURA EN USERSMANAGER PARA QUE FUNCIONE
 
-            //Update projectsManager and obtain the project
+
+
+            
+
+            //Update usersManager and obtain the user
             const updateResult = usersManager.updateUser(
-                userDetailsToUpdate.id,
-                new User({ ...userDetailsToUpdate, ...processedChanges })
+                userId,
+                new User({ ...currentUserData.id, ...processedChanges })
             );
 
             if (updateResult) {
             
-                updateCache(usersManager.list); // Update localStorage cache
-                onUpdatedUser && onUpdatedUser(updateResult!) //Prop_Notify parent component
-                usersManager.onUserUpdated?.(userDetailsToUpdate.id);
+                // //updateCache(usersManager.list); // Update localStorage cache
+                // onUpdatedUser && onUpdatedUser(updateResult!) //Prop_Notify parent component
+                // usersManager.onUserUpdated?.(userId);
             
 
                 console.log('Project updated successfully:', {
-                    id: userDetailsToUpdate.id,
-                    changes: simplifiedChanges
+                    id: userId,
+                    changes: processedChanges 
                 })
 
+                // Notificar al componente padre con el perfil actualizado
+                onProfileUpdate && onProfileUpdate({ ...currentUserData, ...newUpdatedProfileData } as UserProfile);
+
+                return { ...currentUserData, ...processedChanges } as UserProfile
+
             } else {
-                console.error("Project update failed in ProjectsManager")
-                throw new Error('Failed to update project in ProjectManager');
+                console.error("User update failed in UsersManager")
+                throw new Error('Failed to update user in UsersManager');
             }
         } catch (error) {
-            console.error('Error updating project:', error);
+            console.error('Error updating user:', error);
+            setMessagePopUpContent({
+                type: "error",
+                title: "Error Updating User",
+                message: "There was a problem updating the user. Please try again later.",
+                actions: ["OK"],
+                onActionClick: {
+                    "OK": () => setShowMessagePopUp(false),
+                },
+                onClose: () => setShowMessagePopUp(false),
+            });
+            setShowMessagePopUp(true);
             throw error
+        } finally {
+            setIsLoading(false);
         }
     }
-///ELIMINAR HE CAMBIADO LA LÓGICA
-    async function handleCreateUserInDB(userDetails: IUser) {
+    ///ELIMINAR HE CAMBIADO LA LÓGICA
+    async function handleCreateProfileUserInDB(userDetails: IUser) {
 
         const newUser = new User(userDetails)
         console.log(newUser)
@@ -266,20 +320,24 @@ export function NewUserForm({
             phoneCountryNumber: currentUserData.phoneCountryNumber,
             address: currentUserData.address,
             descriptionUser: currentUserData.descriptionUser,
+            organization: currentUserData.organization,
+            roleInApp: currentUserData.roleInApp,
+            status: currentUserData.status,
+
         };
+        console.log('[NewUserForm] currentProfileForDiff (original data):', currentProfileForDiff);
         
         // Solo los admins pueden cambiar estos campos, así que los incluimos en el diff si el rol es admin
-        if (authCurrentUserRole === 'admin') {
-            // Aquí deberías obtener los valores de los campos de rol y status del formulario si son editables por el admin
-            // Por ahora, asumimos que no se cambian en este flujo simplificado o que se manejan de otra forma.
-            // currentProfileForDiff.roleInApp = currentUserData.roleInApp;
-            // currentProfileForDiff.status = currentUserData.status;
-        }
+        //if (authCurrentUserRole === 'admin') {
+        // Aquí deberías obtener los valores de los campos de rol y status del formulario si son editables por el admin
+        // Por ahora, asumimos que no se cambian en este flujo simplificado o que se manejan de otra forma.
+        // currentProfileForDiff.roleInApp = currentUserData.roleInApp;
+        // currentProfileForDiff.status = currentUserData.status;
+        //}
         
 
 
         const newProfileData: Partial<UserProfile> = {
-
             nickName,
             firstName,
             lastName,
@@ -287,10 +345,16 @@ export function NewUserForm({
             phoneCountryNumber: selectedCountry?.callingCode || currentUserData.phoneCountryNumber,
             address,
             descriptionUser,
+            organization,
+            roleInApp: authCurrentUserRole === 'superadmin' ? roleInApp : (currentUserData.roleInApp || 'viewer'),
+            status: authCurrentUserRole === 'superadmin' ? status : (currentUserData.status || 'pending'),
+
+
             // Campos que solo un admin podría cambiar (si se implementa su edición en el form)
             // roleInApp: (authCurrentUserRole === 'admin' ? formData.get("roleInApp") : currentUserData.roleInApp) as UserRoleInAppKey,
             // status: (authCurrentUserRole === 'admin' ? formData.get("status") : currentUserData.status) as UserStatusKey,
         };
+        console.log('[NewUserForm] newProfileData (datos del formulario):', newProfileData);
 
         // Calcular diferencias para la confirmación
         const changes: Record<string, [any, any]> = {};
@@ -301,6 +365,7 @@ export function NewUserForm({
                 }
             }
         }
+        console.log('[NewUserForm] Objeto de cambios calculado:', changes);
 
         if (Object.keys(changes).length === 0) {
             toast.info("No se detectaron cambios en el perfil.");
@@ -310,24 +375,26 @@ export function NewUserForm({
         }
 
         // Mostrar MessagePopUp para confirmación
-        const messageContent = <DiffContentMessage changes={changes, 'user'} />; // Reutilizar o adaptar
+        const messageContent = <DiffContentMessage changes={changes} entityType='user' />
+        console.log('[NewUserForm] Props para DiffContentMessage:', { changes, entityType: 'user' })
+
         const messageRowsCount = Object.keys(changes).length;
-        const messageHeight = `calc(${messageRowsCount} * 3.5rem + 7rem)`;
+        const messageHeight = `calc(${messageRowsCount} * 3.5rem + 5rem)`;
 
         setMessagePopUpContent({
             type: "info",
             title: "Confirmar Actualización de Perfil",
             message: messageContent,
             messageHeight: messageHeight,
-            actions: ["Confirmar", "Cancelar"],
+            actions: ["Confirm", "Cancel"],
             onActionClick: {
-                "Confirmar": async () => {
+                "Confirm": async () => {
                     setShowMessagePopUp(false);
                     setIsLoading(true); // Re-establecer isLoading
                     try {
-                        const updatedUser = await usersManager.updateUserProfile(currentUserData.uid, newProfileData);
+                        const updatedUser = await handleUpdateProfileUserInDB(currentUserData.uid, newProfileData);
                         toast.success("Perfil actualizado correctamente.");
-                        onSuccess(updatedUser); // Llama al callback con el usuario actualizado
+                        //onSuccess(updatedUser); // Llama al callback con el usuario actualizado
                     } catch (err) {
                         console.error("Error actualizando perfil:", err);
                         const errorMessage = (err instanceof Error) ? err.message : "No se pudo actualizar el perfil.";
@@ -337,7 +404,7 @@ export function NewUserForm({
                         setIsLoading(false);
                     }
                 },
-                "Cancelar": () => {
+                "Cancel": () => {
                     setShowMessagePopUp(false);
                     setIsLoading(false);
                 }
@@ -354,14 +421,14 @@ export function NewUserForm({
 
 
 
-///ELIMINAR HE CAMBIADO LA LÓGICA
+    ///ELIMINAR HE CAMBIADO LA LÓGICA
     async function handleNewUserFormSubmit(e: React.FormEvent) {
         e.preventDefault()
         setError(null);
         setSuccess(null);
         setIsLoading(true);
 
-        if (!currentUser ||  !currentUserData) {
+        if (!currentUser || !currentUserData) {
             setError("Debes estar autenticado para actualizar tu perfil.");
             setIsLoading(false);
             return;
@@ -390,7 +457,7 @@ export function NewUserForm({
 
         // Determine the status based on user role and form state
         let userStatus: UserStatusKey;
-        if (authCurrentUserRole === 'admin') {
+        if (authCurrentUserRole === 'superadmin') {
             // Admin user, get status from the form select
             const statusFromForm = formDataUser.get("status") as UserStatusKey | null;
             if (!statusFromForm) {
@@ -409,506 +476,292 @@ export function NewUserForm({
 
 
 
-
-
-
-
-
-
-        if (userForm.checkValidity()) {
-            // Form is valid, proceed with data processing
-            
-            const userDetails: IUser = {                
-                nickName: formDataUser.get("nickname") as string,
-                firstName: formDataUser.get("firstName") as string,
-                lastName: formDataUser.get("lastName") as string,
-                email: formDataUser.get("email") as string,
-                phoneNumber: formDataUser.get("phoneNumber") as string,
-                phoneCountryNumber: formDataUser.get("countryCode") as string,
-                organization: formDataUser.get("organization") as string,
-                roleInApp: formDataUser.get("roleInApp") as UserRoleInAppKey,
-                photoURL: "",
-                address: formDataUser.get("address") as string,
-                
-                descriptionUser: formDataUser.get("descriptionUser") as string, // Assuming you have this field
-
-                accountCreatedAt: currentUserData?.accountCreatedAt ? currentUserData.accountCreatedAt : new Date(), // Preserve original date if editing
-                lastLoginAt: currentUserData?.lastLoginAt ? currentUserData.lastLoginAt : new Date(), // Preserve original date if editing or set new date
-
-                status: userStatus, // Use the determined status
-                projectsAssigned: projectAssignments, // Include the project assignments
-
-            }
-            if (updateUser === null) {
-                //When the form is for a NEW PROJECT
-                //createNewProject(projectDetails)
-                const usersEmails = usersManager.list.map((user: User) => user.email);
-                const existingUser = usersEmails.find(existingEmail => existingEmail.toLowerCase() === userDetails.email.toLowerCase())
-
-                if (existingUser) {
-                    console.log(`A project with the name [ ${userDetails.email} ] already exists`)
-                    console.log("Setting messagePopUpContent state...");    // Log before setting state
-                    //Create a Confirmation Modal to prompt the user about the duplication and offer options
-                    setMessagePopUpContent({
-                        type: "warning",
-                        title: `A project with the name "${userDetails.email}" already exist`,
-                        message: (
-                            <React.Fragment>
-                                <b>
-                                    <u>Overwrite:</u>
-                                </b>{" "}
-                                Replace the existing project with the new data.
-                                <br />
-                                <b>
-                                    <u>Skip:</u>
-                                </b>{" "}
-                                Do not create a new project.
-                                <br />
-                                <b>
-                                    <u>Rename:</u>
-                                </b>{" "}
-                                Enter a new name for the new project.
-
-                            </React.Fragment>),
-                        actions: ["Overwrite", "Skip", "Rename"],
-                        onActionClick: {
-                            "Overwrite": async () => {
-                                console.log("Overwrite button clicked!");
-
-                                //Logic inside newProject already delete if is found a project with the same name
-                                //so, we overwrite the user using create newUser
-                                const originalDataProject = projectsManager.getProjectByName(userDetails.email)
-                                console.log("originalDataProject", originalDataProject);
-
-                                if (!originalDataProject) return
-                                const newProject = new Project({
-                                    ...userDetails,
-                                    id: originalDataProject.id,
-                                })
-                                console.log(newProject);
-
-                                // await deleteDocument("/users", originalDataProject.id) // ADAPTAR
-                                // await createDocument("/users", newUser) // ADAPTAR
-
-
-                                // await updateDocument<Project>("/projects", originalDataProject.id, newProject)
-                                console.log("data transfered to DB created")
-
-                                // onUpdatedUser && onUpdatedUser(newUser) // ADAPTAR
-                                //Because newProject manage the overwrite as well
-                                projectsManager.newProject(newProject)
-
-                                setShowMessagePopUp(false)
-                                onCloseNewProjectForm()
-
-                            },
-                            "Skip": () => {
-                                console.log("Skip button clicked!")
-                                setShowMessagePopUp(false)
-                            },
-                            "Rename": () => {
-                                console.log("Rename button clicked!");
-                                // setProjectDetailsToRename(projectDetails) // ADAPTARsetProjectDetailsToRename(projectDetails)
-
-                                setCurrentProjectName(projectDetails.name);
-                                setIsRenaming(true)
-
-
-                                setShowMessagePopUp(false)
-
-
-                            },
-
-                        },
-                        onClose: () => setShowMessagePopUp(false)
-                    })
-                    setShowMessagePopUp(true)
-                    console.log("showMessagePopUp state:", showMessagePopUp);  // Log state *after* setting it.  Will still be false!
-                    console.log("messagePopUpContent state:", messagePopUpContent); // Log content after setting it.
-                    e.preventDefault()
-                    return
-
-                } else {
-                    // No duplicate, create the project
-                    try {
-                        // handleCreateUserInDB(userDetails) // ADAPTAR O ELIMINAR SI NO ES PARA CREAR
-                    } catch (error) {
-                        console.error("Error creating project in DB:", error)
-                        throw error
-                    }
-
-                    onCloseNewUserForm(); // Close the form for new projects only after creation
-                }
-
-
-            } else {
-                //When the form is for UPDATE AN EXISTING PROJECT
-
-                //HAY QUE COMPROBAR SI LOS DATOS QUE SE CAPTAN DEL FORMULARIO HAY QUE COGER LOS DATOS QUE NO ESTAN EN IProyect.
-                const projectDetailsToUpdate = new User({
-                    ...userDetails, // Esto es IUser, User espera IUser
-                    id: currentUserData.uid, // Usar el ID del usuario actual
-                    //progress: updateProject.progress,
-                    // backgroundColorAcronym: Project.calculateBackgroundColorAcronym(updateProject.businessUnit),
-                    //todoList: updateProject.todoList,
-                })
-
-
-                const changesInUser = usersManager.getChangedUserDataForUpdate(currentUserData, projectDetailsToUpdate) // Asumiendo que existe este método
-                const simplifiedChanges: Record<string, any> = {};
-                for (const key in changesInProject) {
-                    if (changesInProject.hasOwnProperty(key)) { //Variant of the for...in loop that avoids iterating over inherited properties.
-                        simplifiedChanges[key] = changesInProject[key][1]; // Onlytakes the second value
-                    }
-                }
-                console.log("simplifiedChanges for DB", simplifiedChanges)
-
-                if (Object.keys(simplifiedChanges).length > 0) {
-                    const messageContent = <DiffContentMessage changes={changesInProject, 'user'} />
-                    // Calculate the number of rows in the messageContent table
-                    const messageRowsCount = Object.keys(simplifiedChanges).length
-                    // Calculate the desired message height
-                    const messageHeight = `calc(${messageRowsCount} * 3.5rem + 5rem)`; // 3.5rem per row + 5rem for the title
-
-                    setMessagePopUpContent({
-                        type: "info",
-                        title: "Confirm Project Update",
-                        message: messageContent,
-                        messageHeight: messageHeight,
-                        actions: ["Confirm update", "Cancel update"],
-                        onActionClick: {
-                            "Confirm update": async () => {
-                                try {
-                                     // await handleUpdateDataUserInDB(projectDetailsToUpdate, simplifiedChanges) // ADAPTAR
-                                    // navigateTo("/") // No necesario en modal
-
-                                    setShowMessagePopUp(false)
-
-                                } catch (error) {
-                                    console.error("Error updating project in callback throw App till index.ts", error)
-                                    throw error
-                                }
-                            },
-                            "Cancel update": () => {
-                                console.log("User  cancelled the update.")
-                                setShowMessagePopUp(false)
-                            }
-                        },
-                        onClose: () => setShowMessagePopUp(false)
-                    })
-                    setShowMessagePopUp(true)
-                    e.preventDefault()
-                    return
-
-                } else {
-                    setMessagePopUpContent({
-                        type: "info",
-                        title: "No Changes Detected",
-                        message: "No changes were detected in the project details.",
-                        actions: ["Got it"],
-                        onActionClick: {
-                            "Got it": () => {
-                                console.log("No changes to update in the project.");
-                                setShowMessagePopUp(false)
-                                }
-                            },
-                            onClose: () => setShowMessagePopUp(false)
-                        })
-                        setShowMessagePopUp(true)
-                        e.preventDefault()
-                        return
-                    }
-    
-    
-    
-    
-                    // try {
-                    //     await handleUpdateDataProjectInDB(projectDetailsToUpdate, simplifiedChanges)
-                    //     navigateTo("/")
-    
-    
-                    // } catch (error) {
-                    //     console.error("Error updating project in callback throw App till index.ts", error);
-                    //     throw error
-                    // }
-                }
-                onCloseNewProjectForm()
-            } else { // Este else corresponde a if (userForm.checkValidity())
-                // Form is invalid, let the browser handle the error display
-                projectForm.reportValidity();
-            }
     }
-    
 
 
     
-      // Cargar los países al montar el componente
-    React.useEffect(() => {
-        const fetchCountries = async () => {
-            try {
-                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,idd,flags');
-                const data = await response.json();
+        // Cargar los países al montar el componente
+        React.useEffect(() => {
+            const fetchCountries = async () => {
+                try {
+                    const response = await fetch('https://restcountries.com/v3.1/all?fields=name,idd,flags');
+                    const data = await response.json();
                 
-                const formattedCountries = data.map((country: any) => {
-                    // Algunos países tienen múltiples códigos, tomamos el primero
-                    const callingCode = country.idd.root + (country.idd.suffixes?.[0] || '');
-                    return {
-                        name: country.name.common,
-                        callingCode: callingCode.replace(/\s+/g, ''),
-                        flag: country.flags.svg || country.flags.png
-                    };
-                }).filter((country: Country) => country.callingCode);
+                    const formattedCountries = data.map((country: any) => {
+                        // Algunos países tienen múltiples códigos, tomamos el primero
+                        const callingCode = country.idd.root + (country.idd.suffixes?.[0] || '');
+                        return {
+                            name: country.name.common,
+                            callingCode: callingCode.replace(/\s+/g, ''),
+                            flag: country.flags.svg || country.flags.png
+                        };
+                    }).filter((country: Country) => country.callingCode);
                 
-                // Ordenar alfabéticamente
-                formattedCountries.sort((a: Country, b: Country) => 
-                    a.name.localeCompare(b.name)  
-                );
+                    // Ordenar alfabéticamente
+                    formattedCountries.sort((a: Country, b: Country) =>
+                        a.name.localeCompare(b.name)
+                    );
                 
-                setCountries(formattedCountries);
-            } catch (error) {
-                console.error('Error fetching countries:', error);
-                // Manejar error apropiadamente
-            }
+                    setCountries(formattedCountries);
+                } catch (error) {
+                    console.error('Error fetching countries:', error);
+                    // Manejar error apropiadamente
+                }
+            };
+
+            fetchCountries();
+        }, []);
+
+
+
+
+
+        // Filtrar países basado en el término de búsqueda
+        const filteredCountries = countries.filter(country =>
+            country.name.toLowerCase().includes(countrySearchTerm.toLowerCase()) ||
+            country.callingCode.includes(countrySearchTerm)
+        );
+
+        // Manejar selección de país
+        const handleCountrySelect = (country: Country) => {
+            setSelectedCountry(country);
+            setShowCountryList(false);
+            setCountrySearchTerm('');
+        };
+    
+
+
+        const handleFakeUploadClick = () => {
+            setMessagePopUpContent({
+                type: "info",
+                title: "Image Upload Feature",
+                message: (
+                    <>
+                        <p>This feature to upload user profile images is currently disabled.</p>
+                        <p>
+                            Firebase Storage, which is used for hosting images, requires a paid subscription
+                            for servers located in Europe. As this application is primarily for
+                            experimentation and development of coding skills, this functionality
+                            will be enabled in a more advanced version. Sorry and Thanks
+                        </p>
+                    </>
+                ),
+                actions: ["Got it"],
+                onActionClick: { "Got it": () => setShowMessagePopUp(false) },
+                onClose: () => setShowMessagePopUp(false),
+            });
+            setShowMessagePopUp(true);
         };
 
-    fetchCountries();
-    }, []);
-
-  // Filtrar países basado en el término de búsqueda
-    const filteredCountries = countries.filter(country =>
-        country.name.toLowerCase().includes(countrySearchTerm.toLowerCase()) ||
-        country.callingCode.includes(countrySearchTerm)
-    );
-
-  // Manejar selección de país
-    const handleCountrySelect = (country: Country) => {
-    setSelectedCountry(country);
-    setShowCountryList(false);
-    setCountrySearchTerm('');
-    };
-    
 
 
-    const handleFakeUploadClick = () => {
-        setMessagePopUpContent({
-            type: "info",
-            title: "Image Upload Feature",
-            message: (
-                <>
-                    <p>This feature to upload user profile images is currently disabled.</p>
-                    <p>
-                        Firebase Storage, which is used for hosting images, requires a paid subscription
-                        for servers located in Europe. As this application is primarily for
-                        experimentation and development of coding skills, this functionality
-                        will be enabled in a more advanced version. Sorry and Thanks
-                    </p>
-                </>
-            ),
-            actions: ["Got it"],
-            onActionClick: { "Got it": () => setShowMessagePopUp(false) },
-            onClose: () => setShowMessagePopUp(false),
-        });
-        setShowMessagePopUp(true);
-    };
-
-
-
-    if (authLoading) {
-        return <p>Cargando perfil...</p>; // O un spinner
-    } // currentUserData ya se verifica arriba en el submit, aquí es para el render inicial
-    if (!currentUser || !currentUserData) {
-        return <p>No se pudo cargar la información del perfil. Por favor, inicia sesión de nuevo.</p>;
-    } // Si currentUserData no está listo, el useEffect lo llenará.
+        if (authLoading) {
+            return <p>Cargando perfil...</p>; // O un spinner
+        } // currentUserData ya se verifica arriba en el submit, aquí es para el render inicial
+        if (!currentUser || !currentUserData) {
+            return <p>No se pudo cargar la información del perfil. Por favor, inicia sesión de nuevo.</p>;
+        } // Si currentUserData no está listo, el useEffect lo llenará.
 
 
 
 
-    return (
-        <div className="dialog-container">
-            <div className="custom-backdrop">        
-                <dialog
-                    id="new-user-modal"
-                    style={{
-                        overflow: "visible",
-                        display: "flex",                        
-                        justifyContent: "center",
-                        alignItems: "center"
-                    }} open>
-                    <form onSubmit={handleProfileUpdateSubmit}
-                        id="new-user-form"
-                        action=""
-                        name="new-user-form"
-                        method="post"
-                        className="user-form"
-                        encType="multipart/form-data"
-                    >
-                        <h2
-                            style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                                alignItems: "center"
-                            }}
+        return (
+            <div className="dialog-container">
+                <div className="custom-backdrop">
+                    <dialog
+                        id="new-user-modal"
+                        style={{
+                            overflow: "visible",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center"
+                        }} open>
+                        <form onSubmit={handleProfileUpdateSubmit}
+                            id="new-user-form"
+                            action=""
+                            name="new-user-form"
+                            method="post"
+                            className="user-form"
+                            encType="multipart/form-data"
                         >
-                            <div id="modal-user-title">User's Data</div>
-                        </h2>
+                            <h2
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    padding : "0 20px",
+                                }}
+                            >
+                                <div id="modal-user-title">User's Data</div>
 
-                        <div className="user-input-list">
-                            <fieldset className="data-mandatory">
-                                <legend>Update the user here. Click save when you´re done. </legend>
-                                <div className="form-field-container">
-                                    <label>
-                                        <span className="material-icons-round">account_circle</span>Nick Name
-                                    </label>
-                                    <input
-                                        data-form-value="nickName"
-                                        name="nickName"
-                                        type="text"
-                                        size={30}
-                                        placeholder="Please enter the name you want we use in the app."
-                                        required
-                                        minLength={3}
-                                        title="Please enter at least 3 characters"
-                                        autoComplete="off"
-                                        value={nickName}
-                                        onChange={(e) => setNickName(e.target.value)}
-                                    />
-                                    <details>
-                                        <summary>Tip</summary>
-                                        <p>Use a short and characteristic name </p>
-                                    </details>
+
+                                <div
+                                    id="buttonEndRight"
+                                    className="data-optional"
+                                    style={{ alignSelf: "end", height: 'fit-content' }}
+                                >
+                                    <button
+                                        id="cancel-user-btn" type="button" className="buttonC" onClick={onCloseNewUserForm}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button id="accept-profile-changes-btn" type="submit" className="buttonB" disabled={isLoading}>
+                                        {isLoading ? 'Saving...' : 'Save changes'}
+                                    </button>
                                 </div>
-                                <div className="form-field-container">
-                                    <label>
-                                        <span className="material-icons-round">badge</span>First Name
-                                    </label>
-                                    <input
-                                        data-form-value="firstName"
-                                        name='firstName'
-                                        value={firstName}
-                                        onChange={(e) => setFirstName(e.target.value)}
-                                        type="text"
-                                        size={20}
-                                        placeholder="Your Identity. Because your name Matters."
-                                        required
-                                        maxLength={20}
-                                        title= "Please enter your real name"
-                                        autoComplete=""
-                                        
-                                    />
-                                </div>
-                                <div className="form-field-container">
-                                    <label>
-                                        <span className="material-icons-round">badge</span>Last Name
-                                    </label>
-                                    <input
-                                        data-form-value="lastName"
-                                        name='lastName'
-                                        value={lastName}
-                                        type="text"
-                                        size={30}
-                                        placeholder="Finish your Identity with your last name."
-                                        required
-                                        maxLength={30}
-                                        title= "Please enter your real name"
-                                        autoComplete=""
-                                        onChange={(e) => setLastName(e.target.value)}
-                                    />
-                                </div>
-                                <div className="form-field-container">
-                                    <label>
-                                        <span className="material-icons-round">alternate_email</span>Work Email
-                                    </label>
-                                    <input
-                                        data-form-value="email"
-                                        type="email"
-                                        id='email'
-                                        name='email' // El email no se edita aquí, se muestra
-                                        value={currentUserData.email || ''}
-                                        readOnly
-                                        size={30}
-                                        placeholder="Your Email is Your Key. Stay Connected."
-                                        autoComplete="email"
-                                    />
-                                </div>
-                                <div className="form-field-container">
-                                    <label>
-                                        <span className="material-icons-round">phone</span>Work Phone
-                                    </label>
-                                    <input
-                                        data-form-value="phoneNumber"
-                                        type="tel"
-                                        id='phoneNumber'
-                                        name='phoneNumber' // Editable
-                                        value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        placeholder="123-456-7890"
-                                        inputMode="numeric"
-                                        pattern="[0-9]+"
-                                    />
-                                </div>
-                                <div className="form-field-container">
-                                    <label>
-                                        <span className="material-icons-round">language</span>Country Phone Code
-                                    </label>
-                                    <div style={{ position: 'relative' }}>
+
+
+                            </h2>
+
+                            <div className="user-input-list">                                
+                                <fieldset className="data-mandatory">
+                                    <legend>Update the user here. Click save when you´re done. </legend>
+                                    <div className="form-field-container">
+                                        <label>
+                                            <span className="material-icons-round">account_circle</span>Nick Name
+                                        </label>
                                         <input
-                                            data-form-value="phoneCountryNumberlastName"
+                                            data-form-value="nickName"
+                                            name="nickName"
                                             type="text"
-                                            value={selectedCountry ? `${selectedCountry.name} (+${selectedCountry.callingCode})` : ''}
-                                            onClick={() => setShowCountryList(true)}
-                                            readOnly
-                                            placeholder="Select country"
+                                            size={30}
+                                            placeholder="Please enter the name you want we use in the app."
                                             required
-                                            style={{ cursor: 'pointer' }}
+                                            minLength={3}
+                                            title="Please enter at least 3 characters"
+                                            autoComplete="off"
+                                            value={nickName}
+                                            onChange={(e) => setNickName(e.target.value)}
                                         />
-                                
-                                        {showCountryList && (
-                                            <div style={{
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            maxHeight: '300px',
-                                            overflowY: 'auto',
-                                            backgroundColor: 'white',
-                                            border: '1px solid #ccc',
-                                            zIndex: 1000,
-                                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                                            }}>
-                                            {/* Campo de búsqueda */}
+                                        <details>
+                                            <summary>Tip</summary>
+                                            <p>Use a short and characteristic name </p>
+                                        </details>
+                                    </div>
+                                    <div className="form-field-container">
+                                        <label>
+                                            <span className="material-icons-round">badge</span>First Name
+                                        </label>
+                                        <input
+                                            data-form-value="firstName"
+                                            name='firstName'
+                                            value={firstName}
+                                            onChange={(e) => setFirstName(e.target.value)}
+                                            type="text"
+                                            size={20}
+                                            placeholder="Your Identity. Because your name Matters."
+                                            required
+                                            maxLength={20}
+                                            title="Please enter your real name"
+                                            autoComplete=""
+                                        
+                                        />
+                                    </div>
+                                    <div className="form-field-container">
+                                        <label>
+                                            <span className="material-icons-round">badge</span>Last Name
+                                        </label>
+                                        <input
+                                            data-form-value="lastName"
+                                            name='lastName'
+                                            value={lastName}
+                                            type="text"
+                                            size={30}
+                                            placeholder="Finish your Identity with your last name."
+                                            required
+                                            maxLength={30}
+                                            title="Please enter your real name"
+                                            autoComplete=""
+                                            onChange={(e) => setLastName(e.target.value)}
+                                        />
+                                    </div>
+                                    
+                                    <div className="form-field-container">
+                                        <label>
+                                            <span className="material-icons-round">phone</span>Work Phone
+                                        </label>
+                                        <input
+                                            data-form-value="phoneNumber"
+                                            type="tel"
+                                            id='phoneNumber'
+                                            name='phoneNumber' // Editable
+                                            value={phoneNumber}
+                                            onChange={(e) => setPhoneNumber(e.target.value)}
+                                            placeholder="123-456-7890"
+                                            inputMode="numeric"
+                                            pattern="[0-9]+"
+                                        />
+                                    </div>
+                                    <div className="form-field-container">
+                                        <label>
+                                            <span className="material-icons-round">language</span>Country Phone Code
+                                        </label>
+                                        <div style={{ position: 'relative' }}>
                                             <input
+                                                data-form-value="phoneCountryNumberlastName"
                                                 type="text"
-                                                placeholder="Search country..."
-                                                value={countrySearchTerm}
-                                                onChange={(e) => setCountrySearchTerm(e.target.value)}
-                                                style={{
-                                                width: '100%',
-                                                padding: '8px',
-                                                boxSizing: 'border-box',
-                                                border: 'none',
-                                                borderBottom: '1px solid #eee'
-                                                }}
-                                                autoFocus
+                                                value={selectedCountry ? `${selectedCountry.name} (+${selectedCountry.callingCode})` : ''}
+                                                onClick={() => setShowCountryList(true)}
+                                                readOnly
+                                                placeholder="Select country"
+                                                required
+                                                style={{ cursor: 'pointer' }}
                                             />
+                                
+                                            {showCountryList && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '100%',
+                                                    left: 0,
+                                                    right: 0,
+                                                    maxHeight: '300px',
+                                                    overflowY: 'auto',
+                                                    backgroundColor: 'white',
+                                                    border: '1px solid #ccc',
+                                                    zIndex: 1000,
+                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                                                }}>
+                                                    {/* Campo de búsqueda */}
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Search country..."
+                                                        value={countrySearchTerm}
+                                                        onChange={(e) => setCountrySearchTerm(e.target.value)}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '8px',
+                                                            boxSizing: 'border-box',
+                                                            border: 'none',
+                                                            borderBottom: '1px solid #eee'
+                                                        }}
+                                                        autoFocus
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Escape') {
+                                                                setShowCountryList(false);
+                                                                setCountrySearchTerm('');
+                                                            }
+                                                        }}
+
+                                                    />
                                             
-                                            {/* Lista de países */}
-                                            {filteredCountries.map(country => (
-                                                <div 
-                                                key={country.name}
-                                                onClick={() => handleCountrySelect(country)}
-                                                style={{
-                                                    padding: '10px',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    borderBottom: '1px solid #eee',
-                                                    '&:hover': {
-                                                    backgroundColor: '#f0f0f0'
-                                                    }
-                                                }}
-                                                >
-                                                {/* <img 
+                                                    {/* Lista de países */}
+                                                    {filteredCountries.map(country => (
+                                                        <div
+                                                            key={country.name}
+                                                            onClick={() => handleCountrySelect(country)}
+                                                            style={{
+                                                                padding: '10px',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                borderBottom: '1px solid #eee',
+                                                                '&:hover': {
+                                                                    backgroundColor: '#f0f0f0'
+                                                                }
+                                                            }}
+                                                        >
+                                                            {/* <img 
                                                     src={country.flag} 
                                                     alt={`${country.name} flag`} 
                                                     style={{ 
@@ -918,232 +771,279 @@ export function NewUserForm({
                                                     objectFit: 'cover'
                                                     }} 
                                                 /> */}
-                                                <span style={{ flex: 1 }}>{country.name}</span>
-                                                <span style={{ color: '#666' }}>+{country.callingCode}</span>
+                                                            <span style={{ flex: 1 }}>{country.name}</span>
+                                                            <span style={{ color: '#666' }}>+{country.callingCode}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </div>
                                         
-                                    {/* Campo oculto para almacenar el valor en el formulario */}
-                                    <input 
-                                        type="hidden" 
-                                        name="countryCode" 
-                                        value={selectedCountry ? selectedCountry.callingCode : ''} 
-                                    />
-                                </div>
-
-
-
-                                <div className="form-field-container">
-                                    <label>
-                                        <span className="material-icons-round">business</span>Organization
-                                    </label>
-                                    <input
-                                        data-form-value="organization"
-                                        type="text"
-                                        size={30}
-                                        placeholder="Your Organization (Optional)"
-                                        value={currentUserData.organization || ''} // No editable por el usuario directamente
-                                        readOnly
-                                    />
-                                </div>
-                                <div className="form-field-user-container">
-                                    <label>
-                                        <span className="material-icons-round">engineering</span>Rol
-                                    </label>
-                                    {/* Role in App Select - Always visible */}
-                                    <input
-                                        data-form-value="roleInApp"
-                                        type="text"
-                                        value={USER_ROLES_IN_PROJECT[currentUserData.roleInApp as UserRoleInAppKey] || currentUserData.roleInApp || 'N/A'}
-                                        readOnly
-                                    />
-                                    {/* <select
-                                        name="roleInApp" // Nombre para que FormData lo recoja
-                                        data-form-value="roleInApp" // Para que usePrepareUserForm lo pueble
-                                        // required
-                                        // El valor por defecto será establecido por usePrepareUserForm
-                                        // o puedes establecerlo aquí si no es modo edición:
-                                        // defaultValue={isEditMode ? updateUser?.roleInApp : ""}
-                                    >
-                                        <option value="" disabled style={{color: 'var(--color-fontbase-dark)' }}>
-                                            Select a role
-                                        </option>
-                                        {Object.entries(USER_ROLES_IN_PROJECT).map(([key, value]) => (
-                                            <option key={key} value={key}>
-                                                {value}
-                                            </option>
-                                        ))}
-                                    </select> */}
-
-                                    
-                                </div>
-                                <div className="form-field-user-container">
-                                    <label>
-                                        <span className="material-icons-round">not_listed_location</span>
-                                        Status
-                                    </label>
-
-                                    {authCurrentUserRole === 'admin' ? (
-                                        // Admin can edit status
-                                        <select
-                                            name="status" // Name for FormData
-                                            data-form-value="status" // For usePrepareUserForm
-                                            required // Status is likely required
-                                        >
-                                            <option value="" disabled style={{ color: 'var(--color-fontbase-dark)' }}>
-                                                Select status
-                                            </option>
-                                            {Object.entries(USER_STATUS).map(([key, value]) => (
-                                                <option key={key} value={key as UserStatusKey}>
-                                                    {value}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        // Non-admin user, just display status
-                                            <span className={`user-status-badge status-${currentUserData?.status ? currentUserData.status.toLowerCase() : 'pending'}`}>
-                                                {currentUserData?.status
-                                                    ? USER_STATUS[currentUserData.status as UserStatusKey] || currentUserData.status
-                                                    : USER_STATUS['pending']}
-                                            </span>
-                                    )}
-
-                                </div>
-                                {showChangePasswordForm ? (
-                                    <ChangePasswordForm
-                                        onPasswordChanged={() => {
-                                        setShowChangePasswordForm(false);
-                                        // Opcional: mostrar mensaje de éxito, redirigir, etc.
-                                        }}
-                                        onCancel={() => setShowChangePasswordForm(false)}
-                                    />
-                                    ) : (
-                                    <>
-                                        {/* Tu formulario de perfil existente */}
-                                        <button 
-                                        onClick={() => setShowChangePasswordForm(true)} 
-                                        style={{ marginTop: '1rem' }} 
-                                        className="submit-button" // O el estilo que prefieras
-                                        >
-                                        Change password
-                                        </button>
-                                    </>
-                                    )}
-
-
-                            </fieldset>
-                            <fieldset style={{ border: "none" }} className="data-optional">
-                                <legend>Optional Data:</legend>
-                                <div style={{ display: "flex", flexDirection: "column", rowGap: 20 }}>
-                                    <div className="form-field-container">
-                                        <label>
-                                            <span className="material-icons-round">contact_mail</span>
-                                            <address />
-                                            Address
-                                        </label>
+                                        {/* Campo oculto para almacenar el valor en el formulario */}
                                         <input
-                                            data-form-value="address"
-                                            type="text"
-                                            size={30}
-                                            value={address}
-                                            onChange={(e) => setAddress(e.target.value)}
-                                            placeholder="Please provide your mailing/business address"
+                                            type="hidden"
+                                            name="countryCode"
+                                            value={selectedCountry ? selectedCountry.callingCode : ''}
                                         />
                                     </div>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            flexDirection: "row",
-                                            justifyContent: "flex-start",
-                                            alignItems: "center",
-                                            columnGap: 25
-                                        }}
-                                    >
-                                        {/* Add onClick handler to the fake upload button container */}
 
-                                        <div className="fake-upload-button" onClick={handleFakeUploadClick} style={{ cursor: 'pointer' }}>
-                                        <label htmlFor="profilePhotoUpload">Upload a user icon file</label>
-                                            <input 
-                                                type="file"
-                                                accept=".jpg, .png, .jpeg" />
-                                        </div>
-                                        <div className="users-photo" style={{ border: "none" }}>
-                                            <img
-                                            src={currentUserData.photoURL || "./assets/photo-users/default-avatar.jpg"}
-                                            alt="User profile"
-                                            onError={(e) => (e.target as HTMLImageElement).src = './assets/photo-users/default-avatar.jpg'}
-                                            />
-                                             {/* TODO: Implementar subida de imagen y actualización de photoURL */}
-                                        </div>
-                                    </div>
+
+
                                     <div className="form-field-container">
                                         <label>
-                                            <span className="material-icons-round">diversity_3</span>Projects
-                                            Team
+                                            <span className="material-icons-round">business</span>Organization
                                         </label>
-                                        {currentUserData.projectsAssigned && currentUserData.projectsAssigned.length > 0 ? (
-                                            <div id="form-project-teams-included" style={{marginTop: "10px"}}>
-                                                <ul style={{
-                                                    listStyleType: 'none', paddingLeft: 0, maxHeight: '250px', overflowY: 'auto', 
-                                                    fontSize: 'var(--font-base)'
-                                                }}>
-                                                    {projectAssignments.map((assignment, index) => (
-                                                        <li key={index} style={{ marginBottom: '5px', padding: '8px', border: '1px solid var(--color-fontbase-light)', borderRadius: '4px', backgroundColor: 'var(--color-background-light)' }}>
-                                                            <span><strong>{assignment.projectName}</strong> - {assignment.roleInProject.name}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                        <input
+                                            data-form-value="organization"
+                                            placeholder="Your Organization (Optional"
+                                            type="text"
+                                            size={30}
+                                            value={organization} 
+                                            onChange={(e) => setOrganization(e.target.value)}
+                                        />
+                                    </div>
+
+
+                                    <div className="form-field-container">
+                                        <label>
+                                            <span className="material-icons-round">alternate_email</span>Work Email
+                                        </label>
+                                        <p
+                                            data-form-value="email"
+                                            //type="email"
+                                            id='email'
+                                           // name='email' // El email no se edita aquí, se muestra
+                                           // value={currentUserData.email || ''}
+                                            //readOnly
+                                            //size={30}
+                                            //placeholder="Your Email is Your Key. Stay Connected."
+                                            // autoComplete="email"
+                                            aria-label="Email"
+                                        >
+                                            {currentUserData.email || 'N/A'}
+                                        </p>
+                                    </div>
+
+
+                                    {/* El botón ahora llama a la prop del padre */}
+                                    <button
+                                        type="button" // Importante para que no envíe el formulario
+                                        onClick={onTriggerChangePassword}
+                                        style={{
+                                            marginTop: '1rem',
+                                            width: 'fit-content',
+                                        }}
+                                        className="buttonA"
+                                    >
+                                        Change password
+                                    </button>
+
+
+
+
+                                </fieldset>
+                                <fieldset style={{ border: "none" }} className="data-optional">
+                                    <legend></legend>
+                                    <div style={{ display: "flex", flexDirection: "column", rowGap: 20 }}>
+                                        <div className="form-field-container">
+                                            <label>
+                                                <span className="material-icons-round">contact_mail</span>
+                                                <address />
+                                                Address
+                                            </label>
+                                            <input
+                                                data-form-value="address"
+                                                type="text"
+                                                size={30}
+                                                value={address}
+                                                onChange={(e) => setAddress(e.target.value)}
+                                                placeholder="Please provide your mailing/business address"
+                                            />
+                                        </div>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                flexDirection: "row",
+                                                justifyContent: "flex-start",
+                                                alignItems: "center",
+                                                columnGap: 25
+                                            }}
+                                        >
+                                            {/* Add onClick handler to the fake upload button container */}
+
+                                            <div className="fake-upload-button" onClick={handleFakeUploadClick} style={{ cursor: 'pointer' }}>
+                                                <label htmlFor="profilePhotoUpload">Upload a user icon file</label>
+                                                <input
+                                                    type="file"
+                                                    accept=".jpg, .png, .jpeg" />
                                             </div>
-                                        ) : (
+                                            <div className="users-photo" style={{ border: "none" }}>
+                                                <img
+                                                    src={currentUserData.photoURL || "./assets/photo-users/default-avatar.jpg"}
+                                                    alt="User profile"
+                                                    onError={(e) => (e.target as HTMLImageElement).src = './assets/photo-users/default-avatar.jpg'}
+                                                />
+                                                {/* TODO: Implementar subida de imagen y actualización de photoURL */}
+                                            </div>
+                                        </div>
+                                        <div className="form-field-container">
+                                            <label>
+                                                <span className="material-icons-round">diversity_3</span>Projects
+                                                Team
+                                            </label>
+                                            {currentUserData.projectsAssigned && currentUserData.projectsAssigned.length > 0 ? (
+                                                <div id="form-project-teams-included" style={{ marginTop: "10px" }}>
+                                                    <ul style={{
+                                                        listStyleType: 'none', paddingLeft: 0, maxHeight: '250px', overflowY: 'auto',
+                                                        fontSize: 'var(--font-base)'
+                                                    }}>
+                                                        {projectAssignments.map((assignment, index) => (
+                                                            <li key={index} style={{ marginBottom: '5px', padding: '8px', border: '1px solid var(--color-fontbase-light)', borderRadius: '4px', backgroundColor: 'var(--color-background-light)' }}>
+                                                                <span><strong>{assignment.projectName}</strong> - {assignment.roleInProject.name}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ) : (
                                                 <p style={{ fontSize: 'var(--font-base', color: 'var(--color-fontbase-dark)' }}>
                                                     No projects assigned. Manage assignments inside 'Project Teams' section.
                                                 </p>
-                                        ) }
+                                            )}
+                                        </div>
+                                        <div className="form-field-container" style={{}}>
+                                            <label>
+                                                <span className="material-icons-round">article</span>Notes
+                                            </label>
+                                            <textarea
+                                                name="descriptionUser"
+                                                data-form-value="descriptionUser"
+                                                value={descriptionUser}
+                                                onChange={(e) => setDescriptionUser(e.target.value)}
+                                                style={{ marginBottom: 30 }}
+                                                id="descriptionUser"
+                                                cols={45}
+                                                rows={7}
+                                                placeholder="Any"
+                                            />
+                                        </div>
+
+                                        <div style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "1fr 1fr",     // Dos columnas iguales
+                                            rowGap: "10px",                     // Espacio entre filas
+                                            justifyContent: "space-between",    // Opcional, dependiendo de lo que necesites
+                                            alignItems: "center"
+                                        }}>
+                                            <div className="form-field-user-container">
+                                                <label>
+                                                    <span className="material-icons-round">engineering</span>Rol
+                                                </label>
+                                                {authCurrentUserRole === 'superadmin' ? (
+                                                    <select
+                                                        name="roleInApp"
+                                                        data-form-value="roleInApp"
+                                                        required
+                                                        value={roleInApp || ''}
+                                                        onChange={(e) => setRoleInApp(e.target.value as UserRoleInAppKey)}
+                                                        disabled={isLoading}
+                                                    // El valor por defecto será establecido por usePrepareUserForm
+                                                    // o puedes establecerlo aquí si no es modo edición:
+                                                    // defaultValue={isEditMode ? updateUser?.roleInApp : ""}
+                                                    >
+                                                        <option value="" disabled>Select a role</option>
+                                                        {Object.entries(USER_ROLES_IN_PROJECT).map(([key, label]) => (
+                                                            <option key={key} value={key}>{label}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+
+                                                    <p className="form-field-static-value" aria-label="Rol en la aplicación">
+                                                        {USER_ROLES_IN_PROJECT[currentUserData.roleInApp as UserRoleInAppKey] || currentUserData.roleInApp || 'N/A'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            
+
+                                            <div className="form-field-user-container">
+                                                <label>
+                                                    <span className="material-icons-round">not_listed_location</span>
+                                                    Status
+                                                </label>
+                                                {authCurrentUserRole === 'superadmin' ? (
+                                                    // Admin can edit status
+                                                    <select
+                                                        name="status" // Name for FormData
+                                                        value={status || ''}
+                                                        data-form-value="status" // For usePrepareUserForm
+                                                        required // Status is likely required
+                                                        onChange={(e) => setStatus(e.target.value as UserStatusKey)}
+                                                        disabled={isLoading}
+                                                    >
+                                                        <option value="" disabled style={{ color: 'var(--color-fontbase-dark)' }}>
+                                                            Select status
+                                                        </option>
+                                                        {Object.entries(USER_STATUS).map(([key, value]) => (
+                                                            <option key={key} value={key as UserStatusKey}>
+                                                                {value}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    // Non-admin user, just display status
+                                                    <span className={`user-status-badge status-${currentUserData?.status ? currentUserData.status.toLowerCase() : 'pending'}`}>
+                                                        {currentUserData?.status
+                                                            ? USER_STATUS[currentUserData.status as UserStatusKey] || currentUserData.status
+                                                            : USER_STATUS['pending']}
+                                                    </span>
+                                                )}
+
+                                            </div>
+                                        </div>
+
+                                        
+                                        {/* Campos informativos de fecha */}
+                                        <div
+                                            style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "1fr 1fr",     // Dos columnas iguales
+                                            rowGap: "10px",                     // Espacio entre filas
+                                            justifyContent: "space-between",    // Opcional, dependiendo de lo que necesites
+                                            alignItems: "center"
+                                        }}>
+                                            <div className="form-field-user-container">
+                                                <label>
+                                                    <span className="material-icons-round">event</span>Fecha de Creación
+                                                </label>
+                                                <p className="form-field-static-value" aria-label="Fecha de creación de la cuenta">
+                                                    {currentUserData.accountCreatedAt 
+                                                        ? new Date(currentUserData.accountCreatedAt instanceof Date ? currentUserData.accountCreatedAt : currentUserData.accountCreatedAt.toDate()).toLocaleString() 
+                                                        : 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div className="form-field-user-container">
+                                                <label>
+                                                    <span className="material-icons-round">login</span>Último Acceso
+                                                </label>
+                                                <p className="form-field-static-value" aria-label="Fecha del último acceso">
+                                                    {currentUserData.lastLoginAt 
+                                                        ? new Date(currentUserData.lastLoginAt instanceof Date ? currentUserData.lastLoginAt : currentUserData.lastLoginAt.toDate()).toLocaleString() 
+                                                        : 'N/A'}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="form-field-container" style={{}}>
-                                        <label>
-                                            <span className="material-icons-round">article</span>Notes
-                                        </label>
-                                        <textarea
-                                            name="descriptionUser" 
-                                            data-form-value="descriptionUser" 
-                                            value={descriptionUser}
-                                            onChange={(e) => setDescriptionUser(e.target.value)}
-                                            style={{ marginBottom: 30 }}
-                                            id="descriptionUser"
-                                            cols={45}
-                                            rows={7}
-                                            placeholder="Any"
-                                        />
-                                    </div>
-                                </div>
-                            </fieldset>
-                            <div
-                                id="buttonEndRight"
-                                className="data-optional"
-                                style={{ alignSelf: "end", height: 'fit-content' }}
-                            >
-                                <button
-                                    id="cancel-user-btn" type="button" className="buttonC" onClick={onCloseNewUserForm}
-                                >
-                                    Cancel
-                                </button>
-                                <button id="accept-profile-changes-btn" type="submit" className="buttonB" disabled={isLoading}>
-                                    {isLoading ? 'Saving...' : 'Save changes'}
-                                </button>
+                                </fieldset>
                             </div>
-                        </div>
-                        {error && <p style={{ color: 'red', marginTop: '1rem', textAlign: 'center' }}>{error}</p>}
-                        {success && <p style={{ color: 'green', marginTop: '1rem', textAlign: 'center' }}>{success}</p>}
-                    </form>
-                </dialog>
-            </div>
-            {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
-        </div >
-    )
-};
+
+                            {error && <p style={{ color: 'red', marginTop: '1rem', textAlign: 'center' }}>{error}</p>}
+                            {success && <p style={{ color: 'green', marginTop: '1rem', textAlign: 'center' }}>{success}</p>}
+                        </form>
+                    </dialog>
+                </div>
+                {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
+            </div >
+        )
+    };
+
 
 NewUserForm.displayName = 'NewUserForm';

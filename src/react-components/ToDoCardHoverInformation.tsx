@@ -137,6 +137,8 @@ const calculateBannerHeight = (todo: ToDoIssue): number => {
 
 
     return ReactDOM.createPortal(
+        
+            
         <div
             className={`todo-hover-banner ${position.placement}`}
             aria-label={`Additional details for ${todo.title}`}
@@ -226,8 +228,7 @@ const calculateBannerHeight = (todo: ToDoIssue): number => {
             </div>
 
 
-        </div>,
-        document.body
+        </div>, document.body
     );
 }
 

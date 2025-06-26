@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom'
 
 import { RenameIcon } from '../react-components/icons';
 import { MessagePopUp, MessagePopUpProps } from '../react-components';
@@ -86,47 +87,48 @@ export function RenameElementMessage({
         }
     }    
 
-    return (
+    return ReactDOM.createPortal (
         <>
-        <dialog className="popup-default">
-            <div className="message-content toast toast-popup-default">
-                <div className="message-icon">
-                    <RenameIcon size={24} color="#08090a" className="message-icon-svgDark" />
-                </div>
-                <div className="toast-column">
-                    <div className="message-text">
-                        <h5 className="message-text-title">{elementTitle} definition</h5>
-                        <p className="message-text-message">Select the text field and populate it with a new name</p>
+            <div className="custom-backdrop" style={{ position: "fixed",zIndex:1500}} />
+            <dialog className="popup-default"  style={{ top: 0, left: 0, right: 0, bottom: 0, zIndex: 1501}} open>
+                <div className="message-content toast toast-popup-default">
+                    <div className="message-icon">
+                        <RenameIcon size={24} color="#08090a" className="message-icon-svgDark" />
                     </div>
-                    <div className="message-text">
-                        <input
-                            className="toast-input-text"
-                            type="text"
+                    <div className="toast-column">
+                        <div className="message-text">
+                            <h5 className="message-text-title">{elementTitle} definition</h5>
+                            <p className="message-text-message">Select the text field and populate it with a new name</p>
+                        </div>
+                        <div className="message-text">
+                            <input
+                                className="toast-input-text"
+                                type="text"
                                 id="newElementName"
-                            placeholder={previousElementName}
-                            ref={inputRef}
-                            autoFocus
-                            required
-                            minLength={5}
-                            autoComplete="off"
-                        />
+                                placeholder={previousElementName}
+                                ref={inputRef}
+                                autoFocus
+                                required
+                                minLength={5}
+                                autoComplete="off"
+                            />
                             <label className="toast-input-text" htmlFor="newElementName" >
-                            {previousElementName}
-                        </label>
+                                {previousElementName}
+                            </label>
+                        </div>
+                    </div>
+                    <div className="message-btns">
+                        <button className="message-btn" type="button" id="confirmRename" onClick={handleRename}>
+                            <span className="message-btn-text">Do it</span>
+                        </button>
+                        <button className="message-btn" type="button" id="cancelRename" onClick={onCancel}>
+                            <span className="message-btn-text">Cancel</span>
+                        </button>
                     </div>
                 </div>
-                <div className="message-btns">
-                    <button className="message-btn" type="button" id="confirmRename" onClick={handleRename}>
-                        <span className="message-btn-text">Do it</span>
-                    </button>
-                    <button className="message-btn" type="button" id="cancelRename" onClick={onCancel}>
-                        <span className="message-btn-text">Cancel</span>
-                    </button>
-                </div>
-            </div>
-        </dialog>
+            </dialog>
             {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
         </>
 
-    )
+    , document.body)
 }

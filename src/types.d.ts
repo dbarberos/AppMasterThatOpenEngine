@@ -30,6 +30,11 @@ export interface IAssignedUsers {
     createdAt: Date | string | number | Firestore.Timestamp
 }
 
+interface FirebaseTimestamp {
+    seconds: number;
+    nanoseconds: number;
+}
+
 
 export interface IToDoIssue {
     title: string
@@ -60,8 +65,8 @@ export interface IUser {
     photoURL?: string;
     address?: string;
 
-    accountCreatedAt: Firestore.Timestamp | Date; // Firestore usa Timestamp, al leer puede ser Date
-    lastLoginAt?: Firestore.Timestamp | Date;
+    accountCreatedAt: FirebaseTimestamp | Date; // Firestore usa Timestamp, al leer puede ser Date
+    lastLoginAt?: FirebaseTimestamp | Date;
     status: UserStatusKey | UserStatusValue; // Estado del usuario: activo, pendiente, deshabilitado
     // La subcolección 'projectsAssigned' se manejará por separado o se podría cargar bajo demanda.
     projectsAssigned?: IProjectAssignment[]; // Opcional si decides cargarla siempre con el usuario

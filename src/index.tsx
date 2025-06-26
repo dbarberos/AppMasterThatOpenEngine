@@ -215,6 +215,7 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
                     currentUser
                         ? <ProjectsPage
                             projectsManager={props.projectsManager}
+                            usersManager={props.usersManager}
                             onNewProjectCreated={props.onNewProject}
                             onProjectUpdate={props.onProjectUpdate}
                         />

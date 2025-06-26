@@ -770,6 +770,19 @@ async function getSubcollectionItems(subcollectionPath: string) {
 }
 
 
+// Helper function to remove undefined values
+function removeUndefinedValues<T extends Record<string, any>>(data: T): Partial<T> {
+    const cleanedData: Partial<T> = {};
+    for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== undefined) {
+            cleanedData[key] = data[key];
+        }
+    }
+    return cleanedData;
+}
+
+
+
 //Update a document from Firebase
 export async function updateDocument<T extends Record<string, any> | Array<any>>(
     id: string,
@@ -875,7 +888,13 @@ export async function updateDocument<T extends Record<string, any> | Array<any>>
             // Add updatedAt timestamp
             processedData.updatedAt = Firestore.Timestamp.fromDate(new Date())
 
-            await Firestore.updateDoc(docRef, processedData);
+
+            // Aplicar removeUndefinedValues justo antes de enviar a Firestore
+            const dataToUpdate = removeUndefinedValues(processedData);
+
+            await Firestore.updateDoc(docRef, dataToUpdate); 
+
+            //await Firestore.updateDoc(docRef, processedData);
 
             toast.success('Document updated successfully', {
                 description: `ID: ${id} at ${fullPath}`

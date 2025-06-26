@@ -22,6 +22,8 @@ interface NewProjectFormProps {
 export function NewProjectForm({ onClose, projectsManager, updateProject = null, onCreatedProject, onUpdatedProject }: NewProjectFormProps) {
 
     const navigateTo = Router.useNavigate()
+
+    // State for the message pop-up
     const [showMessagePopUp, setShowMessagePopUp] = useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = useState<MessagePopUpProps | null>(null)
 
@@ -37,9 +39,11 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
     // const { isRenaming, initiateRename, currentProjectName, handleProjectRename, cancelRename, setOnRename } = useRenameProject(projectsManager)
     //const updateDataProject = useUpdateExistingProject({ projectsManager, onUpdateExistingProject: onCreatedProject || (() => { }) });
 
+
     usePrepareProjectForm({ projectToBeUpdated: updateProject, projectsManager })
 
-
+    
+    //This hook populates the form field if in "update" mode.
     const onCloseNewProjectForm = () => {
         const projectForm = document.getElementById("new-project-form") as HTMLFormElement
         if (projectForm) {
@@ -51,6 +55,14 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
     const handleRenameConfirmation = React.useCallback(async (renamedProjectName: string, projectDetailsToRename: IProject) => {
         //setNewProjectName(renamedProjectName);
+   
+     
+        if (!projectDetailsToRename) {
+            console.error("cannot rename projects: details are missing")
+            return
+        }
+
+
         const projectToCreate = { ...projectDetailsToRename, name: renamedProjectName }
         const newProject = new Project(projectToCreate);
         console.log("project created with the new name", newProject)
@@ -64,7 +76,8 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
             projectsManager.newProject(new Project(newProject, newProject.id))
             console.log("project added to the list", projectsManager.list)
 
-            onCreatedProject && onCreatedProject(newProject)
+            onCreatedProject?.(newProject)
+            onCloseNewProjectForm(); // Close the form after renaming
         } catch (error) {
             console.error("Error creating project in Firestore:", error);
 
@@ -88,8 +101,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
     async function handleUpdateDataProjectInDB(projectDetailsToUpdate: Project, simplifiedChanges: Record<string, any>) {
 
         if (!projectDetailsToUpdate.id) {
-            throw new Error('Invalid project ID');
-            return
+            throw new Error('Invalid project ID');            
         }
         try {
             const processedChanges = { ...simplifiedChanges };
@@ -124,7 +136,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
             if (updateResult) {
             
                 updateCache(projectsManager.list); // Update localStorage cache
-                onUpdatedProject && onUpdatedProject(updateResult!) //Prop_Notify parent component
+                onUpdatedProject?.(updateResult!) //Prop_Notify parent component
                 projectsManager.onProjectUpdated?.(projectDetailsToUpdate.id);
             
 
@@ -157,7 +169,7 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
             projectsManager.newProject(newProject, newProject.id)
 
 
-            onCreatedProject && onCreatedProject({ ...newProject, id: newProjectDoc.id })
+            onCreatedProject?.({ ...newProject, id: newProjectDoc.id })
 
             console.log("project added to the list", projectsManager.list)
         } catch (error) {
@@ -273,25 +285,75 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                                 console.log("originalDataProject", originalDataProject);
 
                                 if (!originalDataProject) return
-                                const newProject = new Project({
-                                    ...projectDetails,
-                                    id: originalDataProject.id,
-                                })
-                                console.log(newProject);
 
-                                await deleteDocument("/projects", originalDataProject.name)
-                                await createDocument("/projects", newProject)
+                                
+                                // Guarda una copia para rollback
+                                const backupProject = { ...originalDataProject };
+
+                                try { 
+                                    // 1. Elimina el proyecto original en Firebase
+                                    await deleteDocument("/projects", originalDataProject.name);
+
+                                    // 2. Elimina en ProjectsManager y actualiza cache
+                                    projectsManager.deleteProject(originalDataProject.id);
+                                    updateCache(projectsManager.list);
+
+                                    // 3. Crea el nuevo proyecto en Firebase (sin id)
+                                    const newProjectData = { ...projectDetails };
+                                    delete newProjectData.id; // Asegúrate de no pasar el id antiguo
+                                    const newProjectDoc = await createDocument("/projects", newProjectData);
+
+                                    // 4. Asigna el id generado por Firebase
+                                    const newProject = new Project({ ...newProjectData, id: newProjectDoc.id });
+
+                                    // 5. Añade el nuevo proyecto a ProjectsManager y cache
+                                    projectsManager.newProject(newProject, newProject.id);
+                                    updateCache(projectsManager.list);
+
+                                    // const newProject = new Project({
+                                    //     ...projectDetails,
+                                    //     id: originalDataProject.id,
+                                    // })
+                                    // console.log(newProject);
+
+                                    // await deleteDocument("/projects", originalDataProject.name)
+                                    // await createDocument("/projects", newProject)
 
 
-                                // await updateDocument<Project>("/projects", originalDataProject.id, newProject)
-                                console.log("data transfered to DB created")
+                                    // await updateDocument<Project>("/projects", originalDataProject.id, newProject)
+                                    console.log("data transfered to DB created")
 
-                                onUpdatedProject && onUpdatedProject(newProject)
-                                //Because newProject manage the overwrite as well
-                                projectsManager.newProject(newProject)
+                                    // 6. Notifica y cierra
+                                    onUpdatedProject?.(newProject)
+                                    //Because newProject manage the overwrite as well
+                                    //projectsManager.newProject(newProject)
 
-                                setShowMessagePopUp(false)
-                                onCloseNewProjectForm()
+                                    setShowMessagePopUp(false)
+                                    onCloseNewProjectForm()
+                                } catch (error) {
+                                    console.error("Error during overwrite, attempting rollback:", error);
+
+                                    // Rollback: intenta restaurar el proyecto original
+                                    try {
+                                        await createDocument("/projects", backupProject);
+                                        projectsManager.newProject(new Project(backupProject), backupProject.id);
+                                        updateCache(projectsManager.list);
+                                    } catch (rollbackError) {
+                                        console.error("Rollback failed:", rollbackError);
+                                    }
+
+                                    setMessagePopUpContent({
+                                        type: "error",
+                                        title: "Error Overwriting Project",
+                                        message: "There was a problem overwriting the project. The original project has been restored if possible.",
+                                        actions: ["OK"],
+                                        onActionClick: {
+                                            "OK": () => setShowMessagePopUp(false),
+                                        },
+                                        onClose: () => setShowMessagePopUp(false),
+                                    });
+                                    setShowMessagePopUp(true);
+                                }
 
                             },
                             "Skip": () => {
@@ -349,14 +411,39 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                 const changesInProject = ProjectsManager.getChangedProjectDataForUpdate(updateProject, projectDetailsToUpdate)
                 const simplifiedChanges: Record<string, any> = {}
                 for (const key in changesInProject) {
-                    if (changesInProject.hasOwnProperty(key)) { //Variant of the for...in loop that avoids iterating over inherited properties.
+                    //if (changesInProject.hasOwnProperty(key)) { //Variant of the for...in loop that avoids iterating over inherited properties.
+                    if (Object.prototype.hasOwnProperty.call(changesInProject, key)){ //Safer check for own properties
                         simplifiedChanges[key] = changesInProject[key][1]; // Onlytakes the second value
                     }
                 }
                 console.log("simplifiedChanges for DB", simplifiedChanges)
 
                 if (Object.keys(simplifiedChanges).length > 0) {
-                    const messageContent = <DiffContentMessage changes={changesInProject, 'project'} />
+                    // 1. Comprobar si el nombre ya existe en otro proyecto (distinto al actual)
+                    const nameExists = projectsManager.list.some(
+                        p => p.name.toLowerCase() === projectDetailsToUpdate.name.toLowerCase() && p.id !== projectDetailsToUpdate.id
+                    );
+
+                    if (nameExists) {
+                        setMessagePopUpContent({
+                            type: "error",
+                            title: "Duplicate Project Name",
+                            message: `A project with the name "${projectDetailsToUpdate.name}" already exists. Please choose a different name.`,
+                            actions: ["OK"],
+                            onActionClick: {
+                                "OK": () => setShowMessagePopUp(false),
+                            },
+                            onClose: () => setShowMessagePopUp(false),
+                        });
+                        setShowMessagePopUp(true);
+                        e.preventDefault()
+                        return;
+                    }
+
+
+                    // 2. Si no hay duplicado, mostrar el mensaje de confirmación de cambios
+                    const messageContent = <DiffContentMessage changes={changesInProject} entityType='project' />
+                    console.log('[NewProjectForm] Props para DiffContentMessage:', { changesInProject, entityType: 'project' })
                     // Calculate the number of rows in the messageContent table
                     const messageRowsCount = Object.keys(simplifiedChanges).length
                     // Calculate the desired message height
@@ -411,18 +498,6 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
                     return
                 }
 
-
-
-
-                // try {
-                //     await handleUpdateDataProjectInDB(projectDetailsToUpdate, simplifiedChanges)
-                //     navigateTo("/")
-
-
-                // } catch (error) {
-                //     console.error("Error updating project in callback throw App till index.ts", error);
-                //     throw error
-                // }
             }
             onCloseNewProjectForm()
         } else {
@@ -445,166 +520,170 @@ export function NewProjectForm({ onClose, projectsManager, updateProject = null,
 
 
     return (
-        <div className="dialog-container">
-            <div className="custom-backdrop">
-                <dialog id="new-project-modal" style={{ overflow: "visible" }} open> {/*HERE THE SECRET FOR SHOWINHG ON IT MESSAGESPOPUP*/}
-                    <form onSubmit={(e) => { handleNewProjectFormSubmit(e) }} id="new-project-form" action="" name="new-project-form" method="post" >
-                        <h2
-                            style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                                alignItems: "center"
-                            }}
-                        >
-                            <div id="modal-project-title">New Project</div>
-                            <div id="titleModalNewProject" >
-                                {updateProject ? <DeleteProjectBtn updateProject={updateProject} projectsManager={projectsManager} /> : null}
-                            </div>
+        < div className="dialog-container">
+            <div className="custom-backdrop"/>
+            <dialog id="new-project-modal" style={{ overflow: "visible", display: "flex", alignItems:"center" }} open> {/*HERE THE SECRET FOR SHOWINHG ON IT MESSAGESPOPUP*/}
+                <form onSubmit={(e) => { handleNewProjectFormSubmit(e) }} id="new-project-form" action="" name="new-project-form" method="post" >
+                    <h2
+                        style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center"
+                        }}
+                    >
+                        <div id="modal-project-title">{updateProject ? "Update Project" : "New Project"}</div>
+                        <div id="titleModalNewProject" >
+                            {updateProject ? <DeleteProjectBtn updateProject={updateProject} projectsManager={projectsManager} /> : null}
+                        </div>
 
-                        </h2>
-                        <div className="input-list">
-                            <div className="form-field-container">
-                                <label>
-                                    <span className="material-icons-round">apartment</span>Name
-                                </label>
-                                <input
-                                    data-form-value="name"
-                                    name="name"
-                                    type="text"
-                                    size={30}
-                                    placeholder="What´s the name of your project"
-                                    required={true}
-                                    minLength={5}
-                                    title="Please enter at least 5 characters"
-                                    autoComplete="off"
-                                />
-                                <details>
-                                    <summary>Tip</summary>
-                                    <p>Give it a short name</p>
-                                </details>
-                            </div>
-                            <div className="form-field-container">
-                                <label>
-                                    <span className="material-icons-round">text_fields</span>Acronym
-                                </label>
-                                <input
-                                    data-form-value="acronym"
-                                    name="acronym"
-                                    type="text"
-                                    size={30}
-                                    placeholder="Enter a brief acronym for the project"
-                                    required={true}
-                                    maxLength={5}
-                                    data-uppercase="acronym"
-                                    title="Please do not enter more than 5 characters"
-                                    autoComplete=""
-                                />
-                                <details>
-                                    <summary>Tip</summary>
-                                    <p>No more than five characters</p>
-                                </details>
-                            </div>
-                            <div className="form-field-container">
-                                <label>
-                                    <span className="material-icons-round">article</span>Decription
-                                </label>
-                                <textarea
-                                    data-form-value="description"
-                                    name="description"
-                                    id=""
-                                    cols={50}
-                                    rows={5}
-                                    placeholder="Give your project a nice description! So people is jealous about it"
-                                    defaultValue={""}
-                                />
-                            </div>
-                            <div className="form-field-container">
-                                <label>
-                                    <span className="material-icons-round">engineering</span>Business Unit
-                                </label>
-                                <select data-form-value="businessUnit" name="businessUnit">
-                                    <option value="Edification">Edification</option>
-                                    <option value="Civil">Civil</option>
-                                    <option value="Transport">Transport</option>
-                                    <option value="Bridge">Bridge</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <div className="form-field-container">
-                                <label>
-                                    <span className="material-icons-round"></span>Rol
-                                </label>
-                                <select data-form-value="userRole" name="userRole">
-                                    <option>Architect</option>
-                                    <option>Engineer</option>
-                                    <option>Developer</option>
-                                </select>
-                            </div>
-                            <div className="form-field-container">
-                                <label>
-                                    <span className="material-icons-round">not_listed_location</span>
-                                    Status
-                                </label>
-                                <select data-form-value="status" name="status">
-                                    <option>Pending</option>
-                                    <option>Active</option>
-                                    <option>Finished</option>
-                                </select>
-                            </div>
-                            <div className="form-field-container">
-                                <label>
-                                    <span className="material-icons-round">paid</span>Cost
-                                </label>
-                                <input
-                                    data-form-value="cost"
-                                    name="cost"
-                                    type="number"
-                                    size={30}
-                                    placeholder="Enter the budget for the project"
-                                    inputMode="numeric"
-                                    title="Please enter only numbers"
-                                    autoComplete="off"
-                                />
-                                <details>
-                                    <summary>Tip</summary>
-                                    <p>Only allow numbers</p>
-                                </details>
-                            </div>
-                            <div className="form-field-container">
-                                <label>
-                                    <span className="material-icons-round">calendar_month</span>Finish
-                                    Date
-                                </label>
-                                <input
-                                    data-form-value="finishDate"
-                                    name="finishDate"
-                                    type="date"
-                                    id="finisProjecthDate"
-                                    placeholder="Enter a Finish date for the project"
-                                />
-                            </div>
+                    </h2>
+                    <div className="input-list">
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">apartment</span>Name
+                            </label>
+                            <input
+                                data-form-value="name"
+                                name="name"
+                                type="text"
+                                size={30}
+                                placeholder="What´s the name of your project"
+                                required={true}
+                                minLength={5}
+                                title="Please enter at least 5 characters"
+                                autoComplete="off" // Default values will be handled by usePrepareProjectForm
+                            />
+                            <details>
+                                <summary>Tip</summary>
+                                <p>Give it a short name</p>
+                            </details>
                         </div>
-                        <div id="buttonEndRight">
-                            <button id="cancel-project-btn" type="button" className="buttonC" onClick={onCloseNewProjectForm}>
-                                Cancel
-                            </button>
-                            <button id="accept-project-btn" type="submit" className="buttonB">
-                                Accept
-                            </button>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">text_fields</span>Acronym
+                            </label>
+                            <input
+                                data-form-value="acronym"
+                                name="acronym"
+                                type="text"
+                                size={30}
+                                placeholder="Enter a brief acronym for the project"
+                                required={true}
+                                maxLength={5}
+                                data-uppercase="acronym"
+                                title="Please do not enter more than 5 characters"
+                                autoComplete="off"
+                            />
+                            <details>
+                                <summary>Tip</summary>
+                                <p>No more than five characters</p>
+                            </details>
                         </div>
-                    </form>
-                </dialog>
-            </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">article</span>Decription
+                            </label>
+                            <textarea
+                                data-form-value="description"
+                                name="description"
+                                id=""
+                                cols={50}
+                                rows={5}
+                                placeholder="Give your project a nice description! So people is jealous about it"
+                                
+                            />
+                        </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">engineering</span>Business Unit
+                            </label>
+                            <select data-form-value="businessUnit" name="businessUnit">
+                                <option value="Edification">Edification</option>
+                                <option value="Civil">Civil</option>
+                                <option value="Transport">Transport</option>
+                                <option value="Bridge">Bridge</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round"></span>Rol
+                            </label>
+                            <select data-form-value="userRole" name="userRole">
+                                <option>Architect</option>
+                                <option>Engineer</option>
+                                <option>Developer</option>
+                            </select>
+                        </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">not_listed_location</span>
+                                Status
+                            </label>
+                            <select data-form-value="status" name="status">
+                                <option>Pending</option>
+                                <option>Active</option>
+                                <option>Finished</option>
+                            </select>
+                        </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">paid</span>Cost
+                            </label>
+                            <input
+                                data-form-value="cost"
+                                name="cost"
+                                type="number"
+                                size={30}
+                                placeholder="Enter the budget for the project"
+                                inputMode="numeric"
+                                title="Please enter only numbers"
+                                autoComplete="off"
+                            />
+                            <details>
+                                <summary>Tip</summary>
+                                <p>Only allow numbers</p>
+                            </details>
+                        </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">calendar_month</span>Finish
+                                Date
+                            </label>
+                            <input
+                                data-form-value="finishDate"
+                                name="finishDate"
+                                type="date"
+                                id="finisProjecthDate"
+                                placeholder="Enter a Finish date for the project"
+                            />
+                        </div>
+                    </div>
+                    <div id="buttonEndRight">
+                        <button id="cancel-project-btn" type="button" className="buttonC" onClick={onCloseNewProjectForm}>
+                            Cancel
+                        </button>
+                        <button id="accept-project-btn" type="submit" className="buttonB">
+                            Accept
+                        </button>
+                    </div>
+                </form>
+            </dialog>
+            
             {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
             {isRenaming && <RenameElementMessage
                 projectsManager={projectsManager}
                 elementType="project"
                 elementTitle="Project"
                 previousElementName={currentProjectName}
-                onRename={(newName) => {
-                    setProjectNameToConfirm(newName)
+                onRename={async(newName) => {
+                    
+                    await handleRenameConfirmation(newName, projectDetailsToRename);
                     setIsRenaming(false)
+
+                    // setProjectNameToConfirm(newName)
+                    // setIsRenaming(false)
                 }}
                 onCancel={() => {
                     //setRenameConfirmationPending(false);

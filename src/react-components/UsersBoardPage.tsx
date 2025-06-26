@@ -48,7 +48,7 @@ export function UsersBoardPage({
     const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
-    const [isSyncing, setIsSyncing] = React.useState(false)
+    //const [isSyncing, setIsSyncing] = React.useState(false)
 
     // Estado para el modal de nuevo usuario
     const [isNewUserFormOpen, setIsNewUserFormOpen] = React.useState(false);
@@ -90,7 +90,7 @@ export function UsersBoardPage({
 
 
 
-    // //Loading Users at the beginnig
+    // //Loading Users at the beginnig BORRADO
     // React.useEffect(() => {
     //     // Solo intentar sincronizar hay un usuario autenticado
     //     if (!currentUser) {
@@ -161,60 +161,93 @@ export function UsersBoardPage({
 
 
     // },[authLoading, currentUser, hasCache, isStale, users.length, usersManager, updateCache ])
-
-
-    //Suscription to ProjectsManager events with control of refreshing
-        React.useEffect(() => {
-            const handleUsersUpdate = () => {
-                const updatedUsers = usersManager.list.map(user => ({
-                    ...user,
-                    accountCreatedAt: user.accountCreatedAt instanceof Date
-                        ? new Date(user.accountCreatedAt.getTime())
-                        : new Date(user.accountCreatedAt),
-                    lastLogin: user.lastLoginAt instanceof Date
-                        ? new Date(user.lastLoginAt.getTime())
-                        : new Date  (user.lastLoginAt),
-                    // projectsAssigned: user.projectsAssigned.map(project => ({
-                    //     ...project,
-                    //     startDate: project.startDate instanceof Date
-                    //         ? new Date(project.startDate.getTime())
-                    //         : new Date(project.startDate),
-                    //     endDate: project.endDate instanceof Date
-                    //         ? new Date(project.endDate.getTime())
-                    //         : new Date(project.endDate)
-                    // })),
-                }))
     
-    
-    
-                //update cache and localStorage
-                updateCache(updatedUsers);
-
-                lastSyncRef.current = Date.now(); // Actualice timestamp
-    
-                console.log('User cache updated with projectsAssigned:', {
-                    usersCount: updatedUsers.length,
-                    projectsAssigendCount: updatedUsers.reduce((acc, u) => acc + u.projectsAssigned.length, 0)
-                });
-            };
-    
-    
-            usersManager.onUserCreated = handleUsersUpdate;
-            usersManager.onUserDeleted = handleUsersUpdate;
-            usersManager.onUserUpdated = handleUsersUpdate;
     
 
-    
-            return () => {
-                usersManager.onUserCreated = () => { }
-                usersManager.onUserDeleted = () => { }
-                usersManager.onUserUpdated = () => { }
+    /**
+     * Efecto para gestionar el estado de carga inicial de la página.
+     * La página se considera "cargando" hasta que la autenticación haya terminado y
+     * ambos managers (ProjectsManager y UsersManager) estén listos.
+     */
+    React.useEffect(() => {
+        console.log('[UsersBoardPage] useEffect for initial loading triggered.');
+        if (authLoading) {
+            setIsLoading(true);
+            return;
+        }
+
+        // Establecer isLoading a true si alguno de los managers no está listo
+        setIsLoading(!projectsManager.isReady || !usersManager.isReady);
+
+        const onManagersReady = () => {
+            if (projectsManager.isReady && usersManager.isReady) {
+                setIsLoading(false);
+                console.log('[UsersBoardPage] Both managers ready. Initial loading complete.');
             }
-        }, [updateCache, usersManager])
+        };
+
+        // Registrar callbacks para actualizar el estado de carga
+        projectsManager.onReady(onManagersReady);
+        usersManager.onReady(onManagersReady);
+
+        // No es necesario un cleanup específico para estos callbacks en singletons.
+    }, [authLoading, projectsManager, usersManager]);
+    
+
+
+    //Suscription to ProjectsManager events with control of refreshing    
+    React.useEffect(() => {
+        console.log('[UsersBoardPage] Subscribing to UsersManager events.');
+        const handleUsersUpdate = () => {
+            const updatedUsers = usersManager.list.map(user => ({
+                ...user,
+                accountCreatedAt: user.accountCreatedAt instanceof Date
+                    ? new Date(user.accountCreatedAt.getTime())
+                    : new Date(user.accountCreatedAt),
+                lastLoginAt: user.lastLoginAt instanceof Date
+                    ? new Date(user.lastLoginAt.getTime())
+                    : new Date(user.lastLoginAt),
+                // projectsAssigned: user.projectsAssigned.map(project => ({
+                //     ...project,
+                //     startDate: project.startDate instanceof Date
+                //         ? new Date(project.startDate.getTime())
+                //         : new Date(project.startDate),
+                //     endDate: project.endDate instanceof Date
+                //         ? new Date(project.endDate.getTime())
+                //         : new Date(project.endDate)
+                // })),
+            }))
+
+
+
+            //update cache and localStorage
+            updateCache(updatedUsers);
+
+            lastSyncRef.current = Date.now(); // Actualice timestamp
+
+            console.log('User cache updated with projectsAssigned:', {
+                usersCount: updatedUsers.length,
+                projectsAssigendCount: updatedUsers.reduce((acc, u) => acc + u.projectsAssigned.length, 0)
+            });
+        };
+
+
+        // Suscripción al callback general
+        usersManager.onUsersListUpdated = handleUsersUpdate;
+
+
+        return () => {
+            console.log('[UsersBoardPage] Cleaning up UsersManager subscriptions.');
+            usersManager.onUsersListUpdated = null;
+        }
+    }, [updateCache, usersManager])
 
 
 
     // ***************. useCallback para funciones  *******************
+   
+
+
     const handleOpenNewUserModal = React.useCallback(() => {
         setIsNewUserFormOpen(true);
     }, []);
@@ -287,81 +320,56 @@ export function UsersBoardPage({
 
     // **************. useEffect para side effects **********************
 
-    // Cargar todos los usuarios
-    React.useEffect(() => {
-        // Solo intentar cargar usuarios si la autenticación ha terminado y hay un usuario
-        if (authLoading || !currentUser) {
-            console.log('UsersBoardPage: Skipping user fetch, auth loading or no user.');
-            if (isLoading) setIsLoading(false); 
-            return;
-        }
+    // // This useEffect now only sets the initial loading state based on auth and current user.
+    // // The actual user data fetching and syncing is handled by the UsersManager instance itself (via its internal onSnapshot).
+    // React.useEffect(() => { 
+    //     // Only set loading if auth is still loading or no user is present
+    //     if (authLoading || !currentUser) {
+    //         console.log('UsersBoardPage: Skipping user fetch, auth loading or no user.');
+    //         setIsLoading(false); 
+    //         return;
+    //     }
 
 
-        // Set loading to true only if not already loading from a previous effect or initial state
-        if (!isLoading && !hasCache) { // Only set loading if truly starting fresh
-            setIsLoading(true);
-        }
-        const usersCollectionRef = collection(db, 'users');
-
-        console.log('[UsersBoardPage] Setting up onSnapshot listener for users.');
-
-        // Usar onSnapshot para actualizaciones en tiempo real
-        const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
-            const usersData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as User)).map(userData => new User(userData)); // Convertir a instancias de User
-            setUsers(usersData);
-            updateCache(usersData); // Ensure cache is also updated
-            if (isLoading) setIsLoading(false);
-            lastSyncRef.current = Date.now(); // Update sync timestamp
-            console.log('[UsersBoardPage] Users updated from onSnapshot.');
-        }, (err) => {
-            console.error("Error fetching users: ", err);
-            setError("Failed to load users.");
-            setIsLoading(false);
-        });
-
-
-
-        return () => unsubscribe(); // Limpiar el listener al desmontar
-    }, [authLoading, currentUser]); 
-  //}, [authLoading, currentUser, projectsManager, setUsers, updateCache, isLoading, hasCache]); 
-    // Added dependencies: setUsers, updateCache, isLoading, hasCache
-    // authLoading and currentUser trigger re-evaluation.
-    // isLoading and hasCache help manage the setIsLoading(true) call.
+    //     // If we have a user and auth is done, and we don't have cached data yet, show loading.
+    //     // The actual data will come from UsersManager's internal subscription.
+    //     if (!hasCache && !isLoading) {
+    //         setIsLoading(true);
+    //     }
+        
+    //     // Once usersManager.list is populated (via its internal onSnapshot),
+    //     // the handleUsersUpdate callback (defined above) will update the local `users` state and `hasCache`.
+    //     // This will then cause `isLoading` to be set to `false`.
+    //     // No need for a direct onSnapshot here.
+    //     setIsLoading(false); // Assume UsersManager will handle loading state internally or via callbacks
+    // }, [authLoading, currentUser, hasCache]);
 
 
 
 
 
 
-
-
-
-
-
-    // **********************. useMemo para cálculos pesados ***********************
+//     // **********************. useMemo para cálculos pesados ***********************
 
     
-    // --- Lógica de Búsqueda y Filtrado ---
+//     // --- Lógica de Búsqueda y Filtrado ---
 
 
-    // Calcular la lista filtrada usando useMemo
-    const usersListFiltered = React.useMemo(() => {
+//     // Calcular la lista filtrada usando useMemo
+//     const usersListFiltered = React.useMemo(() => {
 
-        return filteredUsers.map((user) => (
-            <Router.Link
-                to={`/userBoard/${user.id}`}
-                key={user.id}
-                onClick={() => handleUserLinkClick(user.id!)}
-            >
-                 {/* UserCardRow will be used inside UsersBoardList */}
-    //             <div>User: {user.nickName || user.email}</div>
-            </Router.Link>
-        ))
-    }, [filteredUsers])
-   // This useMemo might not be needed if UsersBoardList handles the direct rendering of UserCardRow 
+//         return filteredUsers.map((user) => (
+//             <Router.Link
+//                 to={`/userBoard/${user.id}`}
+//                 key={user.id}
+//                 onClick={() => handleUserLinkClick(user.id!)}
+//             >
+//                  {/* UserCardRow will be used inside UsersBoardList */}
+//     //             <div>User: {user.nickName || user.email}</div>
+//             </Router.Link>
+//         ))
+//     }, [filteredUsers])
+//    // This useMemo might not be needed if UsersBoardList handles the direct rendering of UserCardRow 
 
 
 
@@ -531,7 +539,7 @@ export function UsersBoardPage({
                         </button>
                         <button onClick={onNewUserClick} id="new-user-btn" style={{ whiteSpace: 'nowrap' }}>
                             <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
-                            <p style={{color:"var(--color-fontbase-dark)"}}>Add New User</p>
+                            <p style={{color:"var(--color-fontbase-dark)"}}>Invite a new User</p>
                         </button>
                     </div>
                 </div>

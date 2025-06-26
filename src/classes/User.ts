@@ -2,7 +2,10 @@
 import * as  Firestore from 'firebase/firestore';
 import type { IUser, IProjectAssignment, IUserPermissions, IUserProjectRole, UserRoleInAppKey, UserRoleInAppValue, UserStatusKey, UserStatusValue } from '../types.d.ts'; // Importa IUser desde tu archivo de tipos
 
-
+interface FirebaseTimestamp {
+    seconds: number;
+    nanoseconds: number;
+}
 
 export class User implements IUser {
     id: string;
@@ -17,7 +20,7 @@ export class User implements IUser {
     photoURL?: string;
     address?: string;
 
-    accountCreatedAt: Firestore.Timestamp | Date;
+    accountCreatedAt: Date | FirebaseTimestamp;
     lastLoginAt?: Firestore.Timestamp | Date;
     status: UserStatusKey | UserStatusValue
 

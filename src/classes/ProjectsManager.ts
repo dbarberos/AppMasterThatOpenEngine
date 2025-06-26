@@ -1,75 +1,189 @@
 import { Project, IProject, ProjectStatus, UserRole, BusinessUnit } from './Project'
-import { showModal, closeModal, toggleModal, closeModalProject, changePageContent } from './UiManager'
+import { showModal, closeModal, toggleModal, closeModalProject} from './UiManager'
 import { MessagePopUp } from './MessagePopUp'
 import { v4 as uuidv4 } from 'uuid'
 import {  ToDoIssue } from "./ToDoIssue"
 import { IToDoIssue, ITag, IAssignedUsers } from '../types'
-import { newToDoIssue, clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState, setupProjectDetailsSearch } from './ToDoManager'
+import { newToDoIssue, clearSearchAndResetList, renderToDoIssueListInsideProject, resetSearchState } from './ToDoManager'
 import { toast } from 'sonner'
 
-//import { updateAsideButtonsState } from './HTMLUtilities.ts'
 
 import { useProjectsManager } from '../react-components/ProjectsManagerContext'
+
 import { CACHE_TIMESTAMP_KEY, STORAGE_KEY, TODO_STATUSCOLUMN  } from '../const.ts'
-import { createDocument, deleteToDoWithSubcollections, updateDocument, deleteAllTodosInProject } from '../services/firebase'
+import { createDocument, deleteToDoWithSubcollections, updateDocument, deleteAllTodosInProject, firestoreDB, getProjectsFromDB } from '../services/firebase'
 import * as Firestore from 'firebase/firestore'
+
+import { collection, doc, setDoc, deleteDoc, onSnapshot, Timestamp } from 'firebase/firestore'
+
 
 export class ProjectsManager {
 
-    list: Project[] = []
-    //ui: HTMLElement
-    onProjectCreated = (project: Project) => { }
-    onProjectDeleted = (name: string) => { }
-    onProjectUpdated = (id: string) => { }
-    //onToDoUpdated = (projectId: string, todoId: string) => { }
-    onToDoIssueDeleted = (todoIssueId: string) => { }
+    private _projects: Project[] = [];
+    private unsubscribe: (() => void) | null = null; // Para desuscribirse del listener de Firestore
+    private _isReady: boolean = false; // Nuevo estado para indicar si la carga inicial está completa
+    private _readyCallbacks: (() => void)[] = []; // Callbacks para notificar cuando esté listo
 
+    // Callbacks para que los componentes externos se suscriban a cambios
+    public onProjectsListUpdated: (() => void) | null = null;
 
-    //defaultProjectCreated: boolean = false
+    // Callbacks específicos que se mantienen activos
+    public onProjectCreated: ((project: Project) => void) | null = null;
+    public onProjectDeleted: ((name: string) => void) | null = null;
+    public onProjectUpdated: ((id: string) => void) | null = null;
+    public onToDoUpdated: ((projectId: string, todoId: string) => void) | null = null; // Si este callback se usa
+    public onToDoIssueDeleted: ((todoIssueId: string) => void) | null = null;
 
-    /* SINGLETON PATTERN ProjectManager
-    //Applying the singleton design pattern to the ProjectsManager class. This ensures that only one instance of ProjectsManager exists throughout the application, providing a global access point to its functionality.
-
-    static instance: ProjectsManager
-    static container: HTMLElement | null = null
-
-    public static setContainer(container: HTMLElement) {
-        ProjectsManager.container = container
-    }
-
-    public static getInstance(): ProjectsManager {
-        if (!ProjectsManager.instance) {
-            if (!ProjectsManager.container) {
-                throw new Error("Container not established")
-            }
-            ProjectsManager.instance = new ProjectsManager(ProjectsManager.container)
-        }
-        return ProjectsManager.instance
-    }
-    //above finished the singleton pattern
-    */
-
-    /*REMOVED CREATION OF DEFAULT PROJECT
+     /**
+     * Constructor de ProjectsManager.
+     * Inicializa el manager y configura el listener de Firestore para la sincronización en tiempo real.
+     */
     constructor() {
-        
-        this.defaultProjectCreated = false
-        //this.createDefaultProject()
+        this.setupFirestoreListener(); // Inicia el listener de Firestore al construir la instancia
     }
-    */
 
+    //get list(): Project[]
+  
+    // onProjectCreated = (project: Project) => { }
+    // onProjectDeleted = (name: string) => { }
+    // onProjectUpdated = (id: string) => { }
+    // onToDoIssueDeleted = (todoIssueId: string) => { }
+
+
+
+    /**
+     * Configura el listener de Firestore para la colección 'projects'.
+     * Se suscribe a los cambios en tiempo real y actualiza la lista interna de proyectos.
+     */
+    private setupFirestoreListener() {
+        console.log('ProjectsManager: Configurando listener de Firestore...');
+        if (this.unsubscribe) {
+            this.unsubscribe(); // Limpiar el listener anterior si existe
+            console.log('ProjectsManager: Listener de Firestore anterior desuscrito.');
+        }
+
+        const projectsCollectionRef = collection(firestoreDB, 'projects');
+        this.unsubscribe = onSnapshot(projectsCollectionRef, (snapshot) => {
+            console.log('ProjectsManager: onSnapshot disparado. Procesando cambios...');
+            const newProjectsList: Project[] = [];
+            snapshot.forEach(doc => {
+                const projectData = doc.data() as IProject;
+                const projectInstance = new Project({
+                    ...projectData,
+                    id: doc.id,
+                    // Asegurarse de que las fechas dentro de todoList se conviertan de Timestamp a Date
+                    todoList: projectData.todoList?.map(todo => ({
+                        ...todo,
+                        dueDate: todo.dueDate instanceof Timestamp ? todo.dueDate.toDate() : todo.dueDate,
+                        createdDate: todo.createdDate instanceof Timestamp ? todo.createdDate.toDate() : todo.createdDate,
+                    })) || [],
+                });
+                newProjectsList.push(projectInstance);
+            });
+            this._projects = newProjectsList; // Actualizar la lista interna del manager
+
+            console.log('ProjectsManager: Lista interna de proyectos actualizada desde Firestore snapshot.', { count: this._projects.length });
+            
+            // Marcar como listo después de la primera instantánea
+            if (!this._isReady) {
+                this._isReady = true;
+                console.log('ProjectsManager: Datos iniciales cargados. Notificando callbacks de listo.');
+                this._readyCallbacks.forEach(cb => cb()); // Ejecutar callbacks pendientes
+                this._readyCallbacks = []; // Limpiar callbacks después de notificar
+            }
+            
+            // Notificar a los suscriptores que la lista ha cambiado (para actualizar UI y caché)
+            if (this.onProjectsListUpdated) {
+                console.log('ProjectsManager: Invocando onProjectsListUpdated.');
+                this.onProjectsListUpdated();
+            }
+
+        }, (error) => {
+            console.error('ProjectsManager: Error escuchando Firestore:', error);
+            // Aquí podrías añadir lógica para manejar errores de conexión o permisos
+        });
+    }
+
+
+
+    /**
+     * Devuelve una copia de la lista actual de proyectos.
+     * @returns {Project[]} Una copia del array de proyectos.
+     */
+    get list(): Project[] {
+        // CORRECCIÓN CRÍTICA: Asegura que se devuelve la lista interna _projects
+        return [...this._projects]; 
+    }
+
+    /**
+     * Indica si el manager ha completado su carga inicial desde Firestore.
+     * @returns {boolean} True si está listo, false en caso contrario.
+     */
+    get isReady(): boolean {
+        return this._isReady;
+    }
+
+    /**
+     * Registra un callback para ser ejecutado cuando el manager esté listo.
+     * Si ya está listo, el callback se ejecuta inmediatamente.
+     * @param {() => void} callback La función a ejecutar.
+     */
+    onReady(callback: () => void) {
+        console.log(`ProjectsManager: onReady llamado. isReady: ${this._isReady}`);
+        if (this._isReady) {
+            callback();
+        } else {
+            this._readyCallbacks.push(callback);
+        }
+    }
+
+
+
+    /**
+     * Obtiene un proyecto por su ID.
+     * @param {string} id El ID del proyecto.
+     * @returns {Project | undefined} El proyecto encontrado o undefined.
+     */
+    getProject(id: string): Project | undefined {
+        console.log('ProjectsManager.ts: getProject llamado', { id });
+        return this._projects.find(project => project.id === id);
+    }
+
+    /**
+     * Obtiene un proyecto por su nombre.
+     * @param {string} name El nombre del proyecto.
+     * @returns {Project | undefined} El proyecto encontrado o undefined.
+     */
+    getProjectByName(name: string): Project | undefined {
+        console.log('ProjectsManager.ts: getProjectByName llamado', { name });
+        return this._projects.find(project => project.name === name);
+    }
+
+
+
+
+    /**
+     * Añade un nuevo proyecto a la lista interna del manager.
+     * Este método es para poblar la lista local, no para escribir en Firebase.
+     * La escritura en Firebase debe hacerse a través de un método async separado.
+     * @param {Project} data Los datos del proyecto a añadir/actualizar.
+     * @param {string} [id] El ID opcional del proyecto.
+     * @returns {Project | undefined} El proyecto añadido/actualizado o undefined si no se encontró para sobrescribir.
+     */
     //ESTA FUCNION ESTA CREADA PARA LA CREACIÓN DE PROYECTOS AL RERENDERIZAR EL COMPONENTE DE REAC PROJECTPAGE
     newProject(data: Project, id?: string): Project | undefined {
+        console.log('ProjectsManager: newProject llamado para añadir/actualizar en lista local.', { data, id });
         const projectNames = this.list.map((project) => {
             return project.name
         })
 
         if (projectNames.includes(data.name)) {
-            // Find and remove the existing project from the ui & list since you are going to use it later
+            // Find and remove the existing project from the list since you are going to use it later
             const existingProjectIndex = this.list.findIndex(project => project.name === data.name);
             if (existingProjectIndex !== -1) {
                 //It is clare that there is an index, since there is a project with that name
                 // 1. Remove the existing project from the list
-                this.list = this.list.filter((project) => project.name !== data.name);
+                this._projects = this._projects.filter((project) => project.name !== data.name);
 
                 // 2. Create a new project with the imported data
                 const newProject = new Project(data, id);
@@ -77,16 +191,23 @@ export class ProjectsManager {
                 // 3. Process todo list if exists
                 if (data.todoList && Array.isArray(data.todoList)) {
                     newProject.todoList = data.todoList.map(todoData => {
-                        return ToDoIssue.createFromData({
+
+                        // Asegurarse de que las fechas se conviertan de Timestamp a Date si vienen de Firebase
+                        const processedTodoData = {
                             ...todoData,
-                            todoProject: newProject.id || ''
-                        });
+                            todoProject: newProject.id || '',
+                            dueDate: todoData.dueDate instanceof Timestamp ? todoData.dueDate.toDate() : todoData.dueDate,
+                            createdDate: todoData.createdDate instanceof Timestamp ? todoData.createdDate.toDate() : todoData.createdDate,
+                        };
+                        return ToDoIssue.createFromData(processedTodoData);
                     });
                 }
 
                 // 4. Add the new project to the list
-                this.list.push(newProject);
-                this.onProjectCreated(newProject);
+                this._projects.push(newProject);
+                this.updateLocalStorage(); // Actualizar localStorage
+                if (this.onProjectCreated) { this.onProjectCreated(newProject); } // Notificar callback específico
+                if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); } // Notificar callback general
                 return newProject;
 
             } else {
@@ -99,14 +220,20 @@ export class ProjectsManager {
             const newProject = new Project(data, id)
             if (data.todoList && Array.isArray(data.todoList)) {
                 newProject.todoList = data.todoList.map(todoData => {
-                    return ToDoIssue.createFromData({
+                    // Asegurarse de que las fechas se conviertan de Timestamp a Date si vienen de Firebase
+                    const processedTodoData = {
                         ...todoData,
-                        todoProject: newProject.id || ''
-                    });
+                        todoProject: newProject.id || '',
+                        dueDate: todoData.dueDate instanceof Timestamp ? todoData.dueDate.toDate() : todoData.dueDate,
+                        createdDate: todoData.createdDate instanceof Timestamp ? todoData.createdDate.toDate() : todoData.createdDate,
+                    };
+                    return ToDoIssue.createFromData(processedTodoData);
                 });
             }
-            this.list.push(newProject)
-            this.onProjectCreated(newProject)
+            this._projects.push(newProject)
+            this.updateLocalStorage(); // Actualizar localStorage
+            if (this.onProjectCreated) { this.onProjectCreated(newProject); } // Notificar callback específico
+            if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); } // Notificar callback general
             return newProject
         }
     }
@@ -455,7 +582,13 @@ export class ProjectsManager {
     */
 
     // It has been suplanted by custome hook
+        /**
+     * Filtra la lista de proyectos por nombre.
+     * @param {string} value El valor a buscar en el nombre del proyecto.
+     * @returns {Project[]} La lista de proyectos filtrada.
+     */
     filterProjects(value: string) {
+        console.log('ProjectsManager: filterProjects llamado.', { value });
         const filteredProjects = this.list.filter((project) => {
             return project.name.toLowerCase().includes(value.toLowerCase())
         })
@@ -618,8 +751,18 @@ export class ProjectsManager {
 
     /* USED INSIDE INDEX.TSX */
 
-    updateReactProjects(dataToUpdate: Project) {
-        const projectIndex = this.list.findIndex(p => p.id === dataToUpdate.id)
+        /**
+     * Actualiza un proyecto en la lista interna del manager.
+     * Este método es para actualizar la lista local, no para escribir en Firebase.
+     * La escritura en Firebase debe hacerse a través de un método async separado.
+     * @param {Project} dataToUpdate Los datos del proyecto a actualizar.
+     * @returns {Project[] | false} La lista de proyectos actualizada o false si no se encontró el proyecto.
+     */
+
+
+    updateReactProjects(dataToUpdate: Project): Project[] | false {
+        console.log('ProjectsManager: updateReactProjects llamado para actualizar en lista local.', { dataToUpdate });
+        const projectIndex = this._projects.findIndex(p => p.id === dataToUpdate.id)
 
         if (projectIndex !== -1) {
             //Preserve the original ID
@@ -632,8 +775,11 @@ export class ProjectsManager {
                     ...dataToUpdate // Add new properties
                 }) : project
             );
-            //Update the list reference
-            this.list = updatedProjectsList
+            // Se usa this._projects para la lista interna
+            this._projects = updatedProjectsList; // Actualizar la lista interna
+            this.updateLocalStorage(); // Actualizar localStorage
+            if (this.onProjectUpdated) { this.onProjectUpdated(dataToUpdate.id!); } // Notificar callback específico
+            if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); } // Notificar callback general
 
             //Return the entire updated list of projects
             return updatedProjectsList
@@ -658,8 +804,18 @@ export class ProjectsManager {
 
     /* USED INSIDE NEWPROJECTFORM.TSX */
 
-    updateProject(projectId: string, dataToUpdate: Project) {
+        /**
+     * Actualiza un proyecto en la lista interna del manager y en Firebase.
+     * @param {string} projectId El ID del proyecto a actualizar.
+     * @param {Project} dataToUpdate Los datos del proyecto a actualizar.
+     * @returns {Project | null} El proyecto actualizado o null si no se encontró.
+     */
+
+    updateProject(projectId: string, dataToUpdate: Project): Project | null {
         console.log("ProjectsManager.ts: updateProject called", { projectId, dataToUpdate })
+        // Se mantiene la comprobación de isReady aquí si se quiere que este método lance un error
+        // si el manager no está listo, aunque la lógica original no lo hacía.
+
         const projectIdString = projectId.toString().trim()
         const projectIndex = this.list.findIndex(p => p.id?.toString().trim() === projectIdString) //Convert to string and trim for the comparing the same type of data
 
@@ -668,7 +824,7 @@ export class ProjectsManager {
             //const projectToUpdate = this.list[projectIndex];
 
             // Create new project instance with updated data
-            const currentProject = this.list[projectIndex];
+            const currentProject = this._projects[projectIndex]; 
             const updatedProject = new Project({
                 ...currentProject,
                 ...dataToUpdate,
@@ -694,39 +850,45 @@ export class ProjectsManager {
             //}
 
             // Update the list
-            this.list[projectIndex] = updatedProject
+            this._projects[projectIndex] = updatedProject;
 
-            // Trigger update callback
-            if (this.onProjectUpdated) {
-                this.onProjectUpdated(projectId)
-            }
 
-            // Update localStorage
-            this.updateLocalStorage()
+
+            // Actualizar en Firebase
+            const projectDocRef = doc(firestoreDB, 'projects', projectId);
+            setDoc(projectDocRef, this.toFirestoreData(updatedProject), { merge: true }) // Usar toFirestoreData
+                .then(() => console.log(`ProjectsManager: Document updated successfully in Firebase at projects/${projectId}`))
+                .catch(error => console.error(`ProjectsManager: Error updating document in Firebase at projects/${projectId}:`, error));
+
+            // Notificar a los suscriptores y actualizar localStorage
+            this.updateLocalStorage(); 
+            if (this.onProjectUpdated) { this.onProjectUpdated(projectId); } // Notificar callback específico
+            if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); } // Notificar callback general
+
+
+
+            // // Trigger update callback
+            // if (this.onProjectUpdated) {
+            //     this.onProjectUpdated(projectId)
+            // }
+
+            // // Update localStorage
+            // this.updateLocalStorage()
 
             return updatedProject
 
-            // //Preserve the original ID
-            // dataToUpdate.id = this.list[projectIndex].id
-
-            // // Update the Project Data in the Array. Clone the project previously stored in the list and update the properties with the new values
-            // const updatedProjectCloned = new Project(dataToUpdate)
-
-
-            // this.list[projectIndex] = {
-            //     ...this.list[projectIndex], // Keep existing properties
-            //     ...dataToUpdate // Update with new values
-            // }
-
-            // this.onProjectUpdated(projectId)
-
-            // return this.list[projectIndex]
 
         } else {
             console.error("Project not found in the list!")
             return null
         }
     }
+
+
+    /**
+     * Actualiza el caché de proyectos en localStorage.
+     * Se llama cuando la lista interna de proyectos (_projects) se actualiza.
+     */
 
     private updateLocalStorage(): void {
         try {
@@ -789,16 +951,48 @@ export class ProjectsManager {
 
 
 
+    /**
+     * Helper para convertir el objeto Project a un objeto plano compatible con Firestore.
+     * Maneja la conversión de objetos Date a Firestore Timestamps, especialmente para todoList.
+     * @param {Project} project El objeto Project a convertir.
+     * @returns {{ [key: string]: any }} El objeto plano para Firestore.
+     */
+    private toFirestoreData(project: Project): { [key: string]: any } {
+        const data: { [key: string]: any } = { ...project };
+        // Convertir objetos Date a Firestore Timestamps para los elementos de todoList
+        data.todoList = data.todoList.map((todo: ToDoIssue) => ({
+            ...todo,
+            dueDate: todo.dueDate instanceof Date ? Timestamp.fromDate(todo.dueDate) : todo.dueDate,
+            createdDate: todo.createdDate instanceof Date ? Timestamp.fromDate(todo.createdDate) : todo.createdDate,
+        }));
+        delete data.id; // El ID del documento de Firestore es independiente de los campos
+        return data;
+    }
+
+
+
+
+
+
+
 
     //FOR UPDATING THE TODO LIST INSIDE DE PROJECTS.MANAGER WHEN IT SHOULD BE UPDATED
+
+        /**
+     * Actualiza la lista de To-Do Issues dentro de un proyecto específico en el manager.
+     * Este método manipula la lista interna y actualiza localStorage.
+     * @param {string} projectId El ID del proyecto al que pertenece el To-Do.
+     * @param {ToDoIssue} todo El To-Do Issue a añadir o actualizar.
+     */
     updateProjectToDoList(projectId: string, todo: ToDoIssue) {
         console.log(`PM.updateProjectToDoList ENTERED at ${Date.now()} for todo ID ${todo.id}`)
-        const projectIndex = this.list.findIndex(p => p.id === projectId);
-        //const project = this.list.find(p => p.id === projectId);
+
+        const projectIndex = this._projects.findIndex(p => p.id === projectId);
+        // const project = this.list.find(p => p.id === projectId); 
 
         if (projectIndex !== -1) {
             //if (project) {
-            const currentProject = this.list[projectIndex]
+            const currentProject = this._projects[projectIndex]
 
             console.log(`PM.updateProjectToDoList: Checking project ${projectId}. Current todoList IDs:`, currentProject.todoList.map(t => t.id))
 
@@ -848,15 +1042,21 @@ export class ProjectsManager {
 
                 
                     // Actualizar la lista de proyectos con el nuevo proyecto
-                    this.list = [
+                    this._projects = [
                         ...this.list.slice(0, projectIndex),
                         updatedProject,
-                        ...this.list.slice(projectIndex + 1)
+                        ...this._projects.slice(projectIndex + 1)
                     ]
-                    console.log('PM: this.list actualizado, proyecto afectado:', this.list[projectIndex].todoList.map(t => ({ id: t.id, title: t.title })));
+                    console.log('PM: this._projects actualizado, proyecto afectado:', this._projects[projectIndex].todoList.map(t => ({ id: t.id, title: t.title })));
 
                     // *** Log CLAVE antes de guardar en localStorage ***
-                    console.log('PM: Llamando a updateLocalStorage(). Estado actual de this.list:', this.list.map(p => ({ id: p.id, name: p.name, todoCount: p.todoList.length })));
+                    console.log('PM: Llamando a updateLocalStorage(). Estado actual de this._projects:', this._projects.map(p => ({ id: p.id, name: p.name, todoCount: p.todoList.length })));
+
+                    // Actualizar en Firebase
+                    const projectDocRef = doc(firestoreDB, 'projects', projectId);
+                    setDoc(projectDocRef, this.toFirestoreData(updatedProject), { merge: true }) // Actualizar el proyecto completo en Firebase
+                        .then(() => console.log(`ProjectsManager: Project ${projectId} todoList updated in Firebase.`))
+                        .catch(error => console.error(`ProjectsManager: Error updating project ${projectId} todoList in Firebase:`, error));
 
 
                     // Update localStorage immediately after updating ProjectsManager
@@ -871,17 +1071,27 @@ export class ProjectsManager {
                     });
 
                     // Notify changes
-                    this.onProjectUpdated(projectId);
+                    // Notificar a los suscriptores
+                    if (this.onProjectUpdated) { this.onProjectUpdated(projectId); } // Notificar callback específico
+                    if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); } // Notificar callback general
+                    // El callback onProjectUpdated se elimina, ya que onProjectsListUpdated es más general
+                    // this.onProjectUpdated(projectId); 
+
                 } catch (error) {
                     console.error('Error adding todo:', error);
                 }
 
             } else {
                 console.warn(`PM.updateProjectToDoList: Todo ID ${todo.id} ALREADY FOUND at index ${existingTodoIndex}. Skipping add/localStorage update.`);
+                // Si el ToDo ya existe, se asume que no hay cambio o que ya se manejó.
+                // Solo se actualiza localStorage y se notifica si es necesario.
                 // Update localStorage immediately after updating ProjectsManager
                 this.updateLocalStorage()
                 // Notify changes
-                this.onProjectUpdated(projectId);
+                // Notificar a los suscriptores
+                if (this.onProjectUpdated) { this.onProjectUpdated(projectId); } // Notificar callback específico
+                if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); } // No
+                //this.onProjectUpdated(projectId);
 
             }
         } else {
@@ -890,9 +1100,17 @@ export class ProjectsManager {
     }
 
     // Add this method to handle todo updates
+
+        /**
+     * Actualiza un To-Do Issue específico dentro de un proyecto.
+     * Este método manipula la lista interna y actualiza localStorage.
+     * @param {string} projectId El ID del proyecto al que pertenece el To-Do.
+     * @param {string} todoId El ID del To-Do Issue a actualizar.
+     * @param {ToDoIssue} updatedTodo Los datos actualizados del To-Do Issue.
+     */
     updateToDoIssue(projectId: string, todoId: string, updatedTodo: ToDoIssue) {
         console.log("ProjectsManager.ts: updateToDoIssue called", { projectId, todoId, updatedTodo })
-        const project = this.list.find(p => p.id === projectId);
+        const project = this._projects.find(p => p.id === projectId);
 
         if (project) {
             const todoIndex = project.todoList.findIndex(t => t.id === todoId);
@@ -905,12 +1123,21 @@ export class ProjectsManager {
                     // Optimistic update
                     project.todoList[todoIndex] = updatedTodo;
 
+                    // Actualizar en Firebase
+                    const projectDocRef = doc(firestoreDB, 'projects', projectId);
+                    setDoc(projectDocRef, this.toFirestoreData(project), { merge: true }) // Actualizar el proyecto completo en Firebase
+                        .then(() => console.log(`ProjectsManager: ToDo ${todoId} updated in Firebase for project ${projectId}.`))
+                        .catch(error => console.error(`ProjectsManager: Error updating ToDo ${todoId} in Firebase:`, error));
+
+
                     // Update localStorage
                     this.updateLocalStorage();
 
                     // Notify changes
-                    this.onProjectUpdated(projectId);
-                    //this.onToDoUpdated(projectId, todoId);
+                    //this.onProjectUpdated(projectId);
+                    if (this.onProjectUpdated) { this.onProjectUpdated(projectId); } // Notificar callback específico
+                    if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); } // Notificar callback general
+
                 
                 } catch (error) {
                     // Rollback on error
@@ -926,7 +1153,13 @@ export class ProjectsManager {
 
 
     //  *** USED INSIDE NewProjectForm *** 
+    /**
+     * Método estático para poblar un formulario HTML con los detalles de un proyecto.
+     * NOTA: Este método contiene lógica de UI y DOM, idealmente debería estar fuera de esta clase.
+     * @param {Project} project El objeto Project con los datos para poblar el formulario.
+     */
     static populateProjectDetailsForm(project: Project) {
+        console.log('ProjectsManager: populateProjectDetailsForm llamado.');
         const projectDetailsForm = document.getElementById("new-project-form")
         if (!projectDetailsForm) { return }
 
@@ -942,6 +1175,7 @@ export class ProjectsManager {
 
 
                     // const formattedDate = project.finishDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+                    console.log(`ProjectsManager: Populating finishDate for ${key}: ${formattedDate}`);
 
                     inputField.forEach(element => {
                         (element as HTMLInputElement).value = formattedDate
@@ -952,7 +1186,7 @@ export class ProjectsManager {
                     inputField.forEach(element => {
                         // Handle different input types                        
                         if (element instanceof HTMLInputElement) {
-                            element.value = project[key] // For text, date inputs
+                            element.value = (project as any)[key] // For text, date inputs
                         } else if (element instanceof HTMLTextAreaElement) {
                             element.value = project[key] // For textareas
                         } else if (element instanceof HTMLSelectElement) {
@@ -973,7 +1207,17 @@ export class ProjectsManager {
 
 
     //*** USED INSIDE NewProjectForm *** *
+
+        /**
+     * Compara un proyecto existente con uno actualizado y devuelve las diferencias.
+     * NOTA: Este método es de utilidad general y no manipula el estado del manager.
+     * @param {Project | null} existingProject El proyecto original.
+     * @param {Project} updatedProject El proyecto con los datos actualizados.
+     * @returns {Record<string, [any, any]>} Un objeto con las propiedades que cambiaron.
+     */
+
     static getChangedProjectDataForUpdate(existingProject: Project | null, updatedProject: Project): Record<string, [any, any]> {
+        console.log('ProjectsManager: getChangedProjectDataForUpdate llamado.');
         const changedData: { [key: string]: [string, string] } = {};
 
         if (!existingProject) return changedData;
@@ -1126,46 +1370,54 @@ export class ProjectsManager {
     /* USED INSIDE ProjectDetailsPage */
 
 
-    getProject(id: string) {
-        const project = this.list.find((project) => {
-            return project.id === id
-        })
-        return project
-    }
-
-    getProjectByName(name: string) {
-        const project = this.list.find((project) => {
-            return project.name.toLowerCase() === name.toLowerCase()
-        })
-        return project
-    }
+    /**
+     * Obtiene la lista de To-Do Issues para un proyecto específico.
+     * @param {string} projectId El ID del proyecto.
+     * @returns {IToDoIssue[]} La lista de To-Do Issues del proyecto.
+     */
 
     getToDoListForProject(projectId: string): IToDoIssue[] {
+        console.log('ProjectsManager: getToDoListForProject llamado.', { projectId });
         const project = this.getProject(projectId)
         if (project) {
-            return project.todoList
+            return [...project.todoList]; 
         } else {
             return []
         }
     }
 
 
-
+    /**
+     * Calcula el costo total de todos los proyectos.
+     * @returns {number} El costo total.
+     */
     totalProjectsCost() {
+        console.log('ProjectsManager: totalProjectsCost llamado.');
         const TotalBudget = this.list.reduce((acumulative, Project) => acumulative + Project.cost, 0)
         return TotalBudget
     }
 
+
+        /**
+     * Elimina un proyecto de la lista interna del manager.
+     * Este método manipula la lista interna y actualiza localStorage.
+     * @param {string} id El ID del proyecto a eliminar.
+     */
+
     deleteProject(id: string): void {
+        console.log('ProjectsManager: deleteProject llamado para eliminar de la lista local.', { id });
         const project = this.getProject(id)
         if (!project) { return }
         //project.ui.remove()
 
         //Remove the project from the local list
-        this.list = this.list.filter(project => project.id !== id)
-        if (this.onProjectDeleted) {
-            this.onProjectDeleted(project.name)
-        }
+        this._projects = this._projects.filter(project => project.id !== id)
+        this.updateLocalStorage(); // Actualizar localStorage
+        if (this.onProjectDeleted) { this.onProjectDeleted(project.name); } // Notificar callback específico
+        if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); } // Notificar callback general
+        // if (this.onProjectDeleted) {
+        //     this.onProjectDeleted(project.name)
+        // }
 
         //Clean the ID Project from the localStorage if there is project
         if (localStorage.getItem("selectedProjectId") === id) {
@@ -1200,7 +1452,10 @@ export class ProjectsManager {
         }
         */
 
-
+    /**
+     * Exporta los proyectos seleccionados a un archivo JSON.
+     * @param {string} [fileName="projects"] El nombre del archivo JSON.
+     */
     exprtToJSON(fileName: string = "projects") {
         console.log("Inside exprtToJSON")
         const projects: IProject[] = this.list
@@ -1209,6 +1464,10 @@ export class ProjectsManager {
         console.log("After showExportJSONModal")
     }
 
+        /**
+     * Importa proyectos desde un archivo JSON.
+     * @returns {void}
+     */
     imprtFromJSON() {
         // Create a file input element to allow the user to select a JSON file
         const input = document.createElement("input")
@@ -1267,29 +1526,46 @@ export class ProjectsManager {
         input.click()
     }
 
+    // Propiedades para gestionar listeners de eventos de botones en modales (lógica de UI)
     confirmBtnClickListener: EventListener | null = null
     cancelImportProjectBtnClickListener: EventListener | null = null
     cancelExportProjectBtnClickListener: EventListener | null = null
 
+
+    /**
+     * Helper para convertir un objeto Project a un objeto plano compatible con Firestore.
+     * Maneja la conversión de objetos Date a Firestore Timestamps, especialmente para todoList.
+     * @param {Project} project El objeto Project a convertir.
+     * @returns {{ [key: string]: any }} El objeto plano para Firestore.
+     */
     private serializeProjectForFirebase(project: Project) {
+        console.log('ProjectsManager: serializeProjectForFirebase llamado.');
         const serializedProject = {
             ...project,
             // Convertir fechas a Timestamp
             finishDate: project.finishDate instanceof Date 
                 ? Firestore.Timestamp.fromDate(project.finishDate)
                 : project.finishDate,
-            createdAt: project.createdAt instanceof Date
-                ? Firestore.Timestamp.fromDate(project.createdAt)
-                : project.createdAt,
-            updatedAt: Firestore.Timestamp.fromDate(new Date()),
-            // Excluir todoList ya que se maneja como subcollección
-            todoList: undefined
+            // createdAt: project.createdAt instanceof Date
+            //     ? Firestore.Timestamp.fromDate(project.createdAt)
+            //     : project.createdAt,
+            // updatedAt: Firestore.Timestamp.fromDate(new Date()),
+            // // Excluir todoList ya que se maneja como subcollección
+            // todoList: undefined
+            createdAt: project.createdAt instanceof Date ? Firestore.Timestamp.fromDate(project.createdAt) : project.createdAt,
+            updatedAt: project.updatedAt instanceof Date ? Firestore.Timestamp.fromDate(project.updatedAt) : Firestore.Timestamp.fromDate(new Date()),
+            // Asegurarse de que todoList también se serialice correctamente con Timestamps
+            todoList: project.todoList.map(todo => ({
+                ...todo,
+                dueDate: todo.dueDate instanceof Date ? Timestamp.fromDate(todo.dueDate) : todo.dueDate,
+                createdDate: todo.createdDate instanceof Date ? Timestamp.fromDate(todo.createdDate) : todo.createdDate,
+            })),
         };
     
-        // Verificación adicional de datos
-        if (!serializedProject.createdAt) {
-            serializedProject.createdAt = Firestore.Timestamp.fromDate(new Date());
-        }
+        // // Verificación adicional de datos
+        // if (!serializedProject.createdAt) {
+        //     serializedProject.createdAt = Firestore.Timestamp.fromDate(new Date());
+        // }
     
         return serializedProject;
     }
@@ -1483,8 +1759,11 @@ export class ProjectsManager {
                         const existingProjectInList = this.list.find(p => p.name === project.name);
                         const wasOverwrite = !!existingProjectInList;
 
-                        // Update local state
-                        const newProjectResult = await this.newProject(project as Project); // Wait for the Promise
+                        //// Update local state
+                        //const newProjectResult = await this.newProject(project as Project); // Wait for the Promise
+                        // Usar el método newProject existente que ya actualiza la lista local y localStorage
+                        const newProjectResult = this.newProject(project as Project); 
+
                         
                         if (newProjectResult) { // Check if a project was created (not skipped)
                             // Sincronize with Firebase
@@ -1496,7 +1775,9 @@ export class ProjectsManager {
                                     console.log(`Updating project "${newProjectResult.name}" (ID: ${newProjectResult.id}) in Firebase...`);
 
                                     // Serializar el proyecto antes de enviarlo a Firebase
-                                    const serializedProject = this.serializeProjectForFirebase(newProjectResult);
+                                    //const serializedProject = this.serializeProjectForFirebase(newProjectResult);
+                                    const serializedProject = this.toFirestoreData(newProjectResult); // Usar toFirestoreData
+
                                     
                                     await updateDocument(newProjectResult.id!, serializedProject, { basePath: 'projects' });
 
@@ -1509,8 +1790,10 @@ export class ProjectsManager {
                                 } else {
                                     console.log(`Adding new project "${newProjectResult.name}" (ID: ${newProjectResult.id}) to Firebase...`);
 
-                                    // Serializar el proyecto antes de enviarlo a Firebase
-                                    const serializedProject = this.serializeProjectForFirebase(newProjectResult);
+                                    // // Serializar el proyecto antes de enviarlo a Firebase
+                                    // const serializedProject = this.serializeProjectForFirebase(newProjectResult);
+                                    // Serializar el proyecto antes de enviarlo a Firebase (usar toFirestoreData)
+                                    const serializedProject = this.toFirestoreData(newProjectResult); 
                                     // createDocument no necesita el ID como argumento separado si está en el objeto
                                     await createDocument('projects', serializedProject, newProjectResult.id);
                                     // toast.success(`Proyecto "${newProjectResult.name}" añadido a Firebase.`, { id: `firebase-${newProjectResult.id}` });
@@ -1849,6 +2132,12 @@ export class ProjectsManager {
         cancelExportProjectBtn?.addEventListener("click", this.cancelExportProjectBtnClickListener)
     }
 
+    /**
+     * Genera la lista de proyectos para mostrar en un modal (import/export).
+     * NOTA: Este método contiene lógica de UI y DOM, idealmente debería estar fuera de esta clase.
+     * @param {IProject[]} projects La lista de proyectos a mostrar.
+     * @param {Element | null} projectListJson El elemento DOM donde se renderizará la lista.
+     */
     generateProjectList(projects: IProject[], projectListJson: Element | null) {
         // const projectListJson = document.querySelector("#json-projects-list")
         if (!projectListJson) {
@@ -1889,6 +2178,11 @@ export class ProjectsManager {
         })
     }
 
+
+    /**
+     * Limpia la lista de checkboxes de proyectos en un modal.
+     * NOTA: Este método contiene lógica de UI y DOM, idealmente debería estar fuera de esta clase.
+     */
     clearProjectCheckList(list: string) {
         const cleanCheckList = document.querySelector(list);
         if (cleanCheckList) {
@@ -1898,6 +2192,11 @@ export class ProjectsManager {
         }
     }
 
+
+    /**
+     * Selecciona todos los checkboxes habilitados en una lista.
+     * NOTA: Este método contiene lógica de UI y DOM, idealmente debería estar fuera de esta clase.
+     */
     selectAllCheckboxes(list: Element | null) {
         if (!list) {
             throw new Error("List element not found");
@@ -1907,6 +2206,11 @@ export class ProjectsManager {
         });
     }
 
+
+    /**
+     * Deselecciona todos los checkboxes en una lista.
+     * NOTA: Este método contiene lógica de UI y DOM, idealmente debería estar fuera de esta clase.
+     */
     deselectAllCheckboxes(list: Element | null) {
         if (!list) {
             throw new Error("List element not found");
@@ -1916,6 +2220,11 @@ export class ProjectsManager {
         });
     }
 
+    /**
+     * Obtiene los proyectos seleccionados de una lista de checkboxes.
+     * NOTA: Este método contiene lógica de UI y DOM, idealmente debería estar fuera de esta clase.
+     * @returns {IProject[]} La lista de proyectos seleccionados.
+     */
     //Method for get all the selected projects in the export and import modals
     getSelectedProjects(projectListJson, projects): IProject[] {
         const selectedProjects: IProject[] = []
@@ -1941,6 +2250,29 @@ export class ProjectsManager {
         })
         return selectedProjects
     }
+
+
+    /**
+     * Inicializa el listener de Firestore para obtener la lista de proyectos.
+     * Este método se llama en el constructor de la clase.
+     */
+    public init() {
+        this.setupFirestoreListener();
+    }
+
+
+    /**
+     * Limpia el listener de Firestore.
+     * Debería llamarse cuando la instancia del manager ya no sea necesaria (ej. al desmontar la aplicación).
+     */
+        public cleanup() {
+            console.log('ProjectsManager: Ejecutando cleanup.');
+            if (this.unsubscribe) {
+                this.unsubscribe();
+                this.unsubscribe = null;
+                console.log('ProjectsManager: Listener de Firestore desuscrito.');
+            }
+        }
 }
 
 

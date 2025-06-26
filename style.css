@@ -1182,6 +1182,7 @@ dialog {
     overflow-x: hidden;
     z-index: 2;
     height:100%
+    
 
     /* &[open] {
         scale: 1;
@@ -1203,11 +1204,15 @@ dialog:modal {
     scale: 1;
     opacity: 1;
 
+
     @starting-style {
         scale: 0;
         opacity: 0;
         overflow-x: hidden;
     }
+
+
+
 }
 
 
@@ -1221,17 +1226,20 @@ dialog::backdrop {
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(2.5px);
     -webkit-backdrop-filter: blur(2.5px);
+
+
+    position: fixed;
 }
 
 /* Cascading dialog styles */
-dialog[open]:not(:first-of-type) {
+/* dialog[open]:not(:first-of-type) { */
     /* Target all open dialogs except the first one */
-    position: relative;
+    /* position: relative; */
     /* Allow positioning relative to its normal position */
-    top: 150px;
-    left: 100px;
+    /* top: 0px; */
+    /* left: 0px; */
     /* Shift each subsequent dialog down by 150px/100px */
-}
+/* } */
 
 .dialog-container {
     position: fixed;
@@ -1248,7 +1256,7 @@ dialog[open]:not(:first-of-type) {
 }
 
 .custom-backdrop {
-    position: relative;
+    position: fixedrelative;
     /* to cover dialog-container */
     top: 0;
     left: 0;
@@ -4645,6 +4653,11 @@ button .btn-popup {
 
 
 
+
+
+
+
+
 /* --- Inicio de Estilos Específicos para login,logout, signup, etc --- */
 /* Estilos para el Portal y el Overlay */
 
@@ -5037,31 +5050,42 @@ button .btn-popup {
 } 
 
 
+/* Estilos para el portal de cambiar el password */
 
+.change-password-modal-portal {
+    z-index: 2000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
 
+.auth-form-container {
+    position: fixed;
+    max-width: 450px;
+    margin: auto;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-content: center;
 
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+.auth-form-basecard {
+    position: relative;
+    background-color: var(--color-bg1);
+    padding: 2rem;
+    border-radius: var(--br-base);
+    box-shadow: -7px -7px 15px var(--color-light),
+        7px 7px 15px var(--color-shadow);
+    width: fit-content;
+    box-sizing: border-box;
+    border: 1px solid var(--background-300);
+    color: var(--color-fontbase)
+}
+ 
 
 
 /* --- Fin de Estilos Específicos para login,logout, signup, etc --- */
@@ -5147,3 +5171,5 @@ button .btn-popup {
     background-color: inherit;
     color: var(--color-error2);
 }
+
+/* --- Fin de Estilos para User menu accion --- */

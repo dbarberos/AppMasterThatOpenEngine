@@ -123,7 +123,7 @@ export const signUpWithEmail = async ({
             firstName: "",
             lastName: "",
             photoURL: user.photoURL || null, // Use undefined if null for optional fields
-            providerId: user.providerData[0]?.providerId || 'password',
+            providerId: user.providerData[0]?.providerId || 'email',
             accountCreatedAt: Firestore.Timestamp.fromDate(new Date()), // Matches UserProfile
             lastLoginAt: Firestore.Timestamp.fromDate(new Date()),    // Matches UserProfile
             status: 'active',                                         // Matches UserProfile

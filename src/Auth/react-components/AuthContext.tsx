@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
     const [loading, setLoading] = React.useState(true);
 
-    const usersManager = React.useMemo(() => new UsersManager(), []); // Instancia de UsersManager
+    //const usersManager = React.useMemo(() => new UsersManager(), []); // Instancia de UsersManager
 
     React.useEffect(() => {
         console.log('[AuthContext] Setting up auth state observer');
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
         });
         return () => unsubscribe();
-    }, [usersManager]); // usersManager es estable debido a useMemo, pero es buena práctica incluirlo si se usa dentro.
+    }, []); // usersManager es estable debido a useMemo, pero es buena práctica incluirlo si se usa dentro.
 
     console.log('AuthProvider: Rendering', { loading, userExists: !!currentUser })
 

@@ -1,15 +1,15 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
-import * as Firestore from 'firebase/firestore';
+//import * as Firestore from 'firebase/firestore';
 
 
 import { LoadingIcon, SearchProjectBox, ProjectCard, CounterBox} from '../react-components';
 import { AddIcon } from './icons.tsx'
-import { useProjectsCache, useProjectSearch, useStickyState, useDebounce } from '../hooks'
+import { useProjectsCache, useProjectSearch, useStickyState, useDebounce,  useUsersCache } from '../hooks'
 import { STORAGE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL } from '../const';
 
 import { useProjectsManager, NewProjectForm } from './index.tsx';
-import { getProjectsFromDB } from '../services/firebase/index.ts'
+import { getProjectsFromDB, getUsersFromDB } from '../services/firebase/index.ts'
 import { getCollection } from '../services/firebase/index.ts'
 
 import { useAuth } from '../Auth/react-components/AuthContext.tsx'; 
@@ -19,19 +19,22 @@ import { useAuth } from '../Auth/react-components/AuthContext.tsx';
 //import { useProjectsManager } from './ProjectsManagerContext';
 
 import { ProjectsManager } from '../classes/ProjectsManager';
+import { UsersManager } from '../classes/UsersManager.ts';
 import { IProject, Project } from '../classes/Project';
 import { showModal, closeModal, toggleModal, } from "../classes/UiManager.ts"
 import { log } from 'three/examples/jsm/nodes/Nodes.js';
+import { toast } from 'sonner';
 
 
 interface Props {
     projectsManager: ProjectsManager,
+    usersManager: UsersManager,
     onProjectUpdate: (updatedProject: Project) => void
     onNewProjectCreated: (newProjectCreated: Project) => void
 }
 //const projectsCollection = getCollection<IProject>("/projects")
 
-export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCreated }: Props) {
+export function ProjectsPage({ projectsManager, usersManager, onProjectUpdate, onNewProjectCreated }: Props) {
 
     const { currentUser, loading: authLoading } = useAuth(); // Obtener estado de autenticación
 
@@ -45,10 +48,19 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
     // Use custom hooks for cache and search
     const {
         projects,
-        updateCache,
-        hasCache,
-        isStale
+        updateCache: updateProjectsCache,
+        hasCache: hasProjectsCache,
+        isStale: isProjectsCacheStale
     } = useProjectsCache()
+
+    const {
+        users, // This state from the hook will be updated by updateUsersCache
+        updateCache: updateUsersCache,
+        hasCache: hasUsersCache,
+        isStale: isUsersCacheStale
+    } = useUsersCache();
+
+
 
     const {
         searchTerm,
@@ -73,82 +85,164 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
     }, []);
 
 
-    //Loading projects at the beginnig
+    //Loading projects and users at the beginnig
+
+        /**
+     * Efecto para gestionar el estado de carga inicial de la página.
+     * La página se considera "cargando" hasta que ambos managers (ProjectsManager y UsersManager)
+     * hayan completado su carga inicial desde Firebase.
+     */
     React.useEffect(() => {
-        // Solo intentar sincronizar si la autenticación ha terminado de cargar y hay un usuario autenticado
-        if (authLoading || !currentUser) {
-            console.log('[ProjectsPage] Skipping sync. Auth loading:', authLoading, 'CurrentUser:', !!currentUser);
-            setIsInitialLoading(false); // Asegurarse de que no se quede en estado de carga si no hay usuario
+        console.log('[ProjectsPage] useEffect for initial loading triggered.');
+        // Si la autenticación aún está cargando o no hay usuario, no podemos determinar el estado de carga de los managers.
+        // Podríamos mostrar un loading genérico o esperar a que auth termine.
+        if (authLoading) {
+            setIsInitialLoading(true);
             return;
         }
 
-
-
-        const syncWithDatabase = async () => {            
-                // Si hay caché válido, y no ha pasado el intervalo, no hacer nada
-                if (hasCache && !isStale && projects.length > 0) {
-                    console.log('[ProjectsPage] Using cached projects, next sync in:', {
-                        minutes: Math.round((SYNC_INTERVAL - (Date.now() - lastSyncRef.current)) / 60000)
-                    });
-                    // Ensure ProjectManager and search state are in sync with cache
-                    projects.forEach(project => {
-                        if (!projectsManager.getProject(project.id!)) {
-                            projectsManager.newProject(project, project.id);
-                        }
-                    });
-                    //updateOriginalProjects(projects);
-                    return;
-                }
-
-            try {
-                console.log('[ProjectsPage] Starting database sync. HasCache:', hasCache);
-                // Mostrar loading solo si no hay caché
-                if (!hasCache) {
-                    setIsInitialLoading(true);
-                } else {
-                    setIsSyncing(true);
-                }
-
-                console.log('[ProjectsPage] Calling getProjectsFromDB...');
-                const firebaseProjects = await getProjectsFromDB()
-
-                // // Actualizar solo si hay cambios
-                // const currentProjects = projectsManager.list;
-                // const hasChanges = JSON.stringify(firebaseProjects) !== JSON.stringify(currentProjects);
-
-                // Create Project instances using ProjectManager for each project from Firebase
-                // if (hasChanges) {
-                firebaseProjects.forEach(projectData => {
-                    projectsManager.newProject(projectData, projectData.id);
-                })
-
-
-                const currentProjects = projectsManager.list
-
-                //Update cache and local state
-                updateCache(currentProjects)                
-
-                console.log('[ProjectsPage] Projects loaded/synced:', {
-                    count: currentProjects.length,
-                    timestamp: new Date().toISOString()
-                })
-                // }
-                // Actualizar timestamp de última sincronización
-                lastSyncRef.current = Date.now();
-
-                console.log('[ProjectsPage] Sync finished.');
-
-
-            } catch (error) {
-                console.error("Error loading projects:", error);
-                // Handle error appropriately - maybe set an error state
-            } finally {
+        const checkAndSetReady = () => {
+            if (projectsManager.isReady && usersManager.isReady) {
                 setIsInitialLoading(false);
-                setIsSyncing(false)
+                console.log('[ProjectsPage] Both managers ready. Initial loading complete.');
+            
+                // *** NEW: Populate cache with initial data from managers ***
+                // This is crucial because the onProjectCreated/Updated/Deleted callbacks
+                // only fire for *changes* after the initial load.
+                // The initial snapshot population needs to be explicitly pushed to the cache.
+                const currentProjects = projectsManager.list.map(project => ({
+                    ...project,
+                    todoList: project.todoList.map(todo => ({
+                        ...todo,
+                        dueDate: todo.dueDate instanceof Date
+                            ? new Date(todo.dueDate.getTime())
+                            : new Date(todo.dueDate),
+                        createdDate: todo.createdDate instanceof Date
+                            ? new Date(todo.createdDate.getTime())
+                            : new Date(todo.createdDate)
+                    }))
+                }));
+                updateProjectsCache(currentProjects);
+                console.log('[ProjectsPage] Initial projects loaded into cache:', currentProjects.length);
+
+                const currentUsers = usersManager.list.map(user => ({
+                    ...user,
+                    accountCreatedAt: user.accountCreatedAt instanceof Date
+                        ? new Date(user.accountCreatedAt.getTime())
+                        : new Date(user.accountCreatedAt),
+                    lastLoginAt: user.lastLoginAt instanceof Date
+                        ? new Date(user.lastLoginAt.getTime())
+                        : new Date(user.lastLoginAt),
+                }));
+                updateUsersCache(currentUsers);
+                console.log('[ProjectsPage] Initial users loaded into cache:', currentUsers.length);
+
+            } else {
+                setIsInitialLoading(true); // Keep loading if not all are ready
             }
         }
-        syncWithDatabase();
-    }, [authLoading, currentUser, hasCache, isStale, projects.length, projectsManager, updateCache ])
+        
+        // Call immediately in case managers are already ready
+        checkAndSetReady();
+
+        // Register callbacks for managers becoming ready
+        projectsManager.onReady(checkAndSetReady);
+        usersManager.onReady(checkAndSetReady);
+
+        // No specific cleanup needed for these singletons' onReady callbacks
+        // as they are meant to persist.
+    }, [authLoading, projectsManager, usersManager, updateProjectsCache, updateUsersCache]); 
+
+
+    // Solo intentar sincronizar si la autenticación ha terminado de cargar y hay un usuario autenticado
+    //     if (authLoading || !currentUser) {
+    //         console.log('[ProjectsPage] Skipping sync. Auth loading:', authLoading, 'CurrentUser:', !!currentUser);
+    //         setIsInitialLoading(false); // Asegurarse de que no se quede en estado de carga si no hay usuario
+    //         return;
+    //     }
+
+
+
+    //     const syncWithDatabase = async () => {
+
+    //         // Comprobar si necesitamos sincronizar proyectos
+    //         const shouldSyncProjects = !hasProjectsCache || isProjectsCacheStale || projects.length === 0;
+    //         // Comprobar si necesitamos sincronizar usuarios
+    //         const shouldSyncUsers = !hasUsersCache || isUsersCacheStale || users.length === 0;
+
+
+    //         if (!shouldSyncProjects && !shouldSyncUsers) {
+    //             console.log('[ProjectsPage] Using cached data for projects and users.', {
+    //                 minutes: Math.round((SYNC_INTERVAL - (Date.now() - lastSyncRef.current)) / 60000)
+    //             });
+
+    //             // Asegurar que los proyectos estén en el manager
+    //             projects.forEach(project => {
+    //                 if (!projectsManager.getProject(project.id!)) {
+    //                 projectsManager.newProject(project, project.id);
+    //                 }
+    //             });
+
+    //             // Asegurar que los usuarios estén en el manager
+    //             users.forEach(user => {
+    //                 if (!usersManager.getUser(user.id!)) {
+    //                 usersManager.newUser(user, user.id);
+    //                 }
+    //             });
+                    
+    //             return;
+    //         }
+
+    //         try {
+    //             console.log('[ProjectsPage] Starting database sync for projects and users.')
+    //             setIsInitialLoading(true)
+                
+
+    //             // Cargar proyectos y usuarios en paralelo solo si es necesario
+    //             const [firebaseProjects, firebaseUsers] = await Promise.all([
+    //                 shouldSyncProjects ? getProjectsFromDB() : Promise.resolve([]),
+    //                 shouldSyncUsers ? getUsersFromDB() : Promise.resolve([])
+    //             ]);
+
+    //             // Procesar proyectos
+    //             if (shouldSyncProjects) {
+    //                 firebaseProjects.forEach(projectData => {
+    //                     projectsManager.newProject(projectData, projectData.id);
+    //                 })
+    //                 const currentProjects = projectsManager.list
+    //                 //Update cache and local state
+    //                 updateProjectsCache(currentProjects)
+
+    //                 console.log('[ProjectsPage] Projects loaded/synced:', {
+    //                     count: currentProjects.length,
+    //                     timestamp: new Date().toISOString()
+    //                 })
+    //             }
+
+    //             // Procesar usuarios
+    //             if (shouldSyncUsers) {
+    //                 firebaseUsers.forEach(userData => {
+    //                     usersManager.newUser(userData, userData.id);
+    //                 });
+    //                 const currentUsers = usersManager.list;
+    //                 updateUsersCache(currentUsers);
+    //                 console.log('[ProjectsPage] Users loaded/synced:', { count: currentUsers.length })
+    //             }
+
+    //             // Actualizar timestamp de última sincronización
+    //             lastSyncRef.current = Date.now();
+    //             console.log('[ProjectsPage] Sync finished.');
+
+
+    //         } catch (error) {
+    //             console.error("Error loading initial data:", error);
+    //             toast.error("Error loading initial data. Please try again later.");
+    //         } finally {
+    //             setIsInitialLoading(false)
+    //         }
+    //     }
+    //     syncWithDatabase();
+    // }, [authLoading, currentUser,                     hasProjectsCache, isProjectsCacheStale, projects.length, projectsManager, updateProjectsCache, usersManager, updateUsersCache, hasUsersCache, isUsersCacheStale, users.length ])
 
 
     //Suscription to ProjectsManager events with control of refreshing
@@ -171,7 +265,7 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
 
 
             //update cache and localStorage
-            updateCache(updatedProjects);
+            updateProjectsCache(updatedProjects);
             //localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
             //localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());            
             //updateOriginalProjects([...projectsManager.list])
@@ -184,33 +278,66 @@ export function ProjectsPage({ projectsManager, onProjectUpdate, onNewProjectCre
         };
 
 
-        //projectsManager.onProjectCreated = (newProject) => { updateCache([...projectsManager.list]) };
+        //projectsManager.onProjectCreated = (newProject) => { updateProjectsCache([...projectsManager.list]) };
 
         projectsManager.onProjectCreated = handleProjectsUpdate;
         projectsManager.onProjectDeleted = handleProjectsUpdate;
         // projectsManager.onProjectDeleted = (id: string) => {
         //     const updatedProjects = projectsManager.list.filter(p => p.id !== id);
-        //     updateCache(updatedProjects); // <- Actualiza el cache y el estado
+        //     updateProjectsCache(updatedProjects); // <- Actualiza el cache y el estado
         // };
         projectsManager.onProjectUpdated = handleProjectsUpdate;
-
-
-
-        // projectsManager.onProjectCreated = (newProject) => { updateCache([...projectsManager.list]) }
-        // projectsManager.onProjectDeleted = () => { updateCache([...projectsManager.list]) }
-        // projectsManager.onProjectUpdated = () => { updateCache([...projectsManager.list]) }
 
         return () => {
             projectsManager.onProjectCreated = () => { }
             projectsManager.onProjectDeleted = () => { }
             projectsManager.onProjectUpdated = () => { }
         }
-    }, [updateCache, projectsManager])
+    }, [updateProjectsCache, projectsManager])
 
 
-    // React.useEffect(() => {
-    //     console.log("Projects state update", projects)
-    // }, [projects])
+
+    // Subscription to UsersManager events with control of refreshing
+    React.useEffect(() => {
+        const handleUsersUpdate = () => {
+            const updatedUsers = usersManager.list.map(user => ({
+                ...user,
+                accountCreatedAt: user.accountCreatedAt instanceof Date
+                    ? new Date(user.accountCreatedAt.getTime())
+                    : new Date(user.accountCreatedAt),
+                lastLoginAt: user.lastLoginAt instanceof Date
+                    ? new Date(user.lastLoginAt.getTime())
+                    : new Date(user.lastLoginAt),
+                // projectsAssigned: user.projectsAssigned.map(project => ({ // Asegúrate de manejar esto si es necesario
+                //     ...project,
+                //     assignedDate: project.assignedDate instanceof Firestore.Timestamp ? project.assignedDate.toDate() : project.assignedDate,
+                // })),
+                
+            }));
+
+            updateUsersCache(updatedUsers);
+            lastSyncRef.current = Date.now();
+            console.log('Users cache updated:', { usersCount: updatedUsers.length });
+        };
+
+        // usersManager.onUserCreated = handleUsersUpdate;
+        // usersManager.onUserDeleted = handleUsersUpdate;
+        // usersManager.onUserUpdated = handleUsersUpdate;
+        // Suscribirse al callback general de actualización de lista
+        usersManager.onUsersListUpdated = handleUsersUpdate;
+
+        return () => {
+            // usersManager.onUserCreated = () => {};
+            // usersManager.onUserDeleted = () => {};
+            // usersManager.onUserUpdated = () => { };
+            // Limpiar la suscripción al desmontar el componente
+            usersManager.onUsersListUpdated = null;
+        };
+    }, [updateUsersCache, usersManager]);
+
+
+
+
 
 
     //Handlers

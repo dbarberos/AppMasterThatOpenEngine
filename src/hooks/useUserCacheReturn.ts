@@ -156,6 +156,29 @@ export const useUsersCache = (cacheDuration: number = SYNC_INTERVAL): UseUsersCa
         console.log(`Cache for ${USERS_CACHE_KEY} invalidated.`);
     }, []);
 
+    React.useEffect(() => {
+        const cached = localStorage.getItem(USERS_CACHE_KEY);
+        if (cached) {
+            try {
+                const parsedData: CachedUsersData = JSON.parse(cached);
+                const users = parsedData.users.map(u => new User({
+                    ...u,
+                    accountCreatedAt: new Date(u.accountCreatedAt),
+                    lastLoginAt: new Date(u.lastLoginAt),
+                }));            
+                setUsers(users);
+                setHasCache(true);
+                lastFetchRef.current = parsedData.timestamp;
+            } catch (error) {
+                console.error('Error parsing users cache:', error);
+                invalidateCache();
+            }
+        }
+    }, []);
+
+
+
+
     return {
         users,
         setUsers,
