@@ -6,7 +6,7 @@ import * as Firestore from 'firebase/firestore';
 import {  updateDocument } from '../services/firebase'
 
 import { IUser, IProjectAssignment, UserStatusKey, UserRoleInAppKey,UserStatusValue} from '../types'; 
-import {  USER_ROLES_IN_PROJECT , USER_STATUS } from '../const'
+import {  USER_ROLES_IN_PROJECT , USER_STATUS, USER_ROL_IN_APP   } from '../const'
 import { User } from '../classes/User'; 
 import { UsersManager } from '../classes/UsersManager'
 
@@ -32,7 +32,7 @@ interface NewUserFormProps {
     usersManager: UsersManager; // Instancia de UsersManager
     authCurrentUserRole: UserRoleInAppKey | undefined; // Rol del usuario autenticado
     onClose: () => void;
-    onProfileUpdate: (updatedUser: UserProfile) => void; // Callback tras actualización exitosa
+    onProfileUpdate: (updatedData: Partial<UserProfile>) => void; // Callback tras actualización exitosa
     onTriggerChangePassword: () => void;
     
     //projectsManager: ProjectsManager;   // No necesario para "Mi Perfil"    
@@ -217,12 +217,7 @@ export function NewUserForm({
                 new User({ ...currentUserData.id, ...processedChanges })
             );
 
-            if (updateResult) {
-            
-                // //updateCache(usersManager.list); // Update localStorage cache
-                // onUpdatedUser && onUpdatedUser(updateResult!) //Prop_Notify parent component
-                // usersManager.onUserUpdated?.(userId);
-            
+            if (updateResult) {            
 
                 console.log('Project updated successfully:', {
                     id: userId,
@@ -230,7 +225,7 @@ export function NewUserForm({
                 })
 
                 // Notificar al componente padre con el perfil actualizado
-                onProfileUpdate && onProfileUpdate({ ...currentUserData, ...newUpdatedProfileData } as UserProfile);
+                //onProfileUpdate && onProfileUpdate({ ...currentUserData, ...newUpdatedProfileData } as UserProfile);
 
                 return { ...currentUserData, ...processedChanges } as UserProfile
 
@@ -395,6 +390,7 @@ export function NewUserForm({
                         const updatedUser = await handleUpdateProfileUserInDB(currentUserData.uid, newProfileData);
                         toast.success("Perfil actualizado correctamente.");
                         //onSuccess(updatedUser); // Llama al callback con el usuario actualizado
+                        onProfileUpdate(updatedUser);
                     } catch (err) {
                         console.error("Error actualizando perfil:", err);
                         const errorMessage = (err instanceof Error) ? err.message : "No se pudo actualizar el perfil.";
@@ -951,7 +947,7 @@ export function NewUserForm({
                                                     // defaultValue={isEditMode ? updateUser?.roleInApp : ""}
                                                     >
                                                         <option value="" disabled>Select a role</option>
-                                                        {Object.entries(USER_ROLES_IN_PROJECT).map(([key, label]) => (
+                                                        {Object.entries(USER_ROL_IN_APP   ).map(([key, label]) => (
                                                             <option key={key} value={key}>{label}</option>
                                                         ))}
                                                     </select>

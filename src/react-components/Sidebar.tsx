@@ -8,7 +8,7 @@ import { ProjectsManager } from '../classes/ProjectsManager'
 
 
 
-import { useAuth } from '../Auth/react-components/AuthContext.tsx'; // Ajusta la ruta
+import { useAuth, UserProfile } from '../Auth/react-components/AuthContext.tsx'; // Ajusta la ruta
 import { signOut } from '../services/firebase/firebaseAuth'; // Usamos nuestra función signOut centralizada
 import { UserIcon, ChevronDownIcon, ProfileIcon, LoginIcon, LogoutIcon } from './icons';
 import { NewUserForm } from './NewUserForm';
@@ -40,7 +40,7 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
     // const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
     // const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-    const { currentUser, userProfile, loading: authLoading } = useAuth(); // Renombrar loading para claridad
+    const { currentUser, userProfile, loading: authLoading, updateUserProfile } = useAuth(); // Renombrar loading para claridad
     
     const [isProfileFormModalOpen, setIsProfileFormModalOpen] = React.useState(false); // State for modal
 
@@ -331,8 +331,10 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
         setIsProfileFormModalOpen(false);
     };
 
-    const handleProfileUpdateSuccess = () => {
+    const handleProfileUpdateSuccess = (updatedData: Partial<UserProfile>) => {
+
         setIsProfileFormModalOpen(false);
+        updateUserProfile(updatedData);
         toast.success('Profile updated successfully!');
     };
 

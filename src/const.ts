@@ -25,11 +25,10 @@ export const USERS_CACHE_TIMESTAMP_KEY = 'usersCacheTimestamp';
 export const SYNC_INTERVAL = 5 * 60 * 1000;
 
 
-export const USER_STATUS = {
-    admin: "Administrator",
+export const USER_STATUS = {    
     active: "Active",
     pending: "PendingValidation",
-    disable: "Disable"
+    disable: "Disable",
 } as const
 
 
@@ -38,7 +37,7 @@ export const USER_ROL_IN_APP = {
     admin: "admin",
     user: "user",
     viewer: "viewer",
-
+    unverified: "Unverified",
 } as const
 
 export const USER_ROLES_IN_PROJECT = {

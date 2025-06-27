@@ -29,16 +29,18 @@ export interface UserProfile extends Firestore.DocumentData {
     // Añade cualquier otro campo que almacenes en el perfil de usuario en Firestore
   }
 
-interface AuthContextType {
+// interface AuthContextType {
+interface IAuthContext {
     currentUser: FirebaseUser | null;
     userProfile: UserProfile | null;
     loading: boolean;
+    updateUserProfile: (newProfileData: Partial<UserProfile>) => void;
     //usersManager: UsersManager; // Para acceder a los datos del usuario de Firestore
     // Podrías añadir una función para recargar el perfil si es necesario
     // reloadUserProfile: () => Promise<void>;
 }
 
-export const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = React.createContext<IAuthContext | null>(null);;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     console.log('AuthProvider: Initializing');
@@ -75,18 +77,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => unsubscribe();
     }, []); // usersManager es estable debido a useMemo, pero es buena práctica incluirlo si se usa dentro.
 
+    const updateUserProfile = (newProfileData: Partial<UserProfile>) => {
+        setUserProfile(prevProfile => {
+            if (!prevProfile) return null;
+            return { ...prevProfile, ...newProfileData };
+        });
+    };
+
     console.log('AuthProvider: Rendering', { loading, userExists: !!currentUser })
 
+    const value = {
+        currentUser,
+        userProfile,
+        loading,
+        updateUserProfile,
+    };
+
+
     return (
-        <AuthContext.Provider value={{ currentUser, userProfile, loading }}>
-        {children}
+        <AuthContext.Provider value={value}>
+        {!loading && children}
         </AuthContext.Provider>
     );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = (): IAuthContext => {
     const context = React.useContext(AuthContext);
-    if (context === undefined) {
+    if (context === undefined || context === null) {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
