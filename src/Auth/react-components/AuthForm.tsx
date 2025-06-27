@@ -83,7 +83,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onUserAuthenticated, initial
                     password_DO_NOT_STORE_THIS_PLAINTEXT: password,
                     nickName,                    
                 });
-                toast.success(`¡Welcome ${nickName}! Account successfully created.`);
+                toast.success(`¡Welcome ${nickName}! Please check your email to verify your account.`);
                 onUserAuthenticated(user);
             } catch (err: any) {
                 const authError = err as AuthError;

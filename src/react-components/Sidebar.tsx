@@ -17,6 +17,7 @@ import { UsersManager } from '../classes/UsersManager.ts';
 import { toast } from 'sonner';
 
 import { ChangePasswordForm } from '../Auth/react-components/ChangePasswordForm';
+import { UserRoleInAppKey } from '../types';
 
 interface SidebarProps { // Añadir props
     // currentUser: FirebaseUser | null; // Recibir currentUser
@@ -474,7 +475,7 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                         usersManager={usersManager} // Pass the usersManager instance
                         onClose={handleCloseProfileFormModal}
                         onProfileUpdate={handleProfileUpdateSuccess}
-                        authCurrentUserRole={userProfile.roleInApp as any} // Pass the role if needed for form logic
+                        authCurrentUserRole={userProfile.roleInApp as UserRoleInAppKey | undefined} // Pass the role if needed for form logic
                         onTriggerChangePassword={() => setIsChangePasswordModalOpen(true)} 
                     />
                 )}

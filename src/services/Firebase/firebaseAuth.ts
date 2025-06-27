@@ -19,6 +19,8 @@ import {
     onAuthStateChanged,
     sendPasswordResetEmail,
     updatePassword,
+    sendEmailVerification,
+    ActionCodeSettings,
     updateEmail,
     
     // deleteUser,
@@ -74,6 +76,22 @@ export interface SignInData {
 // }
 
 
+
+
+
+// Configuración para la URL de redirección después de la verificación
+const actionCodeSettings: ActionCodeSettings = {
+    // URL a la que se redirigirá al usuario después de verificar su email.
+    // DEBE estar en la lista de dominios autorizados en tu consola de Firebase.
+    url: `${window.location.origin}/auth-successfull`,
+    handleCodeInApp: true, // Importante para apps de una sola página (SPA)
+}
+
+
+
+
+
+
 /**
 * Procesa el inicio de sesión o registro a través de un proveedor OAuth (Google, GitHub).
 * Crea un documento de usuario en Firestore si es la primera vez que inicia sesión.
@@ -126,10 +144,10 @@ export const signUpWithEmail = async ({
             providerId: user.providerData[0]?.providerId || 'email',
             accountCreatedAt: Firestore.Timestamp.fromDate(new Date()), // Matches UserProfile
             lastLoginAt: Firestore.Timestamp.fromDate(new Date()),    // Matches UserProfile
-            status: 'active',                                         // Matches UserProfile
+            status: 'pending',                                         // Matches UserProfile
             // Initialize other optional fields from UserProfile as undefined or default values
             organization: "",
-            roleInApp: "viewer", // Default role
+            roleInApp: "unverified", // Rol inicial para el flujo de verificación
             address: "",
             phoneNumber: "",
             phoneCountryNumber: "",
@@ -158,6 +176,11 @@ export const signUpWithEmail = async ({
         }
 
 
+        // Enviar correo de verificación
+        await sendEmailVerification(user, actionCodeSettings);
+        console.log("[signUpWithEmail] Verification email sent.");
+
+
 
         return user;
     } catch (error: any) { // This is the outer catch block (around line 166)
@@ -167,7 +190,16 @@ export const signUpWithEmail = async ({
         }
         throw error;
     }
+    
 };
+
+export const resendVerificationEmail = async (user: firebaseUser): Promise<void> => {
+    if (!user) {
+        throw new Error("No user provided to resend verification email.");
+    }
+    await sendEmailVerification(user, actionCodeSettings);
+}
+
 
 export const signInWithEmail = async ({
     email,

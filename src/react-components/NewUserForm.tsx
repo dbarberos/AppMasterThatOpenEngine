@@ -52,6 +52,12 @@ export function NewUserForm({
     onProfileUpdate, //Siempre se abre en modo edición. Se crea con el Auth.
     onTriggerChangePassword
 }: NewUserFormProps) {
+
+    console.log('--- DEBUG NewUserForm ---');
+    console.log('Rol recibido (authCurrentUserRole):', authCurrentUserRole);
+    console.log('¿Es superadmin?:', authCurrentUserRole === 'superadmin');
+    console.log('-------------------------');
+
         
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)

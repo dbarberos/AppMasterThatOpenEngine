@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
 
-import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage } from './react-components';
+import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, UserUnverifiedPage } from './react-components';
 import { User as AppUserClass } from './classes/User'; // Renombrado para evitar conflicto
 
 //import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
@@ -32,6 +32,8 @@ import { LoadingIcon } from './react-components/icons.tsx';
 import { signOut } from './services/firebase/firebaseAuth.ts'; // Para el logout
 import { auth } from './services/firebase/index.ts'
 import { UserRoleInAppKey } from './types.ts';
+import { UserEmailVerificationSuccess } from './Auth/react-components/UserEmailVerificationSuccess.tsx'
+import { ProtectedRoute } from './Auth/react-components/ProtectedRoute.tsx';
 
 
 const projectsManager = new ProjectsManager();
@@ -211,51 +213,61 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
                     currentUser ? <Router.Navigate to="/" /> : <AuthForm onUserAuthenticated={() => navigate('/')} initialMode="signUp" />
                 } />
 
-                <Router.Route path="/" element={
-                    currentUser
-                        ? <ProjectsPage
+
+                {/* Esta ruta debe estar fuera de la protección para que el usuario pueda llegar a ella */}
+                <Router.Route path="/auth-successfull" element={
+                    <UserEmailVerificationSuccess />
+                } />
+
+
+                {/* --- INICIO DE RUTAS PROTEGIDAS --- */}
+                <Router.Route element={<ProtectedRoute />}>
+                    {/* Si el usuario está verificado, Outlet renderizará una de estas rutas hijas */}
+
+                    <Router.Route path="/" element={
+                        <ProjectsPage
                             projectsManager={props.projectsManager}
                             usersManager={props.usersManager}
                             onNewProjectCreated={props.onNewProject}
                             onProjectUpdate={props.onProjectUpdate}
-                        />
-                        : <Router.Navigate to="/auth" />
-                } />
+                            />
+                    } />
 
-                <Router.Route path="/project/:id" element={
-                    currentUser
-                        ? <ProjectDetailsPage
-                            projectsManager={props.projectsManager}
-                            onProjectCreate={props.onProjectCreate}
-                            onProjectUpdate={props.onProjectUpdate}
-                            onToDoIssueCreated={props.onToDoIssueCreated}
-                            onToDoIssueUpdated={props.onToDoIssueUpdated}
-                        />
-                        : <Router.Navigate to="/auth" />
-                } />
+                    <Router.Route path="/project/:id" element={
+                        <ProjectDetailsPage
+                                projectsManager={props.projectsManager}
+                                onProjectCreate={props.onProjectCreate}
+                                onProjectUpdate={props.onProjectUpdate}
+                                onToDoIssueCreated={props.onToDoIssueCreated}
+                                onToDoIssueUpdated={props.onToDoIssueUpdated}
+                            />
+                            
+                    } />
 
-                <Router.Route path="/project/todoBoard/:id" element={
-                    currentUser
-                        ? <ToDoBoardPage
-                            projectsManager={props.projectsManager}
-                            onProjectCreate={props.onProjectCreate}
-                            onProjectUpdate={props.onProjectUpdate}
-                            onToDoIssueCreated={props.onToDoIssueCreated}
-                            onToDoIssueUpdated={props.onToDoIssueUpdated}
-                        />
-                        : <Router.Navigate to="/auth" />
-                } />
+                    <Router.Route path="/project/todoBoard/:id" element={
+                        
+                            <ToDoBoardPage
+                                projectsManager={props.projectsManager}
+                                onProjectCreate={props.onProjectCreate}
+                                onProjectUpdate={props.onProjectUpdate}
+                                onToDoIssueCreated={props.onToDoIssueCreated}
+                                onToDoIssueUpdated={props.onToDoIssueUpdated}
+                            />
+                            
+                    } />
 
-                <Router.Route path="/usersBoard" element={
-                    currentUser
-                        ? <UsersBoardPage
-                            usersManager={props.usersManager}
-                            projectsManager={props.projectsManager}
-                            onUserCreate={props.onUserCreate}
-                            onUserUpdate={props.onUserUpdate}
-                        />
-                        : <Router.Navigate to="/auth" />
-                } />
+                    <Router.Route path="/usersBoard" element={
+                        <UsersBoardPage
+                                usersManager={props.usersManager}
+                                projectsManager={props.projectsManager}
+                                onUserCreate={props.onUserCreate}
+                                onUserUpdate={props.onUserUpdate}
+                            />
+                            
+                        } />
+                    
+                </Router.Route>
+                {/* --- FIN DE RUTAS PROTEGIDAS --- */}
 
                 <Router.Route path="/change-password" element={
                     currentUser
