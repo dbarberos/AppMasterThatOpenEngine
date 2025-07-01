@@ -881,9 +881,12 @@ export function NewUserForm({
                                             </div>
                                             <div className="users-photo" style={{ border: "none" }}>
                                                 <img
-                                                    src={currentUserData.photoURL || "./assets/photo-users/default-avatar.jpg"}
+                                                    src={currentUserData.photoURL || "/assets/photo-users/default-avatar.jpg"}
                                                     alt="User profile"
-                                                    onError={(e) => (e.target as HTMLImageElement).src = './assets/photo-users/default-avatar.jpg'}
+                                                    onError={(e) => {
+                                                        e.currentTarget.onerror = null;
+                                                        e.currentTarget.src = "/assets/photo-users/default-avatar.jpg";
+                                                    }}
                                                 />
                                                 {/* TODO: Implementar subida de imagen y actualización de photoURL */}
                                             </div>

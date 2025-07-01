@@ -72,12 +72,16 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
                 </label>
             </div>
             <div className="users-name">
-                <div className="users-photo">
+                <div className="users-photo">                    
                     <img
-                        src={user.photoURL || "./assets/photo-users/default-avatar.jpg"}
+                        src={user.photoURL || "/assets/photo-users/default-avatar.jpg"}
                         //Usa photoURL o un default
                         alt={user.nickName || "User"}
-                        onError={(e) => e.target.src = '/default-avatar.jpg'}
+                        onError={(e) => {
+                            // Previene bucles de error si el avatar por defecto también falla
+                            e.currentTarget.onerror = null; 
+                            e.currentTarget.src = "/assets/photo-users/default-avatar.jpg";
+                        }}
                     />
                 </div>
                 <div>

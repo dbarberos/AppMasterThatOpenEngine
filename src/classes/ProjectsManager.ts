@@ -63,24 +63,73 @@ export class ProjectsManager {
         }
 
         const projectsCollectionRef = collection(firestoreDB, 'projects');
-        this.unsubscribe = onSnapshot(projectsCollectionRef, (snapshot) => {
+        this.unsubscribe = onSnapshot(projectsCollectionRef, async(projectsSnapshot) => {
             console.log('ProjectsManager: onSnapshot disparado. Procesando cambios...');
-            const newProjectsList: Project[] = [];
-            snapshot.forEach(doc => {
-                const projectData = doc.data() as IProject;
-                const projectInstance = new Project({
-                    ...projectData,
-                    id: doc.id,
-                    // Asegurarse de que las fechas dentro de todoList se conviertan de Timestamp a Date
-                    todoList: projectData.todoList?.map(todo => ({
-                        ...todo,
-                        dueDate: todo.dueDate instanceof Timestamp ? todo.dueDate.toDate() : todo.dueDate,
-                        createdDate: todo.createdDate instanceof Timestamp ? todo.createdDate.toDate() : todo.createdDate,
-                    })) || [],
+            // const newProjectsList: Project[] = [];
+            // snapshot.forEach(doc => {
+            //     const projectData = doc.data() as IProject;
+            //     const projectInstance = new Project({
+            //         ...projectData,
+            //         id: doc.id,
+            //         // Asegurarse de que las fechas dentro de todoList se conviertan de Timestamp a Date
+            //         todoList: projectData.todoList?.map(todo => ({
+            //             ...todo,
+            //             dueDate: todo.dueDate instanceof Timestamp ? todo.dueDate.toDate() : todo.dueDate,
+            //             createdDate: todo.createdDate instanceof Timestamp ? todo.createdDate.toDate() : todo.createdDate,
+            //         })) || [],
+
+
+            // Mapea los datos base de los proyectos.
+            const projectDataList = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as IProject) }));
+
+            // Crea una promesa para cada proyecto que resolverá con el proyecto completo (incluyendo todos anidados).
+            const fullyPopulatedProjectPromises = projectDataList.map(async (projectData) => {
+
+                // Nivel 2: Obtener la sub-colección 'todoList' para este proyecto.
+                const todoListCollectionRef = collection(firestoreDB, 'projects', projectData.id, 'todoList');
+                const todoListSnapshot = await Firestore.getDocs(Firestore.query(todoListCollectionRef));
+
+                // Crea una promesa para cada 'todo' que resolverá con el 'todo' completo (incluyendo tags y usuarios).
+                const fullyPopulatedTodoPromises = todoListSnapshot.docs.map(async (todoDoc) => {
+                    const todoData = todoDoc.data();
+                    const todoId = todoDoc.id;
+
+                    // Nivel 3: Obtener las sub-colecciones 'tags' y 'assignedUsers' en paralelo.
+                    const tagsCollectionRef = collection(firestoreDB, 'projects', projectData.id, 'todoList', todoId, 'tags');
+                    const usersCollectionRef = collection(firestoreDB, 'projects', projectData.id, 'todoList', todoId, 'assignedUsers');
+
+                    const [tagsSnapshot, usersSnapshot] = await Promise.all([
+                        Firestore.getDocs(Firestore.query(tagsCollectionRef)),
+                        Firestore.getDocs(Firestore.query(usersCollectionRef))
+                    ]);
+
+                    const tags = tagsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ITag));
+                    const assignedUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as IAssignedUsers));
+
+                    // Ensamblar el objeto ToDoIssue completo.
+                    return new ToDoIssue({
+                        ...todoData,
+                        id: todoId,
+                        dueDate: todoData.dueDate instanceof Timestamp ? todoData.dueDate.toDate() : new Date(todoData.dueDate),
+                        createdDate: todoData.createdDate instanceof Timestamp ? todoData.createdDate.toDate() : new Date(todoData.createdDate),
+                        tags,
+                        assignedUsers
+                    });
                 });
-                newProjectsList.push(projectInstance);
+
+
+                // newProjectsList.push(projectInstance);
+
+
+                const todoList = await Promise.all(fullyPopulatedTodoPromises);
+                
+                // Ensamblar el objeto Project completo.
+                return new Project({ ...projectData, todoList })
             });
-            this._projects = newProjectsList; // Actualizar la lista interna del manager
+            // this._projects = newProjectsList; // Actualizar la lista interna del manager
+
+            this._projects = await Promise.all(fullyPopulatedProjectPromises);
+
 
             console.log('ProjectsManager: Lista interna de proyectos actualizada desde Firestore snapshot.', { count: this._projects.length });
             

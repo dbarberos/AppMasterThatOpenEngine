@@ -35,6 +35,14 @@ export const UserProfileNavButton: React.FC<UserProfileNavButtonProps> = ({
     } | null>(null);
     const buttonRef = React.useRef<HTMLLIElement>(null);
     const portalRef = React.useRef<HTMLDivElement>(null);
+    const [imageError, setImageError] = React.useState(false);
+
+
+    React.useEffect(() => {
+        setImageError(false);
+    }, [userProfile?.photoURL]);
+
+
 
     const getInitials = (firstName?: string, lastName?: string): string => {
         if (firstName && lastName)
@@ -141,10 +149,11 @@ export const UserProfileNavButton: React.FC<UserProfileNavButtonProps> = ({
                     <div
                         className="avatar"
                     >
-                        {userProfile.photoURL ? (
+                        {userProfile.photoURL && !imageError ? (
                             <img
                                 src={userProfile.photoURL}
                                 alt="User"
+                                onError={() => setImageError(true)}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                             />
                         ) : (

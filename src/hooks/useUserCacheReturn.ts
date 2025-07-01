@@ -4,7 +4,7 @@ import * as React from 'react';
 //import { STORAGE_KEY, CACHE_TIMESTAMP_KEY } from '../const';
 
 import { User } from '../classes/User';
-//import { UsersManager } from '../classes/UsersManager';
+import { UsersManager } from '../classes/UsersManager';
 
 import { IUser, UserProfile } from '../types'; 
 import { USERS_CACHE_KEY, USERS_CACHE_TIMESTAMP_KEY, SYNC_INTERVAL  }  from '../const'
@@ -12,6 +12,7 @@ import { useStickyState } from './useStickyState';
 
 interface UseUsersCacheReturn {
     users: User[];
+    usersManager?: UsersManager | null; 
     setUsers: (users: User[]) => void;
     isStale: boolean;
     updateCache: (users: User[]) => void;
@@ -48,7 +49,10 @@ export interface CachedUsersData {
 
 const initialCachedData: CachedUsersData = { users: [], timestamp: 0 };
 
-export const useUsersCache = (cacheDuration: number = SYNC_INTERVAL): UseUsersCacheReturn => {
+export const useUsersCache = (
+    usersManager: UsersManager | null,
+    cacheDuration: number = SYNC_INTERVAL
+): UseUsersCacheReturn => {
 
     const [cachedStorageData, setCachedStorageData] = useStickyState<CachedUsersData | null>(
         initialCachedData,
@@ -175,7 +179,34 @@ export const useUsersCache = (cacheDuration: number = SYNC_INTERVAL): UseUsersCa
             }
         }
     }, []);
+    
 
+    // Efecto para suscribirse a los cambios del UsersManager y sincronizar el caché.
+    React.useEffect(() => {
+        // No hacer nada si el manager no está listo o no existe.
+        if (!usersManager) {
+            return;
+        }
+
+        console.log('useUsersCache: Hook activado. Configurando suscripción a onUsersListUpdated.');
+
+        // 1. Definir la función que se ejecutará cuando la lista de usuarios se actualice.
+        const handleUsersUpdate = () => {
+            console.log('useUsersCache: onUsersListUpdated disparado. Actualizando caché...');
+            updateCache(usersManager.list);
+        };
+
+        // 2. Suscribirse al evento de actualización del manager.
+        usersManager.onUsersListUpdated = handleUsersUpdate;
+
+        // 3. Función de limpieza: se ejecuta cuando el componente que usa el hook se desmonta.
+        return () => {
+            console.log('useUsersCache: Hook desmontado. Limpiando suscripción.');
+            if (usersManager) {
+                usersManager.onUsersListUpdated = null;
+            }
+        };
+    }, [usersManager, updateCache]);
 
 
 
