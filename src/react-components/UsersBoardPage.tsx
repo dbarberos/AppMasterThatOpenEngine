@@ -35,7 +35,7 @@ export function UsersBoardPage({
     onUserCreate,
     onUserUpdate,
 }: Props) {
-    const { currentUser, loading: authLoading } = useAuth();
+    const { currentUser, userProfile, loading: authLoading } = useAuth();
     const [viewMode, setViewMode] = React.useState<'allUsers' | 'projectUsers'>('allUsers');
     //const [users, setUsers] = React.useState<User[]>([]);
     //const [projects, setProjects] = React.useState<Project[]>([]); 
@@ -60,6 +60,10 @@ export function UsersBoardPage({
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
+
+    // Lógica de permisos para la página
+    const canManageUsers = userProfile?.roleInApp === 'admin' || userProfile?.roleInApp === 'superadmin';
+
     // Estado para el término de búsqueda global
     //const [userSearchTerm, setUserSearchTerm] = React.useState('');
 
@@ -71,7 +75,7 @@ export function UsersBoardPage({
         updateCache,
         hasCache,
         isStale,        
-    } = useUsersCache()
+    } = useUsersCache(usersManager)
 
     const {
         userSearchTerm, // Término de búsqueda actual
@@ -89,80 +93,6 @@ export function UsersBoardPage({
     }, []);
 
 
-
-    // //Loading Users at the beginnig BORRADO
-    // React.useEffect(() => {
-    //     // Solo intentar sincronizar hay un usuario autenticado
-    //     if (!currentUser) {
-            
-    //         console.log('[ProjectsPage] Skipping sync. Auth loading:', authLoading, 'CurrentUser:', !!currentUser);
-    //         setIsLoading(false); // Asegurarse de que no se quede en estado de carga si no hay usuario
-    //         return;
-    //     }
-
-    //     const syncWithDatabase = async () => {
-    //                     // Si hay caché válido, y no ha pasado el intervalo, no hacer nada
-    //                     if (hasCache && !isStale && projects.length > 0) {
-    //                         console.log('[ProjectsPage] Using cached projects, next sync in:', {
-    //                             minutes: Math.round((SYNC_INTERVAL - (Date.now() - lastSyncRef.current)) / 60000)
-    //                         });
-    //                         // Ensure UsersManager and search state are in sync with cache
-    //                         users.forEach(user => {
-    //                             if (!usersManager.getUser(user.id!)) {
-    //                                 usersManager.newUser(user, user.id);
-    //                             }
-    //                         });
-    //                         return;
-    //                     }
-        
-    //                 try {
-    //                     console.log('[UserBoardPage] Starting database sync. HasCache:', hasCache);
-    //                     // Mostrar loading solo si no hay caché
-    //                     if (!hasCache) {
-    //                         setIsLoading(true);
-    //                     } else {
-    //                         setIsSyncing(true);
-    //                     }
-        
-    //                     console.log('[UserBoardPage] Calling getUsersFromDB...');
-    //                     const firebaseUsers = await getUsersFromDB()
-        
-    //                     // Create Project instances using ProjectManager for each project from Firebase
-    //                     firebaseUsers.forEach(userData => {
-    //                         usersManager.newUser(userData, userData.id);
-    //                     })        
-        
-        
-    //                     const currentUsers = usersManager.list
-        
-    //                     //Update cache and local state
-    //                     updateCache(currentUsers)                
-        
-    //                     console.log('[UsersBoardPage] Users loaded/synced:', {
-    //                         count: currentUsers.length,
-    //                         timestamp: new Date().toISOString()
-    //                     })
-    //                     // }
-    //                     // Actualizar timestamp de última sincronización
-    //                     lastSyncRef.current = Date.now();
-        
-    //                     console.log('[UsersBoardPage] Sync finished.');
-        
-        
-    //                 } catch (error) {
-    //                     console.error("Error loading users:", error);
-    //                     // Handle error appropriately - maybe set an error state
-    //                 } finally {
-    //                     setIsLoading(false);
-    //                     setIsSyncing(false)
-    //                 }
-    //             }
-    //             syncWithDatabase();
-
-
-    // },[authLoading, currentUser, hasCache, isStale, users.length, usersManager, updateCache ])
-    
-    
 
     /**
      * Efecto para gestionar el estado de carga inicial de la página.
@@ -537,10 +467,18 @@ export function UsersBoardPage({
                             <p>Sort By</p>
                             <span className="material-icons-round">expand_more</span>
                         </button>
-                        <button onClick={onNewUserClick} id="new-user-btn" style={{ whiteSpace: 'nowrap' }}>
-                            <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
-                            <p style={{color:"var(--color-fontbase-dark)"}}>Invite a new User</p>
-                        </button>
+                        {/* El botón solo se renderiza si el usuario tiene permisos */}
+                        {canManageUsers && (
+                            <button
+                                onClick={onNewUserClick}
+                                id="new-user-btn"
+                                style={{ whiteSpace: 'nowrap' }}
+                                title="Invite a new User"
+                            >
+                                <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
+                                <p style={{ color: "var(--color-fontbase-dark)" }}>Invite a new User</p>
+                            </button>
+                        )}
                     </div>
                 </div>
                 {viewMode === 'allUsers' && (

@@ -24,7 +24,11 @@ export const UsersBoardList: React.FC<UserListProps> = ({
     const [expandedUserId, setExpandedUserId] = React.useState<string | null>(null);
 
     // Obtén el perfil del usuario autenticado desde el contexto
-    const { userProfile } = useAuth();
+    const { currentUser, userProfile } = useAuth();
+    
+    // Lógica de permisos para acciones en masa
+    const canPerformBulkActions = userProfile?.roleInApp === 'admin' || userProfile?.roleInApp === 'superadmin';
+    
     
     // // Ejemplo de utilidad de permisos. ************ Pasado dentro de UserCardRow ***************
     // const userPermissions = {
@@ -54,49 +58,59 @@ export const UsersBoardList: React.FC<UserListProps> = ({
             <div
                 className="user-container-header"
                 style={{ border: "none", backgroundColor: "transparent" }}
-            >                
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "left",
-                        columnGap: 10
-                    }}
-                >
-                    {/* <label for=""></label> */}
-                    <label className="radio">
-                        <input
-                            name="bulk-checkbox"
-                            type="checkbox"                        
-                            defaultValue="all-selected"
-                            title="Select all"
+            >
+                {/* El contenedor de acciones en masa solo se renderiza si el usuario tiene permisos */}
+                {canPerformBulkActions ? (
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "left",
+                            columnGap: 10
+                        }}
+                    >
+                        {/* <label for=""></label> */}
+                        <label className="radio">
+                            <input
+                                name="bulk-checkbox"
+                                type="checkbox"
+                                defaultValue="all-selected"
+                                title= "Select all"
+                            
+                            //value={user.id}
+                            />
+                            <span className="checkmark"></span>
+                        </label>
                         
-                        //value={user.id}
-                        />
-                        <span className="checkmark"></span>
-                    </label>
-                    
-                    <div>
-                        <button
-                            style={{ borderRadius: 10, width: "auto", whiteSpace: 'nowrap' }}
-                            className="btn-secondary"
-                        >
-                            Bulk Actions
-                            <label>
-                                <span className="material-icons-round">expand_more</span>
-                                {/* <select name="" id="" style="appearance: none;">
-                                        <option value="Asign proyect">Asign proyect</option>
-                                        <option value="Remove all projects">Remove all projects</option>
-                                        <option value="Remove all roles">Remove all roles</option>
-                                        <option value="Email Validation Accounts">Email Validation Accounts</option>
-                                        <option value="Disable account">Disable account</option>
-                                        <option value="Delete users">Delete users</option>
-                                    </select> */}
-                            </label>
-                        </button>
+                        <div>
+                            <button
+                                style={{
+                                    borderRadius: 10,
+                                    width: "auto",
+                                    whiteSpace: 'nowrap'
+                                }}
+                                className="btn-secondary"  
+                                title= "Bulk Actions"
+                            >
+                                Bulk Actions
+                                <label>
+                                    <span className="material-icons-round">expand_more</span>
+                                    {/* <select name="" id="" style="appearance: none;">
+                                            <option value="Asign proyect">Asign proyect</option>
+                                            <option value="Remove all projects">Remove all projects</option>
+                                            <option value="Remove all roles">Remove all roles</option>
+                                            <option value="Email Validation Accounts">Email Validation Accounts</option>
+                                            <option value="Disable account">Disable account</option>
+                                            <option value="Delete users">Delete users</option>
+                                        </select> */}
+                                </label>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                ) :
+                    <div/>
+                }
                 <h5 style={{ width: '20%' }}></h5>
                 <h5 style={{ width: '20%' }}>EMAIL</h5>
                 <h5 style={{ width: '15%' }}>PHONE</h5>
@@ -117,6 +131,7 @@ export const UsersBoardList: React.FC<UserListProps> = ({
                     onEditUser={onEditUser}
                     onDeleteUser={onDeleteUser}
                     authRole={userProfile?.roleInApp}
+                    authUserId={currentUser?.uid}
                 />
             ))}
 

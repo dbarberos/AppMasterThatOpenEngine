@@ -11,6 +11,7 @@ interface UserCardRowProps {
     onEditUser: (user: User) => void;
     onDeleteUser: (userId: string) => void;
     authRole?: 'admin' | 'superadmin' | string;
+    authUserId?: string;
 }
 
 export const UserCardRow: React.FC<UserCardRowProps> = ({
@@ -21,11 +22,16 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
     onEditUser,
     onDeleteUser,
     authRole,
+    authUserId,
 }) => {
 
 
     //const [isDetailsVisible, setIsDetailsVisible] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+    // Crear una ref para el botón que abre el menú.
+    // Se pasará al menú para que pueda calcular su posición.
+    const menuButtonRef = React.useRef<HTMLButtonElement>(null);
 
     //    Debe cumplir la condición general (canExpandDetails) Y tener el rol adecuado.
     const canUserExpand = (authRole === 'admin' || authRole === 'superadmin')
@@ -116,6 +122,7 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
                 
                 <div style={{ position: 'relative' }} className="users-edit" onClick={(e) => e.stopPropagation()}>
                     <button
+                        ref={menuButtonRef}
                         onClick={toggleMenu}
                         title="Action"
                         className="btn-secondary">
@@ -126,6 +133,7 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
 
                     <UserCardActionsMenu
                         isOpen={isMenuOpen}
+                        menuButtonRef={menuButtonRef}
                         onClose={closeMenu}
                         onAssignProjects={() => {
                             closeMenu();
@@ -139,6 +147,9 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
                             closeMenu()
                             onDeleteUser(user.id!)
                         }}
+                        authRole={authRole}
+                        authUserId={authUserId}
+                        targetUserId={user.id}
                     />
                 </div>
             </div>
