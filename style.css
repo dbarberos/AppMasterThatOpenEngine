@@ -3593,6 +3593,30 @@ header {
     margin-bottom: var(--gap-xs);
 }
 
+/* ==================================================================== */
+/* USER CARD STYLE                                                      */
+/* ==================================================================== */
+
+/*
+ * Contenedor principal para cada tarjeta de usuario.
+ * Gestiona el layout de columna (fila + detalles) y los estilos base como fondo y borde.
+ */
+
+.user-card-wrapper {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background-200);
+    border-radius: var(--br-5xs);
+    margin-bottom: var(--gap-xs);
+    border-bottom: 1px solid var(--background-l00);
+    /* Clave para que la animación de max-height funcione correctamente */
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+.user-card-wrapper:hover {
+    background-color: var(--background-300);
+}
+
 .user-container {
     box-sizing: border-box;
     display: grid;
@@ -3604,7 +3628,7 @@ header {
     height: 75px;
     border-radius: var(--br-5xs);
     border-bottom: 1px solid var(--background-l00);
-    font-size: var(--font-lg);
+    font-size: var(--font-xl);
     background-color: var(--background-300);
     margin-bottom: var(--gap-xs);
 
@@ -3617,61 +3641,59 @@ header {
     position: relative;
     /* overflow: hidden; */
     transition: max-height 0.3s ease-in-out;
-;
 
-    /* &:hover {
-        background-color: var(--background-200);
-        height: 275px;
-    } */
+}
 
+/*
+ * Nuevo contenedor para los detalles.
+ * Este elemento se anima para mostrar/ocultar el contenido.
+ */
+.user-details-wrapper {
+    /* Oculto por defecto usando max-height y opacity */
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
+
+    display: grid;
+    grid-template-columns: 50px repeat(4, minmax(150px, 500px)) 125px 100px 100px;
+        /* grid-template-rows: 75px 200px; */
+    grid-template-areas: "details details1 details1 details2 details2 details2 details2 details2";
+    column-gap: 20px;
+    align-items: center;
     
-    & .user-details1 {
-        display: grid;
-        grid-area: details;
-        grid-row-start: 2;
-        grid-column: 2 / 4;
-        opacity: 1;
-        transition: 0.3s ease-in-out;
-        grid-template-columns: 1fr;
-        grid-row-gap: var(--gap-xs);
-        padding: 30px;
-        width: 100%;
-        /* visibility: hidden; */
-        transition: all 0.3s ease-in-out;
-        transform: translateY(-20px);
         
 
-    }
 
-    & .user-details2 {
-        display: grid;
-        grid-area: details;
-        grid-row-start: 2;
-        grid-column: 4 / 8;
-        opacity: 1;
-        transition: 0.3s ease-in-out;
-        grid-template-columns: 1fr;
-        grid-row-gap: var(--gap-xl);
-        padding: 30px;
-        /* visibility: hidden; */
-        transition: all 0.3s ease-in-out;
-        transform: translateY(-20px);
-        
-
-    }
-
-/* 
-    &:hover .user-details1 {
-        opacity: 1;
-        margin-top: 0px;
-        transition-delay: 0.2s;
-    }
-
-    &:hover .user-details2 {
-        opacity: 1;
-        margin-top: 0px;
-        transition-delay: 0.2s;
-    } */
+        & .user-details1 {
+            display: grid;
+            grid-area: details1;
+            /* grid-column: 2 / 4; */
+            opacity: 1;
+            transition: 0.3s ease-in-out;
+            grid-template-columns: 1fr;
+            /* grid-row-gap: var(--gap-xs); */
+            padding: 30px;
+            width: 100%;
+            row-gap: var(--gap-xs);
+            transition: all 0.3s ease-in-out;
+            transform: translateY(-20px);
+    
+    
+        }
+    
+        & .user-details2 {
+            display: grid;
+            grid-area: details2;
+            /* grid-column: 4 / 8; */
+            opacity: 1;
+            transition: 0.3s ease-in-out;
+            grid-template-columns: 1fr;
+            padding: 30px;
+            row-gap: var(--gap-xs);
+            transition: all 0.3s ease-in-out;
+            transform: translateY(-20px);
+        }
 
     & .user-details-column {
         display: flex;
@@ -3689,34 +3711,33 @@ header {
 
 
         &> :first-child {
-            font-size: var(--font-sm);
+
             color: var(--color-grey);
-            font-size: var(--font-sm);
+            font-size: var(--font-base);
         }
 
         &> :nth-child(2) {
             margin-right: 75px;
+            font-size: var(--font-xl);
         }
     }
 }
 
+/*
+ * Clase que se añade desde React cuando isExpanded es true.
+ * Expande el contenedor a una altura suficiente para mostrar todo el contenido.
+ */
+.user-details-wrapper.expanded {
+    max-height: 500px;
+    /* Un valor suficientemente grande para que quepa cualquier contenido */
+    opacity: 1;
+    padding-top: 10px;
+
+}
+
+
 .users-list.is-open .user-container {
   max-height: 100%;
-}
-
-.user-container.expanded {
-    height: 275px;
-    overflow: visible;
-    /* Altura cuando está expandido */
-}
-
-/* Cuando el contenedor está expandido, mostrar los detalles con animación */
-.user-container.expanded .user-details1,
-.user-container.expanded .user-details2 {
-    opacity: 1;
-    transform: translateY(0);
-    visibility: visible;
-    overflow: visible;
 }
 
 
@@ -3846,6 +3867,7 @@ header {
 
     }
 }
+
 
 
 

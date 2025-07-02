@@ -3,6 +3,7 @@ import React from 'react';
 import { User } from '../classes/User';
 import { EditIcon, TrashIcon } from './icons'; // Asumiendo que tienes iconos
 import { UserCardRow } from '../react-components/';
+import { useAuth } from '../Auth/react-components/AuthContext'
 
 interface UserListProps {
     users: User[];
@@ -22,44 +23,28 @@ export const UsersBoardList: React.FC<UserListProps> = ({
     //solo un elemento pueda estar expandido a la vez
     const [expandedUserId, setExpandedUserId] = React.useState<string | null>(null);
 
-    // Obtén la información del usuario autenticado (ejemplo)
-    //const currentUser = useAuth(); // Suponiendo que tienes un hook de autenticación
+    // Obtén el perfil del usuario autenticado desde el contexto
+    const { userProfile } = useAuth();
     
-
-    // Determina qué usuarios pueden expandir detalles
-    // const canExpandDetails = currentUser?.role === 'admin' || 
-    //     currentUser?.role === 'manager';
-    
-    
-    // Ejemplo de utilidad de permisos
-    const userPermissions = {
-        canViewUserDetails: (userToView: User, currentUser: User) => {
-            // Admins pueden ver todo
-            if (currentUser.role === 'admin') return true;
+    // // Ejemplo de utilidad de permisos. ************ Pasado dentro de UserCardRow ***************
+    // const userPermissions = {
+    //     canViewUserDetails: (userToView: User, currentUser: User) => {
+    //         // Admins pueden ver todo
+    //         if (currentUser.roleInApp === 'admin' || currentUser.roleInApp === 'superadmin') return true;
         
-            // Managers pueden ver usuarios de su mismo departamento
-            if (currentUser.role === 'manager') {
-                return userToView.department === currentUser.department;
-            }
+    //         // Managers pueden ver usuarios de su mismo departamento
+    //         if (currentUser.role === 'manager') {
+    //             return userToView.department === currentUser.department;
+    //         }
         
-            // Usuarios normales solo pueden verse a sí mismos
-            return userToView.id === currentUser.id;
-        }
-    }
-    
-    
-    
-    
-    
-    
-    
-
-    
+    //         // Usuarios normales solo pueden verse a sí mismos
+    //         return userToView.id === currentUser.id;
+    //     }
+    // }
     
     if (users.length === 0) {
         return <p>No users found.</p>;
     }
-
 
     return (
         <div className="users-list" >
@@ -131,9 +116,7 @@ export const UsersBoardList: React.FC<UserListProps> = ({
                     onAssignProjects={onAssignProjects}
                     onEditUser={onEditUser}
                     onDeleteUser={onDeleteUser}
-                    canExpandDetails={true}
-                    //canExpandDetails={userPermissions.canViewUserDetails(user, currentUser)}
-                    // canExpandDetails={canExpandDetails}
+                    authRole={userProfile?.roleInApp}
                 />
             ))}
 
