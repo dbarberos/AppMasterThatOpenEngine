@@ -49,9 +49,11 @@ export const ToDoFieldArray = React.forwardRef<
     //console.log('ToDoFieldArray render:', { fieldName, value, isEditing })
 
 
-    const [items, setItems] = React.useState<ItemType[]>(() => {
-        return Array.isArray(value) ? [...value] : [];
-    });
+    // const [items, setItems] = React.useState<ItemType[]>(() => {
+    //     return Array.isArray(value) ? [...value] : [];
+    // });
+    // El estado 'items' se inicializa con la prop, pero se sincronizará con el useEffect.
+    const [items, setItems] = React.useState<ItemType[]>(Array.isArray(value) ? [...value] : []);
     const [newItem, setNewItem] = React.useState('');
     const [isSaving, setIsSaving] = React.useState(false);
     const inputRef = React.useRef<HTMLInputElement>(null);
@@ -63,24 +65,32 @@ export const ToDoFieldArray = React.forwardRef<
     const isTag = (item: ItemType): item is ITag => 'title' in item
     const isAssignedUser = (item: ItemType): item is IAssignedUsers => 'name' in item
 
-    // Sync with external value and store original state
-    React.useEffect(() => {
-        console.log('🔄 ToDoFieldArray - Value Sync:', {
-            fieldName,
-            value,
-            isEditing,
-            originalItems: originalItems.current,
-            valueType: typeof value,
-            valueIsArray: Array.isArray(value),
-        });
+    // // Sync with external value and store original state
+    // React.useEffect(() => {
+    //     console.log('🔄 ToDoFieldArray - Value Sync:', {
+    //         fieldName,
+    //         value,
+    //         isEditing,
+    //         originalItems: originalItems.current,
+    //         valueType: typeof value,
+    //         valueIsArray: Array.isArray(value),
+    //     });
 
-        // Store original items only when editing starts
-        if (!isEditing && Array.isArray(value)) {
-            setItems([...value])
-            originalItems.current = [...value];
-            setIsValid(false)
-        }
-    }, [value, isEditing])
+    //     // Store original items only when editing starts
+    //     if (!isEditing && Array.isArray(value)) {
+    //         setItems([...value])
+    //         originalItems.current = [...value];
+    //         setIsValid(false)
+    //     }
+    // }, [value, isEditing])
+
+    // REFACTORIZACIÓN CLAVE: Sincronizar siempre el estado interno con la prop 'value'.
+    // Cuando el padre actualice el ToDo, esta prop cambiará y forzará el re-renderizado del hijo con los datos correctos.
+    React.useEffect(() => {
+        console.log(`[ToDoFieldArray: ${fieldName}] 🔄 Sincronizando estado interno con la prop 'value'.`, { newValue: value });
+        setItems(Array.isArray(value) ? [...value] : []);
+    }, [value, fieldName]);
+
 
 
 

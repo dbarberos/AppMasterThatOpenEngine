@@ -35,7 +35,8 @@ interface Props {
     isDndEnabled: boolean
     onUpdatedProject: (updatedProject: Project) => void
     onCreatedToDoIssue: (createdNewToDoIssue: ToDoIssue) => void
-    onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
+    // onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
+    onUpdatedToDoIssue: (todoId: string, updates: Partial<IToDoIssue>) => Promise<void>
     //onDeletedToDoIssue: (deletedTodo: ToDoIssue) => void
     onClickOpenToDoDetailsWindow: (todo: ToDoIssue) => void; 
 }

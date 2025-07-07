@@ -37,8 +37,9 @@ interface Props {
     project: Project
     onUpdatedProject: (updatedProject: Project) => void
     onCreatedToDoIssue: (createdNewToDoIssue: ToDoIssue) => void
-    onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
+    //onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
     //onDeletedToDoIssue: (deletedTodo: ToDoIssue) => void
+    onUpdatedToDoIssue: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => Promise<void>
     onTodoListReordered: (reorderedList: ToDoIssue[]) => void
 }
 
@@ -118,12 +119,13 @@ export function ProjectDetailsToDoList({
     const [selectedToDo, setSelectedToDo] = React.useState<ToDoIssue | null>(null)
 
     // TodoList state to track changes
-    const [todoList, setTodoList] = React.useState<ToDoIssue[]>(project.todoList)
-    const originalTodoListRef = React.useRef<ToDoIssue[]>(project.todoList)
+    //const [todoList, setTodoList] = React.useState<ToDoIssue[]>(project.todoList)
+    //const originalTodoListRef = React.useRef<ToDoIssue[]>(project.todoList)
+
+    const [todoList, setTodoList] = React.useState<ToDoIssue[]>(() => [...project.todoList].sort((a, b) => a.sortOrder - b.sortOrder));
     const [searchTerm, setSearchTerm] = React.useState('')
 
     const [isDragging, setIsDragging] = React.useState(false);
-
     const [activeTodo, setActiveTodo] = React.useState<ToDoIssue | null>(null) // Para DragOverlay
 
     // Sensores para dnd-kit
@@ -145,26 +147,91 @@ export function ProjectDetailsToDoList({
     
 
 
-    // Update useEffect to sync with project changes
-    React.useEffect(() => {
-        console.log('ProjectDetailsToDoList - Project todoList changed:', {
-            projectId: project.id,
-            todoListLength: project.todoList.length,
-            todoListIds: todoList.map(todo => todo.id)
-        })
-        const sortedList = [...project.todoList].sort((a, b) => a.sortOrder - b.sortOrder)
-        // Update both the current todoList and the original reference
-        originalTodoListRef.current = sortedList
-        // Solo actualiza si no hay término de búsqueda activo
-        if (!searchTerm.trim()) {
-            setTodoList(sortedList)
-        }
-        // Resetear el flag al recibir nuevas props
-        isUserReordering.current = false
-        // Si hay búsqueda, la lista filtrada se maneja en el otro useEffect
-    }, [project.todoList, , searchTerm])
+    // // Update useEffect to sync with project changes
+    // React.useEffect(() => {
+    //     console.log('ProjectDetailsToDoList - Project todoList changed:', {
+    //         projectId: project.id,
+    //         todoListLength: project.todoList.length,
+    //         todoListIds: todoList.map(todo => todo.id)
+    //     })
+    //     const sortedList = [...project.todoList].sort((a, b) => a.sortOrder - b.sortOrder)
+    //     // Update both the current todoList and the original reference
+    //     originalTodoListRef.current = sortedList
+    //     // Solo actualiza si no hay término de búsqueda activo
+    //     if (!searchTerm.trim()) {
+    //         setTodoList(sortedList)
+    //     }
+    //     // Resetear el flag al recibir nuevas props
+    //     isUserReordering.current = false
+    //     // Si hay búsqueda, la lista filtrada se maneja en el otro useEffect
+    // }, [project.todoList, , searchTerm])
 
-  
+
+
+    // Este efecto sincroniza el ToDo seleccionado con la lista de ToDos del proyecto
+    // que viene de las props. Cuando `projectsManager` actualiza la lista, esta prop
+    // cambia, y este efecto se dispara.
+    React.useEffect(() => {
+        // Solo actuar si la ventana de detalles está abierta y hay un ToDo seleccionado.
+        if (isTodoDetailsWindowOpen && selectedToDo) {
+            // Buscar la versión "fresca" de nuestro ToDo en la nueva lista de props.
+            const updatedToDoInList = project.todoList.find(t => t.id === selectedToDo.id);
+
+            // Si se encontró y su referencia de objeto es diferente, significa que se actualizó.
+            if (updatedToDoInList && updatedToDoInList !== selectedToDo) {
+                console.log("ProjectDetailsToDoList: Sincronizando selectedToDo con datos actualizados desde props.");
+                setSelectedToDo(updatedToDoInList); // Actualizar el estado local.
+            }
+        }
+    }, [project.todoList, selectedToDo, isTodoDetailsWindowOpen]);
+
+
+
+
+    // --- Lógica Unificada para Sincronización y Filtrado de la Lista ---
+
+    // 1. Creamos una versión memoizada y ordenada de la lista original que viene de las props.
+    //    Esta será nuestra "fuente de la verdad" para cualquier recálculo.
+    const originalSortedList = React.useMemo(() =>
+        [...project.todoList].sort((a, b) => a.sortOrder - b.sortOrder),
+        [project.todoList]
+    );
+
+    // 2. Un único useEffect que reacciona a cambios en la lista original O en el término de búsqueda.
+    React.useEffect(() => {
+        console.log('ProjectDetailsToDoList: Sincronizando y/o filtrando la lista de ToDos.');
+
+        if (!searchTerm.trim()) {
+            // Si no hay búsqueda, la lista a mostrar es la lista original ordenada.
+            setTodoList(originalSortedList);
+            return;
+        }
+
+        // Si hay búsqueda, filtramos a partir de la lista original ordenada.
+        const searchLower = searchTerm.toLowerCase();
+        const filtered = originalSortedList.filter((todoIssue) => {
+            const tags = Array.isArray(todoIssue.tags) ? todoIssue.tags : [];
+            const users = Array.isArray(todoIssue.assignedUsers) ? todoIssue.assignedUsers : [];
+            return (
+                todoIssue.title.toLowerCase().includes(searchLower) ||
+                todoIssue.description.toLowerCase().includes(searchLower) ||
+                tags.some(tag => tag.title?.toLowerCase().includes(searchLower)) ||
+                users.some(user => user.name?.toLowerCase().includes(searchLower)) ||
+                ToDoIssue.getStatusColumnText(todoIssue.statusColumn).toLowerCase().includes(searchLower)
+            );
+        });
+
+        setTodoList(filtered);
+
+    }, [originalSortedList, searchTerm]); // Se ejecuta si la lista de origen o el término de búsqueda cambian.
+
+
+
+
+
+
+
+
 
     //const [updateProject, setUpdateProject]= React.useState(project)
 
@@ -230,36 +297,41 @@ export function ProjectDetailsToDoList({
     }
 
 
-    // ***ESTA FUNCION HAY QUE PASARLA AL TODOMANAGER  ??*** 
+    // ***ESTA FUNCION HAY QUE PASARLA AL TODOMANAGER  ??***
 
-    const handleUpdateToDoIssue = (updatedTodo: ToDoIssue) => {
-        console.log('ProjectDetailsToDoList - handleUpdateToDoIssue:', {
-            todoId: updatedTodo.id,
-            updates: updatedTodo
-        })
+    // const handleUpdateToDoIssue = (updatedTodo: ToDoIssue) => {
+    //     console.log('ProjectDetailsToDoList - handleUpdateToDoIssue:', {
+    //         todoId: updatedTodo.id,
+    //         updates: updatedTodo
+    //     })
 
-        // Create new todoList with updated todo
-        const updatedTodoList = todoList.map(todo =>
-            todo.id === updatedTodo.id ? updatedTodo : todo
-        )
+    //     // Create new todoList with updated todo
+    //     const updatedTodoList = todoList.map(todo =>
+    //         todo.id === updatedTodo.id ? updatedTodo : todo
+    //     )
 
-        // Create new project with updated todoList
-        const updatedProject = {
-            ...project,
-            todoList: updatedTodoList
-        }
+    //     // Create new project with updated todoList
+    //     const updatedProject = {
+    //         ...project,
+    //         todoList: updatedTodoList
+    //     }
 
-        // Update parent state
-        onUpdatedProject(updatedProject)
+    //     // Update parent state
+    //     onUpdatedProject(updatedProject)
 
-        // Update local state
-        setTodoList(updatedTodoList)
+    //     // Update local state
+    //     setTodoList(updatedTodoList)
 
-        //Notify the parent todo object to trigger the rerender.
-        onUpdatedToDoIssue(updatedTodo)
+    //     //Notify the parent todo object to trigger the rerender.
+    //     onUpdatedToDoIssue(updatedTodo)
 
+    // }
+    
+    const handleUpdateToDoIssue = (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => {
+        console.log('ProjectDetailsToDoList: Propagando evento onUpdatedToDoIssue...', { projectId, todoId, updates });
+        // Llama al callback del padre (ProjectDetailsPage) con los argumentos correctos
+        onUpdatedToDoIssue(projectId, todoId, updates);
     }
-
 
     // Modify the search handler to use useEffect for state updates
     const onToDoIssueSearch = React.useCallback((value: string) => {
@@ -270,44 +342,44 @@ export function ProjectDetailsToDoList({
 
 
 
-    // Add useEffect to handle todoList updates when searchTerm changes
-    React.useEffect(() => {
-        console.log('Filtering with searchTerm:', searchTerm);
+    // // Add useEffect to handle todoList updates when searchTerm changes
+    // React.useEffect(() => {
+    //     console.log('Filtering with searchTerm:', searchTerm);
 
-        if (!searchTerm.trim()) {
-            console.log('Empty search, restoring original list');
-            setTodoList(originalTodoListRef.current)
-            return
-        }
+    //     if (!searchTerm.trim()) {
+    //         console.log('Empty search, restoring original list');
+    //         setTodoList(originalTodoListRef.current)
+    //         return
+    //     }
 
-        const searchLower = searchTerm.toLowerCase()
-        const filtered = originalTodoListRef.current.filter((todoIssue) => {
-            const tags = Array.isArray(todoIssue.tags) ? todoIssue.tags : []
-            const users = Array.isArray(todoIssue.assignedUsers) ? todoIssue.assignedUsers : []
+    //     const searchLower = searchTerm.toLowerCase()
+    //     const filtered = originalTodoListRef.current.filter((todoIssue) => {
+    //         const tags = Array.isArray(todoIssue.tags) ? todoIssue.tags : []
+    //         const users = Array.isArray(todoIssue.assignedUsers) ? todoIssue.assignedUsers : []
 
 
-            // // Format date to match possible search patterns (DD-MM-YYYY or DD/MM/YYYY)
-            // const formattedDate = todoIssue.dueDate instanceof Date
-            //     ? todoIssue.dueDate.toLocaleDateString('es-ES', {
-            //         year: 'numeric',
-            //         month: '2-digit',
-            //         day: '2-digit'
-            //     })
-            //     : '';
+    //         // // Format date to match possible search patterns (DD-MM-YYYY or DD/MM/YYYY)
+    //         // const formattedDate = todoIssue.dueDate instanceof Date
+    //         //     ? todoIssue.dueDate.toLocaleDateString('es-ES', {
+    //         //         year: 'numeric',
+    //         //         month: '2-digit',
+    //         //         day: '2-digit'
+    //         //     })
+    //         //     : '';
 
-            return (
-                todoIssue.title.toLowerCase().includes(searchLower) ||
-                todoIssue.description.toLowerCase().includes(searchLower) ||
-                tags.some(tag => tag.title?.toLowerCase().includes(searchLower)) ||
-                users.some(user => user.name?.toLowerCase().includes(searchLower)) ||
-                ToDoIssue.getStatusColumnText(todoIssue.statusColumn).toLowerCase().includes(searchLower) 
-                //formattedDate.includes(searchLower)
-            );
-        });
+    //         return (
+    //             todoIssue.title.toLowerCase().includes(searchLower) ||
+    //             todoIssue.description.toLowerCase().includes(searchLower) ||
+    //             tags.some(tag => tag.title?.toLowerCase().includes(searchLower)) ||
+    //             users.some(user => user.name?.toLowerCase().includes(searchLower)) ||
+    //             ToDoIssue.getStatusColumnText(todoIssue.statusColumn).toLowerCase().includes(searchLower) 
+    //             //formattedDate.includes(searchLower)
+    //         );
+    //     });
 
-        console.log('Filtered results:', filtered.length);
-        setTodoList(filtered);
-    }, [searchTerm, originalTodoListRef.current]);
+    //     console.log('Filtered results:', filtered.length);
+    //     setTodoList(filtered);
+    // }, [searchTerm, originalTodoListRef.current]);
 
 
 
@@ -367,16 +439,16 @@ export function ProjectDetailsToDoList({
     }
 
 
-    // --- NUEVO useEffect para notificar al padre DESPUÉS de actualizar el estado local ---
+    // --- useEffect para notificar al padre DESPUÉS de actualizar el estado local ---
     React.useEffect(() => {
         if (!isUserReordering.current) return; // Solo procesar si fue un reordenamiento real
 
         // Comprobar si la lista local es diferente de la original que vino del proyecto
         // Esto evita llamadas innecesarias en la carga inicial o si no hubo cambios reales.
         // Puedría hacer una comparación más robusta si es necesario (ej. comparar IDs y sortOrders)
-        const originalIds = originalTodoListRef.current.map(t => t.id).join(',');
+        const originalIds = originalSortedList.map(t => t.id).join(',');
         const currentIds = todoList.map(t => t.id).join(',');
-        const originalSortOrders = originalTodoListRef.current.map(t => t.sortOrder).join(',');
+        const originalSortOrders = originalSortedList.map(t => t.sortOrder).join(',');
         const currentSortOrders = todoList.map(t => t.sortOrder).join(',');
 
         // Solo notificar si el orden de IDs o los sortOrders han cambiado respecto a la lista original
@@ -384,11 +456,11 @@ export function ProjectDetailsToDoList({
             console.log("ProjectDetailsToDoList: useEffect detecting change, calling onTodoListReordered");
             onTodoListReordered(todoList); // Llama a la prop del padre
             // Actualizar la referencia original para la próxima comparación
-            originalTodoListRef.current = todoList;
+            //originalTodoListRef.current = todoList;
 
             isUserReordering.current = false;// *** Resetea el flag DESPUÉS de notificar ***
         }
-    }, [todoList, onTodoListReordered]); // Dependencias: el estado local y la función prop
+    }, [todoList, onTodoListReordered, originalSortedList]); // Dependencias: el estado local y la función prop
     
 
     // --- Fin Lógica de Drag and Drop ---
@@ -414,7 +486,8 @@ export function ProjectDetailsToDoList({
                 />
             )
         }),
-        [todoList, searchTerm, handleClickOpenToDo, isDragging, selectedToDo, isTodoDetailsWindowOpen] // Dependency on local todoList state
+        //[todoList, searchTerm, handleClickOpenToDo, isDragging, selectedToDo, isTodoDetailsWindowOpen] // Dependency on local todoList state
+        [todoList, searchTerm, handleClickOpenToDo, isDragging]
     )
 
 
@@ -439,7 +512,7 @@ export function ProjectDetailsToDoList({
 
     //Open the detail page of an existing todo issue 
     const updateToDoDetailsWindow = isTodoDetailsWindowOpen && selectedToDo
-        ? (            
+        ? (
             <ToDoDetailsWindow
                 project={project}
                 toDoIssue={selectedToDo}
@@ -544,8 +617,8 @@ export function ProjectDetailsToDoList({
                                 ? todoList.length
                                 : 0
                             }
-                            totalItemsNum={originalTodoListRef.current.length > 0
-                                ? originalTodoListRef.current.length
+                            totalItemsNum={originalSortedList.length > 0
+                                ? originalSortedList.length
                                 : 0
                             }
                         />

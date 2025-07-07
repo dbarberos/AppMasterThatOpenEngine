@@ -6,6 +6,7 @@ import { updateDocument} from '../services/firebase';
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { type ToDoIssue } from '../classes/ToDoIssue';
 import { Project } from '../classes/Project';
+import { IToDoIssue } from '../types';
 
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -23,7 +24,9 @@ interface Props {
     onProjectCreate: (updatedProject: Project) => void
     onProjectUpdate: (updatedProject: Project) => void
     onToDoIssueCreated: (createdToDoIssue: ToDoIssue) => void
-    onToDoIssueUpdated: (updatedToDoIssue: ToDoIssue) => void
+    //onToDoIssueUpdated: (updatedToDoIssue: ToDoIssue) => void
+    //onToDoIssueUpdated: (todoId: string, updates: Partial<IToDoIssue>) => Promise<void>
+    onToDoIssueUpdated: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => Promise<void>
 }
 
 
@@ -35,10 +38,14 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
 
     const projectId = routeParams.id;
 
-    // Retrieve project based on projectId as soon as possible.
-    const initialProject = projectId ? projectsManager.getProject(projectId) : null;
+    // // Retrieve project based on projectId as soon as possible.
+    // const initialProject = projectId ? projectsManager.getProject(projectId) : null;
 
-    const [currentProject, setCurrentProject] = React.useState<Project | null>(initialProject!);
+    // const [currentProject, setCurrentProject] = React.useState<Project | null>(initialProject!);
+
+    // Derivar el proyecto directamente de las props en cada renderizado.
+    // Esto elimina el estado local obsoleto y asegura que siempre tengamos la última versión.
+    const currentProject = projectId ? projectsManager.getProject(projectId) : null;
 
     console.log("I am the ID of the proyect selected", routeParams.id);
     console.log('ProjectDetailsPage rendering with project:', currentProject);
@@ -52,24 +59,31 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
         if (!projectId) {
             navigateTo('/'); // Redirect to home
         }
-        if (projectId && !currentProject) {
-            navigateTo('/')
+        // if (projectId && !currentProject) {
+        //     navigateTo('/')
+        // }
+        // Si el projectsManager ha cargado y el proyecto sigue sin encontrarse, redirigir.
+        if (projectId && !currentProject && projectsManager.list.length > 0) {
+            console.warn(`ProjectDetailsPage: Project with ID "${projectId}" not found. Redirecting.`);
+            navigateTo('/');
         }
-        
-    }, [projectId, navigateTo, currentProject])
 
 
-    // Update current project if the route params change.
-    React.useEffect(() => {
-        if (projectId) {
-            const project = projectsManager.getProject(projectId);
-            if (project) {
-                setCurrentProject(project)
-            } else {
-                navigateTo('/')
-            }
-        }
-    }, [projectId, projectsManager, navigateTo])
+    }, [projectId, currentProject, projectsManager.list, navigateTo]); 
+    // }, [projectId, navigateTo, currentProject])
+
+
+    // // Update current project if the route params change.
+    // React.useEffect(() => {
+    //     if (projectId) {
+    //         const project = projectsManager.getProject(projectId);
+    //         if (project) {
+    //             setCurrentProject(project)
+    //         } else {
+    //             navigateTo('/')
+    //         }
+    //     }
+    //}, [projectId, projectsManager, navigateTo])
 
 
     //const [projectState, setProjectState] = React.useState<Project | undefined>(project);
@@ -85,13 +99,13 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
 
     const handleCreatedProject = (createdProject: Project) => {
         //Update the parent project object to trigger the rerender.
-        setCurrentProject(createdProject)
+        //setCurrentProject(createdProject)
         onProjectCreate(createdProject)
     }
 
     const handleUpdatedProject = (updatedProject: Project) => {
         //Update the parent project object to trigger the rerender.
-        setCurrentProject(updatedProject)
+        //setCurrentProject(updatedProject)
         onProjectUpdate(updatedProject)
     }
 
@@ -116,7 +130,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
         
 
         // Update the state of the current project
-        setCurrentProject(updatedProject);
+        //setCurrentProject(updatedProject);
         // Update the project in the manager list
         projectsManager.updateReactProjects(updatedProject)
         
@@ -126,31 +140,41 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
     }
 
 
-    const handleUpdatedToDo = (updatedTodo: ToDoIssue) => {
-        // Update the ToDoIssue in the todoList inside the project inside the manager list
-        //projectsManager.updateToDoIssue(updatedTodo.todoProject, updatedTodo.id ,updatedTodo) ******* he quitado este pero hay que comprobarlo lo tiene el padre
-        onToDoIssueUpdated(updatedTodo)
+    // const handleUpdatedToDo = (updatedTodo: ToDoIssue) => {
+    //     // Update the ToDoIssue in the todoList inside the project inside the manager list
+    //     //projectsManager.updateToDoIssue(updatedTodo.todoProject, updatedTodo.id ,updatedTodo) ******* he quitado este pero hay que comprobarlo lo tiene el padre
+    //     onToDoIssueUpdated(updatedTodo)
+        
+    //     // Find the project in the list and update its todoList
+    //     const projectIndex = projectsManager.list.findIndex(p => p.id === currentProject?.id);
+    //     if (projectIndex !== -1 && currentProject) {
+    //         const updatedProject = new Project({
+    //             ...currentProject
+    //         });
+    //         const todoIndex = updatedProject.todoList.findIndex(todo => todo.id === updatedTodo.id);
+    //         if (todoIndex !== -1) {
+    //             updatedProject.todoList[todoIndex] = updatedTodo;
+    //             // Update the state of the current project
+    //             setCurrentProject(updatedProject);
+    //             // Update the project in the manager list
+    //             projectsManager.updateReactProjects(updatedProject);
+    //         }
+    //     }
+    // }
 
-        //*****???????? */
+    // Este handler ahora solo propaga el evento hacia arriba.
+    // La lógica de actualización del estado local se elimina, ya que onSnapshot se encargará.
 
-        // Find the project in the list and update its todoList
-        const projectIndex = projectsManager.list.findIndex(p => p.id === currentProject?.id);
-        if (projectIndex !== -1 && currentProject) {
-            const updatedProject = new Project({
-                ...currentProject
-            });
-            const todoIndex = updatedProject.todoList.findIndex(todo => todo.id === updatedTodo.id);
-            if (todoIndex !== -1) {
-                updatedProject.todoList[todoIndex] = updatedTodo;
-                // Update the state of the current project
-                setCurrentProject(updatedProject);
-                // Update the project in the manager list
-                projectsManager.updateReactProjects(updatedProject);
-            }
-        }
-        //*****???????? */
-
+    //const handleUpdatedToDo = async (todoId: string, updates: Partial<IToDoIssue>) => {
+        // console.log("ProjectDetailsPage: Propagando evento onToDoIssueUpdated", { todoId, updates });
+    const handleUpdatedToDo = async (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => {
+        console.log("ProjectDetailsPage: Propagando evento onToDoIssueUpdated", { projectId, todoId, updates });
+        // Llama a la prop recibida de index.tsx
+        // await onToDoIssueUpdated(todoId, updates);
+        await onToDoIssueUpdated(projectId, todoId, updates);
     }
+
+
 
 
         const handleProjectSelectionInDetails = (newProjectId: string | null) => {
@@ -198,7 +222,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
 
 
         // Actualizar el estado local de ProjectDetailsPage
-        setCurrentProject(updatedProjectInstance);
+        //setCurrentProject(updatedProjectInstance);
 
         // Actualizar el proyecto en ProjectsManager (importante para consistencia)
         projectsManager.updateReactProjects(updatedProjectInstance);
@@ -226,7 +250,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
             } catch (error) {
                 // Manejo de errores
                 console.error("Error updating sortOrder in Firebase:", error);
-                setCurrentProject(currentProject); // Revertir estado local
+                //setCurrentProject(currentProject); // Revertir estado local
                 projectsManager.updateReactProjects(currentProject); // Revertir en manager
                 onProjectUpdate(currentProject);// Notificar al padre del rollback
                 // Mostrar un mensaje de error al usuario gestionado desde services\firebase

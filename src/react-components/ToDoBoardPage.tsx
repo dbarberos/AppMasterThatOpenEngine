@@ -884,6 +884,32 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
 
 
 
+  
+  // Este efecto sincroniza el ToDo seleccionado con la lista de ToDos del proyecto
+  // que viene de las props. Cuando `projectsManager` actualiza la lista, `currentProject`
+  // cambia, y este efecto se dispara.
+  React.useEffect(() => {
+    if (isTodoDetailsWindowOpen && selectedToDo && currentProject) {
+        const updatedToDoInList = currentProject.todoList.find(t => t.id === selectedToDo.id);
+
+        // Si se encontró una nueva versión del ToDo y su referencia es distinta, actualizamos el estado.
+        if (updatedToDoInList && updatedToDoInList !== selectedToDo) {
+            console.log("ToDoBoardPage: Sincronizando selectedToDo con datos actualizados desde props.");
+            setSelectedToDo(updatedToDoInList);
+        } else if (!updatedToDoInList) {
+            // El ToDo fue borrado, cerramos la ventana.
+            console.log("ToDoBoardPage: El ToDo seleccionado ya no existe, cerrando ventana.");
+            handleCloseToDoDetailsWindow();
+        }
+    }
+  }, [currentProject, selectedToDo, isTodoDetailsWindowOpen, handleCloseToDoDetailsWindow]);
+
+
+
+
+
+
+
 
 
   const handleUpdateToDoIssue = async (updatedTodo: ToDoIssue) => {
@@ -894,110 +920,121 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
       return;
     }
     
-    // Capture previous state for potential rollback
-    const previousTodosByColumnState = JSON.parse(JSON.stringify(todosByColumn));
+    // // Capture previous state for potential rollback
+    // const previousTodosByColumnState = JSON.parse(JSON.stringify(todosByColumn));
 
-    try {
-      // Find original todo and its column
-      let oldStatusColumn: StatusColumnKey | null = null;
-      let originalTodoInBoard: ToDoIssue | undefined;
+    // try {
+    //   // Find original todo and its column
+    //   let oldStatusColumn: StatusColumnKey | null = null;
+    //   let originalTodoInBoard: ToDoIssue | undefined;
 
-      for (const colId of BOARD_COLUMNS) {
-          const todoInCol = todosByColumn[colId]?.find(t => t.id === updatedTodo.id);
-          if (todoInCol) {
-              originalTodoInBoard = todoInCol;
-              oldStatusColumn = colId as StatusColumnKey;
-              break;
-          }
-      }
+    //   for (const colId of BOARD_COLUMNS) {
+    //       const todoInCol = todosByColumn[colId]?.find(t => t.id === updatedTodo.id);
+    //       if (todoInCol) {
+    //           originalTodoInBoard = todoInCol;
+    //           oldStatusColumn = colId as StatusColumnKey;
+    //           break;
+    //       }
+    //   }
 
-      const newStatusColumn = updatedTodo.statusColumn;
-      let todoForBoardUpdate = updatedTodo;
+    //   const newStatusColumn = updatedTodo.statusColumn;
+    //   let todoForBoardUpdate = updatedTodo;
 
-      // Handle column change
-      if (newStatusColumn && oldStatusColumn !== newStatusColumn) {
-        console.log(`ToDoBoardPage: StatusColumn changing from ${oldStatusColumn} to ${newStatusColumn}`);
+    //   // Handle column change
+    //   if (newStatusColumn && oldStatusColumn !== newStatusColumn) {
+    //     console.log(`ToDoBoardPage: StatusColumn changing from ${oldStatusColumn} to ${newStatusColumn}`);
         
-        const destinationList = [...(todosByColumn[newStatusColumn] || [])];
-        const newSortOrder = calculateNewSortOrderForColumnMove(
-          destinationList.filter(t => t.id !== updatedTodo.id),
-          destinationList.length
-        );
+    //     const destinationList = [...(todosByColumn[newStatusColumn] || [])];
+    //     const newSortOrder = calculateNewSortOrderForColumnMove(
+    //       destinationList.filter(t => t.id !== updatedTodo.id),
+    //       destinationList.length
+    //     );
 
-        todoForBoardUpdate = new ToDoIssue({
-          ...updatedTodo,
-          sortOrder: newSortOrder
-        });
+    //     todoForBoardUpdate = new ToDoIssue({
+    //       ...updatedTodo,
+    //       sortOrder: newSortOrder
+    //     });
 
-        // Update Firebase
-        await updateDocument(
-          todoForBoardUpdate.id!,
-          { sortOrder: newSortOrder },
-          {
-            basePath: 'projects',
-            subcollection: 'todoList',
-            parentId: todoForBoardUpdate.todoProject!,
-            todoId: todoForBoardUpdate.id!,
-            isArrayCollection: false
-          }
-        );
+    //     // Update Firebase
+    //     await updateDocument(
+    //       todoForBoardUpdate.id!,
+    //       { sortOrder: newSortOrder },
+    //       {
+    //         basePath: 'projects',
+    //         subcollection: 'todoList',
+    //         parentId: todoForBoardUpdate.todoProject!,
+    //         todoId: todoForBoardUpdate.id!,
+    //         isArrayCollection: false
+    //       }
+    //     );
 
-        // Update board state
-        setTodosByColumn(prev => {
-          const newState = { ...prev };
-          // Remove from old column
-          if (oldStatusColumn) {
-            newState[oldStatusColumn] = newState[oldStatusColumn]
-              .filter(t => t.id !== todoForBoardUpdate.id);
-          }
-          // Add to new column
-          if (!newState[newStatusColumn]) {
-            newState[newStatusColumn] = [];
-          }
-          newState[newStatusColumn] = [
-            ...newState[newStatusColumn].filter(t => t.id !== todoForBoardUpdate.id),
-            todoForBoardUpdate
-          ].sort((a, b) => a.sortOrder - b.sortOrder);
-          return newState;
-        });
+    //     // Update board state
+    //     setTodosByColumn(prev => {
+    //       const newState = { ...prev };
+    //       // Remove from old column
+    //       if (oldStatusColumn) {
+    //         newState[oldStatusColumn] = newState[oldStatusColumn]
+    //           .filter(t => t.id !== todoForBoardUpdate.id);
+    //       }
+    //       // Add to new column
+    //       if (!newState[newStatusColumn]) {
+    //         newState[newStatusColumn] = [];
+    //       }
+    //       newState[newStatusColumn] = [
+    //         ...newState[newStatusColumn].filter(t => t.id !== todoForBoardUpdate.id),
+    //         todoForBoardUpdate
+    //       ].sort((a, b) => a.sortOrder - b.sortOrder);
+    //       return newState;
+    //     });
 
-      } else {
-        // Simple update local state todosByColumn without column change      
-        setTodosByColumn(prev => {
-          const newState = { ...prev };
-          if (oldStatusColumn) {
-              newState[oldStatusColumn] = newState[oldStatusColumn]
-                  .map(t => t.id === updatedTodo.id ? updatedTodo : t)
-                  .sort((a, b) => a.sortOrder - b.sortOrder);
-          }
-          return newState;
-      });
-      }
+    //   } else {
+    //     // Simple update local state todosByColumn without column change      
+    //     setTodosByColumn(prev => {
+    //       const newState = { ...prev };
+    //       if (oldStatusColumn) {
+    //           newState[oldStatusColumn] = newState[oldStatusColumn]
+    //               .map(t => t.id === updatedTodo.id ? updatedTodo : t)
+    //               .sort((a, b) => a.sortOrder - b.sortOrder);
+    //       }
+    //       return newState;
+    //   });
+    //   }
 
-      // Update project state currentProject (local) & notify father components
-      const updatedProjectTodoList = currentProject.todoList
-        .map(t => t.id === todoForBoardUpdate.id ? todoForBoardUpdate : t);
+    //   // Update project state currentProject (local) & notify father components
+    //   const updatedProjectTodoList = currentProject.todoList
+    //     .map(t => t.id === todoForBoardUpdate.id ? todoForBoardUpdate : t);
       
-      if (!updatedProjectTodoList.some(t => t.id === todoForBoardUpdate.id)) {
-        updatedProjectTodoList.push(todoForBoardUpdate);
-      }
+    //   if (!updatedProjectTodoList.some(t => t.id === todoForBoardUpdate.id)) {
+    //     updatedProjectTodoList.push(todoForBoardUpdate);
+    //   }
       
-      const updatedProjectInstance = new Project({
-        ...currentProject,
-        todoList: updatedProjectTodoList
-      });
+    //   const updatedProjectInstance = new Project({
+    //     ...currentProject,
+    //     todoList: updatedProjectTodoList
+    //   });
       
-      setCurrentProject(updatedProjectInstance);
-      onProjectUpdate(updatedProjectInstance); // Notifica a ProjectDetailsPage
-      onToDoIssueUpdated(updatedTodo); // Notifica para cualquier otra lógica específica del ToDo
+    //   setCurrentProject(updatedProjectInstance);
+    //   onProjectUpdate(updatedProjectInstance); // Notifica a ProjectDetailsPage
+    //   onToDoIssueUpdated(updatedTodo); // Notifica para cualquier otra lógica específica del ToDo
     
     
-    } catch (error) {
-      console.error('ToDoBoardPage: Error updating todo:', error);
-      // Rollback on error
-      setTodosByColumn(previousTodosByColumnState);
-      toast.error('Failed to update todo. Changes reverted.');
-    }
+    // } catch (error) {
+    //   console.error('ToDoBoardPage: Error updating todo:', error);
+    //   // Rollback on error
+    //   setTodosByColumn(previousTodosByColumnState);
+    //   toast.error('Failed to update todo. Changes reverted.');
+    // }
+    
+    
+    // SIMPLIFICACIÓN: La lógica de actualización ahora es mucho más simple.
+    // Simplemente propagamos el evento hacia arriba. La actualización de la UI
+    // (tanto en el tablero como en la ventana de detalles) se manejará
+    // automáticamente por los listeners de `projectsManager` y los `useEffect`
+    // que hemos implementado.
+    onToDoIssueUpdated(updatedTodo);
+    
+    //
+    
   }
 
   

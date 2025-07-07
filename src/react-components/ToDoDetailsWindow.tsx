@@ -8,15 +8,19 @@ import { EditIcon, Report2Icon, ReportIcon, TrashIcon } from './icons';
 import { ToDoEditableField } from './ToDoEditableField';
 import { updateDocument, UpdateDocumentOptions } from '../services/firebase';
 import { useSidebarState } from '../hooks';
+import { IToDoIssue } from '../types';
 
 
 interface ToDoDetailsWindowProps {
     project: Project
     toDoIssue: ToDoIssue
     onClose: () => void
-    onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
+    // onUpdatedToDoIssue: (updatedTodo: ToDoIssue) => void
+    // onDeleteToDoIssueButtonClick: (projectId: string, todoId: string) => Promise<void>
+    onUpdatedToDoIssue: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => Promise<void>
     onDeleteToDoIssueButtonClick: (projectId: string, todoId: string) => Promise<void>
 }
+
 
 
 export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIssue, onDeleteToDoIssueButtonClick }) {
@@ -132,62 +136,68 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
 
     const handleToDoFieldSave = async (fieldName: string, newValue: any) => {
         try {
-            // Store current state for potential rollback
-            setPreviousValue(toDoIssue);
 
-            // Create updated todo
-            const updatedTodo = new ToDoIssue({
-                ...currentToDoIssue,
-                //...toDoIssue,
-                [fieldName]: newValue
+            const updates: Partial<IToDoIssue> = { [fieldName]: newValue };
+
+            console.log('ToDoDetailsWindow: Propagando actualización parcial...', {
+                projectId: project.id,
+                todoId: toDoIssue.id,
+                updates,
             });
 
+            await onUpdatedToDoIssue(project.id, toDoIssue.id, updates);
 
-            // Prepare data for updateDocument
-            let updateData: any;
-            let options: UpdateDocumentOptions;
 
-            if (fieldName === 'tags' || fieldName === 'assignedUsers') {
-                // Subcollection replacement
-                updateData = newValue; // The array of tags or assigned users
-                options = {
-                    basePath: 'projects',
-                    subcollection: fieldName, // 'tags' or 'assignedUsers'
-                    parentId: project.id,
-                    todoId: toDoIssue.id,
-                    isArrayCollection: true
-                };
-            } else {
-                // Single field update
-                updateData = { [fieldName]: newValue };
-                options = {
-                    basePath: 'projects',
-                    subcollection: 'todoList',
-                    parentId: project.id,
-                    todoId: toDoIssue.id,
-                    isArrayCollection: false
-                };
-            }
+            // // Store current state for potential rollback
+            // setPreviousValue(toDoIssue);
 
-            // La función updateDocument ya maneja internamente:
-            // - Timeouts
-            // - Reintentos
-            // - Errores de conexión
-            // - Backoff exponencial
+            // // Create updated todo
+            // const updatedTodo = new ToDoIssue({
+            //     ...currentToDoIssue,
+            //     //...toDoIssue,
+            //     [fieldName]: newValue
+            // });
 
-            // Update Firebase first
-            await updateDocument(
-                toDoIssue.id,
-                updateData,
-                options
-            );
 
-            // If Firebase update succeeds, update local state and notify parent
-            // Update local state
-            setCurrentToDoIssue(updatedTodo)
-            // Notify parent components
-            onUpdatedToDoIssue(updatedTodo);
-            //setError(null);
+            // // Prepare data for updateDocument
+            // let updateData: any;
+            // let options: UpdateDocumentOptions;
+
+            // if (fieldName === 'tags' || fieldName === 'assignedUsers') {
+            //     // Subcollection replacement
+            //     updateData = newValue; // The array of tags or assigned users
+            //     options = {
+            //         basePath: 'projects',
+            //         subcollection: fieldName, // 'tags' or 'assignedUsers'
+            //         parentId: project.id,
+            //         todoId: toDoIssue.id,
+            //         isArrayCollection: true
+            //     };
+            // } else {
+            //     // Single field update
+            //     updateData = { [fieldName]: newValue };
+            //     options = {
+            //         basePath: 'projects',
+            //         subcollection: 'todoList',
+            //         parentId: project.id,
+            //         todoId: toDoIssue.id,
+            //         isArrayCollection: false
+            //     };
+            // }
+
+            // // Update Firebase first
+            // await updateDocument(
+            //     toDoIssue.id,
+            //     updateData,
+            //     options
+            // );
+
+            // // If Firebase update succeeds, update local state and notify parent
+            // // Update local state
+            // setCurrentToDoIssue(updatedTodo)
+            // // Notify parent components
+            // onUpdatedToDoIssue(updatedTodo);
+            // //setError(null);
 
         } catch (error) {
             console.error('Error updating todo:', error);
@@ -197,7 +207,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
             // 3. Actualizar UI
 
             // Rollback to previous state
-            onUpdatedToDoIssue(previousValue);
+            //onUpdatedToDoIssue(previousValue);
             // Show message error to user
             setMessagePopUpContent({
                 type: "error",
@@ -210,7 +220,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 onClose: () => setShowMessagePopUp(false),
             })
             setShowMessagePopUp(true)
-            throw error
+            //throw error
         }
     }
 

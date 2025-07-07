@@ -22,7 +22,7 @@ import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManag
 import "./classes/DragAndDropManager.ts";
 //import { setUpUserPage } from "./classes/UsersManager.ts";
 import { ErrorBoundary } from 'react-error-boundary';
-import { Toaster } from 'sonner'
+import { toast, Toaster } from 'sonner'
 //import "./classes/VisorModelManager.ts";
 import { AuthProvider, useAuth } from './Auth/react-components/AuthContext.tsx'; // Usar el AuthContext que creamos
 import { AuthForm } from './Auth/react-components/AuthForm.tsx';
@@ -78,11 +78,51 @@ const App = () => {
         }
     }
 
-    const handleToDoIssueUpdated = (todoIssueUpdated) => {
-        console.log("index.tsx: handleToDoIssueUpdated called", { todoIssueUpdated })
-        projectsManager.updateToDoIssue(todoIssueUpdated.todoProject, todoIssueUpdated.id, todoIssueUpdated)
-        console.log("index.tsx: handleToDoIssueUpdated called", { todoIssueUpdated })
-        setProjects([...projectsManager.list]);
+    
+    // const handleToDoIssueUpdated = (todoIssueUpdated) => {
+    // const handleToDoIssueUpdated = async (todoId: string, updates: Partial<IToDoIssue>) => {
+    //     console.log("index.tsx: handleToDoIssueUpdated (centralized) called", { todoId, updates })
+    const handleToDoIssueUpdated = async (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => {
+        console.log("index.tsx: handleToDoIssueUpdated (centralized) called", { projectId, todoId, updates })
+
+        
+        // projectsManager.updateToDoIssue(todoIssueUpdated.todoProject, todoIssueUpdated.id, todoIssueUpdated)
+        // console.log("index.tsx: handleToDoIssueUpdated called", { todoIssueUpdated })
+        // setProjects([...projectsManager.list]);
+
+
+        // // 1. Encontrar el proyecto al que pertenece el ToDo.
+        // const project = projectsManager.getProjectByToDoIssueId(todoId);
+
+        if (!projectId) {
+            const errorMsg = `index.tsx: No se pudo encontrar el proyecto para el ToDo con ID: ${todoId}`;
+            console.error(errorMsg);
+            toast.error("Could not update the ToDo item because the project ID was missing.");
+            throw new Error(errorMsg);
+        }
+        
+        try {
+            // 2. Llamar al método del manager que se encarga de la escritura en Firebase.
+            // await projectsManager.updateToDoIssue(project.id, todoId, updates);
+            await projectsManager.updateToDoIssue(projectId, todoId, updates );
+
+            // . La UI se actualizará automáticamente gracias al listener onSnapshot de ProjectsManager.
+            
+            // 3. Notificar a React que el estado en projectsManager ha cambiado para que vuelva a renderizar la UI.
+            setProjects([...projectsManager.list]);
+
+            console.log(`index.tsx: ToDo ${todoId} actualizado correctamente.`);
+        } catch (error) {
+            console.error(`index.tsx: Error al actualizar el ToDo ${todoId}:`, error);
+            toast.error("Failed to update the ToDo item.");
+            //o
+            // throw error; // Relanzar para que el componente que originó lo sepa.
+        }
+
+
+
+
+
     }
 
 
@@ -159,7 +199,9 @@ interface MainLayoutProps {
     onProjectCreate: (createProject: Project) => void;
     onProjectUpdate: (updatedProject: Project) => void;
     onToDoIssueCreated: (todoIssueCreated: ToDoIssue) => void;
-    onToDoIssueUpdated: (updatedTodo: ToDoIssue) => void;
+    //onToDoIssueUpdated: (updatedTodo: ToDoIssue) => void;
+    // onToDoIssueUpdated: (todoId: string, updates: Partial<IToDoIssue>) => Promise<void>;
+    onToDoIssueUpdated: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => Promise<void>;
     onUserCreate: (newUserCreate: AppUserClass) => void;
     onUserUpdate: (updatedUser: AppUserClass) => void;
 }

@@ -490,6 +490,46 @@ export async function deleteToDoWithSubcollections(
 
 
 
+/**
+ * Replaces all documents in a specified subcollection with a new set of items.
+ * It first deletes all existing documents and then creates new ones.
+ * @param basePath The base path to the subcollection (e.g., `projects/projId/todoList/todoId/tags`).
+ * @param items The new array of items to add. Each item must have a unique `id`.
+ */
+export async function replaceSubcollectionItems(basePath: string, items: (ITag | IAssignedUsers)[]) {
+    return withRetry(async () => {
+        try {
+            const subcollectionRef = Firestore.collection(firestoreDB, basePath);
+
+            // 1. Delete all existing documents in the subcollection
+            const existingDocsSnapshot = await Firestore.getDocs(subcollectionRef);
+            const deletePromises = existingDocsSnapshot.docs.map(doc => Firestore.deleteDoc(doc.ref));
+            await Promise.all(deletePromises);
+            console.log(`Successfully cleared subcollection at: ${basePath}`);
+
+            // 2. Create new documents for each new item
+            const createPromises = items.map(item => {
+                const { id, ...data } = item; // Separate id from the rest of the data
+                const docRef = Firestore.doc(subcollectionRef, id); // Use the item's ID for the new document
+                return Firestore.setDoc(docRef, data);
+            });
+            await Promise.all(createPromises);
+            console.log(`Successfully populated subcollection at: ${basePath} with ${items.length} items.`);
+
+        } catch (error) {
+            console.error(`Error replacing subcollection items at ${basePath}:`, error);
+            toast.error(`Failed to update subcollection at ${basePath}.`);
+            throw error;
+        }
+    }, {
+        maxRetries: 3,
+        timeout: 5000,
+        baseDelay: 500
+    });
+}
+
+
+
 // Delete all todos and their subcollections for a given project
 export async function deleteAllTodosInProject(projectId: string): Promise<void> {
     return withRetry(async () => {
