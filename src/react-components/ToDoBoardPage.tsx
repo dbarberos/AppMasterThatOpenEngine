@@ -69,21 +69,29 @@ interface Props {
   onProjectCreate: (updatedProject: Project) => void
   onProjectUpdate: (updatedProject: Project) => void
   onToDoIssueCreated: (createdToDoIssue: ToDoIssue) => void
-  onToDoIssueUpdated: (updatedToDoIssue: ToDoIssue) => void
+  //onToDoIssueUpdated: (updatedToDoIssue: ToDoIssue) => void
+  onToDoIssueUpdated: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => Promise<void>
+  onToDoIssueDeleted: (projectId: string, todoId: string) => Promise<void>
 }
 
 // Definir BOARD_COLUMNS fuera del componente para una referencia estable
 const BOARD_COLUMNS = Object.keys(TODO_STATUS_MAP_TEXT) as StatusColumnKey[];
 
 
-export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdate, onToDoIssueCreated, onToDoIssueUpdated }: Props) {
+export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdate, onToDoIssueCreated, onToDoIssueUpdated, onToDoIssueDeleted }: Props) {
   const { currentUser, loading: authLoading } = useAuth();
 
   console.log('DEBUG: Contenido del array columns:', BOARD_COLUMNS);
 
   const [isLoading, setIsLoading] = React.useState(true);
-//const [projectId, setProjectId] = React.useState<string | null>(null); // Necesitarás el ID del proyecto actual
-  const [currentProject, setCurrentProject] = React.useState<Project | null>(null);
+  //const [projectId, setProjectId] = React.useState<string | null>(null); // Necesitarás el ID del proyecto actual
+  //const [currentProject, setCurrentProject] = React.useState<Project | null>(null);
+
+  const routeParams = Router.useParams<{ id: string }>();
+  const currentUrlProjectId = routeParams.id;
+  // ELIMINAMOS el estado local para currentProject. Lo derivaremos directamente.
+  const currentProject = currentUrlProjectId ? projectsManager.getProject(currentUrlProjectId) : null;
+
   const navigateTo = Router.useNavigate(); // Añadido para el caso de proyecto no encontrado
 
   // Estado para almacenar los ToDos, organizados por columna. Un objeto donde las claves son los IDs de las columnas y los valores son arrays de IToDoIssue:
@@ -115,8 +123,6 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
   const [isTodoDetailsWindowOpen, setIsTodoDetailsWindowOpen] = React.useState(false)
   const [selectedToDo, setSelectedToDo] = React.useState<ToDoIssue | null>(null)
 
-  const routeParams = Router.useParams<{ id: string }>();
-  const currentUrlProjectId = routeParams.id;
 
   // Sensores para dnd-kit
   const sensors = useSensors(
@@ -246,9 +252,6 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
     // Se comprueba primero si 'over' existe y si su id es 'delete-zone'
     if (over && over.id === 'delete-zone') {
 
-    
-    // --- Escenario 1: Soltar en la Zona de Eliminación ---
-    //if (overId === 'delete-zone') {
       console.log(`Attempting to delete ToDo: ${draggedTodo.title}`);
       setMessagePopUpContent({
         type: "warning",
@@ -257,41 +260,24 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
         actions: ["Delete", "Cancel"],
         onActionClick: {
           "Delete": async () => {
-            setShowMessagePopUp(false);
-
-            // 1. Actualización optimista del estado local
-            const sourceColumnId = draggedTodo.statusColumn;
-            const previousState = JSON.parse(JSON.stringify(todosByColumn));
-
-
-            // Actualizar el estado local inmediatamente
-            setTodosByColumn(prev => {
-              const newState = { ...prev };
-              newState[sourceColumnId] = (newState[sourceColumnId] || []).filter(t => t.id !== draggedTodo.id);
-              return newState; // Devuelve el nuevo estado
-            });
             try {
-              // 2. Actualizar Firebase
-              await deleteToDoWithSubcollections(draggedTodo.todoProject!, draggedTodo.id!);
-              console.log("ToDo deleted successfully from Firebase.");
-
-              // 3. Actualizar el proyecto padre y el local storage              
-
-
-              const updatedProjectTodoList = currentProject.todoList.filter(t => t.id !== draggedTodo.id);
-              const updatedProjectInstance = new Project({ ...currentProject, todoList: updatedProjectTodoList });
-              setCurrentProject(updatedProjectInstance);// Actualizar el estado local de currentProject
-              onProjectUpdate(updatedProjectInstance); // Notificar al padre para que actualice ProjectsManager y localStorage
               
+              setShowMessagePopUp(false);
+              // Propagar el evento de borrado hacia arriba
+              await onToDoIssueDeleted(currentProject.id, draggedTodo.id!);
+              toast.success(`ToDo "${draggedTodo.title}" deleted.`)
 
             } catch (error) {
-              console.error("Error deleting ToDo in Firebase:", error);
-              setTodosByColumn(previousTodosByColumnState); // Rollback en caso de error
+              // console.error("Error deleting ToDo in Firebase:", error);
+              // setTodosByColumn(previousTodosByColumnState); // Rollback en caso de error
 
+              console.error("Error propagating ToDo deletion:", error);
               setMessagePopUpContent({
                 type: "error",
-                title: "Error Deleting TO-DO",
-                message: "Failed to delete the TO-DO.",
+                // title: "Error Deleting TO-DO",
+                // message: "Failed to delete the TO-DO.",
+                title: "Deletion Failed",
+                message: "Could not delete the ToDo issue. Please try again.",
                 actions: ["Ok"],
                 onActionClick: {
                   "Ok": () => setShowMessagePopUp(false)
@@ -309,13 +295,6 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
       return;
     }
     
-
-    // // Si 'over' es null a este punto (y no era delete-zone), significa que se soltó fuera de cualquier área droppable válida.
-    // if (!over) {
-    //   console.log('TodoBoardPage: Drag ended outside a valid droppable area (and not on delete-zone). Cleaning activeTodo.');
-    //   setActiveTodo(null); // Limpiar el overlay
-    //   return;
-    // }
 
     // Si llegamos aquí, no se soltó en la zona de borrado y 'over' no es null.
     // Ahora es seguro limpiar activeTodo para el overlay, ya que la información del ítem arrastrado (draggedTodo) ya se obtuvo.
@@ -344,17 +323,7 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
     } else if (over?.data?.current?.type === 'column' && over.data.current.columnId) { // Caso para el droppable de la columna misma
       destinationColumnId = over.data.current.columnId as StatusColumnKey;
     } else {
-      // // Fallback si no se puede determinar la columna de destino
-      // const activeTodoData = active.data.current as { todo?: IToDoIssue, type?: string, columnId?: StatusColumnKey };
-      // const overTodoData = over?.data?.current as { todo?: IToDoIssue, type?: string, columnId?: StatusColumnKey };
-      // console.warn("TodoBoardPage: Could not determine destination column from over.id or over.data.current.columnId.", {
-      //     activeId,
-      //     overId,
-      //     overData: over?.data?.current,
-      //     activeData: active.data.current,
-      //     sourceColumnId: activeTodoData?.columnId,
-      //     potentialOverColumnId: overTodoData?.columnId
-      // });
+
       console.warn("TodoBoardPage: Could not determine destination column from over.id or over.data.current.columnId. Reverting.");
       return;
     }
@@ -406,14 +375,14 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
         return { ...prev, [sourceColumnId]: updatedList };
       });
 
-      updateFirebaseAndProject(
-        { sortOrder: newSortOrder },
-        draggedTodo,
-        previousTodosByColumnState, // Pasa el estado capturado al inicio
-        currentProject,
-        onProjectUpdate,
-        setCurrentProject,
-        setTodosByColumn);
+
+      // Persistir el cambio en la fuente de la verdad
+      onToDoIssueUpdated(
+        currentProject.id!,
+        //draggedTodo.id!,
+        activeId,
+        { sortOrder: newSortOrder }
+      )
     }
 
 
@@ -437,95 +406,40 @@ export function ToDoBoardPage({ projectsManager, onProjectCreate, onProjectUpdat
       const updatedTodoInstance = new ToDoIssue({ ...draggedTodo, statusColumn: destinationColumnId, sortOrder: newSortOrder });
 
       setTodosByColumn((prev: Record<StatusColumnKey, ToDoIssue[]>) => {
-        const newSourceList = (prev[sourceColumnId] || []).filter(t => t.id !== activeId);
+        const newSourceList = (prev[sourceColumnId!] || []).filter(t => t.id !== activeId);
         const newDestinationList = [...(prev[destinationColumnId] || [])];
         newDestinationList.splice(targetIndex, 0, updatedTodoInstance); // Insertar en la posición correcta
-        return { ...prev, [sourceColumnId]: newSourceList, [destinationColumnId]: newDestinationList };
-      });
-      updateFirebaseAndProject(
-        { statusColumn: destinationColumnId, sortOrder: newSortOrder },
-        draggedTodo,
-        previousTodosByColumnState, // Pasa el estado capturado al inicio
-        currentProject,
-        onProjectUpdate,
-        setCurrentProject,
-        setTodosByColumn);    
-    }
-  }, [isDndEnabled, currentProject, todosByColumn, onProjectUpdate, BOARD_COLUMNS, setTodosByColumn, setCurrentProject])
-
-
-
-
-
-
-
-
-
-
-
-  // Helper para actualizar Firebase y el estado del proyecto
-  async function updateFirebaseAndProject(
-    updates: Partial<IToDoIssue>,
-    todoToUpdate: ToDoIssue,
-    previousState: Record<StatusColumnKey, ToDoIssue[]>,
-    project: Project,
-    onProjectUpdateCallback: (p: Project) => void,
-    setCurrentProjectCallback: (p: Project | null) => void,
-    setTodosByColumnCallback: React.Dispatch<React.SetStateAction<Record<StatusColumnKey, ToDoIssue[]>>>
-  ) {
-    try {
-      const options: UpdateDocumentOptions = {
-        basePath: 'projects', subcollection: 'todoList', parentId: todoToUpdate.todoProject!,
-        todoId: todoToUpdate.id!, isArrayCollection: false
-      };
-      await updateDocument(todoToUpdate.id!, updates, options);
-      console.log(`ToDo ${todoToUpdate.id} updated in Firebase:`, updates);
-
-
-
-      // Actualizar currentProject.todoList
-      // Esto es crucial para que ProjectsManager y localStorage se actualicen.
-      let todoFoundInList = false;
-      const updatedInternalTodoList = project.todoList.map(t => {
-        if (t.id === todoToUpdate.id) {
-          todoFoundInList = true;
-          return new ToDoIssue({ ...t, ...updates }); // Aplicar updates al ToDo existente
-        }
-        return t;
+        return { ...prev, [sourceColumnId!]: newSourceList, [destinationColumnId]: newDestinationList };
       });
 
-      // Si el todoToUpdate (que es el que se arrastró) no se encontró en la project.todoList
-      // (podría pasar si es un ToDo recién creado y project aún no está sincronizado),
-      // lo añadimos explícitamente.
-      if (!todoFoundInList) {
-        console.warn(`ToDoBoardPage: todoToUpdate (ID: ${todoToUpdate.id}) not found in project.todoList during update. Adding it. This might happen for newly created todos.`);
-        updatedInternalTodoList.push(new ToDoIssue({ ...todoToUpdate, ...updates }));
-      }
 
-      const updatedProjectInstance = new Project({ ...project, todoList: updatedInternalTodoList })
+      // Persistir el cambio en la fuente de la verdad
+      onToDoIssueUpdated(
+        currentProject.id!,
+        //draggedTodo.id!,
+        activeId,
+        { statusColumn: destinationColumnId, sortOrder: newSortOrder }
+      )
       
-      onProjectUpdateCallback(updatedProjectInstance);// Notifica a ProjectDetailsPage -> App -> ProjectsManager
-      setCurrentProjectCallback(updatedProjectInstance); // Actualiza el estado currentProject en ToDoBoardPage
-
-
-    } catch (error) {
-      console.error("Failed to update ToDo in Firebase. Reverting local state.", error);
-      setTodosByColumnCallback(previousState); // Rollback
-      setMessagePopUpContent({
-        type: "error",
-        title: "Update Failed",
-        message: "Could not save ToDo changes.",
-        actions: ["Ok"],
-        onActionClick: {
-          "Ok": () => setShowMessagePopUp(false)
-        }
-        , onClose: () => setShowMessagePopUp(false)
-      });
-      setShowMessagePopUp(true);
     }
-  }
+  //}, [isDndEnabled, currentProject, todosByColumn, onProjectUpdate,  onToDoIssueUpdated, onToDoIssueDeleted, BOARD_COLUMNS, setTodosByColumn, setCurrentProject])
+  }, [isDndEnabled, currentProject, todosByColumn, onToDoIssueUpdated, onToDoIssueDeleted])
 
 
+
+
+
+
+
+  // React.useEffect(() => {
+  //   if (!currentProject) return;
+  //   // Busca el proyecto actualizado en la lista global
+  //   const updatedProject = projectsManager.list.find(p => p.id === currentProject.id);
+  //   if (updatedProject && updatedProject !== currentProject) {
+  //     console.log("ToDoBoardPage: Syncing currentProject with projectsManager.list");
+  //     setCurrentProject(updatedProject);
+  //   }
+  // }, [projectsManager.list, currentProject]);
 
 
 
@@ -536,89 +450,83 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
     } // Faltaba el selectedProjectIdKey en las dependencias del useEffect que usa este estado. Se añade abajo.
   };
 
-
-
+  // Efecto para NAVEGAR cuando el sticky state (cambiado por el ProjectSelector) no coincide con la URL.
+  // Su única responsabilidad es mantener la URL sincronizada con la selección del usuario.
   React.useEffect(() => {
-    // This effect now primarily reacts to changes in initialProjectIdFromStorage
-    // It will also navigate if the sticky ID doesn't match the URL ID.
+    if (authLoading || !currentUser) return;
 
-    // Solo intentar cargar datos si la autenticación ha terminado y hay un usuario
-    if (authLoading || !currentUser) {
-      console.log('ToDoBoardPage: Skipping data fetch, auth loading or no user.');
-      setIsLoading(false); // Asegurarse de que no se quede en estado de carga si no hay usuario
-      return;
-  }
+    if (initialProjectIdFromStorage && initialProjectIdFromStorage !== currentUrlProjectId) {
 
-    const fetchDataAndNavigateIfNeeded = async () => {
-      if (!initialProjectIdFromStorage) {
-        console.warn("ToDoBoardPage: Project ID not available or invalid.")
-        setIsLoading(false);
-        setCurrentProject(null);
-        setTodosByColumn(Object.fromEntries(BOARD_COLUMNS.map(col => [col, []])) as Record<string, ToDoIssue[]>); // Resetear
-        // Si la URL todavía tiene un ID, podríamos considerar navegar para limpiarla.
-        // if (currentUrlProjectId) {
-        //   navigateTo('/project/todoBoard/0', { replace: true }); // O a una ruta sin ID
-        // }
-        return;
-      }
-
-      // Navegar si el ID del sticky state (que pudo haber cambiado por ProjectSelector)
-      // no coincide con el ID de la URL actual.
-      if (initialProjectIdFromStorage !== currentUrlProjectId) {
-        console.log(`ToDoBoardPage: Navigating due to projectId mismatch. URL: ${currentUrlProjectId}, Sticky: ${initialProjectIdFromStorage}`);
-        navigateTo(`/project/todoBoard/${initialProjectIdFromStorage}`, { replace: true });
-        // La navegación causará un re-render, y este efecto se re-ejecutará.
-        // En la siguiente ejecución, currentUrlProjectId debería coincidir con initialProjectIdFromStorage.
-        return; // Salir después de navegar para evitar cargar datos con el ID antiguo.
-      }
-
-      // Si llegamos aquí, initialProjectIdFromStorage SÍ coincide con currentUrlProjectId y no es null.
-      setIsLoading(true);
-      console.log(`TodoBoardPage: Fetching data for project ID: ${initialProjectIdFromStorage}`)
-
-      try {
-        const projectObject = projectsManager.getProject(initialProjectIdFromStorage);
-        if (projectObject) {
-          setCurrentProject(projectObject);
-          
-          const promises = BOARD_COLUMNS.map(status =>
-            getSortedTodosForColumn(initialProjectIdFromStorage, status)
-          );
-
-          const results = await Promise.all(promises);
-
-          // Construir el nuevo estado
-          const newTodosByColumnState = {} as Record<StatusColumnKey, ToDoIssue[]>;
-          BOARD_COLUMNS.forEach((status, index) => {
-            newTodosByColumnState[status] = results[index].map(todoData =>
-              todoData instanceof ToDoIssue ? todoData : new ToDoIssue(todoData)
-            );
-          });
-          setTodosByColumn(newTodosByColumnState);
-
-
-        } else {
-          console.error(`Project with ID ${initialProjectIdFromStorage} not found in ProjectsManager.`);
-          setCurrentProject(null);
-          setTodosByColumn(Object.fromEntries(BOARD_COLUMNS.map(col => [col, []])) as Record<string, ToDoIssue[]>)
-          // Considerar si se debe navegar a una página de error o a la lista de proyectos
-          // si el ID de la URL (que ahora coincide con el sticky) no es válido.
-          // Por ahora, simplemente no se carga nada.
-        }
-
-
-      } catch (error) {
-        console.error("TodoBoardPage: Error fetching todos:", error);
-        
-      } finally {
-        setIsLoading(false);
-      }
+      console.log(`ToDoBoardPage: Navigating due to sticky state change. New ID: ${initialProjectIdFromStorage}`);
+      navigateTo(`/project/todoBoard/${initialProjectIdFromStorage}`, { replace: true });
     }
-    fetchDataAndNavigateIfNeeded();
+  }, [initialProjectIdFromStorage, currentUrlProjectId, navigateTo, authLoading, currentUser]);
 
 
-  }, [initialProjectIdFromStorage, projectsManager, navigateTo, BOARD_COLUMNS, currentUrlProjectId, authLoading, currentUser, selectedProjectIdKey]);
+  // Efecto para CARGAR DATOS. Se activa cuando la URL cambia o cuando la lista de proyectos del manager se actualiza.
+  // Su única responsabilidad es sincronizar el estado local (currentProject, todosByColumn) con los datos de la URL y el manager.
+  React.useEffect(() => {
+    setIsLoading(true);
+    //if (authLoading || !currentUser) {
+    if (authLoading) {  
+      setIsLoading(false);
+      return;
+    }
 
+    
+    // if (currentUrlProjectId) {
+    //   const project = projectsManager.getProject(currentUrlProjectId);
+    //   if (project) {
+    //     setCurrentProject(project);
+    //     const newTodosByColumn = BOARD_COLUMNS.reduce((acc, status) => {
+    //       acc[status] = project.todoList
+    //         .filter(todo => todo.statusColumn === status)
+    //         .sort((a, b) => a.sortOrder - b.sortOrder);
+    //       return acc;
+    //     }, {} as Record<StatusColumnKey, ToDoIssue[]>);
+    //     setTodosByColumn(newTodosByColumn);
+    //   } else if (projectsManager.list.length > 0) {
+    //     console.warn(`ToDoBoardPage: Project with ID "${currentUrlProjectId}" from URL not found. Redirecting.`);
+    //     navigateTo('/');
+    //   }
+
+
+
+    // Ahora usamos la variable `currentProject` derivada.
+    if (currentProject) {
+      const newTodosByColumn = BOARD_COLUMNS.reduce((acc, status) => {
+        acc[status] = currentProject.todoList
+          .filter(todo => todo.statusColumn === status)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        return acc;
+      }, {} as Record<StatusColumnKey, ToDoIssue[]>);
+      setTodosByColumn(newTodosByColumn);
+    } else if (currentUrlProjectId && projectsManager.isReady) {
+      // Si hay un ID en la URL pero no se encontró el proyecto Y el manager ya cargó, redirigir.
+      console.warn(`ToDoBoardPage: Project with ID "${currentUrlProjectId}" from URL not found. Redirecting.`);
+      navigateTo('/');
+
+
+
+    } else {
+
+
+      // // No hay ID en la URL, limpiar el tablero
+      // setCurrentProject(null);
+      // const newTodosByColumn = BOARD_COLUMNS.reduce((acc, status) => {
+      //   acc[status] = [];
+      //   return acc;
+      // }, {} as Record<StatusColumnKey, ToDoIssue[]>);
+      // setTodosByColumn(newTodosByColumn);
+
+
+      // No hay proyecto seleccionado o no se ha encontrado aún, limpiar el tablero.
+      setTodosByColumn(Object.fromEntries(BOARD_COLUMNS.map(columnId => [columnId, []])) as Record<StatusColumnKey, ToDoIssue[]>);
+    }
+    setIsLoading(false);
+
+  //}, [currentUrlProjectId, projectsManager, authLoading, currentUser, navigateTo])
+  }, [currentProject, currentUrlProjectId, projectsManager.isReady, authLoading, navigateTo]);
 
 
   // --- Lógica de Búsqueda y Filtrado ---
@@ -839,12 +747,17 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
         console.error('ToDoBoardPage: Invalid todo object passed to handleClickOpenToDo:', toDoIssue);
         return;
       }
-      setSelectedToDo(toDoIssue);
+      // Buscar la referencia real en la lista del proyecto actual
+     const realToDo = currentProject?.todoList.find(t => t.id === toDoIssue.id) || toDoIssue;
+      setSelectedToDo(realToDo);
       setIsTodoDetailsWindowOpen(true);
     } catch (error) {
       console.error('ToDoBoardPage: Error in handleClickOpenToDo:', error);
     }
   };
+
+
+
 
   // Memorized handleClose for avoiding unnecessary re rendering
   const handleCloseToDoDetailsWindow = React.useCallback(() => {
@@ -852,35 +765,6 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
     setIsTodoDetailsWindowOpen(false);
     setSelectedToDo(null);
   }, []);
-
-
-  // Efecto para mantener selectedTodo sincronizado con currentProject
-  React.useEffect(() => {
-    if (!currentProject || !selectedToDo?.id) return;
-
-    const freshSelectedTodo = currentProject.todoList.find(t => t.id === selectedToDo.id);
-
-    if (freshSelectedTodo) {
-        const hasRelevantChanges = 
-            freshSelectedTodo !== selectedToDo || 
-            freshSelectedTodo.statusColumn !== selectedToDo.statusColumn ||
-            freshSelectedTodo.sortOrder !== selectedToDo.sortOrder;
-
-        if (hasRelevantChanges) {
-            console.log('ToDoBoardPage: Updating selectedTodo due to changes:', {
-                todoId: selectedToDo.id,
-                oldStatus: selectedToDo.statusColumn,
-                newStatus: freshSelectedTodo.statusColumn
-            });
-            setSelectedToDo(freshSelectedTodo);
-        }
-    } else {
-        console.log('ToDoBoardPage: Selected todo no longer exists, closing window');
-        handleCloseToDoDetailsWindow();
-    }
-  }, [currentProject, selectedToDo?.id, handleCloseToDoDetailsWindow]);
-
-
 
 
 
@@ -910,194 +794,51 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
 
 
 
-
-
-  const handleUpdateToDoIssue = async (updatedTodo: ToDoIssue) => {
-    console.log('ToDoBoardPage: handleUpdateToDoIssue called with:', updatedTodo);
+  //const handleUpdateToDoIssue = async (updatedTodo: ToDoIssue) => {
+    //console.log('ToDoBoardPage: handleUpdateToDoIssue called with:', updatedTodo);
+  const handleUpdateToDoIssue = (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => {
+    console.log('ToDoBoardPage: Propagando evento onUpdatedToDoIssue...', { projectId, todoId, updates });   
+    
 
     if (!currentProject) {
       console.error("ToDoBoardPage: currentProject is null in handleUpdateToDoIssue");
       return;
     }
-    
-    // // Capture previous state for potential rollback
-    // const previousTodosByColumnState = JSON.parse(JSON.stringify(todosByColumn));
 
-    // try {
-    //   // Find original todo and its column
-    //   let oldStatusColumn: StatusColumnKey | null = null;
-    //   let originalTodoInBoard: ToDoIssue | undefined;
-
-    //   for (const colId of BOARD_COLUMNS) {
-    //       const todoInCol = todosByColumn[colId]?.find(t => t.id === updatedTodo.id);
-    //       if (todoInCol) {
-    //           originalTodoInBoard = todoInCol;
-    //           oldStatusColumn = colId as StatusColumnKey;
-    //           break;
-    //       }
-    //   }
-
-    //   const newStatusColumn = updatedTodo.statusColumn;
-    //   let todoForBoardUpdate = updatedTodo;
-
-    //   // Handle column change
-    //   if (newStatusColumn && oldStatusColumn !== newStatusColumn) {
-    //     console.log(`ToDoBoardPage: StatusColumn changing from ${oldStatusColumn} to ${newStatusColumn}`);
-        
-    //     const destinationList = [...(todosByColumn[newStatusColumn] || [])];
-    //     const newSortOrder = calculateNewSortOrderForColumnMove(
-    //       destinationList.filter(t => t.id !== updatedTodo.id),
-    //       destinationList.length
-    //     );
-
-    //     todoForBoardUpdate = new ToDoIssue({
-    //       ...updatedTodo,
-    //       sortOrder: newSortOrder
-    //     });
-
-    //     // Update Firebase
-    //     await updateDocument(
-    //       todoForBoardUpdate.id!,
-    //       { sortOrder: newSortOrder },
-    //       {
-    //         basePath: 'projects',
-    //         subcollection: 'todoList',
-    //         parentId: todoForBoardUpdate.todoProject!,
-    //         todoId: todoForBoardUpdate.id!,
-    //         isArrayCollection: false
-    //       }
-    //     );
-
-    //     // Update board state
-    //     setTodosByColumn(prev => {
-    //       const newState = { ...prev };
-    //       // Remove from old column
-    //       if (oldStatusColumn) {
-    //         newState[oldStatusColumn] = newState[oldStatusColumn]
-    //           .filter(t => t.id !== todoForBoardUpdate.id);
-    //       }
-    //       // Add to new column
-    //       if (!newState[newStatusColumn]) {
-    //         newState[newStatusColumn] = [];
-    //       }
-    //       newState[newStatusColumn] = [
-    //         ...newState[newStatusColumn].filter(t => t.id !== todoForBoardUpdate.id),
-    //         todoForBoardUpdate
-    //       ].sort((a, b) => a.sortOrder - b.sortOrder);
-    //       return newState;
-    //     });
-
-    //   } else {
-    //     // Simple update local state todosByColumn without column change      
-    //     setTodosByColumn(prev => {
-    //       const newState = { ...prev };
-    //       if (oldStatusColumn) {
-    //           newState[oldStatusColumn] = newState[oldStatusColumn]
-    //               .map(t => t.id === updatedTodo.id ? updatedTodo : t)
-    //               .sort((a, b) => a.sortOrder - b.sortOrder);
-    //       }
-    //       return newState;
-    //   });
-    //   }
-
-    //   // Update project state currentProject (local) & notify father components
-    //   const updatedProjectTodoList = currentProject.todoList
-    //     .map(t => t.id === todoForBoardUpdate.id ? todoForBoardUpdate : t);
-      
-    //   if (!updatedProjectTodoList.some(t => t.id === todoForBoardUpdate.id)) {
-    //     updatedProjectTodoList.push(todoForBoardUpdate);
-    //   }
-      
-    //   const updatedProjectInstance = new Project({
-    //     ...currentProject,
-    //     todoList: updatedProjectTodoList
-    //   });
-      
-    //   setCurrentProject(updatedProjectInstance);
-    //   onProjectUpdate(updatedProjectInstance); // Notifica a ProjectDetailsPage
-    //   onToDoIssueUpdated(updatedTodo); // Notifica para cualquier otra lógica específica del ToDo
-    
-    
-    // } catch (error) {
-    //   console.error('ToDoBoardPage: Error updating todo:', error);
-    //   // Rollback on error
-    //   setTodosByColumn(previousTodosByColumnState);
-    //   toast.error('Failed to update todo. Changes reverted.');
-    // }
-    
     
     // SIMPLIFICACIÓN: La lógica de actualización ahora es mucho más simple.
     // Simplemente propagamos el evento hacia arriba. La actualización de la UI
     // (tanto en el tablero como en la ventana de detalles) se manejará
     // automáticamente por los listeners de `projectsManager` y los `useEffect`
     // que hemos implementado.
-    onToDoIssueUpdated(updatedTodo);
-    
-    //
-    
+    // La lógica de actualización del estado local se elimina.
+    // La actualización de la UI se manejará automáticamente por los listeners de `projectsManager`
+    // y los `useEffect` que reaccionan a los cambios en `currentProject`.
+    onToDoIssueUpdated(projectId, todoId, updates);
   }
 
-  
-  const handleDeleteToDoIssue = async (projectId: string, todoId: string) => {
-    console.log(`ToDoBoardPage: handleDeleteToDoIssue called for project ${projectId}, todo ${todoId} (from DeleteToDoIssueBtn).`);
 
-    if (!currentProject || currentProject.id !== projectId) {
-      console.error("ToDoBoardPage: handleDeleteToDoIssue - Mismatch or missing project.", { currentProject, projectId, todoId });
+
+
+
+  const handleDeleteToDoIssue = async (projectIdFromEvent: string, todoId: string) => {
+    console.log(`ToDoBoardPage: Propagando evento onDeleteToDoIssue...`, { projectIdFromEvent, todoId });
+    if (!currentProject || currentProject.id !== projectIdFromEvent) {
+      console.error("Project ID mismatch. Cannot delete ToDo.");
+      toast.error("Cannot delete: Project mismatch.");
       return;
     }
-
-    // Encontrar el ToDo para saber su columna de origen para la actualización optimista
-    const todoToDelete = currentProject.todoList.find(todo => todo.id === todoId);
-    if (!todoToDelete) {
-      console.warn("ToDoBoardPage: handleDeleteToDoIssue - ToDo not found in currentProject.todoList. It might have been already removed or there's a sync issue.", { projectId, todoId })
-      return;
-    }
-
-    const sourceColumnId = todoToDelete ? todoToDelete.statusColumn : null;
-    const previousState = JSON.parse(JSON.stringify(todosByColumn));
-    const previousProject = JSON.parse(JSON.stringify(currentProject));
   
     
     try {
-      // 1. Actualizar el estado local de todosByColumn
-      // Esto asegura que la UI refleje la eliminación, incluso si el todoToDelete no se encontró (por si acaso).
-      
-      setTodosByColumn(prev => {
-        const newState = { ...prev };
-        if (sourceColumnId) {
-          newState[sourceColumnId] = (newState[sourceColumnId] || []).filter(t => t.id !== todoId);
-        } else {
-          // Si no se encontró el todoToDelete (y por ende sourceColumnId es null),
-          // iterar por todas las columnas para asegurar la eliminación del todoId
-          for (const colId in newState) {
-            newState[colId as StatusColumnKey] = (newState[colId as StatusColumnKey] || []).filter(t => t.id !== todoId);
-          }
-        }
-        return newState;
-      })
+    
+      // Propagar el evento hacia arriba. El padre se encargará de la lógica de borrado.
+      await onToDoIssueDeleted(projectIdFromEvent, todoId);
+      // La ventana de detalles se cerrará automáticamente gracias al useEffect que
+      // detecta que el 'selectedToDo' ya no existe en 'currentProject.todoList'.
 
-      // 2. Actualizar el currentProject local y notificar al padre (ProjectsManager, localStorage)
-      const updatedProjectTodoList = currentProject.todoList.filter(t => t.id !== todoId);
-      const updatedProjectInstance = new Project({ ...currentProject, todoList: updatedProjectTodoList });
-
-      setCurrentProject(updatedProjectInstance); // Actualiza el estado local de currentProject
-      onProjectUpdate(updatedProjectInstance);   // Notificar al padre para que actualice ProjectsManager y localStorage
-
-      console.log(`ToDo ${todoId} removed from local state and project updated.`);
-
-      
-      if (isTodoDetailsWindowOpen) {
-        setIsTodoDetailsWindowOpen(false);
-        setSelectedToDo(null);
-      }
-
-    } catch (error) {      
-      console.error("ToDoBoardPage: Error updating state or notifying parent after deletion notification.", error);      
-
-      // Rollback de estados locales
-      setTodosByColumn(previousState);
-      setCurrentProject(previousProject);
-
+    } catch (error) {
+      console.error("ToDoBoardPage: Error updating state or notifying parent after deletion notification.", error);
       setMessagePopUpContent({
         type: "error",
         title: "UI Sync Error",
@@ -1110,7 +851,7 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
       });
       setShowMessagePopUp(true);
     }
-  };
+  }
   
 
 

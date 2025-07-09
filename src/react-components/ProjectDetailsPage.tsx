@@ -26,11 +26,13 @@ interface Props {
     onToDoIssueCreated: (createdToDoIssue: ToDoIssue) => void
     //onToDoIssueUpdated: (updatedToDoIssue: ToDoIssue) => void
     //onToDoIssueUpdated: (todoId: string, updates: Partial<IToDoIssue>) => Promise<void>
-    onToDoIssueUpdated: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => Promise<void>
+    onToDoIssueUpdated: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) 
+        => Promise<void>
+    onToDoIssueDeleted: (projectId: string, todoId: string) => Promise<void>
 }
 
 
-export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProjectUpdate, onToDoIssueCreated, onToDoIssueUpdated }: Props) {
+export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProjectUpdate, onToDoIssueCreated, onToDoIssueUpdated,onToDoIssueDeleted }: Props) {
 
     const  routeParams  = Router.useParams<{ id: string }>();
     console.log("I am the ID of the proyect selected", routeParams.id);

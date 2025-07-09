@@ -29,6 +29,7 @@ import { AuthForm } from './Auth/react-components/AuthForm.tsx';
 import { NewUserForm } from './react-components/NewUserForm.tsx'; // Tu NewUserForm adaptado
 import { ChangePasswordForm } from './Auth/react-components/ChangePasswordForm.tsx';
 import { LoadingIcon } from './react-components/icons.tsx';
+import { deleteToDoWithSubcollections } from './services/firebase';
 import { signOut } from './services/firebase/firebaseAuth.ts'; // Para el logout
 import { auth } from './services/firebase/index.ts'
 import { UserRoleInAppKey } from './types.ts';
@@ -106,7 +107,9 @@ const App = () => {
             // await projectsManager.updateToDoIssue(project.id, todoId, updates);
             await projectsManager.updateToDoIssue(projectId, todoId, updates );
 
-            // . La UI se actualizará automáticamente gracias al listener onSnapshot de ProjectsManager.
+            // La UI se actualizará automáticamente gracias al listener onSnapshot de ProjectsManager.
+            const updatedFields = Object.keys(updates).join(', ');
+            toast.success(`ToDo field(s) '${updatedFields}' updated successfully.`);
             
             // 3. Notificar a React que el estado en projectsManager ha cambiado para que vuelva a renderizar la UI.
             setProjects([...projectsManager.list]);
@@ -118,12 +121,42 @@ const App = () => {
             //o
             // throw error; // Relanzar para que el componente que originó lo sepa.
         }
-
-
-
-
-
+        
     }
+
+
+    const handleToDoIssueDeleted = async (projectId: string, todoId: string) => {
+        console.log("index.tsx: handleToDoIssueDeleted (centralized) called", { projectId, todoId });
+
+        if (!projectId || !todoId) {
+            const errorMsg = "Project ID or ToDo ID is missing for deletion.";
+            console.error(errorMsg);
+            toast.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+
+        try {
+
+             // Call the service function that handles the deletion logic in Firebase.
+             await deleteToDoWithSubcollections(projectId, todoId);
+             // The UI will update automatically thanks to the onSnapshot listener in ProjectsManager,
+            // which will detect the change in the database and update the application state.
+            
+            // 2. Borra en ProjectsManager y actualiza localStorage
+
+            projectsManager.deleteToDoIssue(projectId, todoId); //Esto actualiza la lista interna del manager
+            // 3. Notificar a React que el estado ha cambiado para forzar el re-renderizado.
+            setProjects([...projectsManager.list]);
+
+
+        } catch (error) {
+            console.error(`index.tsx: Error deleting ToDo ${todoId}:`, error);
+            toast.error("Failed to delete the ToDo item.");
+        }
+    };
+
+
+
 
 
     function handleUserCreate(newUserCreate: AppUserClass): void {
@@ -155,6 +188,7 @@ const App = () => {
                     onProjectUpdate={handleProjectUpdate}
                     onToDoIssueCreated={handleToDoIssueCreated}
                     onToDoIssueUpdated={handleToDoIssueUpdated}
+                    onToDoIssueDeleted={handleToDoIssueDeleted}
                     onUserCreate={handleUserCreate}
                     onUserUpdate={handleUserUpdate}
                 />
@@ -202,6 +236,7 @@ interface MainLayoutProps {
     //onToDoIssueUpdated: (updatedTodo: ToDoIssue) => void;
     // onToDoIssueUpdated: (todoId: string, updates: Partial<IToDoIssue>) => Promise<void>;
     onToDoIssueUpdated: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => Promise<void>;
+    onToDoIssueDeleted: (projectId: string, todoId: string) => Promise<void>;
     onUserCreate: (newUserCreate: AppUserClass) => void;
     onUserUpdate: (updatedUser: AppUserClass) => void;
 }
@@ -282,6 +317,7 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
                                 onProjectUpdate={props.onProjectUpdate}
                                 onToDoIssueCreated={props.onToDoIssueCreated}
                                 onToDoIssueUpdated={props.onToDoIssueUpdated}
+                                onToDoIssueDeleted={props.onToDoIssueDeleted}
                             />
                             
                     } />
@@ -294,6 +330,7 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
                                 onProjectUpdate={props.onProjectUpdate}
                                 onToDoIssueCreated={props.onToDoIssueCreated}
                                 onToDoIssueUpdated={props.onToDoIssueUpdated}
+                                onToDoIssueDeleted={props.onToDoIssueDeleted}
                             />
                             
                     } />

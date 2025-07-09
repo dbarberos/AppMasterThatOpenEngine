@@ -48,8 +48,8 @@ export function DeleteToDoIssueBtn({
             onActionClick: {
                 "Delete": async () => {
                     try {
-                        //Delete in the DB
-                        await deleteToDoWithSubcollections(projectId, todoToBeDeleted.id)
+                        // //Delete in the DB
+                        // await deleteToDoWithSubcollections(projectId, todoToBeDeleted.id)
                         
 
                         // Remove from local state

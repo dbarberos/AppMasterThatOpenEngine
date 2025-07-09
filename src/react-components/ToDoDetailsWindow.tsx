@@ -26,8 +26,8 @@ interface ToDoDetailsWindowProps {
 export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIssue, onDeleteToDoIssueButtonClick }) {
 
     const [editingField, setEditingField] = React.useState<string | null>(null);
-    const [previousValue, setPreviousValue] = React.useState<ToDoIssue>(toDoIssue);
-    const [currentToDoIssue, setCurrentToDoIssue] = React.useState<ToDoIssue>(toDoIssue); // Use local state for current todo issue
+    //const [previousValue, setPreviousValue] = React.useState<ToDoIssue>(toDoIssue);
+    //const [currentToDoIssue, setCurrentToDoIssue] = React.useState<ToDoIssue>(toDoIssue); // Use local state for current todo issue
 
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
@@ -36,56 +36,56 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
     const { storeSidebarState, restoreSidebarState } = useSidebarState();
 
 
-    // Handler to check if specific field is being edited
-    const isFieldEditing = (fieldName: string) => editingField === fieldName;
+    // // Handler to check if specific field is being edited
+    // const isFieldEditing = (fieldName: string) => editingField === fieldName;
 
 
-    React.useEffect(() => {
+    // React.useEffect(() => {
         
-        // This effect will run every time the `toDoIssue` prop changes.
-        // This is crucial for updating the window when a new ToDo is selected
-        // from outside while the window is already open.
+    //     // This effect will run every time the `toDoIssue` prop changes.
+    //     // This is crucial for updating the window when a new ToDo is selected
+    //     // from outside while the window is already open.
 
-        const hasChanged = compareToDoIssues(currentToDoIssue, toDoIssue);
+    //     const hasChanged = compareToDoIssues(currentToDoIssue, toDoIssue);
 
-        if (hasChanged) {
-            console.log('ToDoDetailsWindow: Updating state due to changes:', {
-                field: hasChanged.field,
-                from: hasChanged.from,
-                to: hasChanged.to
-            });
+    //     if (hasChanged) {
+    //         console.log('ToDoDetailsWindow: Updating state due to changes:', {
+    //             field: hasChanged.field,
+    //             from: hasChanged.from,
+    //             to: hasChanged.to
+    //         });
         
-            setCurrentToDoIssue(toDoIssue); // Update the local state with the new ToDo
-            setPreviousValue(toDoIssue);    // Update the rollback value
-            setEditingField(null);          // Exit any active editing mode
-        }
-    }, [toDoIssue]); 
+    //         setCurrentToDoIssue(toDoIssue); // Update the local state with the new ToDo
+    //         setPreviousValue(toDoIssue);    // Update the rollback value
+    //         setEditingField(null);          // Exit any active editing mode
+    //     }
+    // }, [toDoIssue]); 
 
 
 
 
-    // Hlper function for comparing todos
-    const compareToDoIssues = (current: ToDoIssue, next: ToDoIssue) => {
-        const relevantFields = [
-            { field: 'statusColumn', getValue: (todo: ToDoIssue) => todo.statusColumn },
-            { field: 'title', getValue: (todo: ToDoIssue) => todo.title },
-            { field: 'description', getValue: (todo: ToDoIssue) => todo.description },
-            { field: 'dueDate', getValue: (todo: ToDoIssue) => todo.dueDate?.getTime() },
-            { field: 'tags', getValue: (todo: ToDoIssue) => JSON.stringify(todo.tags) },
-            { field: 'assignedUsers', getValue: (todo: ToDoIssue) => JSON.stringify(todo.assignedUsers) }
-        ];
+    // // Hlper function for comparing todos
+    // const compareToDoIssues = (current: ToDoIssue, next: ToDoIssue) => {
+    //     const relevantFields = [
+    //         { field: 'statusColumn', getValue: (todo: ToDoIssue) => todo.statusColumn },
+    //         { field: 'title', getValue: (todo: ToDoIssue) => todo.title },
+    //         { field: 'description', getValue: (todo: ToDoIssue) => todo.description },
+    //         { field: 'dueDate', getValue: (todo: ToDoIssue) => todo.dueDate?.getTime() },
+    //         { field: 'tags', getValue: (todo: ToDoIssue) => JSON.stringify(todo.tags) },
+    //         { field: 'assignedUsers', getValue: (todo: ToDoIssue) => JSON.stringify(todo.assignedUsers) }
+    //     ];
 
-        for (const { field, getValue } of relevantFields) {
-            const currentValue = getValue(current);
-            const nextValue = getValue(next);
+    //     for (const { field, getValue } of relevantFields) {
+    //         const currentValue = getValue(current);
+    //         const nextValue = getValue(next);
 
-            if (currentValue !== nextValue) {
-                return { field, from: currentValue, to: nextValue };
-            }
-        }
+    //         if (currentValue !== nextValue) {
+    //             return { field, from: currentValue, to: nextValue };
+    //         }
+    //     }
 
-        return false;
-    };
+    //     return false;
+    // };
 
     React.useEffect(() => {
         storeSidebarState();
@@ -145,6 +145,8 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 updates,
             });
 
+            // La única responsabilidad de este componente es notificar al padre.
+            // La actualización de la UI ocurrirá cuando las props cambien como resultado.
             await onUpdatedToDoIssue(project.id, toDoIssue.id, updates);
 
 
@@ -208,6 +210,11 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
 
             // Rollback to previous state
             //onUpdatedToDoIssue(previousValue);
+
+
+
+            // El rollback del estado ya no es necesario porque no tenemos estado local que revertir.
+            // La UI simplemente no cambiará porque la prop `toDoIssue` no ha cambiado.
             // Show message error to user
             setMessagePopUpContent({
                 type: "error",
@@ -267,11 +274,13 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         <ToDoEditableField
                             //label="Title"
                             fieldName="title"
-                            value={currentToDoIssue.title}
+                            //value={currentToDoIssue.title}
+                            value={toDoIssue.title}
                             onSave={handleToDoFieldSave}
                             type="text"
                             style={{ marginTop: 30, minHeight: 50, paddingRight: 15, alignItems: "" }}
-                            toDoIssue={currentToDoIssue}
+                            //toDoIssue={currentToDoIssue}
+                            toDoIssue={toDoIssue}
                         />
                     
                         <div
@@ -404,14 +413,16 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     <div className="todo-detail-datafield" >
                         <ToDoEditableField
                             fieldName="description"
-                            value={currentToDoIssue.description}
+                            //value={currentToDoIssue.description}
+                            value={toDoIssue.description}
                             onSave={handleToDoFieldSave}
                             type="textRich"
                             //type="textarea"
                             style={{ marginTop: 25, width: "100%" }}
                             onEditStart={ handleEditQuillContentStart }
                             onEditEnd={ handleEditQuillContentEnd }
-                            toDoIssue={currentToDoIssue}
+                            //toDoIssue={currentToDoIssue}
+                            toDoIssue={toDoIssue}
                         />
                     </div>
                 </div>
@@ -428,13 +439,15 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 <ToDoEditableField
                     //label="Stage:"
                     fieldName="statusColumn"
-                    value={currentToDoIssue.statusColumn}
+                    //value={currentToDoIssue.statusColumn}
+                    value={toDoIssue.statusColumn}
                     onSave={handleToDoFieldSave}
                     type="select"
                     style={{  }}
                     onEditStart={() => setEditingField('statusColumn')}
                     onEditEnd={() => setEditingField(null)}
-                    toDoIssue={currentToDoIssue}
+                    //toDoIssue={currentToDoIssue}
+                    toDoIssue={toDoIssue}
                 />
 
                 {/* Display AssignedUsers */}
@@ -458,7 +471,8 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     }}>
                     <ToDoEditableField
                         fieldName="assignedUsers"
-                        value={currentToDoIssue.assignedUsers}
+                        //value={currentToDoIssue.assignedUsers}
+                        value={toDoIssue.assignedUsers}
                         onSave={handleToDoFieldSave}
                         type="array"
                         style={{
@@ -469,7 +483,9 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         }}
                         onEditStart={() => setEditingField('assignedUsers')}
                         onEditEnd={() => setEditingField(null)}
-                        toDoIssue={currentToDoIssue}
+                        //toDoIssue={currentToDoIssue}
+                        toDoIssue={toDoIssue}
+
                     />
                 </div>
 
@@ -495,7 +511,8 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                     <ToDoEditableField
                         //label="Stage:"
                         fieldName="tags"
-                        value={currentToDoIssue.tags}
+                        //value={currentToDoIssue.tags}
+                        value={toDoIssue.tags}
                         onSave={handleToDoFieldSave}
                         type="array"
                         style={{
@@ -507,7 +524,8 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         }}
                         onEditStart={() => setEditingField('tags')}
                         onEditEnd={() => setEditingField(null)}
-                        toDoIssue={currentToDoIssue}
+                        //toDoIssue={currentToDoIssue}
+                        toDoIssue={toDoIssue}
                     />
                 </div>
 
@@ -523,7 +541,8 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                 <div className="todo-detail-datafield">
                     <ToDoEditableField
                         fieldName="dueDate"
-                        value={currentToDoIssue.dueDate}
+                        //value={currentToDoIssue.dueDate}
+                        value={toDoIssue.dueDate}
                         onSave={handleToDoFieldSave}
                         type="date"
                         style={{
@@ -533,7 +552,8 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
                         }}
                         onEditStart={() => setEditingField('dueDate')}
                         onEditEnd={() => setEditingField(null)}
-                        toDoIssue={currentToDoIssue}
+                        //toDoIssue={currentToDoIssue}
+                        toDoIssue={toDoIssue}
                     />
                 </div>
             </div>
@@ -541,4 +561,7 @@ export function ToDoDetailsWindow({ project, toDoIssue, onClose, onUpdatedToDoIs
         </section>
     )
 }
+
+// Add display name for debugging purposes
+ToDoDetailsWindow.displayName = 'ToDoDetailsWindow'
 

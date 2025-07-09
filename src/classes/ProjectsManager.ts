@@ -1309,6 +1309,27 @@ export class ProjectsManager {
     }
 
     
+    deleteToDoIssue(projectId: string, todoId: string): void {
+        const projectIndex = this._projects.findIndex(p => p.id === projectId);
+        if (projectIndex === -1) {
+            console.error(`Project with ID ${projectId} not found.`);
+            return;
+        }
+        const project = this._projects[projectIndex];
+        const newTodoList = project.todoList.filter(todo => todo.id !== todoId);
+        this._projects[projectIndex] = new Project({ ...project, todoList: newTodoList });
+    
+        this.updateLocalStorage();
+        if (this.onProjectUpdated) { this.onProjectUpdated(projectId); }
+        if (this.onProjectsListUpdated) { this.onProjectsListUpdated(); }
+    }
+
+
+
+
+
+
+
 
 
 
