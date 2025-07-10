@@ -707,35 +707,41 @@ const handleProjectSelectionInBoard = (newProjectId: string | null) => {
   }
 
   const handleCreatedToDoIssue = (createdNewToDoIssue: ToDoIssue) => {
-    console.log('TodoBoardPage: handleCreatedToDoIssue called', createdNewToDoIssue);
+    console.log('ToDoBoardPage: New ToDo created, updating local status and notifying parent.', createdNewToDoIssue);
 
-    // Optimistically add the new todo to the correct column, maintaining sort order
-    setTodosByColumn(prevTodos => {
-      const newTodos = { ...prevTodos };
-      const targetColumn = createdNewToDoIssue.statusColumn;
 
-      // Ensure the target column exists and is an array
-      if (!newTodos[targetColumn]) {
-          newTodos[targetColumn] = [];
-      }
+    if (!currentProject) {
+      toast.error("The To-Do cannot be added because no project is selected.");
+      return;
+    }
 
-      const columnTodos = [...newTodos[targetColumn]]; // Clonar el array
 
-      // Find the correct index to insert based on sortOrder
-      let insertIndex = columnTodos.findIndex(todo => todo.sortOrder > createdNewToDoIssue.sortOrder);
+    // // Optimistically add the new todo to the correct column, maintaining sort order
+    // //    Añade el nuevo "ToDo" a la columna correcta en el estado local del tablero.
+    // setTodosByColumn(prevTodos => {
+    //   const newTodos = { ...prevTodos };
+    //   const targetColumn = createdNewToDoIssue.statusColumn;
 
-      // If no item has a greater sortOrder, insert at the end
-      if (insertIndex === -1) {
-          insertIndex = columnTodos.length;
-      }
+    //   // Ensure the target column exists and is an array
+    //   if (!newTodos[targetColumn]) {
+    //       newTodos[targetColumn] = [];
+    //   }
 
-      // Insert the new todo at the determined index
-      columnTodos.splice(insertIndex, 0, createdNewToDoIssue);
+    //   //const columnTodos = [...newTodos[targetColumn]]; // Clonar el array
+    //   // Añade el nuevo ToDo y reordena la columna por su `sortOrder`.
+    //   const updatedColumn = [...newTodos[targetColumn], createdNewToDoIssue]
+    //       .sort((a, b) => a.sortOrder - b.sortOrder);
+      
+    //     return { ...newTodos, [targetColumn]: updatedColumn };
+    // });
 
-      return { ...newTodos, [targetColumn]: columnTodos }; // Return the updated state object
-    });
 
+  
+    // Notificar al componente raíz (App en index.tsx) sobre el NUEVO ToDo.
+    //    Esta es la llamada CORRECTA. NO se debe llamar a onProjectUpdate aquí.
     onToDoIssueCreated(createdNewToDoIssue)
+  
+    // Cerrar el formulario.
     setIsNewToDoIssueFormOpen(false);
   }
 

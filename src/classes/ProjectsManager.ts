@@ -1180,14 +1180,14 @@ export class ProjectsManager {
                     ]
                     console.log('PM: this._projects actualizado, proyecto afectado:', this._projects[projectIndex].todoList.map(t => ({ id: t.id, title: t.title })));
 
-                    // *** Log CLAVE antes de guardar en localStorage ***
-                    console.log('PM: Llamando a updateLocalStorage(). Estado actual de this._projects:', this._projects.map(p => ({ id: p.id, name: p.name, todoCount: p.todoList.length })));
+                    // // *** Log CLAVE antes de guardar en localStorage ***
+                    // console.log('PM: Llamando a updateLocalStorage(). Estado actual de this._projects:', this._projects.map(p => ({ id: p.id, name: p.name, todoCount: p.todoList.length })));
 
-                    // Actualizar en Firebase
-                    const projectDocRef = doc(firestoreDB, 'projects', projectId);
-                    setDoc(projectDocRef, this.toFirestoreData(updatedProject), { merge: true }) // Actualizar el proyecto completo en Firebase
-                        .then(() => console.log(`ProjectsManager: Project ${projectId} todoList updated in Firebase.`))
-                        .catch(error => console.error(`ProjectsManager: Error updating project ${projectId} todoList in Firebase:`, error));
+                    // // Actualizar en Firebase
+                    // const projectDocRef = doc(firestoreDB, 'projects', projectId);
+                    // setDoc(projectDocRef, this.toFirestoreData(updatedProject), { merge: true }) // Actualizar el proyecto completo en Firebase
+                    //     .then(() => console.log(`ProjectsManager: Project ${projectId} todoList updated in Firebase.`))
+                    //     .catch(error => console.error(`ProjectsManager: Error updating project ${projectId} todoList in Firebase:`, error));
 
 
                     // Update localStorage immediately after updating ProjectsManager
