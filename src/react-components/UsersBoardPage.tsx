@@ -65,8 +65,12 @@ export function UsersBoardPage({
     // Estados para el menú de ordenación
     const [isSortMenuOpen, setIsSortMenuOpen] = React.useState(false);
     const sortButtonRef = React.useRef<HTMLButtonElement>(null);
-    // Estado para la lógica de ordenación (preparado para el siguiente paso)
-    const [sortBy, setSortBy] = React.useState<UserSortKey>('nickName');
+    // // Estado para la lógica de ordenación (preparado para el siguiente paso)
+    // const [sortBy, setSortBy] = React.useState<UserSortKey>('nickName');
+    // Clave única para guardar la preferencia de ordenación en localStorage, específica para cada usuario.
+    const userSortByKey = currentUser ? `userSortBy_${currentUser.uid}` : 'userSortBy_guest';
+    // Reemplazamos React.useState con nuestro hook useStickyState para hacer la ordenación persistente.
+    const [sortBy, setSortBy] = useStickyState<UserSortKey>('nickName', userSortByKey);
 
 
     // Lógica de permisos para la página
