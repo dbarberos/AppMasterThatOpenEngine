@@ -2,7 +2,7 @@
 import React from 'react';
 import { User } from '../classes/User';
 import { EditIcon, TrashIcon } from './icons'; // Asumiendo que tienes iconos
-import { UserCardRow } from '../react-components/';
+import { UserCardRow, UserSortKey } from '../react-components/';
 import { useAuth } from '../Auth/react-components/AuthContext'
 
 interface UserListProps {
@@ -10,13 +10,15 @@ interface UserListProps {
     onAssignProjects: (user: User) => void; // Función para abrir el modal de asignación
     onEditUser: (user: User) => void; // Función para abrir el modal de edición
     onDeleteUser: (userId: string) => void; // Función para manejar la eliminación
+    onSort: (sortKey: UserSortKey) => void; // Función para manejar el ordenamiento
 }
 
 export const UsersBoardList: React.FC<UserListProps> = ({
     users,
     onAssignProjects,
     onEditUser,
-    onDeleteUser
+    onDeleteUser,
+    onSort,
 }) => {
 
     
@@ -112,11 +114,39 @@ export const UsersBoardList: React.FC<UserListProps> = ({
                     <div/>
                 }
                 <h5 style={{ width: '20%' }}></h5>
-                <h5 style={{ width: '20%' }}>EMAIL</h5>
+                {/* <h5 style={{ width: '20%' }}>EMAIL</h5> */}
+                <button
+                    style={{ width: '20%' }}
+                    className="header-sort-button"
+                    onClick={() => onSort('email')}
+                >
+                    EMAIL
+                </button>
                 <h5 style={{ width: '15%' }}>PHONE</h5>
-                <h5 style={{ width: '15%', whiteSpace: 'nowrap' }}>ORGANIZATION / ROLE</h5>
+                <div style={{display: 'flex', flexDirection: 'row',  width: '20%' }}>
+                    <button
+                        // style={{ width: '20%' }}
+                        className="header-sort-button"
+                        onClick={() => onSort('organization')}
+                    >
+                        ORGANIZATION/
+                    </button>
+                    <button
+                        style={{ width: '20%' }}
+                        className="header-sort-button"
+                        onClick={() => onSort('roleInApp')}
+                    >
+                        ROLE
+                    </button>
+                </div>
+                {/* <h5 style={{ width: '15%', whiteSpace: 'nowrap' }}>ORGANIZATION / ROLE</h5> */}
                 <h5 style={{ width: '', textAlign: 'center' }}>PROJECTS</h5>
-                <h5 style={{ width: '', textAlign: 'center' }}>STATUS</h5>
+                <button
+                    style={{ justifyContent: 'center' }}
+                    className="header-sort-button" onClick={() => onSort('status')}>
+                    STATUS
+                </button>
+                {/* <h5 style={{ width: '', textAlign: 'center' }}>STATUS</h5> */}
                 <h5 style={{ width: '', textAlign: 'center' }}>ACTIONS</h5>
             </div>
             {users.map(user => (

@@ -9,7 +9,7 @@ import { User } from '../classes/User'; // Necesitarás definir esta clase/inter
 //import { IProjectAssignment, } from '../types'; // Y esta
 import { IProjectAssignment, IUser } from '../types'; 
 import { ProjectsManager } from '../classes/ProjectsManager';
-import { LoadingIcon, NewUserForm, UsersBoardList, ProjectSelector, SearchUserBox, MessagePopUp, type MessagePopUpProps, CounterBox, } from '../react-components'; // Asumiendo que estos componentes existen o se crearán
+import { LoadingIcon, NewUserForm, UsersBoardList, ProjectSelector, SearchUserBox, MessagePopUp, type MessagePopUpProps, CounterBox, UsersSortMenu, type UserSortKey } from '../react-components'; // Asumiendo que estos componentes existen o se crearán
 
 
 import { MainUsersIndex, SearchIcon, AddIcon, }  from './icons';
@@ -59,6 +59,14 @@ export function UsersBoardPage({
 
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
+
+
+
+    // Estados para el menú de ordenación
+    const [isSortMenuOpen, setIsSortMenuOpen] = React.useState(false);
+    const sortButtonRef = React.useRef<HTMLButtonElement>(null);
+    // Estado para la lógica de ordenación (preparado para el siguiente paso)
+    const [sortBy, setSortBy] = React.useState<UserSortKey>('nickName');
 
 
     // Lógica de permisos para la página
@@ -185,6 +193,46 @@ export function UsersBoardPage({
     const handleCloseNewUserModal = React.useCallback(() => {
         setIsNewUserFormOpen(false);
     }, []);
+
+    // Handler para abrir/cerrar el menú de ordenación
+    const toggleSortMenu = React.useCallback(() => {
+        setIsSortMenuOpen(prev => !prev);
+    }, []);
+
+    // Handler para cuando se selecciona una opción de ordenación
+    const handleSort = React.useCallback((key: UserSortKey) => {
+        console.log(`Sorting by: ${key}`);
+        setSortBy(key);
+    }, []);
+
+
+    // Hook useMemo para ordenar la lista de usuarios de forma eficiente.
+    // Se re-ejecutará solo si la lista de usuarios filtrados (filteredUsers) o la clave de ordenación (sortBy) cambian.
+    const sortedAndFilteredUsers = React.useMemo(() => {
+        // Si no hay una clave de ordenación, devolvemos la lista filtrada tal cual.
+        if (!sortBy) {
+            return filteredUsers;
+        }
+
+        // Usamos .toSorted() para crear una nueva matriz ordenada sin mutar la original.
+        // Esto es una práctica recomendada en React para evitar efectos secundarios.
+        return filteredUsers.toSorted((a, b) => {
+            // Obtenemos los valores a comparar. Usamos '?? '' como fallback para
+            // propiedades que podrían ser null o undefined, evitando errores.
+            const valueA = a[sortBy] ?? '';
+            const valueB = b[sortBy] ?? '';
+
+            // localeCompare es el método ideal para ordenar cadenas de texto alfabéticamente,
+            // ya que maneja correctamente acentos y caracteres especiales.
+            return valueA.localeCompare(valueB);
+        });
+    }, [filteredUsers, sortBy]); // Dependencias del hook
+
+
+
+
+
+
 
     const handleCreateUser = React.useCallback(async (userData: Omit<User, 'id' | 'projectsAssigned'>) => {
         try {
@@ -460,6 +508,8 @@ export function UsersBoardPage({
                 <div className="header-user-page-content">
                     <div style={{ display: "flex", flexDirection: "row", columnGap: 20 }}>
                         <button
+                            ref={sortButtonRef}
+                            onClick={toggleSortMenu}
                             style={{ borderRadius: 10, width: "auto" }}
                             className="btn-secondary"
                         >
@@ -483,10 +533,12 @@ export function UsersBoardPage({
                 </div>
                 {viewMode === 'allUsers' && (
                     <UsersBoardList
-                        users={filteredUsers}
+                        //users={filteredUsers}
+                        users={sortedAndFilteredUsers}
                         onAssignProjects={handleOpenAssignModal}
                         onEditUser={handleOpenEditUserModal} // Necesitarás un modal de edición
-                        onDeleteUser={handleDeleteUser} 
+                        onDeleteUser={handleDeleteUser}
+                        onSort={handleSort}
                     />
                     //<p>Vista de Todos los Usuarios (UserList irá aquí)</p>
                 )}
@@ -545,7 +597,15 @@ export function UsersBoardPage({
                     onCreateUser={handleCreateUser}
                     onUpdateUser={handleUpdateUser}
                 />}
-{showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
+            {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
+            {isSortMenuOpen && (
+                <UsersSortMenu
+                    isOpen={isSortMenuOpen}
+                    onClose={() => setIsSortMenuOpen(false)}
+                    onSort={handleSort}
+                    buttonRef={sortButtonRef}
+                />
+            )}
 
         </section>
     )

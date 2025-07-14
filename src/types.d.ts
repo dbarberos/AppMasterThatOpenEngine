@@ -95,3 +95,10 @@ export interface IUserProjectRole {
     createdAt: Firestore.Timestamp | Date; // Fecha en que se creó el rol
     description?: string; // Descripción opcional del rol
 }
+
+
+declare global {
+    interface Array<T> {
+        toSorted(compareFn?: (a: T, b: T) => number): T[]
+    }
+}

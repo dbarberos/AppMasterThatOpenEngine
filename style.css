@@ -5194,4 +5194,44 @@ button .btn-popup {
     color: var(--color-error2);
 }
 
+
+
 /* --- Fin de Estilos para User menu accion --- */
+
+
+
+/* --- Inicio de Estilos para SortBy Users menu --- */
+
+
+.header-sort-button {
+    color: inherit;
+    cursor: pointer;
+    color: none;
+    border: none;
+    font-size: var(--font-lg);
+    font-weight: 600;
+    padding: 0;
+    text-shadow: none;
+    box-shadow: none;
+    user-select: none;
+    margin: 0;
+    display: flex;
+    align-items: flex-end;
+}
+
+.header-sort-button:hover { 
+    box-shadow: none;
+    background-color: inherit;
+    color: inherit;
+}
+
+.header-sort-button:active {
+    box-shadow: none;
+    background-color: inherit;
+    color: var(--primary);
+}
+
+
+
+
+/* --- Fin de Estilos para SortBy Users menu --- */
