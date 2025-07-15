@@ -5,11 +5,11 @@ import { firestoreDB as db, getUsersFromDB } from '../services/firebase';
 import { collection, getDocs, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 
-import { User } from '../classes/User'; // Necesitarás definir esta clase/interfaz
-//import { IProjectAssignment, } from '../types'; // Y esta
+import { User } from '../classes/User'; // Definir esta clase/interfaz
+//import { IProjectAssignment, } from '../types'; 
 import { IProjectAssignment, IUser } from '../types'; 
 import { ProjectsManager } from '../classes/ProjectsManager';
-import { LoadingIcon, NewUserForm, UsersBoardList, ProjectSelector, SearchUserBox, MessagePopUp, type MessagePopUpProps, CounterBox, UsersSortMenu, type UserSortKey } from '../react-components'; // Asumiendo que estos componentes existen o se crearán
+import { LoadingIcon, NewUserForm, UsersBoardList, ProjectSelector, SearchUserBox, MessagePopUp, type MessagePopUpProps, CounterBox, UsersSortMenu, type UserSortKey, UserInvitationForm } from '../react-components'; 
 
 
 import { MainUsersIndex, SearchIcon, AddIcon, }  from './icons';
@@ -18,6 +18,7 @@ import { useUserSearch, useUsersCache, useStickyState, useDebounce } from '../ho
 import { UsersManager } from '../classes/UsersManager';
 import { useAuth } from '../Auth/react-components/AuthContext';
 import { USERS_CACHE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL } from '../const';
+import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
 
 
 
@@ -60,6 +61,7 @@ export function UsersBoardPage({
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
+    const [isInvitationModalOpen, setIsInvitationModalOpen] = React.useState(false);
 
 
     // Estados para el menú de ordenación
@@ -208,6 +210,56 @@ export function UsersBoardPage({
         console.log(`Sorting by: ${key}`);
         setSortBy(key);
     }, []);
+
+
+
+
+
+
+    const auth = getAuth();
+
+
+    /**
+     * Envía un enlace de inicio de sesión al correo electrónico proporcionado.
+     * Esta es la función principal para el flujo de invitación.
+     */
+    const handleSendInvitation = async (email: string) => {
+        // Configuración para el enlace de acción de Firebase
+        const actionCodeSettings = {
+            // URL a la que se redirigirá al usuario después de hacer clic en el enlace.
+            // Aquí es donde tu app manejará la finalización del registro.
+            // El email se pasa como parámetro para pre-rellenar el formulario.
+            url: `${window.location.origin}/finish-signup?email=${encodeURIComponent(email)}`,
+            handleCodeInApp: true, // El flujo se completará en la app.
+        };
+
+        try {
+            // Llama a la función de Firebase Auth para enviar el correo.
+            // NOTA: Para que esto funcione, debes habilitar "Inicio de sesión con enlace de correo electrónico"
+            // en tu consola de Firebase > Authentication > Sign-in method.
+            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+            // El feedback de éxito se maneja con toast.promise en el modal.
+        } catch (error: any) {
+            console.error("Error sending invitation link:", error);
+            // Propaga el error para que toast.promise lo capture.
+            throw new Error(error.message || "Could not send invitation.");
+        }
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     // Hook useMemo para ordenar la lista de usuarios de forma eficiente.
@@ -524,7 +576,8 @@ export function UsersBoardPage({
                         {/* El botón solo se renderiza si el usuario tiene permisos */}
                         {canManageUsers && (
                             <button
-                                onClick={onNewUserClick}
+                                // onClick={onNewUserClick}
+                                onClick={() => setIsInvitationModalOpen(true)} // Abre el nuevo modal de invitación
                                 id="new-user-btn"
                                 style={{ whiteSpace: 'nowrap' }}
                                 title="Invite a new User"
@@ -570,6 +623,12 @@ export function UsersBoardPage({
             
             </div>
 
+            <UserInvitationForm
+                isOpen={isInvitationModalOpen}
+                onClose={() => setIsInvitationModalOpen(false)}
+                onSendInvitation={handleSendInvitation}
+            />
+
             
 
 
@@ -610,6 +669,8 @@ export function UsersBoardPage({
                     buttonRef={sortButtonRef}
                 />
             )}
+
+
 
         </section>
     )

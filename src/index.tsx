@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
 
-import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, UserUnverifiedPage } from './react-components';
+import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, UserUnverifiedPage, UserFinishSignUpPage } from './react-components';
 import { User as AppUserClass } from './classes/User'; // Renombrado para evitar conflicto
 
 //import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
@@ -295,6 +295,12 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
                 <Router.Route path="/auth-successfull" element={
                     <UserEmailVerificationSuccess />
                 } />
+
+                {/* Ruta para finalizar el registro a través del enlace de correo */}
+                <Router.Route path="/finish-signup" element={
+                    <UserFinishSignUpPage onSignUpSuccess={() => navigate('/')} />
+                } />
+
 
 
                 {/* --- INICIO DE RUTAS PROTEGIDAS --- */}
