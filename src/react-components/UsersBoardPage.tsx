@@ -7,7 +7,7 @@ import { collection, getDocs, doc, setDoc, onSnapshot } from 'firebase/firestore
 
 import { User } from '../classes/User'; // Definir esta clase/interfaz
 //import { IProjectAssignment, } from '../types'; 
-import { IProjectAssignment, IUser } from '../types'; 
+import { IProjectAssignment, IUser, UserRoleInAppKey } from '../types'; 
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { LoadingIcon, NewUserForm, UsersBoardList, ProjectSelector, SearchUserBox, MessagePopUp, type MessagePopUpProps, CounterBox, UsersSortMenu, type UserSortKey, UserInvitationForm } from '../react-components'; 
 
@@ -51,8 +51,9 @@ export function UsersBoardPage({
     const [error, setError] = React.useState<string | null>(null);
     //const [isSyncing, setIsSyncing] = React.useState(false)
 
-    // Estado para el modal de nuevo usuario
+    // Estado para el modal de editar un usuario
     const [isNewUserFormOpen, setIsNewUserFormOpen] = React.useState(false);
+    const [userToEdit, setUserToEdit] = React.useState<User | null>(null);
 
     // Estado para el modal de asignación de proyectos (ejemplo)
     const [isAssignFormOpen, setIsAssignFormOpen] = React.useState(false);
@@ -188,16 +189,28 @@ export function UsersBoardPage({
 
 
 
+    
+    
+
+
+
+
+
+
+
     // ***************. useCallback para funciones  *******************
-   
 
 
-    const handleOpenNewUserModal = React.useCallback(() => {
+
+    const handleOpenNewUserModal = React.useCallback((user: User) => {
+        setUserToEdit(user) // Guarda el usuario a editar
+        console.log("Open edit user modal");
         setIsNewUserFormOpen(true);
     }, []);
 
     const handleCloseNewUserModal = React.useCallback(() => {
         setIsNewUserFormOpen(false);
+        setUserToEdit(null); // Limpiar usuario al cerrar
     }, []);
 
     // Handler para abrir/cerrar el menú de ordenación
@@ -212,6 +225,18 @@ export function UsersBoardPage({
     }, []);
 
 
+
+    // CREO QUE ESTA NO HACE FALTA
+    const onNewUserClick = () => {
+        setIsNewUserFormOpen(true);
+    };
+
+
+// VEREMOS SI ESTA ES POSIBLE DESDE EL MENU DE CADA USERCARDROW
+    const handleDeleteUser = (userId: string) => {
+        console.log("Delete user ID:", userId);
+        // Logic to delete a user
+    };
 
 
 
@@ -249,19 +274,6 @@ export function UsersBoardPage({
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Hook useMemo para ordenar la lista de usuarios de forma eficiente.
     // Se re-ejecutará solo si la lista de usuarios filtrados (filteredUsers) o la clave de ordenación (sortBy) cambian.
     const sortedAndFilteredUsers = React.useMemo(() => {
@@ -283,9 +295,6 @@ export function UsersBoardPage({
             return valueA.localeCompare(valueB);
         });
     }, [filteredUsers, sortBy]); // Dependencias del hook
-
-
-
 
 
 
@@ -412,29 +421,6 @@ export function UsersBoardPage({
    if (authLoading || isLoading) return <LoadingIcon />; // Mostrar loading si auth está cargando O si la carga de usuarios está en curso
     if (error) return <p>Error: {error}</p>;
 
-
-
-
-
-    const onNewUserClick = () => {
-        setIsNewUserFormOpen(true);
-    };
-
-    const handleCloseUserForm = () => {
-        setIsNewUserFormOpen(false);
-        
-    };
-
-    const handleDeleteUser = (userId: string) => {
-        console.log("Delete user ID:", userId);
-        // Logic to delete a user
-    };
-
-
-    const handleOpenEditUserModal = () => {
-        console.log("Open edit user modal");
-        // Logic to open the edit user modal
-    }
 
 
     const authCurrentUserRole = "admin"
@@ -593,7 +579,7 @@ export function UsersBoardPage({
                         //users={filteredUsers}
                         users={sortedAndFilteredUsers}
                         onAssignProjects={handleOpenAssignModal}
-                        onEditUser={handleOpenEditUserModal} // Necesitarás un modal de edición
+                        onEditUser={handleOpenNewUserModal} 
                         onDeleteUser={handleDeleteUser}
                         onSort={handleSort}
                     />
@@ -651,7 +637,25 @@ export function UsersBoardPage({
             )} */}
             {/* Render the NewUserForm conditionally */}
             {isNewUserFormOpen &&
-                <NewUserForm                        
+                <NewUserForm
+                    key={userToEdit?.id}
+                    currentUserData={userToEdit} // Pass the userProfile data
+                    usersManager={usersManager} // Pass the usersManager instance
+                    authCurrentUserRole={userProfile?.roleInApp as UserRoleInAppKey | undefined} // Pass the role if needed for form logic
+                    onClose={handleCloseNewUserModal}
+                // onProfileUpdate={handleUpdateUser}
+                    onProfileUpdate={(updatedData) => {
+                    // Aquí puedes manejar la actualización si es necesario
+                        console.log("User updated:", updatedData);
+                        
+                  }}
+                    
+                    onTriggerChangePassword={() => {
+                        // No aplica para editar otros usuarios
+                      }}
+                
+
+
                     authCurrentUserRole={authCurrentUserRole}
                     onClose={handleCloseNewUserModal}
                     usersManager ={usersManager}

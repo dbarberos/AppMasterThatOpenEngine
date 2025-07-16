@@ -78,7 +78,7 @@ export const UserFinishSignUpPage: React.FC<UserFinishSignUpPageProps> = ({ onSi
     return (
         <>
             {showNewUserForm && email && (
-                <div style={{ maxWidth: '600px', margin: '20px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+                <div style={{ maxWidth: '600px', margin: '30% auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
                     <h1>Complete Your Profile</h1>
                     <p>Please complete the following details to finish creating your account.</p>
                     {/* <NewUserForm */}

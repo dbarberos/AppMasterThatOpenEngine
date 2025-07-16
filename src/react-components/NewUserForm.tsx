@@ -394,11 +394,18 @@ export function NewUserForm({
                     setIsLoading(true); // Re-establecer isLoading
                     try {
                         const updatedUser = await handleUpdateProfileUserInDB(currentUserData.uid, newProfileData);
-                        toast.success("Perfil actualizado correctamente.");
+                        toast.success("Profile Updated correctly.");
                         //onSuccess(updatedUser); // Llama al callback con el usuario actualizado
-                        onProfileUpdate(updatedUser);
+
+                        if (onProfileUpdate) {
+                            onProfileUpdate(updatedUser);
+                        }
+                        // Cerrar el modal después de guardar exitosamente
+                        onClose()
+
+
                     } catch (err) {
-                        console.error("Error actualizando perfil:", err);
+                        console.error("Error updating profile:", err);
                         const errorMessage = (err instanceof Error) ? err.message : "No se pudo actualizar el perfil.";
                         setError(errorMessage);
                         toast.error(errorMessage);

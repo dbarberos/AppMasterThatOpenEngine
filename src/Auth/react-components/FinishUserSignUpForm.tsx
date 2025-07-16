@@ -25,8 +25,7 @@ export const FinishUserSignUpForm: React.FC<FinishUserSignUpFormProps> = ({ init
         setIsSubmitting(true);
 
         try {
-            //const userCredential = await createUserWithEmailAndPassword(auth, initialEmail, password);
-            //const user = userCredential.user;
+
             const user = auth.currentUser;
 
 
@@ -56,10 +55,10 @@ export const FinishUserSignUpForm: React.FC<FinishUserSignUpFormProps> = ({ init
             await updateProfile(user, { displayName: nickName });
             await updatePassword(user, password);
 
-            const newUser = new User(userData);
+            //const newUser = new User(userData);
 
             // Save additional user information to Firestore
-            await setDoc(doc(firestoreDB, "users", user.uid), newUser.toObject());
+            await setDoc(doc(firestoreDB, "users", user.uid), userData);
 
             toast.success("Your account has been created successfully!");
             onSignUpSuccess();

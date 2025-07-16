@@ -49,8 +49,31 @@ export class User implements IUser {
 
         if (idString) {
             this.id = idString
-        } 
+        }         
     }
+
+    // toObject(): IUser {
+    //     return {
+    //         id: this.id,
+    //         email: this.email,
+    //         nickName: this.nickName,
+    //         firstName: this.firstName,
+    //         lastName: this.lastName,
+    //         photoURL: this.photoURL,
+    //         providerId: this.providerId,
+    //         createdAt: this.createdAt,
+    //         phoneNumber: this.phoneNumber,
+    //         phoneCountryNumber: this.phoneCountryNumber,
+    //         organization: this.organization,
+    //         roleInApp: this.roleInApp,
+    //         address: this.address,
+    //         accountCreatedAt: this.accountCreatedAt,
+    //         lastLoginAt: this.lastLoginAt,
+    //         status: this.status,
+    //         projectsAssigned: this.projectsAssigned,
+    //         descriptionUser: this.descriptionUser
+    //     };
+    // }
 
 
 
