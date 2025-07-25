@@ -583,6 +583,16 @@ export class UsersManager {
         return this._users.find(user => user.nickName?.toLowerCase() === nickname.toLowerCase());
     }
 
+        /**
+     * Obtiene un usuario por su email.
+     * @param {string} email El email del usuario.
+     * @returns {User | undefined} El usuario encontrado o undefined.
+     */
+    getUserByEmail(email: string): User | undefined {
+        console.log('UsersManager: getUserByEmail called.', { email });
+        return this._users.find(user => user.email.toLowerCase() === email.toLowerCase());
+    }
+
 
         /**
      * Inicializa el listener de Firestore para obtener la lista de usuarios.

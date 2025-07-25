@@ -633,6 +633,7 @@ export function UsersBoardPage({
                 isOpen={isInvitationModalOpen}
                 onClose={() => setIsInvitationModalOpen(false)}
                 onSendInvitation={handleSendInvitation}
+                usersManager={usersManager}
             />
 
             

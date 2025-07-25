@@ -1,22 +1,29 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { toast } from 'sonner';
+import { UsersManager } from '../classes/UsersManager';
+import { MessagePopUp, type MessagePopUpProps } from './MessagePopUp';
 
 interface UserInvitationFormProps {
     isOpen: boolean;
     onClose: () => void;
     onSendInvitation: (email: string) => Promise<void>;
+    usersManager: UsersManager;
 }
 
 export const UserInvitationForm: React.FC<UserInvitationFormProps> = ({
     isOpen,
     onClose,
     onSendInvitation,
+    usersManager,
 }) => {
     const [email, setEmail] = React.useState('');
     const [isSending, setIsSending] = React.useState(false);
     const inputRef = React.useRef<HTMLInputElement>(null);
     const dialogRef = React.useRef<HTMLDialogElement>(null);
+
+    const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
+    const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
 
     // Función para manejar clics en el formulario
     const handleFormMouseDown = (e: React.MouseEvent<HTMLFormElement>) => {
@@ -93,6 +100,22 @@ export const UserInvitationForm: React.FC<UserInvitationFormProps> = ({
         // Validación simple de email
         if (!/\S+@\S+\.\S+/.test(email)) {
             toast.error("Please enter a valid email address.");
+            return;
+        }
+
+        // Comprobar si el usuario ya existe en el sistema.
+        if (usersManager.getUserByEmail(email)) {
+            setMessagePopUpContent({
+                type: 'error',
+                title: 'User Already Exists',
+                message: `A user with the email address "${email}" is already registered in the system. Please use a different email.`,
+                actions: ['OK'],
+                onActionClick: {
+                    'OK': () => setShowMessagePopUp(false),
+                },
+                onClose: () => setShowMessagePopUp(false),
+            });
+            setShowMessagePopUp(true);
             return;
         }
 
@@ -187,6 +210,7 @@ export const UserInvitationForm: React.FC<UserInvitationFormProps> = ({
                     </div>
                 </form>
             </dialog>
+            {showMessagePopUp && messagePopUpContent && <MessagePopUp {...messagePopUpContent} />}
         </div>,
         document.body
     );
