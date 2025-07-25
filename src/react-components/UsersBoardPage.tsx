@@ -234,8 +234,28 @@ export function UsersBoardPage({
 
 // VEREMOS SI ESTA ES POSIBLE DESDE EL MENU DE CADA USERCARDROW
     const handleDeleteUser = (userId: string) => {
-        console.log("Delete user ID:", userId);
-        // Logic to delete a user
+        console.log("Delete user button clicked for user ID:", userId);
+        setMessagePopUpContent({
+            type: "info",
+            title: "Secure Deletion Feature (Work in Progress)",
+            message: (
+                <>
+                    <br />
+                    For security reasons, deleting a user and all their associated data is a critical operation handled by a secure backend (a Cloud Function).
+                    <br /><br />
+                    Deploying this backend function requires upgrading the project to the 'Blaze' (Pay-as-you-go) plan. This is a standard Firebase requirement to enable advanced APIs like Cloud Build and prevent abuse.
+                    <br /><br />
+                    <strong>As this is a course exercise, this feature is currently disabled.</strong> To delete a user, please contact the system administrator for manual and secure removal.
+                    <br />
+                    
+                </>
+            ),
+            actions: ["Understood"],
+            messageHeight: "400px",
+            onActionClick: { "Understood": () => setShowMessagePopUp(false) },
+            onClose: () => setShowMessagePopUp(false)
+        });
+        setShowMessagePopUp(true)
     };
 
 
@@ -643,26 +663,26 @@ export function UsersBoardPage({
                     usersManager={usersManager} // Pass the usersManager instance
                     authCurrentUserRole={userProfile?.roleInApp as UserRoleInAppKey | undefined} // Pass the role if needed for form logic
                     onClose={handleCloseNewUserModal}
-                // onProfileUpdate={handleUpdateUser}
+                    // onProfileUpdate={handleUpdateUser}
                     onProfileUpdate={(updatedData) => {
                     // Aquí puedes manejar la actualización si es necesario
                         console.log("User updated:", updatedData);
                         
-                  }}
+                    }}
                     
                     onTriggerChangePassword={() => {
                         // No aplica para editar otros usuarios
-                      }}
+                    }}
                 
 
 
-                    authCurrentUserRole={authCurrentUserRole}
-                    onClose={handleCloseNewUserModal}
-                    usersManager ={usersManager}
-                    projectsManager={projectsManager}
-                    onAssignProjects={handleOpenAssignModal}
-                    onCreateUser={handleCreateUser}
-                    onUpdateUser={handleUpdateUser}
+                    // authCurrentUserRole={authCurrentUserRole}
+                    // onClose={handleCloseNewUserModal}
+                    // usersManager ={usersManager}
+                    // projectsManager={projectsManager}
+                    // onAssignProjects={handleOpenAssignModal}
+                    // onCreateUser={handleCreateUser}
+                    // onUpdateUser={handleUpdateUser}
                 />}
             {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
             {isSortMenuOpen && (

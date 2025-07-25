@@ -48,7 +48,8 @@ export function UserUnverifiedPage() {
                 alignItems: 'center',
                 gap: 'var(--gap-m)'
             }}>
-                <NotificationsActiveIcon size={60} color="var(--color-accent)" />
+                <NotificationsActiveIcon size={60} color="var(--color-info2)" className="todo-icon-plain" />
+                <br/>
                 <h2 style={{ fontSize: 'var(--font-3xl)' }}>
                     Please Verify Your Email
                 </h2>
@@ -57,6 +58,7 @@ export function UserUnverifiedPage() {
                     You need to verify your account before you can access all the features of the application.
                     You can still access and edit your profile.
                 </p>
+                <br/>
                 <button
                     onClick={handleResendEmail}
                     disabled={isSending}

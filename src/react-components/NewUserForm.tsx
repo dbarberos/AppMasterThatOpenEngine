@@ -220,7 +220,17 @@ export function NewUserForm({
             //Update usersManager and obtain the user
             const updateResult = usersManager.updateUser(
                 userId,
-                new User({ ...currentUserData.id, ...processedChanges })
+                new User({
+                    ...currentUserData,
+                    ...processedChanges,
+                    // El constructor de User espera `email: string | undefined`, pero currentUserData.email es `string | null`.
+                    // El operador `??` convierte `null` a `undefined`, resolviendo el conflicto de tipos.
+                    email: currentUserData.email ?? undefined,
+                    // Lo mismo ocurre con photoURL, que puede ser `null` desde Firebase.
+                    photoURL: currentUserData.photoURL ?? undefined,
+
+
+                })
             );
 
             if (updateResult) {            
