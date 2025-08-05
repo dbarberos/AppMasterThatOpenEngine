@@ -31,14 +31,63 @@ export const USER_STATUS = {
     disable: "Disable",
 } as const
 
-
+/**
+ * Define los roles generales que un usuario puede tener en la aplicación.
+ * Las claves se usan internamente y en la base de datos.
+ * Los valores son los que se muestran al usuario.
+ */
 export const USER_ROL_IN_APP = {
-    superadmin: "superadmin",
-    admin: "admin",
-    user: "user",
-    viewer: "viewer",
+    superadmin: "Super Admin",
+    admin: "Admin",
+    user: "User",
+    viewer: "Viewer",
     unverified: "Unverified",
 } as const
+
+
+/**
+ * Define todos los permisos posibles que se pueden asignar en un proyecto.
+ * Las claves se usan internamente.
+ * Los valores son los que se muestran al usuario.
+ */
+export const USER_PERMISSIONS = {
+    canCreate: "Create",
+    canRead: "Read",
+    canUpdate: "Update",
+    canDelete: "Delete",
+};
+
+
+
+/**
+ * Mapea cada ROL DE APLICACIÓN a un conjunto de PERMISOS por defecto.
+ * Esto se usa al asignar un usuario a un nuevo proyecto para preseleccionar
+ * sus permisos, que luego pueden ser modificados.
+ */
+export const USER_ROL_IN_APP_PERMISSIONS = {
+    [USER_ROL_IN_APP.superadmin]: [
+        "canCreate", 
+        "canRead", 
+        "canUpdate", 
+        "canDelete"
+    ],
+    [USER_ROL_IN_APP.admin]: [
+        "canCreate", 
+        "canRead", 
+        "canUpdate", 
+        "canDelete"
+    ],
+    [USER_ROL_IN_APP.user]: [
+        "canCreate", 
+        "canRead", 
+        "canUpdate"
+    ],
+    [USER_ROL_IN_APP.viewer]: [
+        "canRead"
+    ],
+    [USER_ROL_IN_APP.unverified]: []
+};
+
 
 export const USER_ROLES_IN_PROJECT = {
     cli: "Client",

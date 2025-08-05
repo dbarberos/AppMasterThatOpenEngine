@@ -5,7 +5,7 @@ import { firestoreDB as db, getUsersFromDB } from '../services/firebase';
 import { collection, getDocs, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 
-import { User } from '../classes/User'; // Definir esta clase/interfaz
+import { User as AppUserClass } from '../classes/User'; // Definir esta clase/interfaz
 //import { IProjectAssignment, } from '../types'; 
 import { IProjectAssignment, IUser, UserRoleInAppKey } from '../types'; 
 import { ProjectsManager } from '../classes/ProjectsManager';
@@ -17,16 +17,17 @@ import { Project } from '../classes/Project';
 import { useUserSearch, useUsersCache, useStickyState, useDebounce } from '../hooks';
 import { UsersManager } from '../classes/UsersManager';
 import { useAuth } from '../Auth/react-components/AuthContext';
-import { USERS_CACHE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL } from '../const';
+import { USERS_CACHE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL, USER_ROL_IN_APP_PERMISSIONS } from '../const';
 import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
+import { UserProjectAssignmentModal } from './UserProjectAssignmentModal';
 
 
 
 interface Props {
     usersManager: UsersManager,
     projectsManager: ProjectsManager,
-    onUserCreate: (newUserCreate: User) => void
-    onUserUpdate: (updatedUser: User) => void
+    onUserCreate: (newUserCreate: AppUserClass) => void
+    onUserUpdate: (updatedUser: AppUserClass) => void
 }
 
 
@@ -53,11 +54,11 @@ export function UsersBoardPage({
 
     // Estado para el modal de editar un usuario
     const [isNewUserFormOpen, setIsNewUserFormOpen] = React.useState(false);
-    const [userToEdit, setUserToEdit] = React.useState<User | null>(null);
+    const [userToEdit, setUserToEdit] = React.useState<AppUserClass | null>(null);
 
-    // Estado para el modal de asignación de proyectos (ejemplo)
-    const [isAssignFormOpen, setIsAssignFormOpen] = React.useState(false);
-    const [currentUserForAssignment, setCurrentUserForAssignment] = React.useState<User | null>(null);
+    // Estado para el modal de asignación de proyectos
+    const [isAssignmentModalOpen, setIsAssignmentModalOpen] = React.useState(false);
+    const [userForAssignment, setUserForAssignment] = React.useState<AppUserClass | null>(null);
 
     const [showMessagePopUp, setShowMessagePopUp] = React.useState(false)
     const [messagePopUpContent, setMessagePopUpContent] = React.useState<MessagePopUpProps | null>(null)
@@ -202,7 +203,7 @@ export function UsersBoardPage({
 
 
 
-    const handleOpenNewUserModal = React.useCallback((user: User) => {
+    const handleOpenNewUserModal = React.useCallback((user: AppUserClass) => {
         setUserToEdit(user) // Guarda el usuario a editar
         console.log("Open edit user modal");
         setIsNewUserFormOpen(true);
@@ -212,6 +213,28 @@ export function UsersBoardPage({
         setIsNewUserFormOpen(false);
         setUserToEdit(null); // Limpiar usuario al cerrar
     }, []);
+
+    // --- Handlers para el Modal de Asignación de Proyectos ---
+
+    const handleOpenAssignmentModal = React.useCallback((user: AppUserClass) => {
+        setUserForAssignment(user);
+        setIsAssignmentModalOpen(true);
+    }, []);
+
+    const handleCloseAssignmentModal = React.useCallback(() => {
+        setIsAssignmentModalOpen(false);
+        setUserForAssignment(null);
+    }, []);
+
+    const handleSaveAssignments = React.useCallback(async (newAssignments: { [projectId: string]: IProjectAssignment }) => {
+        if (!userForAssignment?.id) return;
+
+        await usersManager.updateUser(userForAssignment.id, {
+            projectsAssigned: newAssignments,
+        });
+        // El listener onSnapshot se encargará de actualizar la UI.
+    }, [userForAssignment, usersManager]);
+
 
     // Handler para abrir/cerrar el menú de ordenación
     const toggleSortMenu = React.useCallback(() => {
@@ -319,7 +342,7 @@ export function UsersBoardPage({
 
 
 
-    const handleCreateUser = React.useCallback(async (userData: Omit<User, 'id' | 'projectsAssigned'>) => {
+    const handleCreateUser = React.useCallback(async (userData: Omit<AppUserClass, 'id' | 'projectsAssigned'>) => {
         try {
             // Esta función será llamada por NewUserForm después de crear el usuario en Firebase Auth y Firestore
 
@@ -342,7 +365,7 @@ export function UsersBoardPage({
 
 
 
-    const handleUpdateUser = React.useCallback((updatedUser: User) => {
+    const handleUpdateUser = React.useCallback((updatedUser: AppUserClass) => {
         console.log("User updated (callback in UsersBoardPage):", updatedUser);
         // `users` state se actualizará automáticamente por `onSnapshot`.
             // Si necesitas pasar el usuario actualizado al componente padre (App.tsx), puedes usar `onUserUpdate(updatedUser)`.
@@ -353,20 +376,6 @@ export function UsersBoardPage({
 
 
     // Funciones para abrir/cerrar modal de asignación y manejar la asignación
-    const handleOpenAssignModal = React.useCallback((user: User) => {
-        setCurrentUserForAssignment(user);
-        setIsAssignFormOpen(true);
-    }, []);
-    
-    const handleAssignProjectsToUser = async (userId: string, assignments: IProjectAssignment[]) => {
-        // Lógica para escribir en la subcolección 'projectsAssigned' de Firestore
-        console.log(`Assigning projects to user ${userId}:`, assignments);
-        // assignments.forEach(async (assignment) => {
-        //   const assignmentRef = doc(db, `users/${userId}/projectsAssigned/${assignment.projectId}`);
-        //   await setDoc(assignmentRef, assignment, { merge: true });
-        // });
-        setIsAssignFormOpen(false);
-    };
 
 
     const handleProjectSelectionForView = (projectId: string | null) => {
@@ -598,7 +607,7 @@ export function UsersBoardPage({
                     <UsersBoardList
                         //users={filteredUsers}
                         users={sortedAndFilteredUsers}
-                        onAssignProjects={handleOpenAssignModal}
+                        onAssignProjects={handleOpenAssignmentModal}
                         onEditUser={handleOpenNewUserModal} 
                         onDeleteUser={handleDeleteUser}
                         onSort={handleSort}
@@ -635,8 +644,17 @@ export function UsersBoardPage({
                 onSendInvitation={handleSendInvitation}
                 usersManager={usersManager}
             />
-
             
+            {isAssignmentModalOpen && userForAssignment && (
+                <UserProjectAssignmentModal
+                    isOpen={isAssignmentModalOpen}
+                    onClose={handleCloseAssignmentModal}
+                    projects={projects}
+                    existingAssignments={userForAssignment.projectsAssigned || {}}
+                    userRoleInApp={userForAssignment.roleInApp}
+                    onSave={handleSaveAssignments}
+                />
+            )}
 
 
             {/* {isAssignFormOpen && currentUserForAssignment && (
@@ -704,5 +722,3 @@ export function UsersBoardPage({
 
 // Add display name for debugging purposes
 UsersBoardPage.displayName = 'UsersBoardPage'
-
-

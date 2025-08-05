@@ -144,7 +144,8 @@ export const setSuperadminClaim = onCall(async (request) => {
       "The function must be called by an authenticated user.",
     );
   }
-  // Verificación de seguridad: solo un superadmin puede hacer a otro superadmin.
+
+  // Asegurarse de que el usuario que invoca la función es un superadmin.
   if (request.auth.token.superadmin !== true) {
     logger.error(
       `Usuario ${request.auth.uid} intentó asignar rol de superadmin sin permisos.`
@@ -165,7 +166,6 @@ export const setSuperadminClaim = onCall(async (request) => {
   }
 
   try {
-    
     // --- 3. Lógica de Asignación de Rol ---
     const userToUpdate = await auth.getUserByEmail(targetEmail);
 
@@ -178,4 +178,3 @@ export const setSuperadminClaim = onCall(async (request) => {
     throw new HttpsError("internal", "No se pudo asignar el rol de superadmin.");
   }
 });
-

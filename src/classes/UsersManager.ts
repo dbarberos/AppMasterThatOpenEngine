@@ -1,20 +1,15 @@
-// import { updateAsideButtonsState } from "../index.tsx"
-import { ProjectsManager } from "./ProjectsManager";
-import { Project } from "./Project"
-import { showModal, closeModal, toggleModal, closeModalProject, changePageContent, showPageContent, hidePageContent } from "./UiManager"
-//import { updateAsideButtonsState } from "./HTMLUtilities.ts";
-
-import { renderToDoIssueListInsideProject, renderToDoIssueList, getProjectByToDoIssueId, setDetailsIssuePage, deleteToDoIssue } from "./ToDoManager";
-import { ToDoIssue} from "./ToDoIssue"
-import { IToDoIssue } from '../types'
-import { MessagePopUp } from "./MessagePopUp"
+import { updateAsideButtonsState } from "./HTMLUtilities";
 import { User } from "../classes/User.ts";
-import { UserProfile } from '../Auth/react-components/AuthContext';
 
-import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, Firestore, Timestamp } from 'firebase/firestore'
-import { firestoreDB } from '../services/firebase/index';
+import { collection, onSnapshot, doc, setDoc, Timestamp, deleteDoc, } from 'firebase/firestore'
+// import { firestoreDB } from '../services/firebase/index';
 import { IUser } from '../types'; 
-import { CACHE_TIMESTAMP_KEY, USERS_CACHE_KEY, USERS_CACHE_TIMESTAMP_KEY } from "../const.ts";
+
+import { USERS_CACHE_KEY, USERS_CACHE_TIMESTAMP_KEY } from "../const.ts";
+
+import { createDocument, deleteToDoWithSubcollections, updateDocument, deleteAllTodosInProject, firestoreDB, getProjectsFromDB, replaceSubcollectionItems } from '../services/firebase'
+import * as Firestore from 'firebase/firestore'
+
 
 
 export class UsersManager {
@@ -24,7 +19,6 @@ export class UsersManager {
     private _readyCallbacks: (() => void)[] = []; // Callbacks para notificar cuando esté listo
 
     // Callbacks para que los componentes externos se suscriban a cambios
-    // Estos son ahora más generales para las actualizaciones de lista, ya que onSnapshot maneja los cambios granulares internamente
     public onUsersListUpdated: (() => void) | null = null;
 
     /**
@@ -151,23 +145,48 @@ export class UsersManager {
         const usersCollectionRef = collection(firestoreDB, 'users');
         this.unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
             console.log('UsersManager: onSnapshot disparado. Procesando cambios...');
-            const newUsersList: User[] = [];
-            snapshot.forEach(doc => {
-                // Asegurarse de que las fechas se conviertan correctamente de Firestore Timestamp a Date
-                const userData = doc.data() as IUser;
-                const userInstance = new User({
-                    ...userData,
-                    id: doc.id,
-                    accountCreatedAt: userData.accountCreatedAt instanceof Timestamp ? userData.accountCreatedAt.toDate() : userData.accountCreatedAt,
-                    lastLoginAt: userData.lastLoginAt instanceof Timestamp ? userData.lastLoginAt.toDate() : userData.lastLoginAt,
-                });
-                newUsersList.push(userInstance);
-            });
-            this._users = newUsersList; // Actualizar la lista interna del manager
+            // const newUsersList: User[] = [];
+            // snapshot.forEach(doc => {
+            //     // Asegurarse de que las fechas se conviertan correctamente de Firestore Timestamp a Date
+            //     const userData = doc.data() as IUser;
+            //     const userInstance = new User({
+            //         ...userData,
+            //         id: doc.id,
+            //         accountCreatedAt: userData.accountCreatedAt instanceof Timestamp ? userData.accountCreatedAt.toDate() : userData.accountCreatedAt,
+            //         lastLoginAt: userData.lastLoginAt instanceof Timestamp ? userData.lastLoginAt.toDate() : userData.lastLoginAt,
+            //     });
+            //     newUsersList.push(userInstance);
 
-            console.log('UsersManager: Lista interna de usuarios actualizada desde Firestore snapshot.', { count: this._users.length });
+            snapshot.docChanges().forEach((change) => {
+                const docData = change.doc.data() as IUser;
+                const userInstance = new User(docData, change.doc.id);
+
+                if (change.type === "added") {
+                    console.log("UsersManager (onSnapshot): Nuevo usuario añadido:", userInstance.id);
+                    if (!this._users.some(u => u.id === userInstance.id)) {
+                        this._users.push(userInstance);
+                    }
+                }
+                if (change.type === "modified") {
+                    console.log("UsersManager (onSnapshot): Usuario modificado:", userInstance.id);
+                    const index = this._users.findIndex(u => u.id === userInstance.id);
+                    if (index !== -1) {
+                        this._users[index] = userInstance;
+                    }
+                }
+                if (change.type === "removed") {
+                    console.log("UsersManager (onSnapshot): Usuario eliminado:", userInstance.id);
+                    this._users = this._users.filter(u => u.id !== userInstance.id);
+                }
+
+
+
+            });
+
+            // console.log('UsersManager: Lista interna de usuarios actualizada desde Firestore snapshot.', { count: this._users.length });
+            // this.updateLocalStorage(); // Centralizamos la actualización del localStorage aquí.
             
-            // Marcar como listo después de la primera instantánea
+            // // Marcar como listo después de la primera instantánea
             if (!this._isReady) {
                 this._isReady = true;
                 console.log('UsersManager: Datos iniciales cargados. Notificando callbacks de listo.');
@@ -175,7 +194,9 @@ export class UsersManager {
                 this._readyCallbacks = []; // Limpiar callbacks después de notificar
             }
             
+
             // Notificar a los suscriptores que la lista ha cambiado (para actualizar UI y caché)
+            this.updateLocalStorage();
             if (this.onUsersListUpdated) {
                 console.log('UsersManager: Invocando onUsersListUpdated.');
                 this.onUsersListUpdated();
@@ -193,7 +214,6 @@ export class UsersManager {
      * @returns {User[]} Una copia del array de usuarios.
      */
     get list(): User[] {
-        // CORRECCIÓN CRÍTICA: Asegura que se devuelve la lista interna _users
         return [...this._users]; 
     }
 
@@ -213,7 +233,7 @@ export class UsersManager {
     onReady(callback: () => void) {
         console.log(`UsersManager: onReady llamado. isReady: ${this._isReady}`);
         if (this._isReady) {
-            callback(); // Si ya está listo, llamar inmediatamente
+            callback();
         } else {
             this._readyCallbacks.push(callback); // De lo contrario, añadir a la cola de espera
         }
@@ -221,37 +241,25 @@ export class UsersManager {
 
     /**
      * Añade un nuevo usuario a la lista interna del manager.
-     * Este método es para poblar la lista local, no para escribir en Firebase.
-     * La escritura en Firebase debe hacerse a través de un método async separado.
+     * Este método escribe en Firebase y la actualización local se produce a través del listener.
      * @param {User} data Los datos del usuario a añadir/actualizar.
      * @param {string} [id] El ID opcional del usuario.
-     * @returns {User | undefined} El usuario añadido/actualizado o undefined si no se encontró para sobrescribir.
+     * @returns {Promise<User>} El usuario que se intenta añadir.
      */
+    async newUser(data: IUser, id: string): Promise<User> {
+        console.log('UsersManager: newUser llamado para escribir en Firebase.', { data, id });
+        const userInstance = new User(data, id);
+        const plainData = this.toFirestoreData(userInstance);
 
-
-
-    newUser(data: User, id?: string): User | undefined {
-        console.log('UsersManager: newUser llamado para añadir/actualizar en lista local.', { data, id });
-        const existingUserIndex = this._users.findIndex(u => u.id === id || u.email === data.email);
-
-        if (existingUserIndex !== -1) {
-            // Si el usuario ya existe (por ID o email), lo sobrescribe
-            const newUser = new User(data, id);
-            this._users[existingUserIndex] = newUser;
-            console.log(`UsersManager: Usuario ${newUser.id || newUser.email} sobrescrito en la lista local.`);
-            if (this.onUsersListUpdated) {
-                this.onUsersListUpdated(); // Notificar cambio en la lista
-            }
-            return newUser;
-        } else {
-            // Si el usuario no existe, lo añade
-            const newUser = new User(data, id);
-            this._users.push(newUser);
-            console.log(`UsersManager: Nuevo usuario ${newUser.id || newUser.email} añadido a la lista local.`);
-            if (this.onUsersListUpdated) {
-                this.onUsersListUpdated(); // Notificar cambio en la lista
-            }
-            return newUser;
+        try {
+            const userDocRef = doc(firestoreDB, 'users', id);
+            await setDoc(userDocRef, plainData);
+            console.log(`UsersManager: Nuevo usuario ${id} creado exitosamente en Firebase.`);
+            // La actualización local se hará a través del listener onSnapshot.
+            return userInstance;
+        } catch (error: any) {
+            console.error(`UsersManager: Error creando nuevo usuario en Firebase:`, error);
+            throw new Error(`Fallo al crear nuevo usuario en Firebase: ${error.message}`);
         }
     }
 
@@ -271,161 +279,68 @@ export class UsersManager {
     /**
      * Actualiza un usuario en Firebase. La lista interna del manager se actualizará vía onSnapshot.
      * @param {string} userId El ID del usuario a actualizar.
-     * @param {User} dataToUpdate Los datos del usuario a actualizar.
-     * @returns {Promise<User | undefined>} El usuario actualizado o undefined si no se encontró.
-     * @throws {Error} Si el manager no está listo o el usuario no se encuentra en la lista local.
+     * @param {Partial<IUser>} dataToUpdate Los datos del usuario a actualizar.
+     * @returns {Promise<void>}
      */
-    
-
-
-    
-    /* USED INSIDE NEWUSERFORM.TSX */
-
-    async updateUser(userId: string, dataToUpdate: User): Promise<User | undefined> {
+    async updateUser(userId: string, dataToUpdate: Partial<IUser>): Promise<void> {
         console.log("UsersManager.ts: updateUser called", { userId, dataToUpdate })
-            
-
-        if (!this._isReady) {
-            // Esto es crucial: si el manager no está listo, la lista local podría estar vacía o desactualizada.
-            // Lanzar un error aquí fuerza al componente a esperar o manejar este estado.
-            const errorMessage = 'UsersManager no está listo. Los datos iniciales no se han cargado todavía.';
-            console.error(`UsersManager: ${errorMessage}`);
-            throw new Error(errorMessage);
-        }
-
-        // La comprobación local es útil para dar feedback inmediato, pero la fuente de verdad es Firebase.
-        const userIndex = this._users.findIndex(u => u.id?.toString().trim() === userId.toString().trim());
-
-        if (userIndex !== -1) { // Si el usuario se encuentra en la lista local
-            console.log(`UsersManager: Usuario ${userId} encontrado en la lista local. Procediendo a actualizar en Firebase.`);
-            try {
-                const userDocRef = doc(firestoreDB, 'users', userId);
-                // Convertir User object a objeto plano para Firestore, manejando Date/Timestamp
-                const plainData = this.toFirestoreData(dataToUpdate);
-                await setDoc(userDocRef, plainData, { merge: true });
-                console.log(`UsersManager: Documento actualizado exitosamente en users/${userId}`);
-                // La lista interna _users se actualizará automáticamente vía onSnapshot.
-                // No es necesario actualizar _users[userIndex] directamente aquí.
-                return dataToUpdate; // Devolver los datos actualizados de forma optimista
-            } catch (error: any) {
-                console.error(`UsersManager: Error actualizando documento en users/${userId}:`, error);
-                throw new Error(`Fallo al actualizar usuario en Firebase: ${error.message}`);
-            }
-        } else {
-            // Este error significa que el usuario no estaba en la *lista local* en el momento de la búsqueda.
-            const errorMessage = `UsersManager: Usuario ${userId} no encontrado en la lista local!`;
-            console.error(errorMessage);
-            throw new Error(errorMessage);
+        
+        try {
+            const userDocRef = doc(firestoreDB, 'users', userId);
+            // Convertir el objeto parcial a un objeto plano para Firestore, manejando fechas.
+            const plainData = this.toFirestoreData(dataToUpdate as User);
+            await setDoc(userDocRef, plainData, { merge: true });
+            console.log(`UsersManager: Documento actualizado exitosamente en users/${userId}`);
+            // La lista local se actualizará automáticamente a través del listener onSnapshot.
+        } catch (error: any) {
+            console.error(`UsersManager: Error actualizando documento en users/${userId}:`, error);
+            throw new Error(`Fallo al actualizar usuario en Firebase: ${error.message}`);
         }
     }
 
-
-
-        // const userIdString = userId.toString().trim()
-        // const userIndex = this.list.findIndex(u => u.id?.toString().trim() === userIdString) //Convert to string and trim for the comparing the same type of data
-
-        // if (userIndex !== -1) {
-        //     //  Create new user instance with ipdated data
-        //     const currentUser = this.list[userIndex]
-        //     const updatedUser = new User({
-        //         ...currentUser,
-        //         ...dataToUpdate,
-        //         id: userId,
-        //         // accountCreatedAt: dataToUpdate.accountCreatedAt instanceof Date
-        //         //     ? dataToUpdate.accountCreatedAt
-        //         //     : new Date(dataToUpdate.accountCreatedAt),
-        //         // lastLoginAt: dataToUpdate.lastLoginAt instanceof Date
-        //         //     ? dataToUpdate.lastLoginAt
-        //         //     : new Date(dataToUpdate.lastLoginAt),
-        //     })
-
-        //     // Update the list
-        //     this.list[userIndex] = updatedUser
-
-        //     //trigger update callback
-        //     if (this.onUserUpdated) {
-        //         this.onUserUpdated(userId)
-        //     }
-
-        //     this.updateLocalStorage()
-
-        //     // Return the updated user
-        //     return updatedUser
-            
-        // } else {
-        //     console.error("User not found in the list!")
-        //     return null
-        // }
-        // }
-        
-
-
     /**
+
      * Helper para convertir el objeto User a un objeto plano compatible con Firestore.
      * Maneja la conversión de objetos Date a Firestore Timestamps.
      * @param {User} user El objeto User a convertir.
      * @returns {{ [key: string]: any }} El objeto plano para Firestore.
      */
-
-
-
     private updateLocalStorage(): void {
         try {
-            console.log('Updating: Stating updateLocalStorage, thislist contain:',
-                this.list.map(u => ({ id: u.id, projectsCount: u.projectsAssigned?.length ?? 'N/A' }))
+            console.log('UsersManager: Iniciando updateLocalStorage. this._users contiene:',
+                this._users.map(u => ({ id: u.id, email: u.email, projectsCount: u.projectsAssigned?.length ?? 'N/A' }))
             )
-            // Procesar usuarios antes de almacenar en localStorage
-            const processedUsers = this.list.map(user => {
-                const processedProjectAssigned = user.projectsAssigned?.map(project => {
+            // // Procesar usuarios antes de almacenar en localStorage
+            // const processedUsers = this.list.map(user => {
+            //     const processedProjectAssigned = user.projectsAssigned?.map(project => {
 
-                    // Asegurarse de que las fechas en projectsAssigned sean strings ISO
-                    return {
-                        ...project,
-                        assignedDate: project.assignedDate instanceof Date ? project.assignedDate.toISOString() : project.assignedDate,
-                    };
-                });
-
-                // let processedAccountCreatedAt: string | null = null
-                // if (user.accountCreatedAt instanceof Date) {
-                //     if (!isNaN(user.accountCreatedAt.getTime())) {
-                //         processedAccountCreatedAt = user.accountCreatedAt.toISOString()
-
-                //     } else {
-                //         console.warn('Update - User ${user.id}: Invalid accountCreatedAt value')
-                //         processedAccountCreatedAt = null
-                //     }
-                // } else if (user.accountCreatedAt !== null && user.accountCreatedAt !== undefined) {
-                //     processedAccountCreatedAt = user.accountCreatedAt as string
-                // }
-                    
-
-                // let processedLastLoginAt: string | null = null
-                // if (user.lastLoginAt instanceof Date) {
-                //     if (!isNaN(user.lastLoginAt.getTime())) {
-                //         processedLastLoginAt = user.lastLoginAt.toISOString()
-                //     } else {
-                //         console.warn('Update - User ${user.id}: Invalid lastLoginAt value')
-                //         processedLastLoginAt = null
-                //     }
-                // } else if (user.lastLoginAt !== null && user.lastLoginAt !== undefined) {
-                //     processedLastLoginAt = user.lastLoginAt as string
-                // }
-
-
-
-                // Convertir Date a ISO string para localStorage
+            //         // Asegurarse de que las fechas en projectsAssigned sean strings ISO
+            //         return {
+            //             ...project,
+            //             assignedDate: project.assignedDate instanceof Date ? project.assignedDate.toISOString() : project.assignedDate,
+            //         };
+            //     });
+                
+            //     // Convertir Date a ISO string para localStorage
+            const processedUsers = this._users.map(user => {
                 return {
                     ...user,
-                    projectsAssigned: processedProjectAssigned,
+                    // projectsAssigned: processedProjectAssigned,
+                    // accountCreatedAt: user.accountCreatedAt instanceof Date ? user.accountCreatedAt.toISOString() : user.accountCreatedAt.toString(),
+                    // lastLoginAt: user.lastLoginAt instanceof Date ? user.lastLoginAt.toISOString() : user.lastLoginAt,
                     accountCreatedAt: user.accountCreatedAt instanceof Date ? user.accountCreatedAt.toISOString() : user.accountCreatedAt,
                     lastLoginAt: user.lastLoginAt instanceof Date ? user.lastLoginAt.toISOString() : user.lastLoginAt,
+                    projectsAssigned: user.projectsAssigned?.map(pa => ({
+                        ...pa,
+                        assignedDate: pa.assignedDate instanceof Date ? pa.assignedDate.toISOString() : pa.assignedDate,
+                    }))
                 }
             })
                 
 
             //CAMBIAR  EN COSNTANTES
             localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(processedUsers));
-            localStorage.setItem(USERS_CACHE_TIMESTAMP_KEY , new Date().toISOString());
+            localStorage.setItem(USERS_CACHE_TIMESTAMP_KEY, new Date().toISOString());
             console.log('UsersManager: localStorage actualizado.');
 
         
@@ -442,7 +357,7 @@ export class UsersManager {
      * @param {User} user El objeto User a convertir.
      * @returns {{ [key: string]: any }} El objeto plano para Firestore.
      */
-    private toFirestoreData(user: User): { [key: string]: any } {
+    private toFirestoreData(user: Partial<IUser>): { [key: string]: any } {
         const data: { [key: string]: any } = { ...user };
         // Convertir objetos Date a Firestore Timestamps si es necesario
         if (data.accountCreatedAt instanceof Date) {
@@ -451,14 +366,9 @@ export class UsersManager {
         if (data.lastLoginAt instanceof Date) {
             data.lastLoginAt = Timestamp.fromDate(data.lastLoginAt);
         }
-        // Eliminar 'id' si no debe almacenarse como un campo en el documento
-        // El ID del documento de Firestore es independiente de los campos
-        delete data.id;
+        delete data.id; // El ID no se guarda como un campo dentro del documento.
         return data;
     }
-
-
-
 
     /**
      * Método para configurar el elemento select de proyectos en la página de usuarios.
@@ -594,13 +504,25 @@ export class UsersManager {
     }
 
 
-        /**
+    // /**
+    //  * Inicializa el listener de Firestore para obtener la lista de usuarios.
+    //  * Este método se llama en el constructor de la clase.
+    //  */
+    //     public init() {
+    //         this.setupFirestoreListener();
+    //     }
+
+    /**
      * Inicializa el listener de Firestore para obtener la lista de usuarios.
-     * Este método se llama en el constructor de la clase.
-     */
-        public init() {
+     * Se puede llamar desde un componente de React para iniciar la sincronización.
+    */
+    
+    public init() {
+        if (!this.unsubscribe) { // Evita múltiples suscripciones
             this.setupFirestoreListener();
         }
+    }
+
     
 
         /**

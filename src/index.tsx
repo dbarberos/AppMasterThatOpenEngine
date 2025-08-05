@@ -3,7 +3,8 @@ import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
 
 import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, UserUnverifiedPage, UserFinishSignUpPage } from './react-components';
-import { User as AppUserClass } from './classes/User'; // Renombrado para evitar conflicto
+import { ProjectsManagerProvider, useProjectsManager } from './react-components/ProjectsManagerContext';
+import { UsersManagerProvider, useUsersManager } from './react-components/UsersManagerContext.tsx';
 
 //import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
 import { CheckCircleIcon, NotificationsActiveIcon, WarningIcon, ReportIcon, UpdateIcon } from './react-components/icons.tsx'
@@ -11,6 +12,7 @@ import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./clas
 import { ToDoIssue } from "./classes/ToDoIssue.ts"
 import type { IToDoIssue, IUser } from './types.d.ts';
 import { ProjectsManager } from "./classes/ProjectsManager.ts";
+import { User as AppUserClass } from './classes/User'; // Renombrado para evitar conflicto
 import { UsersManager } from "./classes/UsersManager.ts";
 import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager.ts";
 //import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
@@ -37,10 +39,9 @@ import { UserEmailVerificationSuccess } from './Auth/react-components/UserEmailV
 import { ProtectedRoute } from './Auth/react-components/ProtectedRoute.tsx';
 
 
-const projectsManager = new ProjectsManager();
-const usersManager = new UsersManager()
-
 const App = () => {
+    const projectsManager = useProjectsManager();
+    const usersManager = useUsersManager();
     const [projects, setProjects] = React.useState(projectsManager.list);
 
     function handleNewProject(newProject: Project) {
@@ -172,57 +173,24 @@ const App = () => {
     }
 
     return ( 
-        <AuthProvider>
-            <Router.BrowserRouter>
-                <Sidebar
-                    projectsManager={projectsManager}
-                    usersManager={usersManager}
-                    // currentUser y userProfile se obtienen dentro de Sidebar con useAuth()
-                />
-                {/* MainLayout contiene el área principal con las rutas */}
-                <MainLayout
-                    projectsManager={projectsManager}
-                    usersManager={usersManager}
-                    onNewProject={handleNewProject}
-                    onProjectCreate={handleProjectCreate}
-                    onProjectUpdate={handleProjectUpdate}
-                    onToDoIssueCreated={handleToDoIssueCreated}
-                    onToDoIssueUpdated={handleToDoIssueUpdated}
-                    onToDoIssueDeleted={handleToDoIssueDeleted}
-                    onUserCreate={handleUserCreate}
-                    onUserUpdate={handleUserUpdate}
-                />
-
-            </Router.BrowserRouter>
-            <Toaster                
-                className="custom-sonner"
-                expand={true}
-                //visibleToasts={9}
-                duration={6500}
-                icons={{
-                    success: <CheckCircleIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
-                    info: <NotificationsActiveIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
-                    warning: <WarningIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
-                    error: <ReportIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
-                    loading: <UpdateIcon size = { 30 } className = "todo-icon" color = "var(--color-fontbase)" />,
-                }}
-                toastOptions={{
-                    classNames: {
-                        toast: 'custom-toast',
-                        description: 'custom-description'
-                    },
-                    style: {
-                        //opacity: '75%',
-                        background: 'var(--background-200)',
-                        color: 'var(--fontbase)',
-                        //fontSize: 'var(--font-lg)',
-                    },
-                }}
-                richColors
+        <Router.BrowserRouter>
+            <Sidebar
+                projectsManager={projectsManager}
+                usersManager={usersManager}
             />
-        </AuthProvider>
-
-
+            <MainLayout
+                projectsManager={projectsManager}
+                usersManager={usersManager}
+                onNewProject={handleNewProject}
+                onProjectCreate={handleProjectCreate}
+                onProjectUpdate={handleProjectUpdate}
+                onToDoIssueCreated={handleToDoIssueCreated}
+                onToDoIssueUpdated={handleToDoIssueUpdated}
+                onToDoIssueDeleted={handleToDoIssueDeleted}
+                onUserCreate={handleUserCreate}
+                onUserUpdate={handleUserUpdate}
+            />
+        </Router.BrowserRouter>
     )
 }
 
@@ -378,7 +346,41 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
 
 const rootElement = document.getElementById('app') as HTMLElement;
 const appRoot = ReactDOM.createRoot(rootElement)
-appRoot.render(<App />)
+appRoot.render(
+    <AuthProvider>
+        <ProjectsManagerProvider>
+            <UsersManagerProvider>
+                <App />
+            </UsersManagerProvider>
+        </ProjectsManagerProvider>
+        {/* Toaster puede ir fuera de los providers si no necesita contexto */}
+        <Toaster
+            className="custom-sonner"
+                expand={true}
+                //visibleToasts={9}
+                duration={6500}
+                icons={{
+                    success: <CheckCircleIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    info: <NotificationsActiveIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    warning: <WarningIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    error: <ReportIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    loading: <UpdateIcon size = { 30 } className = "todo-icon" color = "var(--color-fontbase)" />,
+                }}
+                toastOptions={{
+                    classNames: {
+                        toast: 'custom-toast',
+                        description: 'custom-description'
+                    },
+                    style: {
+                        //opacity: '75%',
+                        background: 'var(--background-200)',
+                        color: 'var(--fontbase)',
+                        //fontSize: 'var(--font-lg)',
+                    },
+                }}
+            richColors />
+    </AuthProvider>
+)
 
 
 

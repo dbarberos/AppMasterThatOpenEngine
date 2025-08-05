@@ -6,8 +6,8 @@ import * as React from 'react';
 import { User } from '../classes/User';
 import { UsersManager } from '../classes/UsersManager';
 
-import { IUser, UserProfile } from '../types'; 
-import { USERS_CACHE_KEY, USERS_CACHE_TIMESTAMP_KEY, SYNC_INTERVAL  }  from '../const'
+import { IUser } from '../types'; 
+import { USERS_CACHE_KEY, SYNC_INTERVAL } from '../const';
 import { useStickyState } from './useStickyState';
 
 interface UseUsersCacheReturn {
@@ -20,24 +20,21 @@ interface UseUsersCacheReturn {
     hasCache: boolean;
 }
 
-
-
 export interface CachedUsersData {
-    users: IUser[]; // Almacenar como IUser (datos planos) en localStorage
+    users: IUser[];
     timestamp: number;
 }
 
 // IIFE para inicializar el store
-
 (() => {
     try {
         const cached = localStorage.getItem(USERS_CACHE_KEY);
         if (!cached) {
             console.log(`No cache found for ${USERS_CACHE_KEY}, initializing empty store`);
-            // Inicializar con la estructura correcta para CachedUsersData
+             // Inicializar con la estructura correcta para CachedUsersData
             localStorage.setItem(USERS_CACHE_KEY, JSON.stringify({ users: [], timestamp: 0 }));
         } else {
-            // Log basado en la estructura
+
             const parsed: CachedUsersData = JSON.parse(cached);
             console.log(`Cache found for ${USERS_CACHE_KEY}:`, parsed.users.length, 'users, timestamp:', new Date(parsed.timestamp).toISOString());
         }
@@ -46,27 +43,16 @@ export interface CachedUsersData {
     }
 })();
 
-
-const initialCachedData: CachedUsersData = { users: [], timestamp: 0 };
-
 export const useUsersCache = (
     usersManager: UsersManager | null,
     cacheDuration: number = SYNC_INTERVAL
 ): UseUsersCacheReturn => {
-
-    const [cachedStorageData, setCachedStorageData] = useStickyState<CachedUsersData | null>(
-        initialCachedData,
-        USERS_CACHE_KEY // <--- ¡CLAVE CORRECTA PARA USUARIOS!
-    );
-
-    // Iniciate state with localStorage´s data
     const [users, setUsers] = React.useState<User[]>(() => {
         try {
-            const cached = localStorage.getItem(USERS_CACHE_KEY); // Usar la clave correcta
+            const cached = localStorage.getItem(USERS_CACHE_KEY);
             if (cached) {
                 const parsedData: CachedUsersData = JSON.parse(cached);
-                // Asumimos que User constructor puede tomar IUser
-                return parsedData.users ? parsedData.users.map(uData => new User(uData)) : [];
+                return parsedData.users ? parsedData.users.map(uData => new User(uData, uData.id)) : [];
             }
             return [];
         } catch (error) {
@@ -74,56 +60,46 @@ export const useUsersCache = (
             return [];
         }
     });
-    
-    const lastFetchRef = React.useRef<number>(() => {
+
+    const lastFetchTimestamp = React.useRef<number>(() => {
         try {
-            const cached = localStorage.getItem(USERS_CACHE_KEY); // Usar la clave correcta
+            const cached = localStorage.getItem(USERS_CACHE_KEY);
             if (cached) {
                 const parsedData: CachedUsersData = JSON.parse(cached);
                 return parsedData.timestamp || 0;
             }
-            return 0;
-        } catch (error) {
+        } catch (error){
+            // Si hay un error, se asume que no hay caché.
             console.error(`Error reading timestamp from localStorage key ${USERS_CACHE_KEY}:`, error);
-            return 0;
         }
-    })
-
-    const [hasCache, setHasCache] = React.useState(() => {
-        try {
-            const cached = localStorage.getItem(USERS_CACHE_KEY); // Usar la clave correcta
-            if (cached) {
-                const parsedData: CachedUsersData = JSON.parse(cached);
-                return parsedData.users ? parsedData.users.length > 0 : false;
-            }
-            return false;
-        } catch (error) {
-            console.error(`Error checking cache for ${USERS_CACHE_KEY}:`, error);
-            return false;
-        }
-    })
-
-    //const [error, setError] = React.useState<string | null>(null);
-    
+        return 0;
+    });
 
     const isStale = React.useMemo(() => {
         const now = Date.now();
-        return now - lastFetchRef.current > cacheDuration;
+        return now - lastFetchTimestamp.current > cacheDuration;
     }, [cacheDuration, users]);
 
     const updateCache = React.useCallback((newUsers: User[]) => {
         try {
-            // *** Log CLAVE para ver qué llega a la caché de React ***
-            console.log('CacheHook: updateCache llamado con newUsers:', newUsers.map(p => ({ id: p.id, nickname: p.nickName, assignedProjectsCount: p.projectsAssigned?.length ?? 'undefined' })));
+            console.log('useUsersCache: updateCache llamado con newUsers:', newUsers.map(u => ({ id: u.id, email: u.email })));
 
-            const plainUsersForStorage: IUser[] = newUsers.map(userInstance => ({
-                // Mapea explícitamente a IUser para asegurar la serialización correcta
-                ...userInstance, // Esto podría funcionar si User es suficientemente simple
-                // Si User tiene métodos o fechas como objetos Date, necesitas un mapeo más detallado:
-                // id: userInstance.id, email: userInstance.email, ... etc.
-                // accountCreatedAt: userInstance.accountCreatedAt instanceof Date ? userInstance.accountCreatedAt.toISOString() : userInstance.accountCreatedAt,
+            // const plainUsersForStorage: IUser[] = newUsers.map(userInstance => ({
+            //     // Mapea explícitamente a IUser para asegurar la serialización correcta
+            //     ...userInstance, // Esto podría funcionar si User es suficientemente simple
+            //     // Si User tiene métodos o fechas como objetos Date, necesitas un mapeo más detallado:
+            //     // id: userInstance.id, email: userInstance.email, ... etc.
+            //     // accountCreatedAt: userInstance.accountCreatedAt instanceof Date ? userInstance.accountCreatedAt.toISOString() : userInstance.accountCreatedAt,
+
+            const plainUsersForStorage: IUser[] = newUsers.map(user => ({
+                ...user,
+                accountCreatedAt: user.accountCreatedAt instanceof Date ? user.accountCreatedAt.toISOString() : user.accountCreatedAt,
+                lastLoginAt: user.lastLoginAt instanceof Date ? user.lastLoginAt.toISOString() : user.lastLoginAt,
+                projectsAssigned: user.projectsAssigned?.map(pa => ({
+                    ...pa,
+                    assignedDate: pa.assignedDate instanceof Date ? pa.assignedDate.toISOString() : pa.assignedDate,
+                }))
             }));
-
 
             const currentTimestamp = Date.now();
             const dataToStore: CachedUsersData = { users: plainUsersForStorage, timestamp: currentTimestamp };
@@ -134,52 +110,27 @@ export const useUsersCache = (
 
             // Actualizar estado
             setUsers(newUsers);
-            setHasCache(true);
-            lastFetchRef.current = currentTimestamp;
+            lastFetchTimestamp.current = currentTimestamp;
 
             console.log('Users cache updated:', {
                 count: newUsers.length,
-                timestamp: new Date(lastFetchRef.current).toISOString()
+                timestamp: new Date(lastFetchTimestamp.current).toISOString()
             });
 
-
             console.log('CacheHook: Cache actualizada en localStorage y estado React.');
+
         } catch (error) {
-            //setError('Failed to update cache');
             console.error('Error updating localStorage cache:', error);
         }
     }, []);
 
-
-    const invalidateCache = React.useCallback(() => {        
-        localStorage.removeItem(USERS_CACHE_KEY); // Usar la clave correcta
-        // Ya no se necesita CACHE_TIMESTAMP_KEY
-        setHasCache(false)
-        lastFetchRef.current = 0
-        setUsers([])
+    const invalidateCache = React.useCallback(() => {
+        localStorage.removeItem(USERS_CACHE_KEY);
+        lastFetchTimestamp.current = 0;
+        setUsers([]);
         console.log(`Cache for ${USERS_CACHE_KEY} invalidated.`);
     }, []);
 
-    React.useEffect(() => {
-        const cached = localStorage.getItem(USERS_CACHE_KEY);
-        if (cached) {
-            try {
-                const parsedData: CachedUsersData = JSON.parse(cached);
-                const users = parsedData.users.map(u => new User({
-                    ...u,
-                    accountCreatedAt: new Date(u.accountCreatedAt),
-                    lastLoginAt: new Date(u.lastLoginAt),
-                }));            
-                setUsers(users);
-                setHasCache(true);
-                lastFetchRef.current = parsedData.timestamp;
-            } catch (error) {
-                console.error('Error parsing users cache:', error);
-                invalidateCache();
-            }
-        }
-    }, []);
-    
 
     // Efecto para suscribirse a los cambios del UsersManager y sincronizar el caché.
     React.useEffect(() => {
@@ -208,14 +159,13 @@ export const useUsersCache = (
         };
     }, [usersManager, updateCache]);
 
-
-
     return {
         users,
+        usersManager,
         setUsers,
         isStale,
         updateCache,
         invalidateCache,
-        hasCache
+        hasCache: users.length > 0
     };
 };

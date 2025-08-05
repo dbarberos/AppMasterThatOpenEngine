@@ -2,7 +2,7 @@ import * as Firestore from 'firebase/firestore'
 
 
 import { TODO_STATUSCOLUMN } from './const'
-import { USER_STATUS, USER_ROL_IN_APP, USER_ROLES_IN_PROJECT } from './const'
+import { USER_STATUS, USER_ROL_IN_APP, USER_ROLES_IN_PROJECT, USER_PERMISSIONS } from './const'
 
 export type StatusColumnValue = typeof TODO_STATUSCOLUMN[keyof typeof TODO_STATUSCOLUMN] 
 export type StatusColumnKey = keyof typeof TODO_STATUSCOLUMN
@@ -16,6 +16,8 @@ export type UserStatusKey = keyof typeof USER_STATUS
 
 export type UserRoleInAppValue = typeof USER_ROL_IN_APP[keyof typeof USER_ROL_IN_APP]
 export type UserRoleInAppKey = keyof typeof USER_ROL_IN_APP
+
+export type UserPermissionKey = keyof typeof USER_PERMISSIONS;
 
 
 export interface ITag {
@@ -77,17 +79,8 @@ export interface IProjectAssignment {
     projectId: string;
     projectName?: string;
     roleInProject: IUserProjectRole;
-    permissions: IUserPermissions[];
+    permissions: UserPermissionKey[];
     assignedDate: Date;
-}
-
-export interface IUserPermissions {
-    canCreate: boolean;
-    canRead: boolean;
-    canUpdate: boolean;
-    canDelete: boolean;
-    admin: boolean;
-    assignedAt: Firestore.Timestamp | Date; // Fecha en que se asignaron los permisos
 }
 
 export interface IUserProjectRole {

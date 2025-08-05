@@ -1,14 +1,14 @@
 import * as React from 'react';
-import { User } from '../classes/User';
+import { User as AppUserClass } from '../classes/User';
 import { MoreOptionsHorzIcon  } from './icons'; // Assuming you have these icons
 import { UserCardActionsMenu} from '../react-components'
 
 interface UserCardRowProps {
-    user: User;
+    user: AppUserClass;
     isExpanded: boolean;
     onExpandToggle: (userId: string) => void;
-    onAssignProjects: (user: User) => void;
-    onEditUser: (user: User) => void;
+    onAssignProjects: (user: AppUserClass) => void;
+    onEditUser: (user: AppUserClass) => void;
     onDeleteUser: (userId: string) => void;
     authRole?: 'admin' | 'superadmin' | string;
     authUserId?: string;
