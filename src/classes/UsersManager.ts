@@ -1,5 +1,6 @@
 import { updateAsideButtonsState } from "./HTMLUtilities";
 import { User } from "../classes/User.ts";
+import { toast } from 'sonner';
 
 import { collection, onSnapshot, doc, setDoc, Timestamp, deleteDoc, } from 'firebase/firestore'
 // import { firestoreDB } from '../services/firebase/index';
@@ -18,6 +19,9 @@ export class UsersManager {
     private _isReady: boolean = false; // Nuevo estado para indicar si la carga inicial está completa
     private _readyCallbacks: (() => void)[] = []; // Callbacks para notificar cuando esté listo
 
+    // Nuevo: Mapa para gestionar los listeners de las subcolecciones de projectsAssigned
+    private _projectAssignmentUnsubscribes = new Map<string, () => void>();
+
     // Callbacks para que los componentes externos se suscriban a cambios
     public onUsersListUpdated: (() => void) | null = null;
 
@@ -27,7 +31,7 @@ export class UsersManager {
      */
 
     constructor() {
-        console.log('UsersManager: Inicializando y configurando el listener de Firestore.');
+        console.log('UsersManager: Initializing and setting up Firestore listener.');
         this.setupFirestoreListener(); // Inicia el listener de Firestore al construir la instancia
     }
 
@@ -136,15 +140,15 @@ export class UsersManager {
      * Se suscribe a los cambios en tiempo real y actualiza la lista interna de usuarios.
      */
     private setupFirestoreListener() {
-        console.log('UsersManager: Configurando listener de Firestore...');
+        console.log('UsersManager: Setting up Firestore listener...');
         if (this.unsubscribe) {
             this.unsubscribe(); // Limpiar el listener anterior si existe (útil en hot-reloads o si el manager se reinicia)
-            console.log('UsersManager: Listener de Firestore anterior desuscrito.');
+            console.log('UsersManager: Unsubscribed from previous Firestore listener.');
         }
 
         const usersCollectionRef = collection(firestoreDB, 'users');
         this.unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
-            console.log('UsersManager: onSnapshot disparado. Procesando cambios...');
+            console.log('UsersManager: onSnapshot triggered. Processing changes...');
             // const newUsersList: User[] = [];
             // snapshot.forEach(doc => {
             //     // Asegurarse de que las fechas se conviertan correctamente de Firestore Timestamp a Date
@@ -162,21 +166,49 @@ export class UsersManager {
                 const userInstance = new User(docData, change.doc.id);
 
                 if (change.type === "added") {
-                    console.log("UsersManager (onSnapshot): Nuevo usuario añadido:", userInstance.id);
+                    console.log("UsersManager (onSnapshot): New user added:", userInstance.id);
                     if (!this._users.some(u => u.id === userInstance.id)) {
+                        // Añadir el usuario a la lista interna
                         this._users.push(userInstance);
+                        // Iniciar el listener para su subcolección de proyectos asignados
+                        this.setupProjectsAssignedListener(userInstance.id);
+                        if (this._isReady) {
+                            toast.success(`New user added: ${userInstance.email}`);
+                        }
                     }
                 }
                 if (change.type === "modified") {
-                    console.log("UsersManager (onSnapshot): Usuario modificado:", userInstance.id);
-                    const index = this._users.findIndex(u => u.id === userInstance.id);
+                    console.log("UsersManager (onSnapshot): User top-level data modified:", userInstance.id);
+                    const index = this._users.findIndex(u => u.id === change.doc.id);
                     if (index !== -1) {
-                        this._users[index] = userInstance;
+                        // Patrón de "Fusionar y Reemplazar" para garantizar la integridad de los datos
+                        const oldUser = this._users[index];
+                        const updatedData = { ...oldUser, ...docData }; // Fusiona el objeto antiguo con los nuevos datos
+                        const updatedUserInstance = new User(updatedData, change.doc.id);
+
+                        // Importante: Preservar la lista de projectsAssigned que se gestiona por separado
+                        updatedUserInstance.projectsAssigned = oldUser.projectsAssigned;
+                        this._users[index] = updatedUserInstance;
+
+                        if (this._isReady) {
+                            toast.info(`User data updated: ${updatedUserInstance.email}`);
+                        }
                     }
                 }
                 if (change.type === "removed") {
-                    console.log("UsersManager (onSnapshot): Usuario eliminado:", userInstance.id);
+                    console.log("UsersManager (onSnapshot): User removed:", userInstance.id);
+                    // Detener y eliminar el listener de la subcolección para el usuario eliminado
+                    const unsubscribe = this._projectAssignmentUnsubscribes.get(userInstance.id);
+                    if (unsubscribe) {
+                        unsubscribe();
+                        this._projectAssignmentUnsubscribes.delete(userInstance.id);
+                        console.log(`Unsubscribed from projectsAssigned for user ${userInstance.id}`);
+                    }
+                    // Eliminar el usuario de la lista interna
                     this._users = this._users.filter(u => u.id !== userInstance.id);
+                    if (this._isReady) {
+                        toast.warning(`User removed: ${userInstance.email}`);
+                    }
                 }
 
 
@@ -189,7 +221,7 @@ export class UsersManager {
             // // Marcar como listo después de la primera instantánea
             if (!this._isReady) {
                 this._isReady = true;
-                console.log('UsersManager: Datos iniciales cargados. Notificando callbacks de listo.');
+                console.log('UsersManager: Initial data loaded. Notifying ready callbacks.');
                 this._readyCallbacks.forEach(cb => cb()); // Ejecutar callbacks pendientes
                 this._readyCallbacks = []; // Limpiar callbacks después de notificar
             }
@@ -198,15 +230,48 @@ export class UsersManager {
             // Notificar a los suscriptores que la lista ha cambiado (para actualizar UI y caché)
             this.updateLocalStorage();
             if (this.onUsersListUpdated) {
-                console.log('UsersManager: Invocando onUsersListUpdated.');
+                console.log('UsersManager: Invoking onUsersListUpdated.');
                 this.onUsersListUpdated();
             }
 
         }, (error) => {
-            console.error('UsersManager: Error escuchando Firestore:', error);
+            console.error('UsersManager: Error listening to Firestore:', error);
             // Aquí podrías añadir lógica para manejar errores de conexión o permisos
         });
     }
+
+    /**
+     * Configura un listener en tiempo real para la subcolección 'projectsAssigned' de un usuario específico.
+     * @param {string} userId El ID del usuario.
+     */
+    private setupProjectsAssignedListener(userId: string) {
+        const subcollectionPath = `users/${userId}/projectsAssigned`;
+        const subcollectionRef = collection(firestoreDB, subcollectionPath);
+
+        const unsubscribe = onSnapshot(subcollectionRef, (snapshot) => {
+            console.log(`UsersManager: projectsAssigned snapshot for user ${userId} triggered.`);
+            const userIndex = this._users.findIndex(u => u.id === userId);
+            if (userIndex === -1) return; // El usuario ya no existe
+
+            const newAssignments = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as IUser['projectsAssigned'];
+
+            // Actualizar la propiedad projectsAssigned del usuario en la lista interna
+            this._users[userIndex].projectsAssigned = newAssignments;
+
+            // Notificar a la UI que la lista de usuarios (y sus datos internos) ha cambiado
+            if (this.onUsersListUpdated) {
+                this.onUsersListUpdated();
+            }
+            this.updateLocalStorage();
+        });
+
+        // Guardar la función de desuscripción para poder limpiarla después
+        this._projectAssignmentUnsubscribes.set(userId, unsubscribe);
+    }
+
 
     
     /**
@@ -231,7 +296,7 @@ export class UsersManager {
      * @param {() => void} callback La función a ejecutar.
      */
     onReady(callback: () => void) {
-        console.log(`UsersManager: onReady llamado. isReady: ${this._isReady}`);
+        console.log(`UsersManager: onReady called. isReady: ${this._isReady}`);
         if (this._isReady) {
             callback();
         } else {
@@ -247,19 +312,19 @@ export class UsersManager {
      * @returns {Promise<User>} El usuario que se intenta añadir.
      */
     async newUser(data: IUser, id: string): Promise<User> {
-        console.log('UsersManager: newUser llamado para escribir en Firebase.', { data, id });
+        console.log('UsersManager: newUser called to write to Firebase.', { data, id });
         const userInstance = new User(data, id);
         const plainData = this.toFirestoreData(userInstance);
 
         try {
             const userDocRef = doc(firestoreDB, 'users', id);
             await setDoc(userDocRef, plainData);
-            console.log(`UsersManager: Nuevo usuario ${id} creado exitosamente en Firebase.`);
+            console.log(`UsersManager: New user ${id} created successfully in Firebase.`);
             // La actualización local se hará a través del listener onSnapshot.
             return userInstance;
         } catch (error: any) {
-            console.error(`UsersManager: Error creando nuevo usuario en Firebase:`, error);
-            throw new Error(`Fallo al crear nuevo usuario en Firebase: ${error.message}`);
+            console.error(`UsersManager: Error creating new user in Firebase:`, error);
+            throw new Error(`Failed to create new user in Firebase: ${error.message}`);
         }
     }
 
@@ -272,7 +337,7 @@ export class UsersManager {
      * @returns {User[]} La lista de usuarios filtrada.
      */
     filterUsers(email: string): User[] {
-        console.log('UsersManager: filterUsers llamado.', { email });
+        console.log('UsersManager: filterUsers called.', { email });
         return this._users.filter(user => user.email.toLowerCase().includes(email.toLowerCase()));
     }
 
@@ -283,18 +348,30 @@ export class UsersManager {
      * @returns {Promise<void>}
      */
     async updateUser(userId: string, dataToUpdate: Partial<IUser>): Promise<void> {
-        console.log("UsersManager.ts: updateUser called", { userId, dataToUpdate })
+        console.log("UsersManager.ts: updateUser called", { userId, dataToUpdate });
+
+        // Separar projectsAssigned del resto de los datos del usuario
+        const { projectsAssigned, ...otherUserData } = dataToUpdate;
         
         try {
             const userDocRef = doc(firestoreDB, 'users', userId);
-            // Convertir el objeto parcial a un objeto plano para Firestore, manejando fechas.
-            const plainData = this.toFirestoreData(dataToUpdate as User);
-            await setDoc(userDocRef, plainData, { merge: true });
-            console.log(`UsersManager: Documento actualizado exitosamente en users/${userId}`);
-            // La lista local se actualizará automáticamente a través del listener onSnapshot.
+
+            // 1. Actualizar los campos del documento principal si hay alguno
+            if (Object.keys(otherUserData).length > 0) {
+                const plainData = this.toFirestoreData(otherUserData as User);
+                await setDoc(userDocRef, plainData, { merge: true });
+                console.log(`UsersManager: Main user document updated for ${userId}`);
+            }
+
+            // 2. Si se proporcionó projectsAssigned, reemplazar la subcolección
+            if (projectsAssigned) {
+                const subcollectionPath = `users/${userId}/projectsAssigned`;
+                await replaceSubcollectionItems(subcollectionPath, projectsAssigned);
+                console.log(`UsersManager: Subcollection 'projectsAssigned' updated for ${userId}`);
+            }
         } catch (error: any) {
-            console.error(`UsersManager: Error actualizando documento en users/${userId}:`, error);
-            throw new Error(`Fallo al actualizar usuario en Firebase: ${error.message}`);
+            console.error(`UsersManager: Error updating document in users/${userId}:`, error);
+            throw new Error(`Failed to update user in Firebase: ${error.message}`);
         }
     }
 
@@ -307,7 +384,7 @@ export class UsersManager {
      */
     private updateLocalStorage(): void {
         try {
-            console.log('UsersManager: Iniciando updateLocalStorage. this._users contiene:',
+            console.log('UsersManager: Starting updateLocalStorage. this._users contains:',
                 this._users.map(u => ({ id: u.id, email: u.email, projectsCount: u.projectsAssigned?.length ?? 'N/A' }))
             )
             // // Procesar usuarios antes de almacenar en localStorage
@@ -341,7 +418,7 @@ export class UsersManager {
             //CAMBIAR  EN COSNTANTES
             localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(processedUsers));
             localStorage.setItem(USERS_CACHE_TIMESTAMP_KEY, new Date().toISOString());
-            console.log('UsersManager: localStorage actualizado.');
+            console.log('UsersManager: localStorage updated.');
 
         
         } catch (error) {
@@ -377,7 +454,7 @@ export class UsersManager {
      * @param {string} [selectedProjectId] El ID del proyecto seleccionado.
      */
     setupProjectSelectUsersPage(projectsList: any[], selectedProjectId?: string) { // projectsList debería ser Project[]
-        console.log('UsersManager: setupProjectSelectUsersPage llamado.');
+        console.log('UsersManager: setupProjectSelectUsersPage called.');
         const select = document.getElementById("projectSelectedUsersPage") as HTMLSelectElement;
 
         if (!select) {
@@ -437,7 +514,7 @@ export class UsersManager {
      * @param {User} user El objeto User con los datos para poblar el formulario.
      */
     static populateUserDetailsForm (user: any) { // user debería ser User
-        console.log('UsersManager: populateUserDetailsForm llamado.');
+        console.log('UsersManager: populateUserDetailsForm called.');
         const userDetailsForm = document.getElementById("new-user-form")
         if (!userDetailsForm) {
             console.warn('UsersManager: Formulario de usuario no encontrado.');
@@ -478,7 +555,7 @@ export class UsersManager {
      * @returns {User | undefined} El usuario encontrado o undefined.
      */
     getUser(id: string): User | undefined {
-        console.log('UsersManager: getUser llamado.', { id });
+        console.log('UsersManager: getUser called.', { id });
         return this._users.find(user => user.id === id);
     }
 
@@ -489,7 +566,7 @@ export class UsersManager {
      * @returns {User | undefined} El usuario encontrado o undefined.
      */
     getUserByNickname(nickname: string): User | undefined {
-        console.log('UsersManager: getUserByNickname llamado.', { nickname });
+        console.log('UsersManager: getUserByNickname called.', { nickname });
         return this._users.find(user => user.nickName?.toLowerCase() === nickname.toLowerCase());
     }
 
@@ -529,19 +606,17 @@ export class UsersManager {
      * Limpia el listener de Firestore.
      * Debería llamarse cuando la instancia del manager ya no sea necesaria (ej. al desmontar la aplicación).
      */
-        public cleanup() {
-            console.log('UsersManager: Ejecutando cleanup.');
-            if (this.unsubscribe) {
-                this.unsubscribe();
-                this.unsubscribe = null;
-                console.log('UsersManager: Listener de Firestore desuscrito.');
-            }
+    public cleanup() {
+        console.log('UsersManager: Running cleanup.');
+        if (this.unsubscribe) {
+            this.unsubscribe();
+            this.unsubscribe = null;
+            console.log('UsersManager: Unsubscribed from Firestore listener.');
         }
-    
-
-
-
-    
-
-
+        // Limpiar todos los listeners de subcolecciones
+        this._projectAssignmentUnsubscribes.forEach((unsubscribe) => unsubscribe());
+        this._projectAssignmentUnsubscribes.clear();
+        console.log('UsersManager: Cleaned up all project assignment subcollection listeners.');
+    }
 }
+
