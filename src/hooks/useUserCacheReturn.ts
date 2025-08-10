@@ -18,6 +18,7 @@ interface UseUsersCacheReturn {
     updateCache: (users: User[]) => void;
     invalidateCache: () => void;
     hasCache: boolean;
+    loading: boolean; // <-- Añadir el estado de carga
 }
 
 export interface CachedUsersData {
@@ -25,7 +26,7 @@ export interface CachedUsersData {
     timestamp: number;
 }
 
-// IIFE para inicializar el store
+// IIFE para inicializar el store y/o migrar el store del caché al cargar el módulo.
 (() => {
     try {
         const cached = localStorage.getItem(USERS_CACHE_KEY);
@@ -34,9 +35,19 @@ export interface CachedUsersData {
              // Inicializar con la estructura correcta para CachedUsersData
             localStorage.setItem(USERS_CACHE_KEY, JSON.stringify({ users: [], timestamp: 0 }));
         } else {
-
-            const parsed: CachedUsersData = JSON.parse(cached);
-            console.log(`Cache found for ${USERS_CACHE_KEY}:`, parsed.users.length, 'users, timestamp:', new Date(parsed.timestamp).toISOString());
+            const parsed = JSON.parse(cached);
+            // Comprobación de robustez: si el caché existe pero está en el formato antiguo (un array)
+            // o es un objeto sin la propiedad 'users', lo migramos al nuevo formato.
+            if (Array.isArray(parsed) || !parsed.users) {
+                console.warn(`Old cache format detected for ${USERS_CACHE_KEY}. Migrating...`);
+                const usersToStore = Array.isArray(parsed) ? parsed : [];
+                const migratedData: CachedUsersData = { users: usersToStore, timestamp: Date.now() };
+                localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(migratedData));
+                console.log('Cache migrated to new format.');
+            } else {
+                const data = parsed as CachedUsersData;
+                console.log(`Cache found for ${USERS_CACHE_KEY}:`, data.users.length, 'users, timestamp:', new Date(data.timestamp).toISOString());
+            }
         }
     } catch (error) {
         console.error(`Error initializing localStorage cache for ${USERS_CACHE_KEY}:`, error);
@@ -47,12 +58,28 @@ export const useUsersCache = (
     usersManager: UsersManager | null,
     cacheDuration: number = SYNC_INTERVAL
 ): UseUsersCacheReturn => {
+    // El estado de carga se determina síncronamente al inicio.
+    // - Si NO hay caché o el caché está vacío, `loading` es `true`.
+    // - Si SÍ hay usuarios en el caché, `loading` es `false` desde el primer render.
+    const [loading, setLoading] = React.useState(() => {
+        try {
+            const cached = localStorage.getItem(USERS_CACHE_KEY);
+            if (!cached) return true;
+            const parsed = JSON.parse(cached) as CachedUsersData;
+            return !(parsed.users && parsed.users.length > 0);
+        } catch {
+            return true;
+        }
+    });
     const [users, setUsers] = React.useState<User[]>(() => {
         try {
             const cached = localStorage.getItem(USERS_CACHE_KEY);
             if (cached) {
                 const parsedData: CachedUsersData = JSON.parse(cached);
-                return parsedData.users ? parsedData.users.map(uData => new User(uData, uData.id)) : [];
+                // Asegurarse de que parsedData.users es un array antes de mapear
+                return parsedData.users
+                    ? parsedData.users.map(uData => new User(uData, uData.id))
+                    : [];
             }
             return [];
         } catch (error) {
@@ -61,7 +88,8 @@ export const useUsersCache = (
         }
     });
 
-    const lastFetchTimestamp = React.useRef<number>(() => {
+    const lastFetchTimestamp = React.useRef<number>(
+        (() => {
         try {
             const cached = localStorage.getItem(USERS_CACHE_KEY);
             if (cached) {
@@ -73,7 +101,8 @@ export const useUsersCache = (
             console.error(`Error reading timestamp from localStorage key ${USERS_CACHE_KEY}:`, error);
         }
         return 0;
-    });
+        })()
+    );
 
     const isStale = React.useMemo(() => {
         const now = Date.now();
@@ -93,24 +122,29 @@ export const useUsersCache = (
 
             const plainUsersForStorage: IUser[] = newUsers.map(user => ({
                 ...user,
-                accountCreatedAt: user.accountCreatedAt instanceof Date ? user.accountCreatedAt.toISOString() : user.accountCreatedAt,
-                lastLoginAt: user.lastLoginAt instanceof Date ? user.lastLoginAt.toISOString() : user.lastLoginAt,
-                projectsAssigned: user.projectsAssigned?.map(pa => ({
-                    ...pa,
-                    assignedDate: pa.assignedDate instanceof Date ? pa.assignedDate.toISOString() : pa.assignedDate,
-                }))
+                accountCreatedAt: user.accountCreatedAt instanceof Date 
+                    ? user.accountCreatedAt.toISOString() 
+                    : user.accountCreatedAt,
+                lastLoginAt: user.lastLoginAt instanceof Date 
+                    ? user.lastLoginAt.toISOString() 
+                    : user.lastLoginAt,
+                projectsAssigned: user.projectsAssigned?.map(pa => pa.assignedDate instanceof Date 
+                    ? { ...pa, assignedDate: pa.assignedDate.toISOString() } 
+                    : pa)
             }));
-
+            
             const currentTimestamp = Date.now();
-            const dataToStore: CachedUsersData = { users: plainUsersForStorage, timestamp: currentTimestamp };
+            const dataToCache: CachedUsersData = {
+                users: plainUsersForStorage,
+                timestamp: currentTimestamp
+            };
 
-            // Actualizar localStorage
-            localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(dataToStore));
-            // Ya no se necesita CACHE_TIMESTAMP_KEY porque el timestamp está en dataToStore
+            localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(dataToCache));
 
-            // Actualizar estado
+            // Actualizar estado  y timestamp
             setUsers(newUsers);
             lastFetchTimestamp.current = currentTimestamp;
+            setLoading(false); // <-- La carga ha terminado, ya sea desde caché o desde el manager.
 
             console.log('Users cache updated:', {
                 count: newUsers.length,
@@ -122,7 +156,7 @@ export const useUsersCache = (
         } catch (error) {
             console.error('Error updating localStorage cache:', error);
         }
-    }, []);
+    }, []); // setUsers es estable, no necesita ser dependencia.
 
     const invalidateCache = React.useCallback(() => {
         localStorage.removeItem(USERS_CACHE_KEY);
@@ -141,11 +175,27 @@ export const useUsersCache = (
 
         console.log('useUsersCache: Hook activado. Configurando suscripción a onUsersListUpdated.');
 
-        // 1. Definir la función que se ejecutará cuando la lista de usuarios se actualice.
+        // Función que se ejecutará cuando la lista de usuarios se actualice.
         const handleUsersUpdate = () => {
             console.log('useUsersCache: onUsersListUpdated disparado. Actualizando caché...');
-            updateCache(usersManager.list);
+            // Comprobamos que el manager realmente tenga la lista para evitar actualizaciones innecesarias
+            if (usersManager.list) {
+                updateCache(usersManager.list);
+            }
         };
+
+        // Sincronización Inmediata: Si el manager ya tiene datos cuando el hook se monta,
+        // actualizamos el caché inmediatamente. Esto soluciona la condición de carrera.
+        if (usersManager.list.length > 0) {
+            console.log('useUsersCache: Manager ya tiene datos. Sincronizando caché inmediatamente.');
+            handleUsersUpdate();
+        }
+
+        // 1. Definir la función que se ejecutará cuando la lista de usuarios se actualice.
+        // const handleUsersUpdate = () => {
+        //     console.log('useUsersCache: onUsersListUpdated disparado. Actualizando caché...');
+        //     updateCache(usersManager.list);
+        // };
 
         // 2. Suscribirse al evento de actualización del manager.
         usersManager.onUsersListUpdated = handleUsersUpdate;
@@ -166,6 +216,7 @@ export const useUsersCache = (
         isStale,
         updateCache,
         invalidateCache,
-        hasCache: users.length > 0
+        hasCache: users.length > 0,
+        loading // <-- Devolver el estado de carga
     };
 };

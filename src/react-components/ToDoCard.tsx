@@ -234,7 +234,7 @@ export function ToDoCard({
                             className="todo-task-move"
                         >
                             <ChatBubbleIcon size={24} className="todo-icon" color="var(--color-fontbase)" />
-                            {`${toDoIssue.assignedUsers.length || 0 }`} assigned
+                            {`${toDoIssue.assignedUsers?.length || 0 } assigned`}
                         </span>
                         <span
                             className="todo-task-move todo-tags"

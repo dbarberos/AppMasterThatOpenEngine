@@ -24,6 +24,12 @@ export const UsersBoardList: React.FC<UserListProps> = ({
     onSort,
 }) => {
 
+        console.log('[UsersBoardList] Componente Renderizado con props:', {
+        userCount: users.length,
+        users: users.map(u => u.nickName || u.email)
+    });
+
+
     
     //solo un elemento pueda estar expandido a la vez
     const [expandedUserId, setExpandedUserId] = React.useState<string | null>(null);
@@ -52,6 +58,7 @@ export const UsersBoardList: React.FC<UserListProps> = ({
     // }
     
     if (users.length === 0) {
+        console.log('[UsersBoardList] No hay usuarios para renderizar.');
         return <p>No users found.</p>;
     }
 
@@ -153,6 +160,9 @@ export const UsersBoardList: React.FC<UserListProps> = ({
                 <h5 style={{ width: '', textAlign: 'center' }}>ACTIONS</h5>
             </div>
             {users.map(user => (
+                <React.Fragment key={user.id}>
+                    {console.log(`[UsersBoardList] Mapeando usuario a UserCardRow: ${user.id} - ${user.nickName || user.email}`)}
+                    
                 <UserCardRow
                     key={user.id}
                     user={user}
@@ -166,6 +176,7 @@ export const UsersBoardList: React.FC<UserListProps> = ({
                     authRole={userProfile?.roleInApp}
                     authUserId={currentUser?.uid}
                 />
+                </React.Fragment>
             ))}
 
         </div>

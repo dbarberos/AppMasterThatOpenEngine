@@ -73,7 +73,7 @@ export const deleteUserAndData = onCall(async (request) => {
 
   // Asegurarse de que el usuario que invoca la función es un superadmin.
   // Esto se basa en "Custom Claims" que debes asignar a tus superusuarios
-  if (request.auth.token.superadmin !== true) {
+  if (request.auth?.token?.superadmin !== true) {
     logger.error(
       `El usuario ${request.auth.uid} sin permisos de superadmin intentó eliminar a otro usuario.`,
     );

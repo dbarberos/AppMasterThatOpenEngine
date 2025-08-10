@@ -48,7 +48,6 @@ export function UsersBoardPage({
 
 
     const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
-    const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
     //const [isSyncing, setIsSyncing] = React.useState(false)
 
@@ -89,8 +88,9 @@ export function UsersBoardPage({
         users,
         setUsers,
         updateCache,
-        hasCache,
-        isStale,        
+        hasCache,        
+        isStale,
+        loading: usersLoading,
     } = useUsersCache(usersManager)
 
     const {
@@ -100,6 +100,11 @@ export function UsersBoardPage({
         handleSearchChange: handleUserSearchChange // Función para actualizar el término de búsqueda
     } = useUserSearch(users)
 
+    console.log('[UsersBoardPage] Datos de los hooks:', {
+        usersFromCacheHook_count: users.length,
+        filteredUsersFromSearchHook_count: filteredUsers.length,
+    });
+
 
 
     // Verificar si necesitamos sincronizar
@@ -108,146 +113,55 @@ export function UsersBoardPage({
         return now - lastSyncRef.current > SYNC_INTERVAL;
     }, []);
 
-
-
-    /**
-     * Efecto para gestionar el estado de carga inicial de la página.
-     * La página se considera "cargando" hasta que la autenticación haya terminado y
-     * ambos managers (ProjectsManager y UsersManager) estén listos.
-     */
-    React.useEffect(() => {
-        console.log('[UsersBoardPage] useEffect for initial loading triggered.');
-        if (authLoading) {
-            setIsLoading(true);
-            return;
-        }
-
-        // Establecer isLoading a true si alguno de los managers no está listo
-        setIsLoading(!projectsManager.isReady || !usersManager.isReady);
-
-        const onManagersReady = () => {
-            if (projectsManager.isReady && usersManager.isReady) {
-                setIsLoading(false);
-                console.log('[UsersBoardPage] Both managers ready. Initial loading complete.');
-            }
-        };
-
-        // Registrar callbacks para actualizar el estado de carga
-        projectsManager.onReady(onManagersReady);
-        usersManager.onReady(onManagersReady);
-
-        // No es necesario un cleanup específico para estos callbacks en singletons.
-    }, [authLoading, projectsManager, usersManager]);
-    
-
-
-    //Suscription to ProjectsManager events with control of refreshing    
-    React.useEffect(() => {
-        console.log('[UsersBoardPage] Subscribing to UsersManager events.');
-        const handleUsersUpdate = () => {
-            const updatedUsers = usersManager.list.map(user => ({
-                ...user,
-                accountCreatedAt: user.accountCreatedAt instanceof Date
-                    ? new Date(user.accountCreatedAt.getTime())
-                    : new Date(user.accountCreatedAt),
-                lastLoginAt: user.lastLoginAt instanceof Date
-                    ? new Date(user.lastLoginAt.getTime())
-                    : new Date(user.lastLoginAt),
-                // projectsAssigned: user.projectsAssigned.map(project => ({
-                //     ...project,
-                //     startDate: project.startDate instanceof Date
-                //         ? new Date(project.startDate.getTime())
-                //         : new Date(project.startDate),
-                //     endDate: project.endDate instanceof Date
-                //         ? new Date(project.endDate.getTime())
-                //         : new Date(project.endDate)
-                // })),
-            }))
-
-
-
-            //update cache and localStorage
-            updateCache(updatedUsers);
-
-            lastSyncRef.current = Date.now(); // Actualice timestamp
-
-            console.log('User cache updated with projectsAssigned:', {
-                usersCount: updatedUsers.length,
-                projectsAssigendCount: updatedUsers.reduce((acc, u) => acc + u.projectsAssigned.length, 0)
-            });
-        };
-
-
-        // Suscripción al callback general
-        usersManager.onUsersListUpdated = handleUsersUpdate;
-
-
-        return () => {
-            console.log('[UsersBoardPage] Cleaning up UsersManager subscriptions.');
-            usersManager.onUsersListUpdated = null;
-        }
-    }, [updateCache, usersManager])
-
-
-
-    
-    
-
-
-
-
-
-
-
-    // ***************. useCallback para funciones  *******************
-
-
-
-    const handleOpenNewUserModal = React.useCallback((user: AppUserClass) => {
-        setUserToEdit(user) // Guarda el usuario a editar
-        console.log("Open edit user modal");
-        setIsNewUserFormOpen(true);
-    }, []);
-
-    const handleCloseNewUserModal = React.useCallback(() => {
-        setIsNewUserFormOpen(false);
-        setUserToEdit(null); // Limpiar usuario al cerrar
-    }, []);
-
-    // --- Handlers para el Modal de Asignación de Proyectos ---
-
-    const handleOpenAssignmentModal = React.useCallback((user: AppUserClass) => {
-        setUserForAssignment(user);
-        setIsAssignmentModalOpen(true);
-    }, []);
-
-    const handleCloseAssignmentModal = React.useCallback(() => {
-        setIsAssignmentModalOpen(false);
-        setUserForAssignment(null);
-    }, []);
-
-    const handleSaveAssignments = React.useCallback(async (newAssignments: { [projectId: string]: IProjectAssignment }) => {
-        if (!userForAssignment?.id) return;
-
-        await usersManager.updateUser(userForAssignment.id, {
-            projectsAssigned: newAssignments,
-        });
-        // El listener onSnapshot se encargará de actualizar la UI.
-    }, [userForAssignment, usersManager]);
-
-
-    // Handler para abrir/cerrar el menú de ordenación
     const toggleSortMenu = React.useCallback(() => {
         setIsSortMenuOpen(prev => !prev);
     }, []);
 
+
     // Handler para cuando se selecciona una opción de ordenación
     const handleSort = React.useCallback((key: UserSortKey) => {
-        console.log(`Sorting by: ${key}`);
+    console.log(`Sorting by: ${key}`)
         setSortBy(key);
-    }, []);
+    }, [setSortBy]);
 
 
+    // --- Handlers para el modal de asignación de proyectos ---
+    const handleOpenAssignmentModal = (user: AppUserClass) => {
+        setUserForAssignment(user);
+        setIsAssignmentModalOpen(true);
+    };
+
+
+    const handleCloseAssignmentModal = () => {
+        setIsAssignmentModalOpen(false);
+        setUserForAssignment(null);
+    };
+
+    const handleSaveAssignments = (newAssignments: { [projectId: string]: IProjectAssignment }) => {
+        if (!userForAssignment) return;
+
+        const updatedUser = new AppUserClass(
+            {
+                ...userForAssignment,
+                projectsAssigned: Object.values(newAssignments),
+            },
+            userForAssignment.id
+        );
+
+        // Llama a la función del padre para actualizar el usuario en el manager y en Firestore.
+        onUserUpdate(updatedUser);
+    };
+
+    // --- Handlers para el modal de edición/creación de usuario ---
+    const handleOpenNewUserModal = (user: AppUserClass | null) => {
+        setUserToEdit(user);
+        setIsNewUserFormOpen(true);
+    };
+
+    const handleCloseNewUserModal = () => {
+        setIsNewUserFormOpen(false);
+        setUserToEdit(null);
+    };
 
     // CREO QUE ESTA NO HACE FALTA
     const onNewUserClick = () => {
@@ -325,9 +239,14 @@ export function UsersBoardPage({
             return filteredUsers;
         }
 
-        // Usamos .toSorted() para crear una nueva matriz ordenada sin mutar la original.
-        // Esto es una práctica recomendada en React para evitar efectos secundarios.
-        return filteredUsers.toSorted((a, b) => {
+        // // Usamos .toSorted() para crear una nueva matriz ordenada sin mutar la original.
+        // // Esto es una práctica recomendada en React para evitar efectos secundarios.
+        // return filteredUsers.toSorted((a, b) => {
+
+
+        // Usamos [...filteredUsers].sort() para crear una copia y ordenarla.
+        // .toSorted() es más moderno y podría no estar disponible en todos los entornos.
+        const sorted = [...filteredUsers].sort((a, b) => {
             // Obtenemos los valores a comparar. Usamos '?? '' como fallback para
             // propiedades que podrían ser null o undefined, evitando errores.
             const valueA = a[sortBy] ?? '';
@@ -337,6 +256,12 @@ export function UsersBoardPage({
             // ya que maneja correctamente acentos y caracteres especiales.
             return valueA.localeCompare(valueB);
         });
+        console.log('[UsersBoardPage] sortedAndFilteredUsers calculado:', {
+            count: sorted.length,
+            users: sorted.map(u => u.nickName || u.email)
+        });
+        return sorted;
+
     }, [filteredUsers, sortBy]); // Dependencias del hook
 
 
@@ -446,16 +371,28 @@ export function UsersBoardPage({
 
 
 
-    
-   if (authLoading || isLoading) return <LoadingIcon />; // Mostrar loading si auth está cargando O si la carga de usuarios está en curso
-    if (error) return <p>Error: {error}</p>;
 
+    // El estado de carga ahora depende directamente de la autenticación Y de la carga de usuarios del hook.
+    if (authLoading || usersLoading) {
+        console.log('[UsersBoardPage] Renderizando LoadingIcon porque:', { authLoading, usersLoading });
+        return <LoadingIcon />; // Mostrar loading si auth está cargando O si la carga de usuarios está en curso
+    }
+
+    if (error) {
+        console.error('[UsersBoardPage] Renderizando mensaje de error:', error);
+        return <p>Error: {error}</p>;
+    }
 
 
     const authCurrentUserRole = "admin"
 
 
 
+    console.log('[UsersBoardPage] A punto de renderizar UsersBoardList con props:', {
+        userCount: sortedAndFilteredUsers.length
+    });
+
+    
     return (
         <section className="page" id="users-page" data-page="">
             <header className="header-users" style={{ height: 120 }}>

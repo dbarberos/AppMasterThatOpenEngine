@@ -24,6 +24,7 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
     authRole,
     authUserId,
 }) => {
+    console.log(`[UserCardRow] Renderizando para el usuario: ${user.id} - ${user.nickName || user.email}`);
 
 
     //const [isDetailsVisible, setIsDetailsVisible] = React.useState(false);
