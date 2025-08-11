@@ -267,40 +267,6 @@ export function NewUserForm({
             setIsLoading(false);
         }
     }
-    ///ELIMINAR HE CAMBIADO LA LÓGICA
-    async function handleCreateProfileUserInDB(userDetails: IUser) {
-
-        const newUser = new User(userDetails)
-        console.log(newUser)
-        try {
-
-            const newUserDoc = await createDocument("/Users", newUser)
-            newUser.id = newUserDoc.id
-            console.log("data transfered to DB", newUser)
-
-            usersManager.newUser(newUser, newUser.id)
-
-
-            onCreatedUser && onCreatedUser({ ...newUser, id: newUserDoc.id })
-
-            console.log("project added to the list", projectsManager.list)
-        } catch (error) {
-            console.error("Error creating project in DB:", error);
-
-            setMessagePopUpContent({
-                type: "error",
-                title: "Error Creating User",
-                message: "There was a problem saving the user. Please try again later.",
-                actions: ["OK"],
-                onActionClick: {
-                    "OK": () => setShowMessagePopUp(false),
-                },
-                onClose: () => setShowMessagePopUp(false),
-            });
-            setShowMessagePopUp(true);
-        }
-    
-    }
     
 
     async function handleProfileUpdateSubmit(e: React.FormEvent) {
@@ -403,7 +369,15 @@ export function NewUserForm({
                     setShowMessagePopUp(false);
                     setIsLoading(true); // Re-establecer isLoading
                     try {
-                        const updatedUser = await handleUpdateProfileUserInDB(currentUserData.uid, newProfileData);
+                        // FIX: Get the user ID from either 'uid' (from Auth context) or 'id' (from User class)
+                        const userIdToUpdate = currentUserData.uid || currentUserData.id;
+                        if (!userIdToUpdate) {
+                            throw new Error("User ID is missing, cannot update profile.");
+                        }
+
+                        const updatedUser = await handleUpdateProfileUserInDB(userIdToUpdate, newProfileData);
+                        //const updatedUser = await handleUpdateProfileUserInDB(currentUserData.uid, newProfileData);
+                        
                         toast.success("Profile Updated correctly.");
                         //onSuccess(updatedUser); // Llama al callback con el usuario actualizado
 
