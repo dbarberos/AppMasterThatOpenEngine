@@ -5,7 +5,7 @@ import * as Firestore from 'firebase/firestore';
 
 import {  updateDocument } from '../services/firebase'
 
-import { IUser, IProjectAssignment, UserStatusKey, UserRoleInAppKey,UserStatusValue} from '../types'; 
+import { IUser, IProjectAssignment, UserStatusKey, UserRoleInAppKey,UserStatusValue, UserRoleInProjectKey} from '../types'; 
 import {  USER_ROLES_IN_PROJECT , USER_STATUS, USER_ROL_IN_APP   } from '../const'
 import { User } from '../classes/User'; 
 import { UsersManager } from '../classes/UsersManager'
@@ -895,7 +895,9 @@ export function NewUserForm({
                                                     }}>
                                                         {projectAssignments.map((assignment, index) => (
                                                             <li key={index} style={{ marginBottom: '5px', padding: '8px', border: '1px solid var(--color-fontbase-light)', borderRadius: '4px', backgroundColor: 'var(--color-background-light)' }}>
-                                                                <span><strong>{assignment.projectName}</strong> - {assignment.roleInProject.name}</span>
+                                                                <span>
+                                                                    <strong>{assignment.projectName}</strong> - {USER_ROLES_IN_PROJECT[assignment.roleInProject as UserRoleInProjectKey] || 'Rol not defined'}
+                                                                </span>
                                                             </li>
                                                         ))}
                                                     </ul>

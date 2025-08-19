@@ -16,6 +16,7 @@ export type UserStatusKey = keyof typeof USER_STATUS
 
 export type UserRoleInAppValue = typeof USER_ROL_IN_APP[keyof typeof USER_ROL_IN_APP]
 export type UserRoleInAppKey = keyof typeof USER_ROL_IN_APP
+export type UserRoleInProjectKey = keyof typeof USER_ROLES_IN_PROJECT;
 
 export type UserPermissionKey = keyof typeof USER_PERMISSIONS;
 
@@ -76,19 +77,20 @@ export interface IUser {
 }
 
 export interface IProjectAssignment {
+    id?: string; // ID único del documento de asignación, generado por Firebase
     projectId: string;
     projectName?: string;
-    roleInProject: IUserProjectRole;
+    roleInProject: UserRoleInProjectKey | ''; // Usamos la clave del rol, permitiendo un string vacío para el estado inicial
     permissions: UserPermissionKey[];
     assignedDate: Date;
 }
 
-export interface IUserProjectRole {
-    name: typeof USER_ROLES_IN_PROJECT[keyof typeof USER_ROLES_IN_PROJECT];
-    createdAt: Firestore.Timestamp | Date; // Fecha en que se creó el rol
-    description?: string; // Descripción opcional del rol
-}
 
+// export interface IUserProjectRole {
+//     name: typeof USER_ROLES_IN_PROJECT[keyof typeof USER_ROLES_IN_PROJECT];
+//     createdAt: Firestore.Timestamp | Date; // Fecha en que se creó el rol
+//     description?: string; // Descripción opcional del rol
+// }
 
 declare global {
     interface Array<T> {

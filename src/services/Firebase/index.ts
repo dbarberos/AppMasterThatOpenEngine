@@ -3,10 +3,11 @@ import { getStorage, ref, uploadBytes, getDownloadURL,FirebaseStorage } from "fi
 import { initializeApp, FirebaseApp } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth"; // Import Auth and getAuth
 
+
 import { IProject, Project } from "../../classes/Project";
 import { ToDoIssue } from "../../classes/ToDoIssue";
 import { ProjectsManager } from "../../classes/ProjectsManager";
-import { IAssignedUsers, ITag, IToDoIssue } from '../../types'
+import { IAssignedUsers, IProjectAssignment, ITag, IToDoIssue } from '../../types'
 import { toast } from 'sonner'
 import { IUser, User } from "../../classes/User";
 
@@ -496,7 +497,7 @@ export async function deleteToDoWithSubcollections(
  * @param basePath The base path to the subcollection (e.g., `projects/projId/todoList/todoId/tags`).
  * @param items The new array of items to add. Each item must have a unique `id`.
  */
-export async function replaceSubcollectionItems(basePath: string, items: (ITag | IAssignedUsers)[]) {
+export async function replaceSubcollectionItems(basePath: string, items: (ITag | IAssignedUsers | IProjectAssignment)[]): Promise<(ITag | IAssignedUsers | IProjectAssignment)[]> {
     return withRetry(async () => {
         try {
             const subcollectionRef = Firestore.collection(firestoreDB, basePath);
@@ -508,14 +509,25 @@ export async function replaceSubcollectionItems(basePath: string, items: (ITag |
             console.log(`Successfully cleared subcollection at: ${basePath}`);
 
             // 2. Create new documents for each new item
-            const createPromises = items.map(item => {
-                const { id, ...data } = item; // Separate id from the rest of the data
-                const docRef = Firestore.doc(subcollectionRef, id); // Use the item's ID for the new document
-                return Firestore.setDoc(docRef, data);
-            });
-            await Promise.all(createPromises);
-            console.log(`Successfully populated subcollection at: ${basePath} with ${items.length} items.`);
+            const createPromises = items.map(async (item) => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { id, ...data } = item as any; // Excluimos el ID temporal si existe
 
+                // Dejamos que Firebase genere siempre el ID para asegurar unicidad.
+                const docRef = await Firestore.addDoc(subcollectionRef, data);
+
+                // Devolvemos el item original, pero con el ID real de Firebase.
+                return {
+                    ...item,
+                    id: docRef.id
+                };
+            });
+
+            const createdItems = await Promise.all(createPromises);
+            console.log(`Successfully populated subcollection at: ${basePath} with ${createdItems.length} items.`);
+
+            // Devolvemos los items con sus IDs actualizados
+            return createdItems;
         } catch (error) {
             console.error(`Error replacing subcollection items at ${basePath}:`, error);
             toast.error(`Failed to update subcollection at ${basePath}.`);
@@ -1160,6 +1172,23 @@ const getImageVersion = (url: string, version: 'thumbnail' | 'full' = 'full'): s
 
 
 
+async function getUserProjectAssignments(userDoc: Firestore.QueryDocumentSnapshot): Promise<IProjectAssignment[]> {
+    const assignmentsRef = Firestore.collection(userDoc.ref, 'projectsAssigned');
+    const assignmentsSnapshot = await Firestore.getDocs(assignmentsRef);
+    return assignmentsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            ...data,
+            id: doc.id,
+            assignedDate: (data.assignedDate as unknown as Firestore.Timestamp).toDate()
+        } as IProjectAssignment;
+    });
+}
+
+
+
+
+
 //Retrieve information from Firebase
 export const getUsersFromDB = async (): Promise<User[]> => {
     return withRetry(async () => {
@@ -1182,17 +1211,22 @@ export const getUsersFromDB = async (): Promise<User[]> => {
             // Array to store all users with their nested data?
             const users: User[] = []
 
-            firebaseUsers.forEach((doc) => {
-                const userData = doc.data();
+            for (const userDoc of firebaseUsers.docs) {
+                const userData = userDoc.data()
+
+                // Fetch projectsAssigned subcollection for this user
+                const projectsAssigned = await getUserProjectAssignments(userDoc);
+
                 // Ensure the ID from Firestore is used
                 const user = new User({
                     ...userData,
-                    id: doc.id,
-                    createdAt: userData.createdAt?.toDate() || new Date(),
-                    updatedAt: userData.updatedAt?.toDate() || new Date()
+                    id: userDoc.id,
+                    accountCreatedAt: (userData.accountCreatedAt as unknown as Firestore.Timestamp).toDate(),
+                    lastLoginAt: userData.lastLoginAt ? (userData.lastLoginAt as unknown as Firestore.Timestamp).toDate() : undefined,
+                    projectsAssigned
                 });
                 users.push(user);
-            });
+            }
 
 
 

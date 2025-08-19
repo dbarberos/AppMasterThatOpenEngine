@@ -2,6 +2,8 @@ import * as React from 'react';
 import { User as AppUserClass } from '../classes/User';
 import { MoreOptionsHorzIcon  } from './icons'; // Assuming you have these icons
 import { UserCardActionsMenu} from '../react-components'
+import { useProjectsManager } from './ProjectsManagerContext';
+import { USER_ROLES_IN_PROJECT } from '../const';
 
 interface UserCardRowProps {
     user: AppUserClass;
@@ -25,6 +27,9 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
     authUserId,
 }) => {
     console.log(`[UserCardRow] Renderizando para el usuario: ${user.id} - ${user.nickName || user.email}`);
+
+    // Accedemos al gestor de proyectos para obtener detalles como el acrónimo y el color.
+    const projectsManager = useProjectsManager();
 
 
     //const [isDetailsVisible, setIsDetailsVisible] = React.useState(false);
@@ -188,32 +193,46 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
                             </div>
                         </div>
                         <div className="user-details2">
-                            <div className="user-data" style={{ justifyContent: "flex-start" }}>
+                            <div className="user-data" style={{ justifyContent: "flex-start", flexDirection: "row", gap: 10 }}>
                                 <div>
                                     <p>PROJECTS TEAMS:</p>
                                 </div>
                                 <div>
                                     {user.projectsAssigned && user.projectsAssigned.length > 0 ? (
-                                        user.projectsAssigned.map(pa => (
-                                            <p key={pa.projectId}
-                                                style={{
-                                                    fontSize: "var(--font-xl)",
-                                                    // backgroundColor: "#ca8134", // Consider dynamic color based on project
-                                                    padding: 10,
-                                                    borderRadius: "var(--br-circle)",
-                                                    aspectRatio: 1,
-                                                    color: "var(--background)",
-                                                    marginRight: 5,
-                                                    display: 'inline-block',
-                                                    // You might want to fetch project acronyms or use a placeholder
-                                                    backgroundColor: `#${Math.floor(Math.random()*16777215).toString(16)}` // Random color for demo
-                                                }}
-                                                title={`Role: ${pa.roleInProject}`}
-                                            >
-                                                {/* Placeholder for project acronym - you'd need to fetch this */}
-                                                {pa.projectId.substring(0, 2).toUpperCase()}
-                                            </p>
-                                        ))
+                                        user.projectsAssigned.map(pa => {
+                                            const project = projectsManager.getProject(pa.projectId);
+                                            if (!project) {
+                                                // Fallback si el proyecto no se encuentra (por ejemplo, si fue eliminado)
+                                                return (
+                                                    <p key={pa.projectId} className="project-acronym-badge" title={`Project not found. Role: ${pa.roleInProject}`} style={{ backgroundColor: '#808080', color: 'white', padding: 10, borderRadius: '50%', aspectRatio: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginRight: 5 }}>
+                                                        ?
+                                                    </p>
+                                                );
+                                            }
+                                            const roleDisplayName = USER_ROLES_IN_PROJECT[pa.roleInProject] || pa.roleInProject;
+                                            return (
+                                                <p
+                                                    key={pa.projectId}
+                                                    className="project-acronym-badge"
+                                                    style={{
+                                                        fontSize: "var(--font-xl)",
+                                                        padding: 10,
+                                                        borderRadius: "var(--br-circle)",
+                                                        aspectRatio: 1,
+                                                        color: "var(--background)",
+                                                        marginRight: 20,
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: project.backgroundColorAcronym || '#808080',
+                                                        
+                                                    }}
+                                                    title={`Project: ${project.name}\nRole: ${roleDisplayName}`}
+                                                >
+                                                    {project.acronym}
+                                                </p>
+                                            );
+                                        })
                                     ) : (
                                         <p>No projects assigned</p>
                                     )}

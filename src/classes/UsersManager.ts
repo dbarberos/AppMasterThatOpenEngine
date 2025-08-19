@@ -352,15 +352,19 @@ export class UsersManager {
 
         // Separar projectsAssigned del resto de los datos del usuario
         const { projectsAssigned, ...otherUserData } = dataToUpdate;
+        const user = this.getUser(userId);
         
         try {
             const userDocRef = doc(firestoreDB, 'users', userId);
+            let mainDataUpdated = false;
+            let assignmentsUpdated = false;
 
             // 1. Actualizar los campos del documento principal si hay alguno
             if (Object.keys(otherUserData).length > 0) {
                 const plainData = this.toFirestoreData(otherUserData as User);
                 await setDoc(userDocRef, plainData, { merge: true });
                 console.log(`UsersManager: Main user document updated for ${userId}`);
+                mainDataUpdated = true;
             }
 
             // 2. Si se proporcionó projectsAssigned, reemplazar la subcolección
@@ -368,9 +372,26 @@ export class UsersManager {
                 const subcollectionPath = `users/${userId}/projectsAssigned`;
                 await replaceSubcollectionItems(subcollectionPath, projectsAssigned);
                 console.log(`UsersManager: Subcollection 'projectsAssigned' updated for ${userId}`);
+                assignmentsUpdated = true;
+            }
+
+            // 3. Mostrar notificación de éxito
+            if (user) {
+                if (assignmentsUpdated && mainDataUpdated) {
+                    toast.success(`Profile and project assignments for ${user.nickName} updated successfully.`);
+                } else if (assignmentsUpdated) {
+                    toast.success(`Project assignments for ${user.nickName} updated successfully.`);
+                } else if (mainDataUpdated) {
+                    toast.success(`Profile for ${user.nickName} updated successfully.`);
+                }
+            } else if (mainDataUpdated || assignmentsUpdated) {
+                // Fallback si el usuario no se encuentra en el manager local
+                toast.success(`User ${userId} updated successfully.`);
             }
         } catch (error: any) {
             console.error(`UsersManager: Error updating document in users/${userId}:`, error);
+            const userName = user ? user.nickName : `user ${userId}`;
+            toast.error(`Failed to update ${userName}. Please try again.`);
             throw new Error(`Failed to update user in Firebase: ${error.message}`);
         }
     }
@@ -619,4 +640,3 @@ export class UsersManager {
         console.log('UsersManager: Cleaned up all project assignment subcollection listeners.');
     }
 }
-

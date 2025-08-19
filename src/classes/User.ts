@@ -58,7 +58,14 @@ export class User implements IUser {
         this.lastLoginAt = data.lastLoginAt ? this.parseAndValidateDate(data.lastLoginAt) : undefined;
 
         // Asegura que `projectsAssigned` sea siempre un array para evitar errores.
-        this.projectsAssigned = Array.isArray(data.projectsAssigned) ? data.projectsAssigned : [];
+        this.projectsAssigned = (Array.isArray(data.projectsAssigned) ? data.projectsAssigned : [])
+            .filter(p => {
+                if (!p || typeof p.projectId !== 'string' || !p.projectId) {
+                    console.warn("Se ha filtrado una asignación de proyecto inválida (sin projectId):", p);
+                    return false;
+                }
+                return true;
+            });
     }
 
     private parseAndValidateDate(rawValue: any): Date {
