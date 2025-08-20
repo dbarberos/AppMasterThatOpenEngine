@@ -14,6 +14,8 @@ interface UserProjectAssignmentRowProps {
     onAllowModificationRequest: (projectId: string) => void;
 }
 
+
+
 export const UserProjectAssignmentRow: React.FC<UserProjectAssignmentRowProps> = ({
     project,
     currentAssignment,
@@ -24,6 +26,16 @@ export const UserProjectAssignmentRow: React.FC<UserProjectAssignmentRowProps> =
     onPermissionChange,
     onAllowModificationRequest,
 }) => {
+
+
+    console.log('UserProjectAssignmentRow props:', {
+        projectId: project.id,
+        projectName: project.name,
+        isAlreadyAssigned,
+        isModificationAllowed,
+        currentAssignment,
+    });
+    
     // Estado local para controlar si el panel está desplegado
     const [isExpanded, setIsExpanded] = React.useState(false);
 
@@ -142,6 +154,11 @@ export const UserProjectAssignmentRow: React.FC<UserProjectAssignmentRowProps> =
             
             {/* Contenedor para los controles (rol y permisos), visible solo si el proyecto está seleccionado */}
             {isProjectSelected && (
+                <>
+                {console.log('UserProjectAssignmentRow permissions for project:', {
+                    projectId: project.id,
+                    permissions: currentAssignment?.permissions,
+                })}
                 <div className="controls-container"
                     style={{
                         display: 'flex',
@@ -184,6 +201,7 @@ export const UserProjectAssignmentRow: React.FC<UserProjectAssignmentRowProps> =
                     </div>
 
                     {/* Contenedor de Permisos */}
+                            
                     <div
                         className="permissions-container"
                         style={{
@@ -194,6 +212,7 @@ export const UserProjectAssignmentRow: React.FC<UserProjectAssignmentRowProps> =
                             marginRight:'50px',
                         }}
                     >
+                        
                         {Object.entries(USER_PERMISSIONS).map(([key, value]) => (
                             <div
                                 key={key}
@@ -227,7 +246,8 @@ export const UserProjectAssignmentRow: React.FC<UserProjectAssignmentRowProps> =
                             </div>
                         ))}
                     </div>
-                </div>
+                    </div>
+                </>
             )}
         </div>
     );

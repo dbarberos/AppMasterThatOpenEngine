@@ -68,12 +68,12 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
     const handleAllowModificationRequest = (projectId: string) => {        
         setMessagePopUpContent({
             type: 'info',
-            title: 'Proyecto ya asignado',
-            message: 'Este proyecto ya ha sido asignado al usuario. Selecciónelo solo si desea modificar el rol o los permisos existentes.',
-            actions: ["Entendido", "Modificar Asignación"],
+            title: 'Project Already Assigned',
+            message: 'This project is already assigned to the user. Select it only if you want to modify the existing role or permissions.',
+            actions: ["Understood", "Modify Assignment"],
             onActionClick: {
-                "Entendido": () => setShowMessagePopUp(false),
-                "Modificar Asignación": () => {
+                "Understood": () => setShowMessagePopUp(false),
+                "Modify Assignment": () => {
                     setUnlockedProjects(prev => new Set(prev).add(projectId));
                     // Asegurarse de que el proyecto esté seleccionado en las asignaciones pendientes
                     // para que se muestren los controles de rol/permisos.
@@ -120,13 +120,28 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
             const project = projects.find((p) => p.id === projectId);
             if (!project) return;
 
-            // Si ya existía una asignación, la recupera. Si no, crea una nueva.
-            newAssignments[projectId] = normalizedAssignments[projectId] || {
+            // Obtener los permisos por defecto basados en el rol del usuario en la aplicación.
+            const defaultPermissions = (userRoleInApp && USER_ROL_IN_APP_PERMISSIONS[userRoleInApp]) || [];
+            console.log('[UserProjectAssignmentModal] userRoleInApp:', userRoleInApp);
+            console.log('[UserProjectAssignmentModal] USER_ROL_IN_APP_PERMISSIONS:', USER_ROL_IN_APP_PERMISSIONS);
+            console.log('[UserProjectAssignmentModal] defaultPermissions:', defaultPermissions);
+
+            // Comprobar si ya existía una asignación para preservar datos como el rol.
+            
+            
+            // Si el usuario vuelve a marcar el proyecto, SIEMPRE asigna los permisos por defecto
+            newAssignments[projectId] = {
                 projectId: project.id!,
                 projectName: project.name,
-                roleInProject: '',
-                permissions: userRoleInApp ? USER_ROL_IN_APP_PERMISSIONS[userRoleInApp] || [] : [],
-                assignedDate: new  Date(), // Se añade la fecha al seleccionar
+                // Si ya existía, mantener el rol. Si no, dejarlo vacío para que se seleccione.
+                roleInProject: pendingAssignments[projectId]?.roleInProject || '',
+                // roleInProject: '',
+                // roleInProject: existingAssignment ? existingAssignment.roleInProject : '',
+                // Siempre aplicar los permisos por defecto al seleccionar/re-seleccionar.
+                permissions: defaultPermissions,
+                // Si ya existía, mantener la fecha de asignación. Si no, crear una nueva.
+                assignedDate: new Date(),
+                // assignedDate: existingAssignment ? existingAssignment.assignedDate : new Date(),
             };
         } else {
             // Si se desmarca, elimina la asignación
@@ -148,6 +163,7 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
             // }
         }
         setPendingAssignments(newAssignments);
+        console.log('[UserProjectAssignmentModal] pendingAssignments after change:', newAssignments);
     };
 
     const handleRoleChange = (projectId: string, role: string) => {

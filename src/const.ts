@@ -65,27 +65,27 @@ export const USER_PERMISSIONS = {
  * sus permisos, que luego pueden ser modificados.
  */
 export const USER_ROL_IN_APP_PERMISSIONS = {
-    [USER_ROL_IN_APP.superadmin]: [
+    superadmin: [
         "canCreate", 
         "canRead", 
         "canUpdate", 
         "canDelete"
     ],
-    [USER_ROL_IN_APP.admin]: [
+    admin: [
         "canCreate", 
         "canRead", 
         "canUpdate", 
         "canDelete"
     ],
-    [USER_ROL_IN_APP.user]: [
+    user: [
         "canCreate", 
         "canRead", 
         "canUpdate"
     ],
-    [USER_ROL_IN_APP.viewer]: [
+    viewer: [
         "canRead"
     ],
-    [USER_ROL_IN_APP.unverified]: []
+    unverified: []
 };
 
 
