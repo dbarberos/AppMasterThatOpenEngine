@@ -92,9 +92,11 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
     const handleSelectAll = () => {
         const newAssignments = { ...pendingAssignments };
         projects.forEach((project) => {
-            // Si el proyecto no está ya seleccionado, lo añade con valores por defecto.
-            if (!newAssignments[project.id!]) {
-                newAssignments[project.id!] = {                    
+            // Solo seleccionar si el proyecto NO está asignado y bloqueado
+            const isAlreadyAssigned = !!normalizedAssignments[project.id!];
+            const isModificationAllowed = unlockedProjects.has(project.id!);
+            if (!isAlreadyAssigned || isModificationAllowed) {                
+                newAssignments[project.id!] = {
                     projectId: project.id!,
                     projectName: project.name,
                     roleInProject: '', // Forzar al usuario a seleccionar un rol
@@ -102,14 +104,28 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
                     assignedDate: new Date(), // Se añade la fecha al seleccionar
                 };
             }
+            // Si está asignado y bloqueado, no modificar
         });
         setPendingAssignments(newAssignments);
     };
 
     const handleDeselectAll = () => {
+        const newAssignments = { ...pendingAssignments };
+        projects.forEach((project) => {
+            const isAlreadyAssigned = !!normalizedAssignments[project.id!];
+            const isModificationAllowed = unlockedProjects.has(project.id!);
+            // Solo desmarcar si el proyecto NO está asignado y bloqueado
+            if (!isAlreadyAssigned || isModificationAllowed) {
+                delete newAssignments[project.id!];
+            }
+            // Si está asignado y bloqueado, no modificar
+    });
         // Revierte las asignaciones al estado original y bloquea de nuevo los proyectos modificados.
+        
+        setPendingAssignments(newAssignments);
         // Esto previene la eliminación accidental de asignaciones existentes.
-        setPendingAssignments(JSON.parse(JSON.stringify(existingAssignments || {})));
+        // setPendingAssignments(JSON.parse(JSON.stringify(existingAssignments || {})));
+        // Opcional: Si quieres bloquear de nuevo los proyectos desbloqueados, puedes limpiar unlockedProjects aquí.
         setUnlockedProjects(new Set());
     };
 
@@ -140,27 +156,13 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
                 // Siempre aplicar los permisos por defecto al seleccionar/re-seleccionar.
                 permissions: defaultPermissions,
                 // Si ya existía, mantener la fecha de asignación. Si no, crear una nueva.
-                assignedDate: new Date(),
+                assignedDate: pendingAssignments[projectId]?.assignedDate || new Date(),
                 // assignedDate: existingAssignment ? existingAssignment.assignedDate : new Date(),
             };
         } else {
             // Si se desmarca, elimina la asignación
             delete newAssignments[projectId];
-            // Si el proyecto estaba desbloqueado para modificar, mantenerlo desbloqueado
-            // (no volver a bloquearlo automáticamente)
-            
 
-            // // Si el proyecto ya existía, no lo eliminamos, solo lo "bloqueamos" de nuevo.
-            // if (normalizedAssignments[projectId]) {
-            //     setUnlockedProjects(prev => {
-            //         const newSet = new Set(prev);
-            //         newSet.delete(projectId);
-            //         return newSet;
-            //     });
-            // } else {
-            //     // Si era una asignación nueva, sí la eliminamos.
-            //     delete newAssignments[projectId];
-            // }
         }
         setPendingAssignments(newAssignments);
         console.log('[UserProjectAssignmentModal] pendingAssignments after change:', newAssignments);
@@ -253,7 +255,7 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
             
             })
                 console.log('existingAssignments keys:', Object.keys(existingAssignments));
-console.log('existingAssignments:', existingAssignments);;
+                console.log('existingAssignments:', existingAssignments);;
             return (
                 <UserProjectAssignmentRow
                     key={project.id}
