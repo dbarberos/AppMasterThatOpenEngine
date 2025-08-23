@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { User as AppUserClass } from '../classes/User';
 import { MoreOptionsHorzIcon  } from './icons'; // Assuming you have these icons
-import { UserCardActionsMenu} from '../react-components'
+import { UserCardActionsMenu, UserProjectAssignmentHoverInformation} from '../react-components'
 import { useProjectsManager } from './ProjectsManagerContext';
 import { USER_ROLES_IN_PROJECT } from '../const';
+
 
 interface UserCardRowProps {
     user: AppUserClass;
@@ -38,6 +39,11 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
     // Crear una ref para el botón que abre el menú.
     // Se pasará al menú para que pueda calcular su posición.
     const menuButtonRef = React.useRef<HTMLButtonElement>(null);
+
+    // Estado para hover
+    const [hoveredProjectId, setHoveredProjectId] = React.useState<string | null>(null);
+    const acronymRefs = React.useRef<{ [projectId: string]: HTMLElement | null }>({});
+
 
     //    Debe cumplir la condición general (canExpandDetails) Y tener el rol adecuado.
     const canUserExpand = (authRole === 'admin' || authRole === 'superadmin')
@@ -211,26 +217,51 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
                                             }
                                             const roleDisplayName = USER_ROLES_IN_PROJECT[pa.roleInProject] || pa.roleInProject;
                                             return (
-                                                <p
-                                                    key={pa.projectId}
-                                                    className="project-acronym-badge"
-                                                    style={{
-                                                        fontSize: "var(--font-xl)",
-                                                        padding: 10,
-                                                        borderRadius: "var(--br-circle)",
-                                                        aspectRatio: 1,
-                                                        color: "var(--background)",
-                                                        marginRight: 20,
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        backgroundColor: project.backgroundColorAcronym || '#808080',
-                                                        
-                                                    }}
-                                                    title={`Project: ${project.name}\nRole: ${roleDisplayName}`}
-                                                >
-                                                    {project.acronym}
-                                                </p>
+                                                <React.Fragment key={pa.projectId}>
+                                                    <p
+                                                        ref={el => acronymRefs.current[pa.projectId] = el}
+                                                        className="project-acronym-badge"
+                                                        onMouseEnter={() => setHoveredProjectId(pa.projectId)}
+                                                        onMouseLeave={() => setHoveredProjectId(null)}
+                                                        style={{
+                                                            fontSize: "var(--font-xl)",
+                                                            width: "66px",// Fijo para 5 letras (ajusta según tu diseño)
+                                                            height: "66px", // Igual que el ancho 
+                                                            padding: 10,
+                                                            borderRadius: "var(--br-circle)",
+                                                            aspectRatio: 1,
+                                                            color: "#43464e",
+                                                            marginRight: 20,
+                                                            marginBottom: 10,
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            backgroundColor: project.backgroundColorAcronym || '#808080',
+
+                                                            // fontWeight: 600,
+                                                            // letterSpacing: "0.05em",
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                            whiteSpace: "nowrap",
+                                                            boxSizing: "border-box",
+                                                        }}
+                                                        title={""} // Elimina el title para evitar el tooltip nativo
+                                                        // title={`Project: ${project.name}\nRole: ${roleDisplayName}`}
+                                                    >
+                                                        {project.acronym}
+                                                    </p>
+                                                    {/* Condiciona la aparición igual que en ToDoCard */}
+                                                    {hoveredProjectId === pa.projectId && (
+                                                        <UserProjectAssignmentHoverInformation
+                                                            user={user}
+                                                            assignment={pa}
+                                                            project={project}
+                                                            anchorRef={{ current: acronymRefs.current[pa.projectId] }}
+                                                            isVisible={true}
+                                                            // isVisible={hoveredProjectId === pa.projectId}
+                                                        />
+                                                    )}
+                                                </React.Fragment>
                                             );
                                         })
                                     ) : (
