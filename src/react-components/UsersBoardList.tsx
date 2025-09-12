@@ -3,26 +3,38 @@ import React from 'react';
 import { User } from '../classes/User';
 import { EditIcon, TrashIcon } from './icons'; // Asumiendo que tienes iconos
 import { UserCardRow, UserSortKey } from '../react-components/';
-import { useAuth } from '../Auth/react-components/AuthContext'
+import { useAuth } from '../Auth/react-components/AuthContext';
+import { useUserBoardContext } from './UsersBoardPage';
 
 
 
+// interface UserListProps {
+//     users: User[];
+//     onAssignProjects: (user: User) => void; // Función para abrir el modal de asignación
+//     onEditUser: (user: User) => void; // Función para abrir el modal de edición
+//     onDeleteUser: (userId: string) => void; // Función para manejar la eliminación
+//     onSort: (sortKey: UserSortKey) => void; // Función para manejar el ordenamiento
+// }
 
-interface UserListProps {
-    users: User[];
-    onAssignProjects: (user: User) => void; // Función para abrir el modal de asignación
-    onEditUser: (user: User) => void; // Función para abrir el modal de edición
-    onDeleteUser: (userId: string) => void; // Función para manejar la eliminación
-    onSort: (sortKey: UserSortKey) => void; // Función para manejar el ordenamiento
-}
+// export const UsersBoardList: React.FC<UserListProps> = ({
+//     users,
+//     onAssignProjects,
+//     onEditUser,
+//     onDeleteUser,
+//     onSort,
+// }) => {
 
-export const UsersBoardList: React.FC<UserListProps> = ({
-    users,
-    onAssignProjects,
-    onEditUser,
-    onDeleteUser,
-    onSort,
-}) => {
+export const UsersBoardList: React.FC = () => {
+    const {
+        sortedAndFilteredUsers: users, // Renombramos para usarlo localmente
+        onAssignProjects,
+        onEditUser,
+        onDeleteUser,
+        onSort,
+    } = useUserBoardContext();
+
+
+
 
         console.log('[UsersBoardList] Componente Renderizado con props:', {
         userCount: users.length,

@@ -319,13 +319,13 @@ export function NewUserForm({
             firstName,
             lastName,
             phoneNumber,
-            phoneCountryNumber: selectedCountry?.callingCode || currentUserData.phoneCountryNumber,
+            phoneCountryNumber: selectedCountry?.callingCode || currentUserData.phoneCountryNumber,            
             address,
             descriptionUser,
             organization,
             roleInApp: authCurrentUserRole === 'superadmin' ? roleInApp : (currentUserData.roleInApp || 'viewer'),
             status: authCurrentUserRole === 'superadmin' ? status : (currentUserData.status || 'pending'),
-
+            photoURL: currentUserData.photoURL !== undefined ? currentUserData.photoURL : null,
 
             // Campos que solo un admin podría cambiar (si se implementa su edición en el form)
             // roleInApp: (authCurrentUserRole === 'admin' ? formData.get("roleInApp") : currentUserData.roleInApp) as UserRoleInAppKey,
@@ -373,6 +373,10 @@ export function NewUserForm({
                         const userIdToUpdate = currentUserData.uid || currentUserData.id;
                         if (!userIdToUpdate) {
                             throw new Error("User ID is missing, cannot update profile.");
+                        }
+
+                        if (newProfileData.photoURL === undefined) {
+                            newProfileData.photoURL = null;
                         }
 
                         const updatedUser = await handleUpdateProfileUserInDB(userIdToUpdate, newProfileData);

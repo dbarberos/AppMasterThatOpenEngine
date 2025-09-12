@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
 
-import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, UserUnverifiedPage, UserFinishSignUpPage } from './react-components';
+import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, UsersBoardList, UserBoardProjectsTeamsPage, UserUnverifiedPage, UserFinishSignUpPage } from './react-components';
 import { ProjectsManagerProvider, useProjectsManager } from './react-components/ProjectsManagerContext';
 import { UsersManagerProvider, useUsersManager } from './react-components/UsersManagerContext.tsx';
 
@@ -139,7 +139,7 @@ const App = () => {
         try {
 
              // Call the service function that handles the deletion logic in Firebase.
-             await deleteToDoWithSubcollections(projectId, todoId);
+            await deleteToDoWithSubcollections(projectId, todoId);
              // The UI will update automatically thanks to the onSnapshot listener in ProjectsManager,
             // which will detect the change in the database and update the application state.
             
@@ -316,10 +316,13 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
                                 onUserCreate={props.onUserCreate}
                                 onUserUpdate={props.onUserUpdate}
                             />
-                            
-                        } />
+                        } >
+                            <Router.Route index element={<UsersBoardList />} />
+                            <Router.Route path="teams" element={<UserBoardProjectsTeamsPage />} />
+                        </Router.Route>
                     
-                </Router.Route>
+                    </Router.Route>
+                    
                 {/* --- FIN DE RUTAS PROTEGIDAS --- */}
 
                 <Router.Route path="/change-password" element={

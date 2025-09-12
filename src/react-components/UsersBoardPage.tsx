@@ -22,6 +22,21 @@ import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
 import { UserProjectAssignmentModal } from './UserProjectAssignmentModal';
 
 
+interface UserBoardContextType {
+    users: AppUserClass[];
+    projects: Project[];
+    onAssignProjects: (user: AppUserClass) => void;
+    onEditUser: (user: AppUserClass | null) => void;
+    onDeleteUser: (userId: string) => void;
+    onSort: (sortKey: UserSortKey) => void;
+    sortedAndFilteredUsers: AppUserClass[];
+    // No necesitamos pasar los elementos del header, ya que se quedan en el padre
+}
+
+export const useUserBoardContext = () => {
+    return Router.useOutletContext<UserBoardContextType>();
+};
+
 
 interface Props {
     usersManager: UsersManager,
@@ -76,6 +91,11 @@ export function UsersBoardPage({
     const [sortBy, setSortBy] = useStickyState<UserSortKey>('nickName', userSortByKey);
 
 
+    // Referencias y hooks para la navegación deslizante
+    const navRef = React.useRef<HTMLUListElement>(null);
+    const location = Router.useLocation();
+
+
     // Lógica de permisos para la página
     const canManageUsers = userProfile?.roleInApp === 'admin' || userProfile?.roleInApp === 'superadmin';
 
@@ -105,8 +125,6 @@ export function UsersBoardPage({
         filteredUsersFromSearchHook_count: filteredUsers.length,
     });
 
-
-
     // Verificar si necesitamos sincronizar
     const shouldSync = React.useCallback(() => {
         const now = Date.now();
@@ -123,6 +141,12 @@ export function UsersBoardPage({
     console.log(`Sorting by: ${key}`)
         setSortBy(key);
     }, [setSortBy]);
+
+
+
+
+
+
 
 
     // --- Handlers para el modal de asignación de proyectos ---
@@ -194,6 +218,9 @@ export function UsersBoardPage({
         });
         setShowMessagePopUp(true)
     };
+
+
+
 
 
 
@@ -369,6 +396,65 @@ export function UsersBoardPage({
 //    // This useMemo might not be needed if UsersBoardList handles the direct rendering of UserCardRow 
 
 
+    const contextValue: UserBoardContextType = {
+        users,
+        projects,
+        onAssignProjects: handleOpenAssignmentModal,
+        onEditUser: handleOpenNewUserModal,
+        onDeleteUser: handleDeleteUser,
+        onSort: handleSort,
+        sortedAndFilteredUsers,
+    };
+
+
+
+    
+
+
+// Efecto para actualizar la posición del indicador deslizante
+    React.useEffect(() => {
+        // Si la referencia al contenedor de navegación no existe, no hacemos nada.
+        if (!navRef.current) return;
+
+        // Buscamos el enlace que tiene la clase 'active'.
+        // react-router-dom añade esta clase automáticamente al NavLink de la ruta actual.
+        const activeLink = navRef.current.querySelector('a.active') as HTMLElement;
+
+        if (activeLink) {
+            // Obtenemos el elemento <li> padre del enlace activo.
+            const activeListItem = activeLink.parentElement as HTMLLIElement;
+            if (activeListItem) {
+                // Obtenemos la posición y el ancho del <li> activo.
+                const { offsetLeft, offsetWidth } = activeListItem;
+                // Actualizamos las variables CSS en el elemento <ul> para mover el indicador.
+                navRef.current.style.setProperty('--_indicator-left', `${offsetLeft}px`);
+                navRef.current.style.setProperty('--_indicator-width', `${offsetWidth}px`);
+            }
+        } else {
+            // Opcional: Si no se encuentra un enlace activo, puedes ocultar el indicador.
+            // navRef.current.style.setProperty('--_indicator-width', `0px`);
+        }
+    }, [location.pathname, sortedAndFilteredUsers]); // Añadimos sortedAndFilteredUsers como dependencia // Este efecto se ejecuta cada vez que la URL cambia.
+
+
+
+    // --- Handlers para la animación de hover del indicador ---
+    const handleTabMouseEnter = (e: React.MouseEvent<HTMLLIElement>) => {
+        if (!navRef.current) return;
+        const target = e.currentTarget;
+        // Actualizamos las variables CSS para el estado de hover
+        navRef.current.style.setProperty('--_hover-left', `${target.offsetLeft}px`);
+        navRef.current.style.setProperty('--_hover-width', `${target.offsetWidth}px`);
+        // Añadimos una clase para activar la transición del hover en el CSS
+        navRef.current.classList.add('is-hovering');
+    };
+
+    const handleTabMouseLeave = () => {
+        if (!navRef.current) return;
+        // Quitamos la clase para que el indicador vuelva a su posición activa
+        navRef.current.classList.remove('is-hovering');
+    };
+
 
 
 
@@ -410,7 +496,7 @@ export function UsersBoardPage({
                             color="var(--color-fontbase)"
                         />
                     
-                        {/* Selector de Proyecto (para Parte 2) */}
+                        {/* Selector de Proyecto (para Parte 2) Solo aparece cuando esta en la pestana de projects Teams*/}
                         <div style={{ display: "flex", alignItems: "center", columnGap: 10 }}>
                             <ProjectSelector
                                 currentProject={projects.find(p => p.id === selectedProject) || null}
@@ -420,7 +506,8 @@ export function UsersBoardPage({
                         </div>
                     </h2>
                     <ul
-                        id="users-sliding-nav1"
+                        ref={navRef}
+                        id="users-sliding-nav" // Cambiado de users-sliding-nav1 para coincidir con el nuevo CSS
                         style={{
                             display: "flex",
                             columnGap: 25,
@@ -429,19 +516,36 @@ export function UsersBoardPage({
                             alignItems: "center"
                         }}
                     >
-                        <li className="users-slide1" />
-                        <li className="users-slide2" />
-                        <li>
-                            <a href="#/users" className="tab-buttons">
+                        {/* <li className="users-slide1" />
+                        <li className="users-slide2" /> */}
+                        {/* Los <li> con las clases slide se eliminan, el indicador ahora es un pseudo-elemento ::after */}
+
+                        <li
+                            className="nav-item-users"
+                            onMouseEnter={handleTabMouseEnter}
+                            onMouseLeave={handleTabMouseLeave}
+                        >
+                            {/* <a href="#/users" className="tab-buttons"> */}
+                             {/* Este NavLink se activará SOLO cuando la ruta sea EXACTAMENTE "/usersBoard" */}
+                            <Router.NavLink to="/usersBoard" end className="tab-buttons">
                                 <span className="material-icons-round">people_alt</span>
                                 Users
-                            </a>
+                            {/* </a> */}
+                            </Router.NavLink>
                         </li>
-                        <li>
-                            <a href="#/teams" className="tab-buttons" style={{ width: 175 }}>
+                        <li
+                            className="nav-item-teams"
+                            onMouseEnter={handleTabMouseEnter}
+                            onMouseLeave={handleTabMouseLeave}
+                        >
+                            {/* <a href="#/teams" className="tab-buttons" style={{ width: 175 }}> */}
+                            {/* Usamos NavLink para que react-router-dom gestione la clase 'active' */}
+                            {/* Este NavLink se activará cuando la ruta sea "/usersBoard/teams" */}
+                            <Router.NavLink to="/usersBoard/teams" className="tab-buttons" style={{ width: 175 }}>
                                 <span className="material-icons-round">diversity_3</span>
-                                Users by Proyects
-                            </a>
+                                Users by Projects
+                            {/* </a> */}
+                            </Router.NavLink>
                         </li>
                     </ul>
                     {/* <div style="display: flex; column-gap: 25px; transform: translateY(35px); z-index:100;" >
@@ -513,8 +617,8 @@ export function UsersBoardPage({
                 }}
             >
 
-                <div className="header-user-page-content">
-                    <div style={{ display: "flex", flexDirection: "row", columnGap: 20 }}>
+                {/* <div className="header-user-page-content">
+                    < style={{ display: "flex", flexDirection: "row", columnGap: 20 }}>
                         <button
                             ref={sortButtonRef}
                             onClick={toggleSortMenu}
@@ -525,22 +629,52 @@ export function UsersBoardPage({
                             <p>Sort By</p>
                             <span className="material-icons-round">expand_more</span>
                         </button>
-                        {/* El botón solo se renderiza si el usuario tiene permisos */}
-                        {canManageUsers && (
+                        El botón solo se renderiza si el usuario tiene permisos 
+                        {canManageUsers && ( */}
+
+
+                {/* --- HEADER SECUNDARIO CONDICIONAL --- */}
+                {/* Solo mostramos estos botones si estamos en la ruta raíz de usersBoard */}
+                {location.pathname === '/usersBoard' && (
+                    <div className="header-user-page-content">
+                        <div style={{ display: "flex", flexDirection: "row", columnGap: 20 }}>
+                            
                             <button
-                                // onClick={onNewUserClick}
-                                onClick={() => setIsInvitationModalOpen(true)} // Abre el nuevo modal de invitación
-                                id="new-user-btn"
-                                style={{ whiteSpace: 'nowrap' }}
-                                title="Invite a new User"
+                                // onClick={() => setIsInvitationModalOpen(true)} // Abre el nuevo modal de invitación
+                                // id="new-user-btn"
+                                // style={{ whiteSpace: 'nowrap' }}
+                                // title="Invite a new User"
+
+                                ref={sortButtonRef}
+                                onClick={toggleSortMenu}
+                                style={{ borderRadius: 10, width: "auto" }}
+                                className="btn-secondary"
                             >
                                 <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
                                 <p style={{ color: "var(--color-fontbase-dark)" }}>Invite a new User</p>
+                                <span className="material-icons-round">swap_vert</span>
+                                <p>Sort By</p>
+                                <span className="material-icons-round">expand_more</span>
+
                             </button>
-                        )}
+                            {/* )} */}
+                            {canManageUsers && (
+                                <button
+                                    onClick={() => setIsInvitationModalOpen(true)}
+                                    id="new-user-btn"
+                                    style={{ whiteSpace: 'nowrap' }}
+                                    title="Invite a new User"
+                                >
+                                    <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
+                                    <p style={{ color: "var(--color-fontbase-dark)" }}>Invite a new User</p>
+                                </button>
+                            )}
+                            
+                        </div>
                     </div>
-                </div>
-                {viewMode === 'allUsers' && (
+                )}
+                
+                {/* {viewMode === 'allUsers' && (
                     <UsersBoardList
                         //users={filteredUsers}
                         users={sortedAndFilteredUsers}
@@ -556,13 +690,11 @@ export function UsersBoardPage({
                     //<p>Vista de Usuarios por Proyecto {selectedProject} (ProjectUserView irá aquí)</p>
                     <div>
                         <h3>Users in Project: {projects.find(p => p.id === selectedProject)?.name || 'Unknown Project'}</h3>
-                        {/* Aquí iría el componente UsersBoardProjectView, que filtraría los usuarios
+                        Aquí iría el componente UsersBoardProjectView, que filtraría los usuarios
                         basándose en el selectedProject y sus asignaciones.
-                        Por ahora, un placeholder: */}
+                        Por ahora, un placeholder: 
                         <p>Displaying users assigned to project ID: {selectedProject}. (UsersBoardProjectView component will go here)</p>
-                        {/* Ejemplo de cómo podrías filtrar y mostrar:
-                    <UsersBoardList users={filteredUsers.filter(u => u.projectsAssigned?.some(pa => pa.projectId === selectedProject))} onAssignProjects={handleOpenAssignModal} />
-                    */}
+                        
                     </div>
 
                 )}
@@ -571,7 +703,9 @@ export function UsersBoardPage({
                 )}
                 {viewMode === 'projectUsers' && !selectedProject && projects.length === 0 && (
                     <p>No projects available to display users by project.</p>
-                )}
+                )} */}
+
+                <Router.Outlet context={contextValue} />
             
             </div>
 

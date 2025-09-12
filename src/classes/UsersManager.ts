@@ -314,7 +314,12 @@ export class UsersManager {
     async newUser(data: IUser, id: string): Promise<User> {
         console.log('UsersManager: newUser called to write to Firebase.', { data, id });
         const userInstance = new User(data, id);
-        const plainData = this.toFirestoreData(userInstance);
+
+        // Limpiar el objeto de cualquier campo 'undefined' antes de enviarlo a Firestore.
+        const cleanedData = Object.fromEntries(
+            Object.entries(userInstance).filter(([, value]) => value !== undefined)
+        );
+        const plainData = this.toFirestoreData(cleanedData as IUser);
 
         try {
             const userDocRef = doc(firestoreDB, 'users', id);
@@ -361,7 +366,14 @@ export class UsersManager {
 
             // 1. Actualizar los campos del documento principal si hay alguno
             if (Object.keys(otherUserData).length > 0) {
-                const plainData = this.toFirestoreData(otherUserData as User);
+
+                // Limpiar el objeto de cualquier campo 'undefined' antes de enviarlo a Firestore.
+                const cleanedData = Object.fromEntries(
+                    Object.entries(otherUserData).filter(([, value]) => value !== undefined)
+                );
+                const plainData = this.toFirestoreData(cleanedData as Partial<IUser>);
+                
+                // const plainData = this.toFirestoreData(otherUserData as User);
                 await setDoc(userDocRef, plainData, { merge: true });
                 console.log(`UsersManager: Main user document updated for ${userId}`);
                 mainDataUpdated = true;
