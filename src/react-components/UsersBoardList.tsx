@@ -1,8 +1,8 @@
 // src/react-components/UserList.tsx (Conceptual)
 import React from 'react';
 import { User } from '../classes/User';
-import { EditIcon, TrashIcon } from './icons'; // Asumiendo que tienes iconos
-import { UserCardRow, UserSortKey } from '../react-components/';
+import { AddIcon, EditIcon, TrashIcon } from './icons'; // Asumiendo que tienes iconos
+import { UserCardRow, UserSortKey, UsersSortMenu } from '../react-components/';
 import { useAuth } from '../Auth/react-components/AuthContext';
 import { useUserBoardContext } from './UsersBoardPage';
 
@@ -31,10 +31,8 @@ export const UsersBoardList: React.FC = () => {
         onEditUser,
         onDeleteUser,
         onSort,
+        onInviteUser,
     } = useUserBoardContext();
-
-
-
 
         console.log('[UsersBoardList] Componente Renderizado con props:', {
         userCount: users.length,
@@ -42,6 +40,9 @@ export const UsersBoardList: React.FC = () => {
     });
 
 
+    // Estados y ref para el menú de ordenación, ahora locales a este header
+    const [isSortMenuOpen, setIsSortMenuOpen] = React.useState(false);
+    const sortButtonRef = React.useRef<HTMLButtonElement>(null);
     
     //solo un elemento pueda estar expandido a la vez
     const [expandedUserId, setExpandedUserId] = React.useState<string | null>(null);
@@ -53,6 +54,19 @@ export const UsersBoardList: React.FC = () => {
     const canPerformBulkActions = userProfile?.roleInApp === 'admin' || userProfile?.roleInApp === 'superadmin';
     
     
+    // Lógica de permisos para acciones en masa
+    const canManageUsers = userProfile?.roleInApp === 'admin' || userProfile?.roleInApp === 'superadmin';
+
+    
+    const toggleSortMenu = React.useCallback(() => {
+        setIsSortMenuOpen(prev => !prev);
+    }, []);
+
+
+
+
+
+
     // // Ejemplo de utilidad de permisos. ************ Pasado dentro de UserCardRow ***************
     // const userPermissions = {
     //     canViewUserDetails: (userToView: User, currentUser: User) => {
@@ -75,6 +89,39 @@ export const UsersBoardList: React.FC = () => {
     }
 
     return (
+        <>
+            {/* --- HEADER SECUNDARIO --- */}
+            {/* Este es el header que movimos desde UsersBoardPage */}
+            <div className="header-user-page-content">
+                <div style={{ display: "flex", flexDirection: "row", columnGap: 20 }}>
+                    <button
+                        ref={sortButtonRef}
+                        onClick={toggleSortMenu}
+                        style={{  width: "auto" }}
+                        // className="btn-secondary"
+                    >
+                        <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
+                        {/* <p style={{ color: "var(--color-fontbase-dark)" }}>Invite a new User</p>
+                        <span className="material-icons-round">swap_vert</span> */}
+                        <p style={{ color: "var(--color-fontbase-dark)" }}>Sort By</p>
+                        <span className="material-icons-round">expand_more</span>
+                    </button>
+
+                    {canManageUsers && (
+                        <button
+                            onClick={onInviteUser} // Usamos la función del contexto
+                            id="new-user-btn"
+                            style={{ whiteSpace: 'nowrap' }}
+                            title="Invite a new User"
+                        >
+                            <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
+                            <p style={{ color: "var(--color-fontbase-dark)" }}>Invite a new User</p>
+                        </button>
+                    )}
+                </div>
+            </div>
+
+
         <div className="users-list" >
             
 
@@ -84,7 +131,8 @@ export const UsersBoardList: React.FC = () => {
                 style={{ border: "none", backgroundColor: "transparent" }}
             >
                 {/* El contenedor de acciones en masa solo se renderiza si el usuario tiene permisos */}
-                {canPerformBulkActions ? (
+                    {/* {canPerformBulkActions ? ( */}
+                    {canManageUsers ? (
                     <div
                         style={{
                             display: "flex",
@@ -191,7 +239,18 @@ export const UsersBoardList: React.FC = () => {
                 </React.Fragment>
             ))}
 
-        </div>
+            </div>
+            
+            {isSortMenuOpen && (
+                <UsersSortMenu
+                    isOpen={isSortMenuOpen}
+                    onClose={() => setIsSortMenuOpen(false)}
+                    onSort={onSort}
+                    buttonRef={sortButtonRef}
+                />
+            )}
+
+        </>
     );
 };
 

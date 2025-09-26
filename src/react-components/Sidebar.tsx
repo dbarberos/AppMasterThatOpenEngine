@@ -232,8 +232,9 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
             currentSelectedProjectId: selectedProjectId
         });
 
-        let extractedProjectId: string | null = null;
-        const parts = currentPath.split('/'); // e.g., ["", "project", "ID"] or ["", "project", "todoBoard", "ID"]
+        //RETIRADA DE SOLUCION RIGIDA QUE DIVIDE LA URL PARA LOCALIZAR EL PROJECTID
+        // let extractedProjectId: string | null = null;
+        // const parts = currentPath.split('/'); // e.g., ["", "project", "ID"] or ["", "project", "todoBoard", "ID"]
 
 
         if (currentPath === '/') {
@@ -245,63 +246,116 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
             return  // Early exit for home page
         }
 
+        //RETIRADA DE SOLUCION RIGIDA QUE DIVIDE LA URL PARA LOCALIZAR EL PROJECTID
+        // // Palabras clave que indican segmentos de ruta que NO son IDs de proyecto por sí mismos
+        // // cuando aparecen como el último segmento de una ruta que no termina en un ID.
+        // // Ejemplos: /project, /project/todoBoard, /usersBoard
+        // // Asegúrate de incluir aquí cualquier segmento que pueda ser el último en una URL
+        // // donde quieras que el selectedProjectId se mantenga "sticky" en lugar de intentar
+        // // extraer un ID.
+        // const pathKeywords = ["project", "todoboard", "usersboard", "settings",'auth', 'profile', 'change-password', 'signin', 'signup']; // Añade más según sea necesario
 
-        // Palabras clave que indican segmentos de ruta que NO son IDs de proyecto por sí mismos
-        // cuando aparecen como el último segmento de una ruta que no termina en un ID.
-        // Ejemplos: /project, /project/todoBoard, /usersBoard
-        // Asegúrate de incluir aquí cualquier segmento que pueda ser el último en una URL
-        // donde quieras que el selectedProjectId se mantenga "sticky" en lugar de intentar
-        // extraer un ID.
-        const pathKeywords = ["project", "todoboard", "usersboard", "settings",'auth', 'profile', 'change-password', 'signin', 'signup']; // Añade más según sea necesario
+        // let potentialProjectId = parts[parts.length - 1];
 
-        let potentialProjectId = parts[parts.length - 1];
-
-        // Si el último segmento está vacío (ej: URL termina en '/'), o es una palabra clave conocida.
-        if (!potentialProjectId || pathKeywords.includes(potentialProjectId.toLowerCase())) {
-            // Estamos en una ruta como /project/ o /project/todoBoard (sin ID al final), o /users.
-            // En estos casos, selectedProjectId mantiene su valor "sticky".
-            // Si selectedProjectId era null, seguirá siendo null.
-            // Si selectedProjectId tenía un valor, lo conservará.
-            // Esto permite que si navegas de /project/ID_VALIDO a /project/todoBoard (sin ID en la URL),
-            // el botón "Project Details" siga activo con ID_VALIDO.
+        // // Si el último segmento está vacío (ej: URL termina en '/'), o es una palabra clave conocida.
+        // if (!potentialProjectId || pathKeywords.includes(potentialProjectId.toLowerCase())) {
+        //     // Estamos en una ruta como /project/ o /project/todoBoard (sin ID al final), o /users.
+        //     // En estos casos, selectedProjectId mantiene su valor "sticky".
+        //     // Si selectedProjectId era null, seguirá siendo null.
+        //     // Si selectedProjectId tenía un valor, lo conservará.
+        //     // Esto permite que si navegas de /project/ID_VALIDO a /project/todoBoard (sin ID en la URL),
+        //     // el botón "Project Details" siga activo con ID_VALIDO.
             
-            console.log('Sidebar: Last segment is empty or a keyword. selectedProjectId remains sticky:', selectedProjectId);
-            return
-        } else {
-            // El último segmento no está vacío y no es una palabra clave conocida.
-            // VERIFICAR SI EL ID EXTRAÍDO DE LA URL EXISTE EN ProjectsManager
-        if (projectsManager.getProject(potentialProjectId)) {
-            extractedProjectId = potentialProjectId;
-        } else {
-            // El ID extraído de la URL no corresponde a un proyecto conocido.
-            // No actualizaremos selectedProjectId con este ID inválido, manteniendo el valor "sticky" anterior.
-            // Solo mostrar advertencia si el projectsManager tiene proyectos cargados, para evitar falsos positivos durante la carga inicial.
-            if (projectsManager && projectsManager.list.length > 0) {
-                console.warn(`Sidebar: Project ID "${potentialProjectId}" from URL not found in ProjectsManager. Keeping sticky ID: ${selectedProjectId}`);
-            } else if (!projectsManager) {
-                console.warn(`Sidebar: ProjectsManager not available while checking project ID "${potentialProjectId}".`);
-            }
-        }
-        }
+        //     console.log('Sidebar: Last segment is empty or a keyword. selectedProjectId remains sticky:', selectedProjectId);
+        //     return
+        // } else {
+        //     // El último segmento no está vacío y no es una palabra clave conocida.
+        //     // VERIFICAR SI EL ID EXTRAÍDO DE LA URL EXISTE EN ProjectsManager
+        // if (projectsManager.getProject(potentialProjectId)) {
+        //     extractedProjectId = potentialProjectId;
+        // } else {
+        //     // El ID extraído de la URL no corresponde a un proyecto conocido.
+        //     // No actualizaremos selectedProjectId con este ID inválido, manteniendo el valor "sticky" anterior.
+        //     // Solo mostrar advertencia si el projectsManager tiene proyectos cargados, para evitar falsos positivos durante la carga inicial.
+        //     if (projectsManager && projectsManager.list.length > 0) {
+        //         console.warn(`Sidebar: Project ID "${potentialProjectId}" from URL not found in ProjectsManager. Keeping sticky ID: ${selectedProjectId}`);
+        //     } else if (!projectsManager) {
+        //         console.warn(`Sidebar: ProjectsManager not available while checking project ID "${potentialProjectId}".`);
+        //     }
+        // }
+        // }
 
-
-
-
-        // If a project ID was extracted from the URL
-        if (extractedProjectId ) {
-            if (extractedProjectId !== selectedProjectId) {
-                console.log('Sidebar: Syncing selectedProjectId with extracted URL Project ID:', extractedProjectId);
-                setSelectedProjectId(extractedProjectId);
+        // // If a project ID was extracted from the URL
+        // if (extractedProjectId ) {
+        //     if (extractedProjectId !== selectedProjectId) {
+        //         console.log('Sidebar: Syncing selectedProjectId with extracted URL Project ID:', extractedProjectId);
+        //         setSelectedProjectId(extractedProjectId);
                 
-            }
-        } else {
-            // Si no se extrajo un ID válido de la URL (o la URL era '/', o era una página no específica de proyecto)
-            // selectedProjectId mantiene su valor "sticky".
-            // Si currentPath es '/', selectedProjectId ya se habrá puesto a null antes.
-            if (currentPath !== '/') {
-                console.log('Sidebar: No valid project ID extracted from URL or on non-project page. selectedProjectId remains sticky:', selectedProjectId);
+        //     }
+        // } else {
+        //     // Si no se extrajo un ID válido de la URL (o la URL era '/', o era una página no específica de proyecto)
+        //     // selectedProjectId mantiene su valor "sticky".
+        //     // Si currentPath es '/', selectedProjectId ya se habrá puesto a null antes.
+        //     if (currentPath !== '/') {
+        //         console.log('Sidebar: No valid project ID extracted from URL or on non-project page. selectedProjectId remains sticky:', selectedProjectId);
+        //     }
+        // }
+
+
+        //NUEVA FORMA MAS ESCALABLE Y MANTENIBLE DE LEER LA URL PARA TENER ACTUALIZADO EL PROYECTO QUE SE GUARDA EN LOCAL STORAGE COMO ACTUAL.
+
+                // 1. Define una lista de todas las rutas que contienen un ID de proyecto.
+        const projectRoutes = [
+            '/project/:projectId',
+            '/project/todoBoard/:projectId',
+            '/usersBoard/teams/:projectId'
+            // ¡Añade aquí futuras rutas que contengan un ID de proyecto!
+            //EJEMPLO: '/project/graphs/:projectId' // <-- ¡Solo tienes que añadir esta línea! Y añadir en el index.tsx el Router.Route
+        ];
+        // 2. Usa `matchPath` para ver si la URL actual coincide con alguno de esos patrones.
+
+        //la función matchPath de react-router-dom espera que la propiedad path sea una única cadena de texto (un solo patrón de ruta), pero tú le estás pasando projectRoutes, que es un array de cadenas de texto (string[]).
+        //matchPath no está diseñado para aceptar un array de patrones directamente.
+        //La solución es iterar sobre tu array projectRoutes y llamar a matchPath para cada ruta individualmente hasta que encuentres una que coincida.
+
+        //const match = Router.matchPath({ path: projectRoutes, end: true }, currentPath);
+        let match = null;
+        for (const route of projectRoutes) {
+            // Intentamos hacer match con cada ruta de la lista.
+            const potentialMatch = Router.matchPath({ path: route, end: true }, currentPath);
+            if (potentialMatch) {
+                // Si encontramos una coincidencia, la guardamos y rompemos el bucle.
+                match = potentialMatch;
+                break;
             }
         }
+
+
+        const extractedProjectId = match?.params.projectId ?? null;
+        
+        
+        // 3. Actúa solo si se encontró un ID de proyecto válido.
+        if (extractedProjectId) {
+            // El ID extraído de la URL existe en ProjectsManager
+            if (projectsManager.getProject(extractedProjectId)) {
+                if (extractedProjectId !== selectedProjectId) {
+                    console.log('Sidebar: Syncing selectedProjectId with extracted URL Project ID:', extractedProjectId);
+                    setSelectedProjectId(extractedProjectId);
+                }
+            } else {
+                // El ID de la URL no es un proyecto válido, mantenemos el anterior y advertimos.
+                if (projectsManager.list.length > 0) {
+                    console.warn(`Sidebar: Project ID "${extractedProjectId}" from URL not found in ProjectsManager. Keeping sticky ID: ${selectedProjectId}`);
+                }
+            }
+        } else {
+            // La URL no contiene un ID de proyecto. selectedProjectId mantiene su valor "sticky".
+            console.log('Sidebar: No valid project ID extracted from URL or on non-project page. selectedProjectId remains sticky:', selectedProjectId);
+        }
+
+
+
+
 
 
         console.log("🔍 Project ID check:", {
@@ -417,7 +471,7 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                     
 
                     {/* Button To-Do Boards  */}
-                    <Router.Link to={toDoBoardPath}>
+                    {/* <Router.Link to={toDoBoardPath}>
                         <li
                             id="asideBtnToDoBoards"
                             className="nav-button"
@@ -429,7 +483,36 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                             />
                             To-Do Boards
                         </li>
-                    </Router.Link>
+                    </Router.Link> */}
+
+                    {isProjectSelected
+                        ? (
+                            <Router.Link to={`/project/todoBoard/${selectedProjectId}`}>
+                                <li
+                                    id="asideBtnToDoBoards"
+                                    className="nav-button"
+                                    title="To-Do Boards"
+                                >
+                                    <MainToDoBoard size={37}
+                                        className="todo-icon-edit"
+                                        color="var(--color-fontbase)"
+                                    />
+                                    To-Do Boards
+                                </li>
+                            </Router.Link>
+                        ) : (
+                            <li
+                                id="asideBtnToDoBoardsDisabled"
+                                className="nav-button disabled"
+                                title="Select a project first"
+                            >
+                                <MainToDoBoard size={37} className="todo-icon-edit" color="var(--color-fontbase)" />
+                                To-Do Boards
+                            </li>
+                        )}
+
+
+
 
 
                     {/* Botón Users Index */}

@@ -318,7 +318,7 @@ const MainLayout: React.FC<MainLayoutProps> = (props) => {
                             />
                         } >
                             <Router.Route index element={<UsersBoardList />} />
-                            <Router.Route path="teams" element={<UserBoardProjectsTeamsPage />} />
+                            <Router.Route path="teams/:projectId?" element={<UserBoardProjectsTeamsPage />} />
                         </Router.Route>
                     
                     </Router.Route>

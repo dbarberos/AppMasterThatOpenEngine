@@ -3464,7 +3464,8 @@ header {
     flex-direction: row;
     align-content: space-between;
     overflow: hidden;
-    align-items: flex-start
+    align-items: flex-start;
+    
 }
 
 /* Slidding switch buttons */

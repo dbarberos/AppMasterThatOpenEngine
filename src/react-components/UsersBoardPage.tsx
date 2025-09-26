@@ -30,6 +30,9 @@ interface UserBoardContextType {
     onDeleteUser: (userId: string) => void;
     onSort: (sortKey: UserSortKey) => void;
     sortedAndFilteredUsers: AppUserClass[];
+    // selectedProject: string | null;
+    onProjectSelect: (projectId: string | null) => void
+    onInviteUser: () => void; // Añadimos el handler para invitar
     // No necesitamos pasar los elementos del header, ya que se quedan en el padre
 }
 
@@ -52,6 +55,7 @@ export function UsersBoardPage({
     onUserCreate,
     onUserUpdate,
 }: Props) {
+    const navigate = Router.useNavigate()
     const { currentUser, userProfile, loading: authLoading } = useAuth();
     const [viewMode, setViewMode] = React.useState<'allUsers' | 'projectUsers'>('allUsers');
     //const [users, setUsers] = React.useState<User[]>([]);
@@ -59,10 +63,16 @@ export function UsersBoardPage({
 
     const projects = React.useMemo(() => {
         return projectsManager?.list || [];
-      }, [projectsManager?.list]); // Solo cambia cuando cambia la lista
+    }, [projectsManager?.list]); // Solo cambia cuando cambia la lista
 
 
-    const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
+    //const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
+
+    // Usamos useStickyState para leer/escribir el ID del proyecto seleccionado en localStorage
+    const selectedProjectIdKey = currentUser ? `selectedProjectId_${currentUser.uid}` : 'selectedProjectId_guest';
+    const [selectedProjectId, setSelectedProjectId] = useStickyState<string | null>(null, selectedProjectIdKey);
+
+
     const [error, setError] = React.useState<string | null>(null);
     //const [isSyncing, setIsSyncing] = React.useState(false)
 
@@ -108,7 +118,7 @@ export function UsersBoardPage({
         users,
         setUsers,
         updateCache,
-        hasCache,        
+        hasCache,
         isStale,
         loading: usersLoading,
     } = useUsersCache(usersManager)
@@ -138,7 +148,7 @@ export function UsersBoardPage({
 
     // Handler para cuando se selecciona una opción de ordenación
     const handleSort = React.useCallback((key: UserSortKey) => {
-    console.log(`Sorting by: ${key}`)
+        console.log(`Sorting by: ${key}`)
         setSortBy(key);
     }, [setSortBy]);
 
@@ -193,7 +203,7 @@ export function UsersBoardPage({
     };
 
 
-// VEREMOS SI ESTA ES POSIBLE DESDE EL MENU DE CADA USERCARDROW
+    // VEREMOS SI ESTA ES POSIBLE DESDE EL MENU DE CADA USERCARDROW
     const handleDeleteUser = (userId: string) => {
         console.log("Delete user button clicked for user ID:", userId);
         setMessagePopUpContent({
@@ -298,15 +308,15 @@ export function UsersBoardPage({
         try {
             // Esta función será llamada por NewUserForm después de crear el usuario en Firebase Auth y Firestore
 
-        // Aquí integrarías Firebase Authentication para crear el usuario
-        // y luego guardarías userData en Firestore con el UID obtenido.
-        // Por ahora, simularemos la creación en Firestore.
-        // const newUserRef = doc(collection(db, "users")); // Firestore genera ID
-        // await setDoc(newUserRef, { ...userData, accountCreatedAt: new Date() });
+            // Aquí integrarías Firebase Authentication para crear el usuario
+            // y luego guardarías userData en Firestore con el UID obtenido.
+            // Por ahora, simularemos la creación en Firestore.
+            // const newUserRef = doc(collection(db, "users")); // Firestore genera ID
+            // await setDoc(newUserRef, { ...userData, accountCreatedAt: new Date() });
             console.log("User data to create:", userData);
             // setIsNewUserModalOpen(false); // Cierra el modal después de crear
-        // La lista se actualizará automáticamente gracias a onSnapshot
-        // Si necesitas pasar el usuario creado al componente padre (App.tsx), puedes usar `onUserCreate(createdUser)`.
+            // La lista se actualizará automáticamente gracias a onSnapshot
+            // Si necesitas pasar el usuario creado al componente padre (App.tsx), puedes usar `onUserCreate(createdUser)`.
             setIsNewUserFormOpen(false);
         } catch (error) {
             console.error('Error creating user:', error);
@@ -320,7 +330,7 @@ export function UsersBoardPage({
     const handleUpdateUser = React.useCallback((updatedUser: AppUserClass) => {
         console.log("User updated (callback in UsersBoardPage):", updatedUser);
         // `users` state se actualizará automáticamente por `onSnapshot`.
-            // Si necesitas pasar el usuario actualizado al componente padre (App.tsx), puedes usar `onUserUpdate(updatedUser)`.
+        // Si necesitas pasar el usuario actualizado al componente padre (App.tsx), puedes usar `onUserUpdate(updatedUser)`.
 
     
     }, []);
@@ -330,12 +340,50 @@ export function UsersBoardPage({
     // Funciones para abrir/cerrar modal de asignación y manejar la asignación
 
 
-    const handleProjectSelectionForView = (projectId: string | null) => {
-        setSelectedProject(projectId);
-        setViewMode(projectId ? 'projectUsers' : 'allUsers');
-    };
+    // const handleProjectSelectionForView = (projectId: string | null) => {
+        // setSelectedProject(projectId);
+        // setViewMode(projectId ? 'projectUsers' : 'allUsers');
+
+        // Esta función es llamada por el ProjectSelector.
+        // Su única responsabilidad es actualizar el estado persistente y navegar cambiando la url
+
     
+    const handleProjectSelectionForView = React.useCallback((projectId: string | null) => {
+        // 1. Actualiza el estado persistente (y localStorage) a través del hook.
+        setSelectedProjectId(projectId);
     
+        //}
+
+
+
+        // // Efecto para NAVEGAR cuando el estado persistente cambia.
+        // React.useEffect(() => {
+        //     if (selectedProjectId) {
+        //         // Si hay un proyecto seleccionado, navegamos a la URL con su ID.
+        //         navigate(`/usersBoard/teams/${selectedProjectId}`);
+        //     } else {
+        //         // Si no hay proyecto, navegamos a la URL base.
+        //         navigate('/usersBoard/teams');
+        //     }
+        //     }, [selectedProjectId, ]);
+
+
+    
+        // 2. Navega explícitamente a la URL correspondiente.
+        // Esto asegura que el componente hijo (UserBoardProjectsTeamsPage) se
+        // vuelva a renderizar con el nuevo `projectId` de la URL.
+        if (projectId) {
+            navigate(`/usersBoard/teams/${projectId}`);
+        } else {
+            navigate('/usersBoard/teams');
+        }
+    }, [setSelectedProjectId, navigate]);
+    
+
+
+
+
+
     const handleUserSearch = React.useCallback((value: string) => {
         setUserSearchTerm(value)
     }, [setUserSearchTerm])
@@ -360,7 +408,7 @@ export function UsersBoardPage({
     //     if (!hasCache && !isLoading) {
     //         setIsLoading(true);
     //     }
-        
+    
     //     // Once usersManager.list is populated (via its internal onSnapshot),
     //     // the handleUsersUpdate callback (defined above) will update the local `users` state and `hasCache`.
     //     // This will then cause `isLoading` to be set to `false`.
@@ -373,27 +421,27 @@ export function UsersBoardPage({
 
 
 
-//     // **********************. useMemo para cálculos pesados ***********************
-
-    
-//     // --- Lógica de Búsqueda y Filtrado ---
+    //     // **********************. useMemo para cálculos pesados ***********************
 
 
-//     // Calcular la lista filtrada usando useMemo
-//     const usersListFiltered = React.useMemo(() => {
+    //     // --- Lógica de Búsqueda y Filtrado ---
 
-//         return filteredUsers.map((user) => (
-//             <Router.Link
-//                 to={`/userBoard/${user.id}`}
-//                 key={user.id}
-//                 onClick={() => handleUserLinkClick(user.id!)}
-//             >
-//                  {/* UserCardRow will be used inside UsersBoardList */}
-//     //             <div>User: {user.nickName || user.email}</div>
-//             </Router.Link>
-//         ))
-//     }, [filteredUsers])
-//    // This useMemo might not be needed if UsersBoardList handles the direct rendering of UserCardRow 
+
+    //     // Calcular la lista filtrada usando useMemo
+    //     const usersListFiltered = React.useMemo(() => {
+
+    //         return filteredUsers.map((user) => (
+    //             <Router.Link
+    //                 to={`/userBoard/${user.id}`}
+    //                 key={user.id}
+    //                 onClick={() => handleUserLinkClick(user.id!)}
+    //             >
+    //                  {/* UserCardRow will be used inside UsersBoardList */}
+    //     //             <div>User: {user.nickName || user.email}</div>
+    //             </Router.Link>
+    //         ))
+    //     }, [filteredUsers])
+    //    // This useMemo might not be needed if UsersBoardList handles the direct rendering of UserCardRow 
 
 
     const contextValue: UserBoardContextType = {
@@ -404,14 +452,17 @@ export function UsersBoardPage({
         onDeleteUser: handleDeleteUser,
         onSort: handleSort,
         sortedAndFilteredUsers,
+        onInviteUser: () => setIsInvitationModalOpen(true),
+        // selectedProject: selectedProject, // selectedProject ya no es necesario en el contexto, el hijo lo leerá de la URL.
+        onProjectSelect: handleProjectSelectionForView,
     };
 
 
 
-    
 
 
-// Efecto para actualizar la posición del indicador deslizante
+
+    // Efecto para actualizar la posición del indicador deslizante
     React.useEffect(() => {
         // Si la referencia al contenedor de navegación no existe, no hacemos nada.
         if (!navRef.current) return;
@@ -481,29 +532,29 @@ export function UsersBoardPage({
     
     return (
         <section className="page" id="users-page" data-page="">
-            <header className="header-users" style={{ height: 120 }}>
+            <header className="header-users" style={{ height: "fit-content", minHeight: 110 }}>
                 <div
                     style={{
                         display: 'flex',
                         flexDirection: 'column',
                         rowGap: 25,
                     }}>
-                    
+                
                     <h2 style={{ display: "flex", alignItems: "center", columnGap: 20 }}>
                         Users Board
                         <MainUsersIndex size={24}
                             className="todo-icon-edit"
                             color="var(--color-fontbase)"
                         />
-                    
+                
                         {/* Selector de Proyecto (para Parte 2) Solo aparece cuando esta en la pestana de projects Teams*/}
-                        <div style={{ display: "flex", alignItems: "center", columnGap: 10 }}>
-                            <ProjectSelector
-                                currentProject={projects.find(p => p.id === selectedProject) || null}
-                                projectsList={projects}
-                                onProjectSelect={handleProjectSelectionForView}
-                            />
-                        </div>
+                        {/* <div style={{ display: "flex", alignItems: "center", columnGap: 10 }}>
+                        <ProjectSelector
+                            currentProject={projects.find(p => p.id === selectedProject) || null}
+                            projectsList={projects}
+                            onProjectSelect={handleProjectSelectionForView}
+                        />
+                    </div> */}
                     </h2>
                     <ul
                         ref={navRef}
@@ -517,7 +568,7 @@ export function UsersBoardPage({
                         }}
                     >
                         {/* <li className="users-slide1" />
-                        <li className="users-slide2" /> */}
+                    <li className="users-slide2" /> */}
                         {/* Los <li> con las clases slide se eliminan, el indicador ahora es un pseudo-elemento ::after */}
 
                         <li
@@ -526,11 +577,11 @@ export function UsersBoardPage({
                             onMouseLeave={handleTabMouseLeave}
                         >
                             {/* <a href="#/users" className="tab-buttons"> */}
-                             {/* Este NavLink se activará SOLO cuando la ruta sea EXACTAMENTE "/usersBoard" */}
+                            {/* Este NavLink se activará SOLO cuando la ruta sea EXACTAMENTE "/usersBoard" */}
                             <Router.NavLink to="/usersBoard" end className="tab-buttons">
                                 <span className="material-icons-round">people_alt</span>
                                 Users
-                            {/* </a> */}
+                                {/* </a> */}
                             </Router.NavLink>
                         </li>
                         <li
@@ -540,24 +591,29 @@ export function UsersBoardPage({
                         >
                             {/* <a href="#/teams" className="tab-buttons" style={{ width: 175 }}> */}
                             {/* Usamos NavLink para que react-router-dom gestione la clase 'active' */}
-                            {/* Este NavLink se activará cuando la ruta sea "/usersBoard/teams" */}
-                            <Router.NavLink to="/usersBoard/teams" className="tab-buttons" style={{ width: 175 }}>
+                            {/* <Router.NavLink to="/usersBoard/teams" className="tab-buttons" style={{ width: 175 }}> */}
+                            {/* Al hacer clic, navegamos a la ruta de equipos. Si hay un proyecto guardado, vamos a él. */}
+                            <Router.NavLink
+                                to={selectedProjectId ? `/usersBoard/teams/${selectedProjectId}` : "/usersBoard/teams"}
+                                className="tab-buttons"
+                                style={{ width: 175 }}
+                            >
                                 <span className="material-icons-round">diversity_3</span>
                                 Users by Projects
-                            {/* </a> */}
+                                {/* </a> */}
                             </Router.NavLink>
                         </li>
                     </ul>
                     {/* <div style="display: flex; column-gap: 25px; transform: translateY(35px); z-index:100;" >
-                            <button class="tab-button">
-                                <span class="material-icons-round">people_alt</span>
-                                Users
-                            </button>
-                            <button class="tab-button" style="width: 200px;">
-                                <span class="material-icons-round">diversity_3</span>
-                                Projects Teams
-                            </button>
-                        </div> */}
+                        <button class="tab-button">
+                            <span class="material-icons-round">people_alt</span>
+                            Users
+                        </button>
+                        <button class="tab-button" style="width: 200px;">
+                            <span class="material-icons-round">diversity_3</span>
+                            Projects Teams
+                        </button>
+                    </div> */}
                 </div>
 
                 {/* Seccion de busqueda del header (ej: Nuevo Usuario) */}
@@ -589,124 +645,74 @@ export function UsersBoardPage({
                                     <SearchUserBox onChange={handleUserSearchChange} />
                                 </div>
                                 {/* <input
-                                    type="search"
-                                    id="search-user"
-                                    placeholder="Search by name, email or phone number"
-                                    style={{ width: 350 }}
-                                />
-                                <span className="material-icons-round">search</span> */}
+                                type="search"
+                                id="search-user"
+                                placeholder="Search by name, email or phone number"
+                                style={{ width: 350 }}
+                            />
+                            <span className="material-icons-round">search</span> */}
                             </div>
                         </div>
-                        {/* <div style={{ display: "flex", flexDirection: "end", columnGap: 10 }}>
-                            <button
-                                className="btn-secondary"
-                                style={{ borderRadius: 10, width: "auto", border: 0 }}
-                            >
-                                <span className="material-icons-round">filter_alt</span>
-                            </button>
-                        </div> */}
+
                     </div>
                 </div>
             </header>
 
+
+
+
             {/* OPCIONES DEL TABULADOR DE USUARIOS USUARIOS TOTALES Y EQUIPOS/PROYECTOS */}
             <div
                 className="users-page-content"
-                style={{ height: "calc(130px + 100vh)", position: "relative" 
+                style={{
+                    height: "calc(130px + 100vh)", position: "relative"
 
                 }}
             >
 
-                {/* <div className="header-user-page-content">
-                    < style={{ display: "flex", flexDirection: "row", columnGap: 20 }}>
-                        <button
-                            ref={sortButtonRef}
-                            onClick={toggleSortMenu}
-                            style={{ borderRadius: 10, width: "auto" }}
-                            className="btn-secondary"
-                        >
-                            <span className="material-icons-round">swap_vert</span>
-                            <p>Sort By</p>
-                            <span className="material-icons-round">expand_more</span>
-                        </button>
-                        El botón solo se renderiza si el usuario tiene permisos 
-                        {canManageUsers && ( */}
-
-
+            
                 {/* --- HEADER SECUNDARIO CONDICIONAL --- */}
                 {/* Solo mostramos estos botones si estamos en la ruta raíz de usersBoard */}
-                {location.pathname === '/usersBoard' && (
-                    <div className="header-user-page-content">
-                        <div style={{ display: "flex", flexDirection: "row", columnGap: 20 }}>
-                            
-                            <button
-                                // onClick={() => setIsInvitationModalOpen(true)} // Abre el nuevo modal de invitación
-                                // id="new-user-btn"
-                                // style={{ whiteSpace: 'nowrap' }}
-                                // title="Invite a new User"
+                {/* {location.pathname === '/usersBoard' && (
+                <div className="header-user-page-content">
+                    <div style={{ display: "flex", flexDirection: "row", columnGap: 20 }}>
+                        
+                        <button
+                            // onClick={() => setIsInvitationModalOpen(true)} // Abre el nuevo modal de invitación
+                            // id="new-user-btn"
+                            // style={{ whiteSpace: 'nowrap' }}
+                            // title="Invite a new User"
 
-                                ref={sortButtonRef}
-                                onClick={toggleSortMenu}
-                                style={{ borderRadius: 10, width: "auto" }}
-                                className="btn-secondary"
+                            ref={sortButtonRef}
+                            onClick={toggleSortMenu}
+                            style={{  width: "auto" }}
+                            // className="btn-secondary"
+                        >
+                            <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
+                            
+                            <p style={{ color: "var(--color-fontbase-dark)" }}>Sort By</p>
+                            <span className="material-icons-round">expand_more</span>
+
+                        </button>
+
+                        {canManageUsers && (
+                            <button
+                                onClick={() => setIsInvitationModalOpen(true)}
+                                id="new-user-btn"
+                                style={{ whiteSpace: 'nowrap' }}
+                                title="Invite a new User"
                             >
                                 <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
                                 <p style={{ color: "var(--color-fontbase-dark)" }}>Invite a new User</p>
-                                <span className="material-icons-round">swap_vert</span>
-                                <p>Sort By</p>
-                                <span className="material-icons-round">expand_more</span>
-
                             </button>
-                            {/* )} */}
-                            {canManageUsers && (
-                                <button
-                                    onClick={() => setIsInvitationModalOpen(true)}
-                                    id="new-user-btn"
-                                    style={{ whiteSpace: 'nowrap' }}
-                                    title="Invite a new User"
-                                >
-                                    <AddIcon size={24} className="todo-icon-plain" color="var(--color-fontbase-dark)" />
-                                    <p style={{ color: "var(--color-fontbase-dark)" }}>Invite a new User</p>
-                                </button>
-                            )}
-                            
-                        </div>
-                    </div>
-                )}
-                
-                {/* {viewMode === 'allUsers' && (
-                    <UsersBoardList
-                        //users={filteredUsers}
-                        users={sortedAndFilteredUsers}
-                        onAssignProjects={handleOpenAssignmentModal}
-                        onEditUser={handleOpenNewUserModal} 
-                        onDeleteUser={handleDeleteUser}
-                        onSort={handleSort}
-                    />
-                    //<p>Vista de Todos los Usuarios (UserList irá aquí)</p>
-                )}
-                {viewMode === 'projectUsers' && selectedProject && (
-                    // <UsersBoardProjectView projectId={selectedProject} />
-                    //<p>Vista de Usuarios por Proyecto {selectedProject} (ProjectUserView irá aquí)</p>
-                    <div>
-                        <h3>Users in Project: {projects.find(p => p.id === selectedProject)?.name || 'Unknown Project'}</h3>
-                        Aquí iría el componente UsersBoardProjectView, que filtraría los usuarios
-                        basándose en el selectedProject y sus asignaciones.
-                        Por ahora, un placeholder: 
-                        <p>Displaying users assigned to project ID: {selectedProject}. (UsersBoardProjectView component will go here)</p>
+                        )}
                         
                     </div>
-
-                )}
-                {viewMode === 'projectUsers' && !selectedProject && projects.length > 0 && (
-                    <p>Please select a project from the dropdown to see assigned users.</p>
-                )}
-                {viewMode === 'projectUsers' && !selectedProject && projects.length === 0 && (
-                    <p>No projects available to display users by project.</p>
-                )} */}
-
-                <Router.Outlet context={contextValue} />
+                </div>
+            )} */}
             
+                <Router.Outlet context={contextValue} />
+        
             </div>
 
             <UserInvitationForm
@@ -715,7 +721,7 @@ export function UsersBoardPage({
                 onSendInvitation={handleSendInvitation}
                 usersManager={usersManager}
             />
-            
+        
             {isAssignmentModalOpen && userForAssignment && (
                 <UserProjectAssignmentModal
                     isOpen={isAssignmentModalOpen}
@@ -729,22 +735,22 @@ export function UsersBoardPage({
 
 
             {/* {isAssignFormOpen && currentUserForAssignment && (
-            <UserProjectAssignmentsModal
-                isOpen={isAssignFormOpen}
-                onClose={() => setIsAssignFormOpen(false)}
-                user={currentUserForAssignment}
-                projects={projects} // Pasar la lista de todos los proyectos
-                onSubmitAssignments={handleAssignProjectsToUser}
-            />
-            )} */ }
-            
+        <UserProjectAssignmentsModal
+            isOpen={isAssignFormOpen}
+            onClose={() => setIsAssignFormOpen(false)}
+            user={currentUserForAssignment}
+            projects={projects} // Pasar la lista de todos los proyectos
+            onSubmitAssignments={handleAssignProjectsToUser}
+        />
+        )} */ }
+        
             {/* {isLoading ? (
-                            <LoadingIcon />
-                        ) : (
-                            <div id="project-list">
-                                {filteredUsers.length > 0 ? usersListFiltered  : <p>No projects found</p>}
-                            </div>
-            )} */}
+                        <LoadingIcon />
+                    ) : (
+                        <div id="project-list">
+                            {filteredUsers.length > 0 ? usersListFiltered  : <p>No projects found</p>}
+                        </div>
+        )} */}
             {/* Render the NewUserForm conditionally */}
             {isNewUserFormOpen &&
                 <NewUserForm
@@ -755,40 +761,41 @@ export function UsersBoardPage({
                     onClose={handleCloseNewUserModal}
                     // onProfileUpdate={handleUpdateUser}
                     onProfileUpdate={(updatedData) => {
-                    // Aquí puedes manejar la actualización si es necesario
+                        // Aquí puedes manejar la actualización si es necesario
                         console.log("User updated:", updatedData);
-                        
-                    }}
                     
+                    }}
+                
                     onTriggerChangePassword={() => {
                         // No aplica para editar otros usuarios
                     }}
-                
+            
 
 
-                    // authCurrentUserRole={authCurrentUserRole}
-                    // onClose={handleCloseNewUserModal}
-                    // usersManager ={usersManager}
-                    // projectsManager={projectsManager}
-                    // onAssignProjects={handleOpenAssignModal}
-                    // onCreateUser={handleCreateUser}
-                    // onUpdateUser={handleUpdateUser}
+                // authCurrentUserRole={authCurrentUserRole}
+                // onClose={handleCloseNewUserModal}
+                // usersManager ={usersManager}
+                // projectsManager={projectsManager}
+                // onAssignProjects={handleOpenAssignModal}
+                // onCreateUser={handleCreateUser}
+                // onUpdateUser={handleUpdateUser}
                 />}
             {showMessagePopUp && messagePopUpContent && (<MessagePopUp {...messagePopUpContent} />)}
-            {isSortMenuOpen && (
-                <UsersSortMenu
-                    isOpen={isSortMenuOpen}
-                    onClose={() => setIsSortMenuOpen(false)}
-                    onSort={handleSort}
-                    buttonRef={sortButtonRef}
-                />
-            )}
+            {/* {isSortMenuOpen && (
+            <UsersSortMenu
+                isOpen={isSortMenuOpen}
+                onClose={() => setIsSortMenuOpen(false)}
+                onSort={handleSort}
+                buttonRef={sortButtonRef}
+            />
+        )} */}
 
 
 
         </section>
     )
 }
+
 
 
 // Add display name for debugging purposes
