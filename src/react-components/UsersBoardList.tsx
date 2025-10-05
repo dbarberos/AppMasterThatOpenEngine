@@ -1,7 +1,7 @@
 // src/react-components/UserList.tsx (Conceptual)
 import React from 'react';
 import { User } from '../classes/User';
-import { AddIcon, EditIcon, TrashIcon } from './icons'; // Asumiendo que tienes iconos
+import { AddIcon, EditIcon, TrashIcon } from './icons';
 import { UserCardRow, UserSortKey, UsersSortMenu } from '../react-components/';
 import { useAuth } from '../Auth/react-components/AuthContext';
 import { useUserBoardContext } from './UsersBoardPage';
@@ -219,6 +219,9 @@ export const UsersBoardList: React.FC = () => {
                 {/* <h5 style={{ width: '', textAlign: 'center' }}>STATUS</h5> */}
                 <h5 style={{ width: '', textAlign: 'center' }}>ACTIONS</h5>
             </div>
+
+
+
             {users.map(user => (
                 <React.Fragment key={user.id}>
                     {console.log(`[UsersBoardList] Mapeando usuario a UserCardRow: ${user.id} - ${user.nickName || user.email}`)}

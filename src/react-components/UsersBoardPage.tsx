@@ -16,9 +16,9 @@ import { MainUsersIndex, SearchIcon, AddIcon, }  from './icons';
 import { Project } from '../classes/Project';
 import { useUserSearch, useUsersCache, useStickyState, useDebounce } from '../hooks';
 import { UsersManager } from '../classes/UsersManager';
-import { useAuth } from '../Auth/react-components/AuthContext';
+import { useAuth, UserProfile } from '../Auth/react-components/AuthContext';
 import { USERS_CACHE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL, USER_ROL_IN_APP_PERMISSIONS } from '../const';
-import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
+import { getAuth, sendSignInLinkToEmail, User as FirebaseUser,  } from 'firebase/auth';
 import { UserProjectAssignmentModal } from './UserProjectAssignmentModal';
 
 
@@ -33,6 +33,8 @@ interface UserBoardContextType {
     // selectedProject: string | null;
     onProjectSelect: (projectId: string | null) => void
     onInviteUser: () => void; // Añadimos el handler para invitar
+    userProfile: UserProfile | null; // Añadido para permisos
+    currentUser: FirebaseUser | null; // Añadido para permisos
     // No necesitamos pasar los elementos del header, ya que se quedan en el padre
 }
 
@@ -455,6 +457,8 @@ export function UsersBoardPage({
         onInviteUser: () => setIsInvitationModalOpen(true),
         // selectedProject: selectedProject, // selectedProject ya no es necesario en el contexto, el hijo lo leerá de la URL.
         onProjectSelect: handleProjectSelectionForView,
+        userProfile, // Pasamos el perfil del usuario autenticado
+        currentUser, // Pasamos el usuario de Firebase actual
     };
 
 
