@@ -3665,17 +3665,39 @@ header {
     box-sizing: border-box;
     display: grid;
     grid-template-columns: 50px repeat(4, minmax(150px, 500px)) 125px 100px 100px;
+    grid-template-columns: 50px repeat(4, minmax(150px, 1fr)) 125px 100px 100px;
     grid-template-areas:
         "checkbox name email phone company projects status edit" "details details details details details details details details";
     column-gap: 20xp;
+    column-gap: 20px;
     align-items: end;
     height: 75px;
     border-radius: var(--br-5xs);
+    border-radius: var(--br-2xs);
     border-bottom: 1px solid var(--background-l00);
     font-size: var(--font-lg);
     background-color: var(--background-300);
     margin-bottom: var(--gap-xs);
 }
+
+.projectteam-container-header {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 50px repeat(4, minmax(150px, 1fr)) 100px 100px 100px;
+    grid-template-areas:
+        "checkbox nickname organization role permisions status edit";
+    column-gap: 20xp;
+    column-gap: 20px;
+    align-items: end;
+    height: 75px;
+    border-radius: var(--br-5xs);
+    border-radius: var(--br-2xs);
+    border-bottom: 1px solid var(--background-l00);
+    font-size: var(--font-lg);
+    background-color: var(--background-300);
+    margin-bottom: var(--gap-xs);
+}
+
 
 /* ==================================================================== */
 /* USER CARD STYLE                                                      */
@@ -3705,9 +3727,11 @@ header {
     box-sizing: border-box;
     display: grid;
     grid-template-columns: 50px repeat(4, minmax(150px, 500px)) 125px 100px 100px;
+    grid-template-columns: 50px repeat(4, minmax(150px, 1fr)) 125px 100px 100px;
     grid-template-rows: 75px 200px;
     grid-template-areas: "checkbox name email phone company projects status edit" ". details details details details details details details";
     column-gap: 20xp;
+    column-gap: 20px;
     align-items: center;
     height: 75px;
     border-radius: var(--br-5xs);

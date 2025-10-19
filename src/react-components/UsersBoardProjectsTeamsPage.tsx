@@ -124,10 +124,6 @@ export function UserBoardProjectsTeamsPage() {
     const canManageUsers = userProfile?.roleInApp === 'admin' || userProfile?.roleInApp === 'superadmin';
 
 
-
-
-
-
     return (
         <>
             {/* --- HEADER SECUNDARIO --- */}
@@ -171,85 +167,109 @@ export function UserBoardProjectsTeamsPage() {
 
             <div className="users-list" style={{ gap: '2rem', paddingTop: '20px', }}>
                 
-                {/* {projectToDisplay && projectToDisplay.length === 0 && (
-                    selectedProject */}
+                
                 {projectsToDisplay.length === 0 && (
                     projectId
-                        ? <p>Project not found or no users assigned.</p> 
+                        ? <p>Project not found or no users assigned.</p>
                         : <p>Select a project from the dropdown to view its team.</p>
                 )}
 
-                {/* {projectToDisplay && projectToDisplay.map((project) => ( */}
-                {projectsToDisplay.map((project) => (
-                    <div key={project.id} className="project-team-card" style={{
-                        backgroundColor: 'var(--background-200)',
-                        padding: '20px',
-                        borderRadius: 'var(--br-xs)',
-                        border: '1px solid var(--color-border)'
-                    }}>
-                        <h3 style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '10px', marginBottom: '15px' }}>
-                            {project.name}
-                        </h3>
-                        <div className="project-team-users-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {(usersByProject[project.id!] || []).length > 0 ? (
-
-
+                {projectsToDisplay.length > 0 && (
+                    <>
+                        {/* Cabecera de la tabla/lista de usuarios por proyecto */ }
+                        <div 
+                            className="projectteam-container-header"
+                            style={{ border: "none", backgroundColor: "transparent" }}
+                        >
+                            <div />
+                            <h5 style={{ width: '20%' }}></h5>
+                            {/* <h5 style={{ width: '20%' }}>EMAIL</h5> */}
+                            <button
+                                style={{ width: '20%' }}
+                                className="header-sort-button"
+                                onClick={() => onSort('email')}
+                            >
+                                NICKNAME
+                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'row', width: '20%' }}>
+                                <button
+                                    // style={{ width: '20%' }}
+                                    className="header-sort-button"
+                                    onClick={() => onSort('organization')}
+                                >
+                                    ORGANIZATION/
+                                </button>
+                                <button
+                                    style={{ width: '20%' }}
+                                    className="header-sort-button"
+                                    onClick={() => onSort('roleInApp')}
+                                >
+                                    ROLE IN PROJECT
+                                </button>
                                 
-                                // usersByProject[project.id!].map(user => (
-                                //     <div key={user.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                //         <img
-                                //             src={user.photoURL || "/assets/photo-users/default-avatar.jpg"}
-                                //             alt={user.nickName}
-                                //             style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                                //             onError={(e) => { e.currentTarget.src = "/assets-photo-users/default-avatar.jpg"; }}
-                                //         />
-                                //         <div>
-                                //             <p style={{ fontWeight: 600 }}>{user.nickName || user.email}</p>
-                                //             <p style={{ fontSize: 'var(--font-sm)', color: 'var(--color-fontbase-dark)' }}>
-                                //                 {user.roleInApp}
-                                //             </p>
-                                //         </div>
-                                //     </div>
-
-
-                                usersByProject[project.id!].map(user => (
-                                    <UserCardRow
-                                            key={user.id}
-                                            user={user}
-                                            isExpanded={OpenUserPermitsCardId === user.id}
-                                            onExpandToggle={(userId) => {
-                                                setOpenUserPermitsCardId(prev => prev === userId ? null : userId);
-                                            }}
-                                            onAssignProjects={onAssignProjects}
-                                            onEditUser={onEditUser}
-                                            onDeleteUser={onDeleteUser}
-                                            authRole={userProfile?.roleInApp}
-                                            authUserId={currentUser?.uid}
-                                        />
-                                    
-                                    
-                                ))
-                            ) : (
-                                <p style={{ color: 'var(--color-fontbase-dark)', fontStyle: 'italic' }}>No users assigned to this project.</p>
-                            )}
+                            </div>
+                            <h5 style={{ width: '15%',  }}>PERMISSIONS</h5>
+                            <h5 style={{ width: '15%', whiteSpace: 'nowrap' }}>JOIN DATE</h5>
+                            <button
+                                style={{ justifyContent: 'center' }}
+                                className="header-sort-button" onClick={() => onSort('status')}>
+                                STATUS
+                            </button>                            
+                            <h5 style={{ width: '', textAlign: 'center' }}>ACTIONS</h5>
                         </div>
-                    </div>
-                ))}
+
+                        <div>
+                            {projectsToDisplay.map((project) => (
+                                <div
+                                    key={project.id}
+                                    className="project-team-card"
+                                    style={{
+                                        
+                                    }}
+                                >
+                                    <div className="project-team-users-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        {(usersByProject[project.id!] || []).length > 0 ? (
+
+                                            usersByProject[project.id!].map(user => (
+                                                <UserCardRow
+                                                    key={user.id}
+                                                    user={user}
+                                                    isExpanded={OpenUserPermitsCardId === user.id}
+                                                    onExpandToggle={(userId) => {
+                                                        setOpenUserPermitsCardId(prev => prev === userId ? null : userId);
+                                                    }}
+                                                    onAssignProjects={onAssignProjects}
+                                                    onEditUser={onEditUser}
+                                                    onDeleteUser={onDeleteUser}
+                                                    authRole={userProfile?.roleInApp}
+                                                    authUserId={currentUser?.uid}
+                                                />
+                                                            
+                                                            
+                                            ))
+                                        ) : (
+                                            <p style={{ color: 'var(--color-fontbase)', fontStyle: 'italic' }}>No users assigned to this project.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
             {isSortMenuOpen && (
-                            <UsersSortMenu
-                                isOpen={isSortMenuOpen}
-                                onClose={() => setIsSortMenuOpen(false)}
-                                onSort={onSort}
-                                buttonRef={sortButtonRef}
-                            />
-                        )}
+                <UsersSortMenu
+                    isOpen={isSortMenuOpen}
+                    onClose={() => setIsSortMenuOpen(false)}
+                    onSort={onSort}
+                    buttonRef={sortButtonRef}
+                />
+            )}
         </>
-    );
+    )
 }
 
-            
 
 // Add display name for debugging purposes
 UserBoardProjectsTeamsPage.displayName = 'UserBoardProjectsTeamsPage';

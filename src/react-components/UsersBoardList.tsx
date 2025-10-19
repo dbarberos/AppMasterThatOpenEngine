@@ -181,7 +181,7 @@ export const UsersBoardList: React.FC = () => {
                         </div>
                     </div>
                 ) :
-                    <div/>
+                    <div></div>
                 }
                 <h5 style={{ width: '20%' }}></h5>
                 {/* <h5 style={{ width: '20%' }}>EMAIL</h5> */}
@@ -218,7 +218,8 @@ export const UsersBoardList: React.FC = () => {
                 </button>
                 {/* <h5 style={{ width: '', textAlign: 'center' }}>STATUS</h5> */}
                 <h5 style={{ width: '', textAlign: 'center' }}>ACTIONS</h5>
-            </div>
+                </div>
+                
 
 
 

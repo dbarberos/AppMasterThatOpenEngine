@@ -32,3 +32,7 @@ dist-ssr1
 vite-env.d.ts
 env.d.ts
 node_modules/.vite/deps/_metadata.json
+
+#AI
+
+AGENTS.md
