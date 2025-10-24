@@ -2,10 +2,10 @@ import * as React from 'react';
 import * as Router from 'react-router-dom';
 // import { useProjectsManager } from './ProjectsManagerContext';
 // import { useUsersManager } from './UsersManagerContext';
-import { IProject, Project } from '../classes/Project';
+import { IProject, Project, } from '../classes/Project';
 import { User } from '../classes/User';
-import { useUserBoardContext } from './UsersBoardPage';
-import { ProjectSelector, UserCardRow, UsersSortMenu } from '../react-components'; 
+import { useUserBoardContext} from './UsersBoardPage';
+import { ProjectSelector, UserCardRow, UsersSortMenu, UserProjectTeamCardRow } from '../react-components'; 
 import { AddIcon, EditIcon, TrashIcon } from './icons'
 
 /**
@@ -60,7 +60,7 @@ export function UserBoardProjectsTeamsPage() {
 
 
     const { projectId } = Router.useParams<{ projectId: string }>();
-    const [OpenUserPermitsCardId, setOpenUserPermitsCardId] = React.useState<string | null>(null);
+
 
     // const projects = projectsManager.list;
     // const usersByProject = React.useMemo(() => groupUsersByProject(usersManager.list), [usersManager.list]);
@@ -181,19 +181,22 @@ export function UserBoardProjectsTeamsPage() {
                             className="projectteam-container-header"
                             style={{ border: "none", backgroundColor: "transparent" }}
                         >
-                            <div />
-                            <h5 style={{ width: '20%' }}></h5>
-                            {/* <h5 style={{ width: '20%' }}>EMAIL</h5> */}
+                            <div style={{ width: '5%' }} />
+                            {/* <h5 style={{ width: '20%' }}></h5> */}
                             <button
                                 style={{ width: '20%' }}
                                 className="header-sort-button"
-                                onClick={() => onSort('email')}
+                                onClick={() => onSort('nickName')}
                             >
                                 NICKNAME
                             </button>
+
+
+
+
+
                             <div style={{ display: 'flex', flexDirection: 'row', width: '20%' }}>
                                 <button
-                                    // style={{ width: '20%' }}
                                     className="header-sort-button"
                                     onClick={() => onSort('organization')}
                                 >
@@ -208,14 +211,23 @@ export function UserBoardProjectsTeamsPage() {
                                 </button>
                                 
                             </div>
-                            <h5 style={{ width: '15%',  }}>PERMISSIONS</h5>
+                            <h5 style={{ width: '15%', }}>PERMISSIONS</h5>
+                            
+
+
+                            <button style={{ width: '15%' }} className="header-sort-button" onClick={() => onSort('organization')}>ORGANIZATION</button>
+                            <h5 style={{ width: '15%' }}>ROLE IN PROJECT</h5>
+                            <h5 style={{ width: '15%' }}>PERMISSIONS</h5>
+
+
+
                             <h5 style={{ width: '15%', whiteSpace: 'nowrap' }}>JOIN DATE</h5>
                             <button
                                 style={{ justifyContent: 'center' }}
                                 className="header-sort-button" onClick={() => onSort('status')}>
                                 STATUS
                             </button>                            
-                            <h5 style={{ width: '', textAlign: 'center' }}>ACTIONS</h5>
+                            <h5 style={{ width: '5%', textAlign: 'center' }}>ACTIONS</h5>
                         </div>
 
                         <div>
@@ -229,24 +241,20 @@ export function UserBoardProjectsTeamsPage() {
                                 >
                                     <div className="project-team-users-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         {(usersByProject[project.id!] || []).length > 0 ? (
-
-                                            usersByProject[project.id!].map(user => (
-                                                <UserCardRow
-                                                    key={user.id}
-                                                    user={user}
-                                                    isExpanded={OpenUserPermitsCardId === user.id}
-                                                    onExpandToggle={(userId) => {
-                                                        setOpenUserPermitsCardId(prev => prev === userId ? null : userId);
-                                                    }}
-                                                    onAssignProjects={onAssignProjects}
-                                                    onEditUser={onEditUser}
-                                                    onDeleteUser={onDeleteUser}
-                                                    authRole={userProfile?.roleInApp}
-                                                    authUserId={currentUser?.uid}
-                                                />
-                                                            
-                                                            
-                                            ))
+                                            usersByProject[project.id!].map(user => {
+                                                const assignment = user.projectsAssigned?.find(a => a.projectId === project.id);
+                                                if (!assignment) return null; //No debería pasar si está en este grupo
+                                                return (
+                                                    <UserProjectTeamCardRow
+                                                        key={user.id}
+                                                        user={user}
+                                                        project={project}
+                                                        assignment={assignment}
+                                                        authRole={userProfile?.roleInApp}
+                                                        onEditPermissions={onAssignProjects} //Reutilizar el handler del contexto
+                                                    />
+                                                )
+                                            })
                                         ) : (
                                             <p style={{ color: 'var(--color-fontbase)', fontStyle: 'italic' }}>No users assigned to this project.</p>
                                         )}

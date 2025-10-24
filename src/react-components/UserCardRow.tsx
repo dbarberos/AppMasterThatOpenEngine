@@ -45,7 +45,7 @@ export const UserCardRow: React.FC<UserCardRowProps> = ({
     const acronymRefs = React.useRef<{ [projectId: string]: HTMLElement | null }>({});
 
 
-    //    Debe cumplir la condición general (canExpandDetails) Y tener el rol adecuado.
+    // Debe cumplir la condición general (canExpandDetails) Y tener el rol adecuado.
     const canUserExpand = (authRole === 'admin' || authRole === 'superadmin')
 
     // Manejar la expansión por click

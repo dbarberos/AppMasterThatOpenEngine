@@ -25,14 +25,23 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
 }) => {
 
         // --- Normalización robusta de existingAssignments ---
-    // Si es un array, conviértelo a objeto indexado por projectId
+    // Si es un array, conviértelo a objeto indexado por projectId para un acceso mas rápido.
     const normalizedAssignments: { [projectId: string]: IProjectAssignment } = React.useMemo(() => {
         if (Array.isArray(existingAssignments)) {
-            return Object.fromEntries(
-                existingAssignments
-                    .filter(a => a && a.projectId)
-                    .map(a => [a.projectId, a])
-            );
+            // return Object.fromEntries(
+            //     existingAssignments
+            //         .filter(a => a && a.projectId)
+            //         .map(a => [a.projectId, a])
+            // );
+
+            const obj: { [projectId: string]: IProjectAssignment } = {};
+            for (const assignment of existingAssignments) {
+                if (assignment && assignment.projectId) {
+                    obj[assignment.projectId] = assignment;
+                }
+            }
+            return obj;
+
         }
         return existingAssignments || {};
     }, [existingAssignments]);

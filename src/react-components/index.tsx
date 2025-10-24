@@ -55,3 +55,4 @@ export * from './UserProjectAssignmentModal'
 export * from './UserProjectAssignmentRow'
 export * from './UserProjectAssignmentHoverInformation'
 export * from "./UsersBoardProjectsTeamsPage"
+export * from './UserProjectTeamCardRow'
