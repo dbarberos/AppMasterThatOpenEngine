@@ -129,7 +129,11 @@ export function UserBoardProjectsTeamsPage() {
             {/* --- HEADER SECUNDARIO --- */}
             <div className="header-user-page-content" style={{ justifyContent: 'space-between' }}>
                 <div style={{ display: "flex", flexDirection: "row", columnGap: 20, alignItems: 'center' }}>
-                    <h3 style={{ fontSize: 'var(--font-3xl)', fontWeight: 500, color: 'var(--color-fontbase)', whiteSpace: 'nowrap' }}>{currentProject.name}</h3>
+                    <h3                        
+                        className='projectteam-title-active'
+                    >
+                        {currentProject.name}
+                    </h3>
                     
                     <ProjectSelector
                         // currentProject={projects.find(p => p.id === selectedProject) || null}
@@ -165,7 +169,7 @@ export function UserBoardProjectsTeamsPage() {
                 </div>
             </div>
 
-            <div className="users-list" style={{ gap: '2rem', paddingTop: '20px', }}>
+            <div className="users-list" style={{ gap: '1.5rem'}}>
                 
                 
                 {projectsToDisplay.length === 0 && (
@@ -182,52 +186,29 @@ export function UserBoardProjectsTeamsPage() {
                             style={{ border: "none", backgroundColor: "transparent" }}
                         >
                             <div style={{ width: '5%' }} />
+                            <h5 style={{ width: '20%' }}></h5>
                             {/* <h5 style={{ width: '20%' }}></h5> */}
                             <button
-                                style={{ width: '20%' }}
                                 className="header-sort-button"
-                                onClick={() => onSort('nickName')}
+                                onClick={() => onSort('organization')}
                             >
-                                NICKNAME
+                                ORGANIZATION
                             </button>
-
-
-
-
-
-                            <div style={{ display: 'flex', flexDirection: 'row', width: '20%' }}>
-                                <button
+                            <button
+                                    style={{ width: '20%', whiteSpace: 'nowrap' }}
                                     className="header-sort-button"
-                                    onClick={() => onSort('organization')}
-                                >
-                                    ORGANIZATION/
-                                </button>
-                                <button
-                                    style={{ width: '20%' }}
-                                    className="header-sort-button"
-                                    onClick={() => onSort('roleInApp')}
-                                >
-                                    ROLE IN PROJECT
-                                </button>
-                                
-                            </div>
-                            <h5 style={{ width: '15%', }}>PERMISSIONS</h5>
-                            
-
-
-                            <button style={{ width: '15%' }} className="header-sort-button" onClick={() => onSort('organization')}>ORGANIZATION</button>
-                            <h5 style={{ width: '15%' }}>ROLE IN PROJECT</h5>
+                                onClick={() => onSort('roleInApp')}
+                            >
+                                ROLE IN PROJECT
+                            </button>
                             <h5 style={{ width: '15%' }}>PERMISSIONS</h5>
-
-
-
                             <h5 style={{ width: '15%', whiteSpace: 'nowrap' }}>JOIN DATE</h5>
                             <button
                                 style={{ justifyContent: 'center' }}
                                 className="header-sort-button" onClick={() => onSort('status')}>
                                 STATUS
                             </button>                            
-                            <h5 style={{ width: '5%', textAlign: 'center' }}>ACTIONS</h5>
+                            <h5 style={{ textAlign: 'center' }}>ACTIONS</h5>
                         </div>
 
                         <div>

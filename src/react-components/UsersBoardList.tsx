@@ -122,7 +122,7 @@ export const UsersBoardList: React.FC = () => {
             </div>
 
 
-        <div className="users-list" >
+        <div className="users-list" style={{ gap: '1.5rem' }}>
             
 
             {/* Cabecera de la tabla/lista de usuarios */}
@@ -220,28 +220,27 @@ export const UsersBoardList: React.FC = () => {
                 <h5 style={{ width: '', textAlign: 'center' }}>ACTIONS</h5>
                 </div>
                 
-
-
-
-            {users.map(user => (
-                <React.Fragment key={user.id}>
-                    {console.log(`[UsersBoardList] Mapeando usuario a UserCardRow: ${user.id} - ${user.nickName || user.email}`)}
-                    
-                <UserCardRow
-                    key={user.id}
-                    user={user}
-                    isExpanded={expandedUserId === user.id}
-                    onExpandToggle={(userId) => {
-                        setExpandedUserId(prev => prev === userId ? null : userId);
-                    }}
-                    onAssignProjects={onAssignProjects}
-                    onEditUser={onEditUser}
-                    onDeleteUser={onDeleteUser}
-                    authRole={userProfile?.roleInApp}
-                    authUserId={currentUser?.uid}
-                />
-                </React.Fragment>
-            ))}
+                <div> 
+                    {users.map(user => (
+                        <React.Fragment key={user.id}>
+                            {console.log(`[UsersBoardList] Mapeando usuario a UserCardRow: ${user.id} - ${user.nickName || user.email}`)}
+                            
+                        <UserCardRow
+                            key={user.id}
+                            user={user}
+                            isExpanded={expandedUserId === user.id}
+                            onExpandToggle={(userId) => {
+                                setExpandedUserId(prev => prev === userId ? null : userId);
+                            }}
+                            onAssignProjects={onAssignProjects}
+                            onEditUser={onEditUser}
+                            onDeleteUser={onDeleteUser}
+                            authRole={userProfile?.roleInApp}
+                            authUserId={currentUser?.uid}
+                        />
+                        </React.Fragment>
+                    ))}
+                </div>
 
             </div>
             

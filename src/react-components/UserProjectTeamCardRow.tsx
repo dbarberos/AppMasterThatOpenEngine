@@ -42,7 +42,7 @@ export const UserProjectTeamCardRow: React.FC<UserProjectTeamCardRowProps> = ({
     };
 
     return (
-        <div className="user-container project-team-user-row" style={{ gridTemplateColumns: '5% 20% 15% 15% 15% 15% 10% 5%' }}>
+        <div className="user-container user-team-container" style={{  }}>
             {/* Checkbox (si se necesitara para acciones en masa en el futuro) */}
             <div className="users-checkbox" onClick={(e) => e.stopPropagation()}>
                 <label className="radio">
@@ -60,14 +60,18 @@ export const UserProjectTeamCardRow: React.FC<UserProjectTeamCardRowProps> = ({
                 <div className="users-photo">
                     <img
                         src={user.photoURL || "/assets/photo-users/default-avatar.jpg"}
+                        //Usa photoURL o un default
                         alt={user.nickName || "User"}
                         onError={(e) => {
+                            // Previene bucles de error si el avatar por defecto también falla
                             e.currentTarget.onerror = null;
                             e.currentTarget.src = "/assets/photo-users/default-avatar.jpg";
                         }}
                     />
                 </div>
-                <div>{user.nickName || 'N/A'}</div>
+                <div>
+                    {user.nickName || 'N/A'}
+                </div>
             </div>
 
             {/* Organization */}
@@ -85,14 +89,21 @@ export const UserProjectTeamCardRow: React.FC<UserProjectTeamCardRowProps> = ({
             <div>{assignedDate}</div>
 
             {/* Status */}
-            <div style={{ textAlign: 'center' }}>
-                <p className={`user-status-badge status-${user.status?.toLowerCase()}`}>
+            <div
+                style={{ textAlign: 'center' }}
+            >
+                <p
+                    className={`user-status-badge status-${user.status?.toLowerCase()}`}
+                >
                     {user.status || 'N/A'}
                 </p>
             </div>
 
             {/* Actions */}
-            <div style={{ position: 'relative', textAlign: 'center' }} className="users-edit" onClick={(e) => e.stopPropagation()}>
+            <div
+                style={{ position: 'relative', textAlign: 'center' }}
+                className="users-edit" onClick={(e) => e.stopPropagation()}
+            >
                 {canEditPermissions && (
                     <button
                         onClick={handleEditClick}
