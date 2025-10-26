@@ -163,6 +163,7 @@ export function UsersBoardPage({
 
     // --- Handlers para el modal de asignación de proyectos ---
     const handleOpenAssignmentModal = (user: AppUserClass) => {
+        console.log('[UsersBoardPage] Abriendo modal. ViewMode:', viewMode, 'selectedProjectId:', selectedProjectId);
         setUserForAssignment(user);
         setIsAssignmentModalOpen(true);
     };
@@ -492,6 +493,16 @@ export function UsersBoardPage({
     }, [location.pathname, sortedAndFilteredUsers]); // Añadimos sortedAndFilteredUsers como dependencia // Este efecto se ejecuta cada vez que la URL cambia.
 
 
+    // Efecto para sincronizar el viewMode con la ruta actual. Usando el hook useLocation de react-router-dom y un React.useEffect.Para que cuando mostremos el modal de permisos de proyectos desde el TeamsUser solo se muestre un proyecto. el selectedProyectId que tenemos guardado en el estado
+    React.useEffect(() => {
+        if (location.pathname.startsWith('/usersBoard/teams')) {
+            setViewMode('projectUsers');
+        } else {
+            setViewMode('allUsers');
+        }
+    }, [location.pathname]); // Se ejecuta cada vez que la URL cambia
+
+
 
     // --- Handlers para la animación de hover del indicador ---
     const handleTabMouseEnter = (e: React.MouseEvent<HTMLLIElement>) => {
@@ -733,6 +744,8 @@ export function UsersBoardPage({
                     projects={projects}
                     existingAssignments={userForAssignment.projectsAssigned || {}}
                     userRoleInApp={userForAssignment.roleInApp}
+                    //filterProjectId={viewMode === 'projectUsers' ? selectedProjectId : undefined}
+                    filterProjectId={viewMode === 'projectUsers' ? (selectedProjectId ?? undefined) : undefined}
                     onSave={handleSaveAssignments}
                 />
             )}

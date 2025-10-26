@@ -13,6 +13,7 @@ interface UserProjectAssignmentModalProps {
     projects: IProject[]; // Lista de todos los proyectos disponibles
     existingAssignments: { [projectId: string]: IProjectAssignment }; // Asignaciones existentes del usuario
     userRoleInApp: IUser['roleInApp']; // Rol del usuario en la aplicación para permisos por defecto
+    filterProjectId?: string; // ID del proyecto para filtrar (opcional)
     onSave: (newAssignments: { [projectId: string]: IProjectAssignment }) => void; // Función para guardar los cambios
 }
 export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProps> = ({
@@ -21,8 +22,11 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
     projects, // Lista de proyectos disponibles
     existingAssignments, // Asignaciones existentes del usuario
     userRoleInApp, // Rol del usuario en la aplicación para permisos por defecto
+    filterProjectId, // ID del proyecto para filtrar (opcional)
     onSave, // Función para guardar los cambios
 }) => {
+
+    console.log('[Modal] Props recibidas:', { filterProjectId, projectsCount: projects.length });
 
         // --- Normalización robusta de existingAssignments ---
     // Si es un array, conviértelo a objeto indexado por projectId para un acceso mas rápido.
@@ -97,10 +101,22 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
         setShowMessagePopUp(true);
     };
 
+   // Filtra los proyectos a mostrar. Si filterProjectId está presente, muestra solo ese.
+    const projectsToDisplay = React.useMemo(() => {
+        console.log('[Modal] Calculando projectsToDisplay. filterProjectId:', filterProjectId);
+        if (filterProjectId) {
+            return projects.filter(p => p.id === filterProjectId);
+        }
+        console.log('[Modal] Filtrado desactivado. Mostrando todos los proyectos:', projects.length);
+        return projects;
+    }, [projects, filterProjectId]);
+
+
 
     const handleSelectAll = () => {
         const newAssignments = { ...pendingAssignments };
-        projects.forEach((project) => {
+        projectsToDisplay.forEach((project) => {
+        // projects.forEach((project) => {
             // Solo seleccionar si el proyecto NO está asignado y bloqueado
             const isAlreadyAssigned = !!normalizedAssignments[project.id!];
             const isModificationAllowed = unlockedProjects.has(project.id!);
@@ -108,7 +124,8 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
                 newAssignments[project.id!] = {
                     projectId: project.id!,
                     projectName: project.name,
-                    roleInProject: '', // Forzar al usuario a seleccionar un rol
+                    // roleInProject: '', // Forzar al usuario a seleccionar un rol
+                    roleInProject: normalizedAssignments[project.id!]?.roleInProject || '', //Mantener rol si existe
                     permissions: userRoleInApp ? USER_ROL_IN_APP_PERMISSIONS[userRoleInApp] || [] : [],
                     assignedDate: new Date(), // Se añade la fecha al seleccionar
                 };
@@ -120,7 +137,8 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
 
     const handleDeselectAll = () => {
         const newAssignments = { ...pendingAssignments };
-        projects.forEach((project) => {
+        // projects.forEach((project) => {
+        projectsToDisplay.forEach((project) => {
             const isAlreadyAssigned = !!normalizedAssignments[project.id!];
             const isModificationAllowed = unlockedProjects.has(project.id!);
             // Solo desmarcar si el proyecto NO está asignado y bloqueado
@@ -252,7 +270,8 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
 
 
     const projectAssignmentRows = React.useMemo(() => {
-        return projects.map((project) => {
+        // return projects.map((project) => {
+        return projectsToDisplay.map((project) => {
             const isAlreadyAssigned = !!normalizedAssignments[project.id!];
             const isModificationAllowed = unlockedProjects.has(project.id!);
             console.log('Modal Row:', {
@@ -279,7 +298,7 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
                 />
             );
         });
-    }, [projects, normalizedAssignments, unlockedProjects, pendingAssignments, handleProjectChange, handleRoleChange, handlePermissionChange, handleAllowModificationRequest]);
+    }, [projectsToDisplay, normalizedAssignments, unlockedProjects, pendingAssignments, handleProjectChange, handleRoleChange, handlePermissionChange, handleAllowModificationRequest]);
 
 
 
@@ -310,15 +329,26 @@ export const UserProjectAssignmentModal: React.FC<UserProjectAssignmentModalProp
                         boxSizing: 'border-box'
                     }}>
                     <header id="modal-header-title" style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: '0', flexShrink: 0 }}>
-                        <h4 style={{ marginLeft: '25px' }}>SELECT PROJECT/S TO ASSIGN</h4>
-                        <div style={{ display: 'flex', flexDirection: 'column', rowGap: '10px' }}>
-                            <button type="button" onClick={handleSelectAll} id="selectAllBtn" className="buttonB">Select all</button>
-                            <button type="button" onClick={handleDeselectAll} id="deselectAllBtn" className="buttonB">Deselect all</button>
-                        </div>
+                         {/* Ocultar título y botones si estamos en modo de edición única */}
+                        {!filterProjectId && (
+                            <>
+
+
+                                <h4 style={{ marginLeft: '25px' }}>SELECT PROJECT/S TO ASSIGN</h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', rowGap: '10px' }}>
+                                    <button type="button" onClick={handleSelectAll} id="selectAllBtn" className="buttonB">Select all</button>
+                                    <button type="button" onClick={handleDeselectAll} id="deselectAllBtn" className="buttonB">Deselect all</button>
+                                </div>
+                            </>
+                        )}
+                        {filterProjectId && <h4 style={{ marginLeft: '25px' }}>EDIT USER PERMISSIONS</h4>}
+
+
                     </header>
                     <div style={{ width: '100%', margin: 'var(--gap-base)', flexGrow: 1, }}>
                         <ul id="json-projects-list" style={{ listStyle: 'none', padding: 0, width: '100%', }}>
                             {/* {projects.map((project) => {
+                                {projectsToDisplay.map((project) => {
                                 const isAlreadyAssigned = !!existingAssignments[project.id!];
                                 const isModificationAllowed = unlockedProjects.has(project.id!);
                                 return (
