@@ -3,15 +3,25 @@ import * as ReactDOM from 'react-dom';
 import { IUser } from '../types';
 
 // Definimos un tipo para las claves de ordenación válidas.
-// Usamos `keyof Pick<IUser, ...>` para asegurar que solo se puedan usar
-// propiedades válidas del tipo IUser, lo que previene errores.
-export type UserSortKey = keyof Pick<IUser, 'nickName' | 'email' | 'organization' | 'roleInApp' | 'status'>;
+// // Usamos `keyof Pick<IUser, ...>` para asegurar que solo se puedan usar
+// // propiedades válidas del tipo IUser, lo que previene errores.
+// export type UserSortKey = keyof Pick<IUser, 'nickName' | 'email' | 'organization' | 'roleInApp' | 'status'>;
+
+
+// Ampliamos el tipo para incluir todas las posibles claves de ordenación de IUser.
+// Esto hace que el tipo sea más completo para futuros usos.
+export type UserSortKey = keyof IUser;
+export interface SortOption {
+    key: UserSortKey;
+    label: string;
+}
 
 interface UsersSortMenuProps {
     isOpen: boolean;
     onClose: () => void;
     onSort: (sortKey: UserSortKey) => void;
     buttonRef: React.RefObject<HTMLButtonElement | null>;
+    sortOptions: SortOption[]; // Nueva prop para pasar las opciones de ordenación
 }
 
 export const UsersSortMenu: React.FC<UsersSortMenuProps> = ({
@@ -19,6 +29,7 @@ export const UsersSortMenu: React.FC<UsersSortMenuProps> = ({
     onClose,
     onSort,
     buttonRef,
+    sortOptions,
 }) => {
     const menuRef = React.useRef<HTMLDivElement>(null);
     const [menuPosition, setMenuPosition] = React.useState<{ top: number; left: number } | null>(null);
@@ -67,14 +78,16 @@ export const UsersSortMenu: React.FC<UsersSortMenuProps> = ({
         onClose();       // Cierra el menú.
     };
 
-    // Definimos las opciones del menú.
-    const sortOptions: { key: UserSortKey; label: string }[] = [
-        { key: 'nickName', label: 'Nickname' },
-        { key: 'email', label: 'Email' },
-        { key: 'organization', label: 'Organization' },
-        { key: 'roleInApp', label: 'Role' },
-        { key: 'status', label: 'Status' },
-    ];
+    // No hace falta ahora emplear esta seccion porque las opciones se pasan como prop.
+    
+    // // Definimos las opciones del menú.
+    // const sortOptions: { key: UserSortKey; label: string }[] = [
+    //     { key: 'nickName', label: 'Nickname' },
+    //     { key: 'email', label: 'Email' },
+    //     { key: 'organization', label: 'Organization' },
+    //     { key: 'roleInApp', label: 'Role' },
+    //     { key: 'status', label: 'Status' },
+    // ];
 
     // Usamos un portal para renderizar el menú en el body, evitando problemas de z-index y overflow.
     return ReactDOM.createPortal(

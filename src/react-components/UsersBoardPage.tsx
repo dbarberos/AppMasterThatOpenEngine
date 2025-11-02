@@ -28,7 +28,9 @@ interface UserBoardContextType {
     onAssignProjects: (user: AppUserClass) => void;
     onEditUser: (user: AppUserClass | null) => void;
     onDeleteUser: (userId: string) => void;
-    onSort: (sortKey: UserSortKey) => void;
+    // onSort: (sortKey: UserSortKey) => void;  //Manejamos los sortBy según donde rendericemos el compoenente
+    onSortUsers: (sortKey: UserSortKey) => void; // Específico para la lista de usuarios
+    onSortTeams: (sortKey: UserSortKey) => void; // Específico para la lista de equipos
     sortedAndFilteredUsers: AppUserClass[];
     // selectedProject: string | null;
     onProjectSelect: (projectId: string | null) => void
@@ -97,10 +99,18 @@ export function UsersBoardPage({
     const sortButtonRef = React.useRef<HTMLButtonElement>(null);
     // // Estado para la lógica de ordenación (preparado para el siguiente paso)
     // const [sortBy, setSortBy] = React.useState<UserSortKey>('nickName');
+
     // Clave única para guardar la preferencia de ordenación en localStorage, específica para cada usuario.
     const userSortByKey = currentUser ? `userSortBy_${currentUser.uid}` : 'userSortBy_guest';
-    // Reemplazamos React.useState con nuestro hook useStickyState para hacer la ordenación persistente.
-    const [sortBy, setSortBy] = useStickyState<UserSortKey>('nickName', userSortByKey);
+    const teamsSortByKey = currentUser ? `TeamsUsersSortBy_${currentUser.uid}` : 'TeamsUsersSortBy_guest';
+
+    // // Reemplazamos React.useState con nuestro hook useStickyState para hacer la ordenación persistente.
+    // const [sortBy, setSortBy] = useStickyState<UserSortKey>('nickName', userSortByKey);
+
+
+    // Creamos dos estados de ordenación persistentes separados.
+    const [userSortBy, setUserSortBy] = useStickyState<UserSortKey>('nickName', userSortByKey);
+    const [teamsSortBy, setTeamsSortBy] = useStickyState<UserSortKey>('nickName', teamsSortByKey);
 
 
     // Referencias y hooks para la navegación deslizante
@@ -148,11 +158,27 @@ export function UsersBoardPage({
     }, []);
 
 
-    // Handler para cuando se selecciona una opción de ordenación
-    const handleSort = React.useCallback((key: UserSortKey) => {
-        console.log(`Sorting by: ${key}`)
-        setSortBy(key);
-    }, [setSortBy]);
+    // // Handler para cuando se selecciona una opción de ordenación
+    // const handleSort = React.useCallback((key: UserSortKey) => {
+    //     console.log(`Sorting by: ${key}`)
+    //     setSortBy(key);
+    // }, [setSortBy]);
+
+
+    // Handlers de ordenación separados para cada vista.
+    const handleUserSort = React.useCallback((key: UserSortKey) => {
+        console.log(`Sorting UserList by: ${key}`);
+        setUserSortBy(key);
+    }, [setUserSortBy]);
+
+    const handleTeamsSort = React.useCallback((key: UserSortKey) => {
+        console.log(`Sorting TeamsList by: ${key}`);
+        setTeamsSortBy(key);
+    }, [setTeamsSortBy]);
+
+
+    // Determinamos qué clave de ordenación usar basándonos en la ruta actual.
+    const activeSortBy = location.pathname.startsWith('/usersBoard/teams') ? teamsSortBy : userSortBy;
 
 
 
@@ -274,8 +300,13 @@ export function UsersBoardPage({
     // Hook useMemo para ordenar la lista de usuarios de forma eficiente.
     // Se re-ejecutará solo si la lista de usuarios filtrados (filteredUsers) o la clave de ordenación (sortBy) cambian.
     const sortedAndFilteredUsers = React.useMemo(() => {
-        // Si no hay una clave de ordenación, devolvemos la lista filtrada tal cual.
-        if (!sortBy) {
+
+        // // Si no hay una clave de ordenación, devolvemos la lista filtrada tal cual.
+        // if (!sortBy) {
+
+        // Usamos la clave de ordenación activa determinada por la ruta.
+        if (!activeSortBy) {
+            
             return filteredUsers;
         }
 
@@ -287,10 +318,20 @@ export function UsersBoardPage({
         // Usamos [...filteredUsers].sort() para crear una copia y ordenarla.
         // .toSorted() es más moderno y podría no estar disponible en todos los entornos.
         const sorted = [...filteredUsers].sort((a, b) => {
+            // Lógica de ordenación especial para 'roleInProject'
+            if (activeSortBy === 'roleInProject') {
+                const roleA = a.projectsAssigned?.find(p => p.projectId === selectedProjectId)?.roleInProject || 'zzzz';
+                const roleB = b.projectsAssigned?.find(p => p.projectId === selectedProjectId)?.roleInProject || 'zzzz';
+                return roleA.localeCompare(roleB);
+            }
+
             // Obtenemos los valores a comparar. Usamos '?? '' como fallback para
             // propiedades que podrían ser null o undefined, evitando errores.
-            const valueA = a[sortBy] ?? '';
-            const valueB = b[sortBy] ?? '';
+            // const valueA = a[sortBy] ?? '';
+            // const valueB = b[sortBy] ?? '';
+            const valueA = a[activeSortBy as keyof AppUserClass] ?? '';
+            const valueB = b[activeSortBy as keyof AppUserClass] ?? '';
+
 
             // localeCompare es el método ideal para ordenar cadenas de texto alfabéticamente,
             // ya que maneja correctamente acentos y caracteres especiales.
@@ -302,7 +343,7 @@ export function UsersBoardPage({
         });
         return sorted;
 
-    }, [filteredUsers, sortBy]); // Dependencias del hook
+    }, [filteredUsers, activeSortBy, selectedProjectId]); // Dependencias del hook
 
 
 
@@ -453,7 +494,9 @@ export function UsersBoardPage({
         onAssignProjects: handleOpenAssignmentModal,
         onEditUser: handleOpenNewUserModal,
         onDeleteUser: handleDeleteUser,
-        onSort: handleSort,
+        // onSort: handleSort,
+        onSortUsers: handleUserSort,
+        onSortTeams: handleTeamsSort,
         sortedAndFilteredUsers,
         onInviteUser: () => setIsInvitationModalOpen(true),
         // selectedProject: selectedProject, // selectedProject ya no es necesario en el contexto, el hijo lo leerá de la URL.

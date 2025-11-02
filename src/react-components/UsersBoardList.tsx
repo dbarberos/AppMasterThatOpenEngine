@@ -2,7 +2,7 @@
 import React from 'react';
 import { User } from '../classes/User';
 import { AddIcon, EditIcon, TrashIcon } from './icons';
-import { UserCardRow, UserSortKey, UsersSortMenu } from '../react-components/';
+import { UserCardRow, UserSortKey, UsersSortMenu,  type SortOption  } from '../react-components/';
 import { useAuth } from '../Auth/react-components/AuthContext';
 import { useUserBoardContext } from './UsersBoardPage';
 
@@ -30,7 +30,7 @@ export const UsersBoardList: React.FC = () => {
         onAssignProjects,
         onEditUser,
         onDeleteUser,
-        onSort,
+        onSortUsers: onSort, // Renombramos la prop del contexto para claridad
         onInviteUser,
     } = useUserBoardContext();
 
@@ -250,6 +250,13 @@ export const UsersBoardList: React.FC = () => {
                     onClose={() => setIsSortMenuOpen(false)}
                     onSort={onSort}
                     buttonRef={sortButtonRef}
+                    sortOptions={[
+                        { key: 'nickName', label: 'Nickname' },
+                        { key: 'email', label: 'Email' },
+                        { key: 'organization', label: 'Organization' },
+                        { key: 'roleInApp', label: 'Role in App' },
+                        { key: 'status', label: 'Status' },
+                    ] as SortOption[]}
                 />
             )}
 

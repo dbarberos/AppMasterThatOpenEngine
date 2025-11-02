@@ -3,9 +3,9 @@ import * as Router from 'react-router-dom';
 // import { useProjectsManager } from './ProjectsManagerContext';
 // import { useUsersManager } from './UsersManagerContext';
 import { IProject, Project, } from '../classes/Project';
-import { User } from '../classes/User';
+import { User as AppUserClass} from '../classes/User';
 import { useUserBoardContext} from './UsersBoardPage';
-import { ProjectSelector, UserCardRow, UsersSortMenu, UserProjectTeamCardRow } from '../react-components'; 
+import { ProjectSelector, UserCardRow, UsersSortMenu, UserProjectTeamCardRow, type SortOption } from '../react-components'; 
 import { AddIcon, EditIcon, TrashIcon } from './icons'
 
 /**
@@ -13,8 +13,8 @@ import { AddIcon, EditIcon, TrashIcon } from './icons'
  * @param users - La lista completa de usuarios.
  * @returns Un objeto donde las claves son IDs de proyecto y los valores son arrays de usuarios.
  */
-const groupUsersByProject = (users: User[]): { [projectId: string]: User[] } => {
-    const grouped: { [projectId: string]: User[] } = {};
+const groupUsersByProject = (users: AppUserClass[]): { [projectId: string]: AppUserClass[] } => {
+    const grouped: { [projectId: string]: AppUserClass[] } = {};
 
     for (const user of users) {
         if (user.projectsAssigned && user.projectsAssigned.length > 0) {
@@ -41,7 +41,7 @@ export function UserBoardProjectsTeamsPage() {
         users,
         onProjectSelect,
         onAssignProjects,
-        onSort,
+        onSortTeams: onSort, // Renombramos la prop del contexto para claridad
         onInviteUser,
         onEditUser,
         onDeleteUser,
@@ -253,6 +253,12 @@ export function UserBoardProjectsTeamsPage() {
                     onClose={() => setIsSortMenuOpen(false)}
                     onSort={onSort}
                     buttonRef={sortButtonRef}
+                    sortOptions={[
+                        { key: 'nickName', label: 'Nickname' },
+                        { key: 'organization', label: 'Organization' },
+                        { key: 'roleInProject', label: 'Role in Project' },
+                        { key: 'status', label: 'Status' },
+                    ] as SortOption[]}
                 />
             )}
         </>
