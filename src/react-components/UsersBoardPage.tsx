@@ -201,12 +201,35 @@ export function UsersBoardPage({
     // Efecto para redirigir a la última ruta guardada al entrar en la página.
     // Si el usuario navega a /usersBoard (la ruta base), este efecto lo llevará
     // a la última pestaña que tenía abierta (ej: /usersBoard/teams/xyz).
+        // --- MODIFICADO para sincronizar con el selectedProjectId global ---
     React.useEffect(() => {
-        if (location.pathname === '/usersBoard' && lastPath && lastPath !== '/usersBoard') {
+        // if (location.pathname === '/usersBoard' && lastPath && lastPath !== '/usersBoard') {
+        //     navigate(lastPath, { replace: true });
+        // }
+
+        // Extraer el ID del proyecto de la última ruta guardada, si existe.
+        const lastPathProjectId = lastPath.startsWith('/usersBoard/teams/')
+            ? lastPath.split('/usersBoard/teams/')[1]
+            : null;
+
+        // // Si el ID del proyecto seleccionado globalmente ha cambiado y es diferente al de la última ruta...
+        // if (selectedProjectId && selectedProjectId !== lastPathProjectId) {
+        //     // ...navegamos a la URL de equipos con el nuevo ID de proyecto.
+
+        // Si el ID del proyecto seleccionado globalmente ha cambiado Y la última ruta era una página de equipo...
+        if (selectedProjectId && selectedProjectId !== lastPathProjectId && lastPath.startsWith('/usersBoard/teams/')) {
+            // ...navegamos a la URL de equipos con el nuevo ID de proyecto para mantener la consistencia.
+            navigate(`/usersBoard/teams/${selectedProjectId}`, { replace: true });
+        }
+        // Si no hay un nuevo ID de proyecto seleccionado, pero sí una última ruta guardada (y no es la base)...
+        else if (location.pathname === '/usersBoard' && lastPath && lastPath !== '/usersBoard') {
+            // ...mantenemos el comportamiento original y redirigimos a la última ruta visitada.
             navigate(lastPath, { replace: true });
         }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar.
+         }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar.
+    
 
 
 
