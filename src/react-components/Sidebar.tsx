@@ -167,12 +167,14 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
             ? `selectedProjectId_${currentUser.uid}`
             : 'selectedProjectId_guest';
         
-        console.log('Sidebar: Clearing selectedProjectId using useStickyState setter');
-        //localStorage.removeItem('selectedProjectId');
-        setSelectedProjectId(null); // Actualiza el estado inmediatamente
+        // console.log('Sidebar: Clearing selectedProjectId using useStickyState setter');
+        
+        // setSelectedProjectId(null); // Actualiza el estado inmediatamente
 
-        // Eliminación directa para casos donde el estado no cambia
-        window.localStorage.removeItem(key);
+        // // Eliminación directa para casos donde el estado no cambia
+        // window.localStorage.removeItem(key);
+
+        console.log('Sidebar: Navigating to catalog. Project ID will persist.');
 
         // Añadir navegación para forzar actualización
         navigate('/', { replace: true }); 
@@ -237,14 +239,14 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
         // const parts = currentPath.split('/'); // e.g., ["", "project", "ID"] or ["", "project", "todoBoard", "ID"]
 
 
-        if (currentPath === '/') {
+        // if (currentPath === '/') {
             
-            if (selectedProjectId !== null) {
-                console.log('Sidebar: Navigated to home. Clearing selectedProjectId.');
-                setSelectedProjectId(null);
-            }
-            return  // Early exit for home page
-        }
+        //     if (selectedProjectId !== null) {
+        //         console.log('Sidebar: Navigated to home. Clearing selectedProjectId.');
+        //         setSelectedProjectId(null);
+        //     }
+        //     return  // Early exit for home page
+        // }
 
         //RETIRADA DE SOLUCION RIGIDA QUE DIVIDE LA URL PARA LOCALIZAR EL PROJECTID
         // // Palabras clave que indican segmentos de ruta que NO son IDs de proyecto por sí mismos

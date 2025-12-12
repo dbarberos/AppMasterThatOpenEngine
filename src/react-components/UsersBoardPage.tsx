@@ -113,6 +113,11 @@ export function UsersBoardPage({
     const [teamsSortBy, setTeamsSortBy] = useStickyState<UserSortKey>('nickName', teamsSortByKey);
 
 
+    // Clave y estado para recordar la última pestaña visitada (Users o Teams)
+    const lastUsersPathKey = currentUser ? `lastUsersPath_${currentUser.uid}` : 'lastUsersPath_guest';
+    const [lastPath, setLastPath] = useStickyState<string>('/usersBoard', lastUsersPathKey);
+
+
     // Referencias y hooks para la navegación deslizante
     const navRef = React.useRef<HTMLUListElement>(null);
     const location = Router.useLocation();
@@ -183,6 +188,25 @@ export function UsersBoardPage({
 
 
 
+    // --- Lógica de Navegación Persistente ---
+
+    // Efecto para guardar la última ruta visitada dentro de UsersBoard.
+    // Si el usuario está en /usersBoard/teams/xyz, esa ruta se guardará.
+    React.useEffect(() => {
+        if (location.pathname.startsWith('/usersBoard')) {
+            setLastPath(location.pathname);
+        }
+    }, [location.pathname, setLastPath]);
+
+    // Efecto para redirigir a la última ruta guardada al entrar en la página.
+    // Si el usuario navega a /usersBoard (la ruta base), este efecto lo llevará
+    // a la última pestaña que tenía abierta (ej: /usersBoard/teams/xyz).
+    React.useEffect(() => {
+        if (location.pathname === '/usersBoard' && lastPath && lastPath !== '/usersBoard') {
+            navigate(lastPath, { replace: true });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar.
 
 
 
