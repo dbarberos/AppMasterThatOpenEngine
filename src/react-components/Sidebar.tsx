@@ -553,17 +553,29 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
 
                 {/* Render the NewUserForm modal conditionally */}
                 {/* {isProfileFormModalOpen && currentUser && userProfile && ( */}
-                {isProfileFormModalOpen && userProfile &&(
-                    <NewUserForm
-                        key={userProfile.uid}
-                        currentUserData={userProfile} // Pass the userProfile data
-                        usersManager={usersManager} // Pass the usersManager instance
-                        onClose={handleCloseProfileFormModal}
-                        onProfileUpdate={handleProfileUpdateSuccess}
-                        authCurrentUserRole={userProfile.roleInApp as UserRoleInAppKey | undefined} // Pass the role if needed for form logic
-                        onTriggerChangePassword={() => setIsChangePasswordModalOpen(true)} 
-                    />
-                )}
+                {isProfileFormModalOpen && userProfile && (() => {
+                    // PROCESO: Obtener la versión más reciente del usuario desde UsersManager
+                    // antes de pasarla al formulario. Esto asegura que los datos (ej. projectsAssigned)
+                    // estén siempre actualizados, sin importar desde dónde se abra el formulario.
+                    const freshUserProfile = usersManager.getUser(userProfile.uid);
+                    if (!freshUserProfile) return null; // Salvaguarda por si el usuario no se encuentra
+
+                    // La clase User usa 'id', pero el formulario espera 'uid'.
+                    const compatibleUserProfile = { ...freshUserProfile, uid: freshUserProfile.id } as UserProfile;
+                    return (
+
+                        <NewUserForm
+                            key={userProfile.uid}
+                            // currentUserData={userProfile} // Pass the userProfile data
+                            currentUserData={compatibleUserProfile} // Pasamos la versión fresca y completa
+                            usersManager={usersManager} // Pass the usersManager instance
+                            onClose={handleCloseProfileFormModal}
+                            onProfileUpdate={handleProfileUpdateSuccess}
+                            authCurrentUserRole={userProfile.roleInApp as UserRoleInAppKey | undefined} // Pass the role if needed for form logic
+                            onTriggerChangePassword={() => setIsChangePasswordModalOpen(true)} 
+                        />
+                    )}
+                )()}
 
                 {isChangePasswordModalOpen && (
                     <ChangePasswordForm onPasswordChanged={() => setIsChangePasswordModalOpen(false)} onCancel={() => setIsChangePasswordModalOpen(false)} />

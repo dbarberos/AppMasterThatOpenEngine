@@ -313,6 +313,13 @@ export function NewUserForm({
         //}
         
 
+        // PROCESO: Usar el spread operator para fusionar.
+        // 1. Copiamos todos los datos originales del usuario. Y así podemos emprear el mismo componente en diferentes contextos para editar distintos campos.
+        // 2. Sobrescribimos solo los campos que vienen del estado del formulario.
+        // Propiedades como 'projectsAssigned', 'id', 'uid', etc., se mantendrán intactas. Ya que el usuer puede tener mas información que la que puede modificarse en este formulario.
+        const mergedProfileData = { ...currentUserData };
+
+
 
         const newProfileData: Partial<UserProfile> = {
             nickName,
@@ -336,9 +343,12 @@ export function NewUserForm({
         // Calcular diferencias para la confirmación
         const changes: Record<string, [any, any]> = {};
         for (const key in newProfileData) {
-            if (newProfileData.hasOwnProperty(key) && currentProfileForDiff.hasOwnProperty(key)) {
-                if (newProfileData[key] !== currentProfileForDiff[key]) {
-                    changes[key] = [currentProfileForDiff[key] || "N/A", newProfileData[key] || "N/A"];
+            // if (newProfileData.hasOwnProperty(key) && currentProfileForDiff.hasOwnProperty(key)) {
+                // if (newProfileData[key] !== currentProfileForDiff[key]) {
+                //     changes[key] = [currentProfileForDiff[key] || "N/A", newProfileData[key] || "N/A"];
+            if (newProfileData.hasOwnProperty(key) && mergedProfileData.hasOwnProperty(key)) {
+                if (newProfileData[key] !== mergedProfileData[key]) {
+                    changes[key] = [mergedProfileData[key] || "N/A", newProfileData[key] || "N/A"];
                 }
             }
         }
@@ -379,7 +389,11 @@ export function NewUserForm({
                             newProfileData.photoURL = null;
                         }
 
-                        const updatedUser = await handleUpdateProfileUserInDB(userIdToUpdate, newProfileData);
+                        // Usamos el objeto fusionado para la actualización
+                        const finalDataToUpdate = { ...currentUserData, ...newProfileData };
+                        const updatedUser = await handleUpdateProfileUserInDB(userIdToUpdate, finalDataToUpdate);
+
+                        // const updatedUser = await handleUpdateProfileUserInDB(userIdToUpdate, newProfileData);
                         //const updatedUser = await handleUpdateProfileUserInDB(currentUserData.uid, newProfileData);
                         
                         toast.success("Profile Updated correctly.");
