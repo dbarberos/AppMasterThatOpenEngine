@@ -979,6 +979,29 @@ button:active {
     box-shadow: none !important;    
 }
 
+/* Estilos para NavLink activo */
+.nav-link-active {
+    /* Vacío: Los estilos se aplican al li hijo */
+}
+
+.nav-link-active .nav-button {
+    background: linear-gradient(to left, var(--color-shadow), var(--primary));
+    color: white;
+    font-weight: 600;
+    box-shadow: -2px -2px 5px var(--color-light), 2px 2px 5px var(--color-shadow);
+}
+
+.nav-link-active .nav-button svg {
+    fill: white;
+    color: white;
+    transition: fill 0.2s ease-in-out;
+}
+
+.nav-link-active .nav-button span {
+    color: white;
+}
+
+
 #sidebar-checkbox-switch {
     display: none;
 }

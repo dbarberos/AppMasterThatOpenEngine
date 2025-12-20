@@ -43,6 +43,8 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
 
     const { currentUser, userProfile, loading: authLoading, updateUserProfile } = useAuth(); // Renombrar loading para claridad
     
+
+
     const [isProfileFormModalOpen, setIsProfileFormModalOpen] = React.useState(false); // State for modal
 
     // Usamos useStickyState para gestionar el estado principal y su persistencia
@@ -398,7 +400,6 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
 
 
 
-
     return (
         <aside id="sidebar" style={{ height: '100vh' }}>
             <div className="sidebar-organization">
@@ -409,9 +410,15 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                     title="company-logo"
                 />
                 <ul id="navigation-bar">
-                    <Router.Link
+                    {/* --- PROJECTS CATALOG --- */}
+                    {/* 
+                        NavLink automáticamente añade la clase 'active' cuando la ruta actual es exactamente '/'
+                        Usamos 'end' para asegurar que solo se activa en la ruta raíz
+                    */}         
+                    <Router.NavLink
                         to="/"
-                        onClick={handleCatalogClick}
+                        end
+                        className={({ isActive }) => isActive ? 'nav-link-active' : ''}
                     >
                         <li id="asideBtnProjects" className="nav-button" title="Projects Catalog" >
                             <MainProjectCatalog size={37}
@@ -419,10 +426,9 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                                 color="var(--color-fontbase)"
 
                             />
-                            Projects
-                            Catalog
+                            <span>Projects Catalog</span>
                         </li>
-                    </Router.Link >
+                    </Router.NavLink >
 
                     {/* Button Project Details */}
 
@@ -441,9 +447,17 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                             </Router.Link> */}
 
 
+                    {/* --- PROJECT DETAILS --- */}
+                    {/* 
+                        Si no hay proyecto seleccionado, mostramos un botón deshabilitado.
+                        Si hay proyecto, usamos NavLink que se activa cuando la ruta es /project/:projectId
+                    */}
                     {isProjectSelected
                         ? (
-                            <Router.Link to={`/project/${selectedProjectId}`}>
+                            <Router.NavLink
+                                to={`/project/${selectedProjectId}`}
+                                className={({ isActive }) => isActive ? 'nav-link-active' : ''}
+                            >
                                 <li
                                     id="asideBtnProjectDetails"
                                     className="nav-button"
@@ -453,9 +467,9 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                                         className="todo-icon-edit"
                                         color="var(--color-fontbase)"
                                     />
-                                    Project Details
+                                    <span>Project Details</span>
                                 </li>
-                            </Router.Link>
+                            </Router.NavLink>
                         ) : (
                             <li
                                 id="asideBtnProjectDetailsDisabled"
@@ -466,7 +480,7 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                                     className="todo-icon-edit"
                                     color="var(--color-fontbase)" // El color se mantiene, pero la opacidad lo atenúa
                                 />
-                                Project Details
+                                <span>Project Details</span>
                             </li>
                         )
                     }
@@ -487,9 +501,18 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                         </li>
                     </Router.Link> */}
 
+
+                    {/* --- TO-DO BOARDS --- */}
+                    {/* 
+                        NavLink se activa cuando la ruta es /project/todoBoard/:projectId
+                        El patrón /project/todoBoard/* coincide con cualquier ID de proyecto
+                    */}
                     {isProjectSelected
                         ? (
-                            <Router.Link to={`/project/todoBoard/${selectedProjectId}`}>
+                            <Router.NavLink
+                                to={`/project/todoBoard/${selectedProjectId}`}
+                                className={({ isActive }) => isActive ? 'nav-link-active' : ''}
+                            >
                                 <li
                                     id="asideBtnToDoBoards"
                                     className="nav-button"
@@ -499,38 +522,46 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                                         className="todo-icon-edit"
                                         color="var(--color-fontbase)"
                                     />
-                                    To-Do Boards
+                                    <span>To-Do Boards</span>
                                 </li>
-                            </Router.Link>
+                            </Router.NavLink>
                         ) : (
                             <li
                                 id="asideBtnToDoBoardsDisabled"
                                 className="nav-button disabled"
                                 title="Select a project first"
                             >
-                                <MainToDoBoard size={37} className="todo-icon-edit" color="var(--color-fontbase)" />
-                                To-Do Boards
+                                <MainToDoBoard
+                                    size={37}
+                                    className="todo-icon-edit"
+                                    color="var(--color-fontbase)" />
+                                <span>To-Do Boards</span>
                             </li>
                         )}
 
 
-
-
-
-                    {/* Botón Users Index */}
-                    <Router.Link to='/usersBoard'>
+                    {/* --- USERS INDEX --- */}
+                    {/* 
+                        NavLink se activa cuando la ruta comienza con /usersBoard
+                        Sin 'end', cualquier ruta como /usersBoard/teams/123 también se considera activa
+                    */}                    
+                    <Router.NavLink
+                        to='/usersBoard'
+                        className={({ isActive }) => isActive ? 'nav-link-active' : ''}
+                    >
                         <li
                             id="asideBtnUsers"
                             className="nav-button"
                             title="Index Users"
                         >
-                            <MainUsersIndex size={37}
+                            <MainUsersIndex
+                                size={37}
                                 className="todo-icon-edit"
                                 color="var(--color-fontbase)"
                             />
-                            Index Users
+                            <span>Index Users</span>
                         </li>
-                    </Router.Link>
+                    </Router.NavLink>
                 </ul>  {/* End of navigation-bar */}
 
 
@@ -543,12 +574,23 @@ export function Sidebar({ projectsManager, usersManager }: SidebarProps) {
                         margin: 'auto -25px 150px 0' ,
                         
                     }}> {/* Contenedor para el botón de perfil */}
-                    <UserProfileNavButton
-                        currentUser={currentUser}
-                        userProfile={userProfile}
-                        authLoading={authLoading}
-                        onNavigate={handleUserProfileNavActions}
-                    />
+                    {(() => {
+                        // Función autoejecutable: Obtener la versión más fresca del perfil desde UsersManager.
+                        // AuthContext nos da el UID, y con eso consultamos la fuente de verdad actualizada.
+                        // Esto asegura que el nickName y la foto en la barra lateral siempre estén sincronizados.
+                        const freshUserProfile = currentUser ? usersManager.getUser(currentUser.uid) : null;
+                        const displayProfile = freshUserProfile ? { ...userProfile, ...freshUserProfile, uid: freshUserProfile.id } : userProfile;
+
+                        return (
+                            <UserProfileNavButton
+                                currentUser={currentUser}
+                                userProfile={displayProfile}
+                                authLoading={authLoading}
+                                onNavigate={handleUserProfileNavActions}
+                            />
+                        );
+                    })()}
+
                 </ul>
 
                 {/* Render the NewUserForm modal conditionally */}
