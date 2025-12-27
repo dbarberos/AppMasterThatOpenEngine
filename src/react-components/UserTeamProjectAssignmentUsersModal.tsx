@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 
 import { UserTeamProjectAssignmentRow } from './UserTeamProjectAssignmentRow';
 import { MessagePopUp, type MessagePopUpProps } from './MessagePopUp';
+import { USER_ROL_IN_APP_PERMISSIONS } from '../const'; // Importamos la constante de permisos
 import { IProject } from '../classes/Project';
 import { User as AppUserClass } from '../classes/User';
 import type { IProjectAssignment } from '../types';
@@ -90,7 +91,8 @@ export function UserTeamProjectAssignmentUsersModal({
             const user = allUsers.find(u => u.id === userId);
             if (!user) return;
 
-            const defaultPermissions: string[] = []; 
+            // Calculamos permisos por defecto para el usuario según su rol en la App
+            const defaultPermissions = (user.roleInApp && USER_ROL_IN_APP_PERMISSIONS[user.roleInApp]) || [];
             const previous = existingAssignmentsMap[userId];
 
             newAssignments[userId] = {
@@ -116,13 +118,19 @@ export function UserTeamProjectAssignmentUsersModal({
     const handlePermissionChange = (userId: string, permission: string, isChecked: boolean) => {
         const newAssignments = { ...pendingAssignments };
         const assignment = newAssignments[userId];
+
         if (!assignment) return;
 
-        const currentPerms = new Set(assignment.permissions || []);
-        if (isChecked) currentPerms.add(permission);
-        else currentPerms.delete(permission);
+        // Asegurarse de que el array de permisos exista
+        if (!assignment.permissions) {
+            assignment.permissions = [];
+        }
 
-        assignment.permissions = Array.from(currentPerms);
+        const currentPermissions = new Set(assignment.permissions || []);
+        if (isChecked) currentPermissions.add(permission);
+        else currentPermissions.delete(permission);
+
+        assignment.permissions = Array.from(currentPermissions);
         setPendingAssignments(newAssignments);
     };
 
@@ -132,12 +140,16 @@ export function UserTeamProjectAssignmentUsersModal({
             const isAlreadyAssigned = !!existingAssignmentsMap[user.id];
             const isUnlocked = unlockedUsers.has(user.id);
 
+            // Calculamos permisos por defecto para cada usuario según su rol
+            const defaultPermissions = (user.roleInApp && USER_ROL_IN_APP_PERMISSIONS[user.roleInApp]) || [];
+
             if (!isAlreadyAssigned || isUnlocked) {
                 newAssignments[user.id] = {
                     projectId: targetProject.id!,
                     projectName: targetProject.name,
                     roleInProject: existingAssignmentsMap[user.id]?.roleInProject || '',
-                    permissions: existingAssignmentsMap[user.id]?.permissions || [],
+                    // Si ya tenía permisos (porque estaba asignado), los mantenemos. Si no, usamos los defaults.
+                    permissions: existingAssignmentsMap[user.id]?.permissions || defaultPermissions,
                     assignedDate: new Date()
                 };
             }
@@ -163,7 +175,7 @@ export function UserTeamProjectAssignmentUsersModal({
         const missingRoles = assignmentsArray.filter(a => !a.roleInProject);
 
         if (missingRoles.length > 0) {
-             setMessagePopUpContent({
+            setMessagePopUpContent({
                 type: 'warning',
                 title: 'Role Selection Required',
                 message: `Please select a role for all selected users.`,

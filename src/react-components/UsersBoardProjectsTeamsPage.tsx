@@ -150,20 +150,27 @@ export function UserBoardProjectsTeamsPage() {
 
             let needsUpdate = false;
             // Clonamos la lista actual de proyectos del usuario para no mutar el estado directamente
+            // Si projectsAssigned es undefined, iniciamos con un array vacío
             let newProjectList: IProjectAssignment[] = [...(user.projectsAssigned || [])];
 
             if (newAssignment) {
                 // El usuario DEBE estar en el proyecto (Añadir o Actualizar)
                 if (!currentAssignment) {
-                    // AÑADIR: No estaba, lo agregamos.
+                    // CASO 1: AÑADIR NUEVO USUARIO AL PROYECTO
+                    // El usuario no tenía este proyecto asignado, lo agregamos a su lista.
+                    console.log(`Adding user ${user.name} to project ${currentProject.name}`);
                     newProjectList.push(newAssignment);
                     needsUpdate = true;
                 } else {
-                    // ACTUALIZAR: Ya estaba, comprobamos si cambiaron roles o permisos.
+                    // CASO 2: ACTUALIZAR USUARIO EXISTENTE
+                    // Ya estaba en el proyecto, comprobamos si cambiaron roles o permisos.
                     const roleChanged = currentAssignment.roleInProject !== newAssignment.roleInProject;
+                    
+                    // Comparamos permisos ordenados para evitar falsos positivos por orden
                     const permsChanged = JSON.stringify(currentAssignment.permissions?.sort()) !== JSON.stringify(newAssignment.permissions?.sort());
                     
                     if (roleChanged || permsChanged) {
+                        console.log(`Updating permissions for user ${user.name} in project ${currentProject.name}`);
                         // Reemplazamos la asignación antigua con la nueva
                         newProjectList = newProjectList.map(p => p.projectId === currentProject.id ? newAssignment : p);
                         needsUpdate = true;
@@ -172,22 +179,26 @@ export function UserBoardProjectsTeamsPage() {
             } else {
                 // El usuario NO debe estar en el proyecto (Eliminar o Ignorar)
                 if (currentAssignment) {
-                    // ELIMINAR: Estaba asignado, lo quitamos.
+                    // CASO 3: ELIMINAR USUARIO DEL PROYECTO
+                    // Estaba asignado pero ya no está en updatedAssignments (fue desmarcado).
+                    console.log(`Removing user ${user.name} from project ${currentProject.name}`);
                     newProjectList = newProjectList.filter(p => p.projectId !== currentProject.id);
                     needsUpdate = true;
                 }
             }
 
             if (needsUpdate) {
-                console.log(`Updating user ${user.name} (${user.id}) assignments.`);
+                console.log(`Persisting changes for user ${user.name} (${user.id})...`);
                 
                 // Creamos una nueva instancia del usuario con la lista de proyectos actualizada
+                // Es crucial crear una nueva instancia para que React detecte el cambio de estado
                 const updatedUser = new AppUserClass({
                     ...user,
                     projectsAssigned: newProjectList
                 }, user.id);
 
                 // Llamamos a onUserUpdate en lugar de onAssignProjects
+                // Esto disparará la actualización en Firebase, LocalStorage y el Contexto
                 updates.push(Promise.resolve(onUserUpdate(updatedUser)));
             }
         }
