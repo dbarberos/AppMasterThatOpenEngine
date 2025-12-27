@@ -2,7 +2,7 @@
 import { ProjectsManager } from "./ProjectsManager";
 import { Project } from "./Project"
 import { showModal, closeModal, toggleModal, closeModalProject, changePageContent, showPageContent, hidePageContent } from "./UiManager"
-import { updateAsideButtonsState } from "./HTMLUtilities.ts";
+//import { updateAsideButtonsState } from "./HTMLUtilities.ts";
 
 import dragula from 'dragula';
 

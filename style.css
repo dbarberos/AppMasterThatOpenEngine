@@ -16,18 +16,24 @@
     --font-xl: 18px;
     --font-2xl: 20px;
     --font-3xl: 22px;
-    --font-icon-xs:20px;
-    --font-icon-s:25px;
-    --font-icon-sm:30px;
+    --font-4xl: 24px;
+    --font-5xl: 32px;
+    --font-icon-xs: 20px;
+    --font-icon-s: 25px;
+    --font-icon-sm: 30px;
     --font-icon-m: 35px;
-    --font-icon-base:40px;
+    --font-icon-base: 40px;
     --font-icon-lg: 50px;
     /* Colors */
     --primary: #029AE0;
-    --primary-l00: #073044;
-    --primary-200: #415A66;
-    --primary-300: #017CB3;
-    --primary-400: #50B6E6;
+    --primary-l00: rgb(7, 48, 68);
+    --primary-100-rgb: 7, 48, 68; /* solo rgb, sin # ni alfa */
+    --primary-200: rgb(65, 90, 102);
+    --primary-200-rgb: 65, 90, 102;
+    --primary-300: rgb(1, 124, 179);
+    --primary-300-rgb: 1, 124, 179;
+    --primary-400: rgb(80, 182, 230);
+    --primary-400-rgb: 80, 182, 230;
     --secundary: #176304;
     --secundary-100: #30A912;
     --secundary-200: #96e682;
@@ -49,7 +55,7 @@
     --color-royal-blue: #2563eb;
     --color-pale-sky: #6b7280;
     --color-scandal: #ccfbf1;
-    --colro-eden: #115e59;
+    --color-eden: #115e59;
     --color-mischka: #d1d5db;
     --color-lemon-chiffon: #fef9c3;
     --color-korma: #854d0e;
@@ -60,8 +66,8 @@
     --color-fontbase-dark: #a5a4a4;
 
     --color-bg: linear-gradient(275deg, #1c1e21 15%, #3d3e3f 95%);
-    --color-bg1:#343537;
-    --color-bg2:#28292c;
+    --color-bg1: #343537;
+    --color-bg2: #28292c;
     --color-shadow: #08090a;
     --color-light: #43464e;
 
@@ -99,7 +105,7 @@
 
     /* Border radiuses */
     --br-base: 15px;
-    --br-xs: 12;
+    --br-xs: 12px;
     --br-2xs: 10px;
     --br-5xs: 8px;
     --br-9980xl: 9999px;
@@ -121,38 +127,44 @@
     --color-error2: #db3056;
     --color-error3: #db305640;
     --color-clock1: #f2c464;
-    --color-clock2: #ffd700 ;
+    --color-clock2: #ffd700;
     --color-clock3: #ffd70040;
-    --color-update1:#f7f7f7 ;
-    --color-update2:#e5e5e5;
-    --color-update3:#e5e5e540 ;
+    --color-update1: #f7f7f7;
+    --color-update2: #e5e5e5;
+    --color-update3: #e5e5e540;
     --color-message1: #7a288a;
     --color-message2: #9c4dcc;
-    --color-message3:#9c4dcc40;
+    --color-message3: #9c4dcc40;
     --color-arrowup1: #ff69b4;
-    --color-arrowup2:#ffa0c9;
-    --color-arrowup3:#ffa0c940;
+    --color-arrowup2: #ffa0c9;
+    --color-arrowup3: #ffa0c940;
 
-/* ToDo Issue colors */
+    /* ToDo Issue colors */
 
---color-backlog:#7057a1;
---color-wip:#caa97e;
---color-qa:#da9595;
---color-completed:#4fa5b1;
---color-notassigned:#ccc;
+    --color-backlog: #7057a1;
+    --color-wip: #caa97e;
+    --color-qa: #da9595;
+    --color-completed: #4fa5b1;
+    --color-notassigned: #ccc;
 
-/* ToDo Details Panel */
+    /* ToDo Details Panel */
 
---color-tododetails-bg: rgba(40, 40, 40, 0.65);
+    --color-tododetails-bg: rgba(40, 40, 40, 0.65);
+    --color-tododetails-bg-dark: rgba(40, 40, 40, 0.85);
 
-
-/* Añadir estas nuevas variables */
+    /* Añadir estas nuevas variables */
     --color-border: #2d2d2d;
     --color-hover: #3a3a3a;
     --color-active: #404040;
     --input-background: var(--color-bg1);
     --input-border: var(--background-200);
     --input-shadow: rgba(0, 0, 0, 0.2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        interpolate-size: allow-keywords;
+    }
 }
 
 /* Notification styling */
@@ -162,32 +174,38 @@
     --clr: var(--color-info2);
     --brd: var(--color-info3);
 }
+
 .toast.toast-popup-success {
     --bg: var(--color-success1);
     --clr: var(--color-success2);
     --brd: var(--color-success3);
 }
+
 .toast.toast-popup-warning {
     --bg: var(--color-warning1);
     --clr: var(--color-warning2);
     --brd: var(--color-warning3);
 }
+
 .toast.toast-popup-error {
     --bg: var(--color-error1);
     --clr: var(--color-error2);
     --brd: var(--color-error3);
 }
+
 .toast.toast-popup-clock {
     --bg: var(--color-clock1);
     --clr: var(--color-clock2);
     --brd: var(--color-clock3);
 }
+
 .toast.toast-popup-update,
 .toast.toast-popup-default {
     --bg: var(--color-update1);
     --clr: var(--color-update2);
     --brd: var(--color-update3);
 }
+
 .toast.toast-popup-message {
     --bg: var(--color-message1);
     --clr: var(--color-message2);
@@ -221,8 +239,8 @@
     /* left: -0.15rem; */
     z-index: 0;
     border-radius: 0.35rem;
-    background: 
-        radial-gradient(circle at 0% 50%, var(--clr), #fff0 7.5rem), radial-gradient(circle at -50% 50%, var(--bg), #fff0 5rem);        
+    background:
+        radial-gradient(circle at 0% 50%, var(--clr), #fff0 7.5rem), radial-gradient(circle at -50% 50%, var(--bg), #fff0 5rem);
     opacity: 0.95;
 }
 
@@ -231,15 +249,15 @@
     position: absolute;
     width: 90px;
     height: 90px;
-    background: 
-        radial-gradient(circle at 50% 50%, 
-        var(--clr) 32px, 
-        var(--brd) calc(30px + 10px) 100%);
+    background:
+        radial-gradient(circle at 50% 50%,
+            var(--clr) 32px,
+            var(--brd) calc(30px + 10px) 100%);
 
     left: 20px;
     /* left: 50%;
     transform: translateX(-50%); */
-    
+
     border-radius: 100%;
     padding-top: 0.2rem;
     display: flex;
@@ -257,28 +275,28 @@
     height: 100%;
     margin-left: auto;
     justify-content: space-evenly;
-    position:relative;
-    
-    
+    position: relative;
+
+
 }
 
 
 .message-text input {
-        width: 475px;
-} 
+    width: 475px;
+}
 
-.message-text input + label {
-        display: block;
-        /* Ensures the label takes up its own line */
-        position: relative;
-        transform-origin: left top;
-        /* Allows for precise positioning */
-        top: -52px;
-left: 5px;
-        /* Adjust this value to control vertical spacing */
-        font-size: 1.1em;
-        /* Adjust font size as needed */
-        color: var(--color-fontbase);
+.message-text input+label {
+    display: block;
+    /* Ensures the label takes up its own line */
+    position: relative;
+    transform-origin: left top;
+    /* Allows for precise positioning */
+    top: -52px;
+    left: 5px;
+    /* Adjust this value to control vertical spacing */
+    font-size: 1.1em;
+    /* Adjust font size as needed */
+    color: var(--color-fontbase);
 
 
 
@@ -289,10 +307,10 @@ left: 5px;
     transition: all 0.25s linear;
 }
 
-.message-text input::placeholder{
+.message-text input::placeholder {
     color: transparent;
     /* color:var(--color-light); */
-    transition:color 0.25 linear;
+    transition: color 0.25 linear;
     text-shadow: none;
 
 }
@@ -318,14 +336,16 @@ left: 5px;
         font-weight: 600;
     }
 }
+
 .toast-input-text input:valid {
     color: var(---color-light);
-    
-        &+label {
-            transform: translateY(-34px) scale(0.9);
-            font-weight: 600;
-        }
+
+    &+label {
+        transform: translateY(-34px) scale(0.9);
+        font-weight: 600;
+    }
 }
+
 .toast-input-text input:disabled {
     color: var(--base3);
     background: var(--color-shadow);
@@ -338,8 +358,60 @@ left: 5px;
     }
 }
 
-.light-mode {
+/* Notification footer toaster styling */
+
+.custom-sonner .custom-toast {
+    display: flex !important;
+    align-items: center !important;
+    width: 110% !important;
+    min-height: 60px !important;
+    transform: scale(1.1) !important;
+    transform-origin: bottom right !important;
+    font-size: 'var(--font-base)' !important;
+    /* gap: 20px !important; */
+    /* padding:15px 15px 5px 15px !important; */
+
+}
+
+.custom-sonner .custom-description {
+    font-size:'var(--font-base)' !important;
+    /* padding: 0px 15px 15px 15px !important; */
+    display: block !important;
+    flex-direction: row !important;
+    align-items: center !important;
+}
+
+/* Contenedor de icono */
+.custom-sonner .custom-toast [data-icon] {
+    margin-left: 4px !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
     
+}
+
+/* Contenedor de texto (title + description) */
+.custom-sonner .custom-toast>div:first-of-type {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    column-gap: 5px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    
+}
+
+
+
+
+
+
+
+
+
+/* Ligth Mode Theme Values */
+
+.light-mode {
+
 
     /* backgroun colors */
     --background: #ebf0f7;
@@ -355,8 +427,10 @@ left: 5px;
     --popup-info: #445668;
 
     /* Text and utility colors */
-    --color-fontbase: #4f5a66; /*#394b5e*/
-    --color-fontbase-dark: #a4a7aa; /*#8e9092*/
+    --color-fontbase: #4f5a66;
+    /*#394b5e*/
+    --color-fontbase-dark: #a4a7aa;
+    /*#8e9092*/
     --color-grey-light: #D0D8E4;
     --color-grey: #607D8B;
 
@@ -376,7 +450,7 @@ left: 5px;
     --input-shadow: rgba(44, 62, 80, 0.05);
 
     /* ToDo Issue colors */
-    
+
     --color-backlog: #a155e9;
     --color-wip: #fba63c;
     --color-qa: #e677a1;
@@ -384,7 +458,7 @@ left: 5px;
     --color-notassigned: #ccc;
 
     /* ToDo Details Panel */
-    
+
     --color-tododetails-bg: rgba(231, 230, 230, 0.65);
 }
 
@@ -393,7 +467,8 @@ left: 5px;
 * {
     margin: 0;
     padding: 0;
-    font-family: var(--font); /*'roboto', 'Inter', sans-serif;*/
+    font-family: var(--font);
+    /*'roboto', 'Inter', sans-serif;*/
     line-height: normal;
 
 }
@@ -402,30 +477,34 @@ left: 5px;
     display: grid;
     grid-template-columns: 300px 1fr;
     grid-template-areas: "sidebar content";
-    min-height: 100vh;    
+    min-height: 100vh;
     color: var(--color-fontbase);
     background: var(--color-bg1);
-        /* fallback for old browsers */
-        background: -webkit-linear-gradient(to top, #343537, #1c1e21);
-        /* Chrome 10-25, Safari 5.1-6 */
-        background: var(--color-bg1);
-        /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    /* fallback for old browsers */
+    background: -webkit-linear-gradient(to top, #343537, #1c1e21);
+    /* Chrome 10-25, Safari 5.1-6 */
+    background: var(--color-bg1);
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
     transition: all 0.2s ease-in-out;
 
 
 
 }
+
 /* General style */
 
 h2 {
     font-size: var(--font-3xl);
 }
+
 h3 {
     font-size: var(--font-2xl);
 }
+
 h4 {
     font-size: var(--font-xl);
 }
+
 h5 {
     font-size: var(--font-lg);
 }
@@ -442,20 +521,25 @@ h5 {
     position: fixed;
     bottom: 30px;
     right: 20px;
-    
+
 }
+
 #theme-switch svg {
     fill: var(--color-fontbase)
 }
+
 #theme-switch svg:last-child {
     display: none;
 }
+
 .light-mode #theme-switch svg:first-child {
     display: none;
 }
+
 .light-mode #theme-switch svg:last-child {
     display: block
 }
+
 button {
     padding: 8px 15px;
     cursor: pointer;
@@ -474,9 +558,11 @@ button {
     box-shadow: -7px -7px 15px var(--color-light), 7px 7px 15px var(--color-shadow);
     transition: all 0.2s ease-in-out;
     user-select: none;
-    
+
 }
-button:hover, svg{
+
+button:hover,
+svg {
     /* background-color: var(--primary-400); */
     box-shadow: -2px -2px 5px var(--color-light), 2px 2px 5px var(--color-shadow);
     background-color: var(--color-bg1);
@@ -485,7 +571,7 @@ button:hover, svg{
 }
 
 button:active {
-    box-shadow: -10px -10px 30px var(--color-light),10px 10px 30px var(--color-shadow),inset -5px -5px 20px var(--color-shadow), inset 5px 5px 20px var(--color-light);
+    box-shadow: -10px -10px 30px var(--color-light), 10px 10px 30px var(--color-shadow), inset -5px -5px 20px var(--color-shadow), inset 5px 5px 20px var(--color-light);
     /* box-shadow: inset -5px -5px 20px var(--color-shadow) inset 5px 5px 20px var(--color-light); */
     background-color: var(--primary);
     color: var(--color-fontbase);
@@ -543,25 +629,64 @@ button:active {
     column-gap: var(--gap-9xs);
 
     text-shadow: 1px 1px 0 var(--color-light);
-        box-shadow: -10px -10px 30px var(--color-bg1), 10px 10px 30px var(--color-bg1);
+    box-shadow: -10px -10px 30px var(--color-bg1), 10px 10px 30px var(--color-bg1);
     transition: all 0.2s ease-in-out;
     user-select: none;
 }
 
 .buttonC:hover {
-    box-shadow: -5px -5px 30px var(--color-light), 
-        5px 5px 30px var(--color-shadow), 
+    box-shadow: -5px -5px 30px var(--color-light),
+        5px 5px 30px var(--color-shadow),
         inset -5px -5px 20px var(--color-shadow),
         inset 5px 5px 20px var(--color-light);
     /* background-color: var(--secundary-100); */
     color: var(--popup-error);
 }
+
 .buttonC:active {
     box-shadow: -10px -10px 30px var(--color-light), 10px 10px 30px var(--color-shadow), inset -5px -5px 20px var(--color-shadow), inset 5px 5px 20px var(--color-light);
     background-color: var(--popup-error);
     color: var(--color-bg1);
 }
 
+
+.buttonD {
+    all: unset;
+    padding: 8px 15px;
+    cursor: pointer;
+    height: 1.75rem;
+    font-size: var(--font-lg);
+    background-color: var(--color-bg1);
+    color: var(--color-fontbase);
+    border-radius: 100px;
+    border: var(--color-bg1) solid 4px;
+    /* border-color: var(--primary-200); */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    column-gap: var(--gap-9xs);
+
+    text-shadow: 1px 1px 0 var(--color-light);
+    box-shadow: -10px -10px 30px var(--color-bg1), 10px 10px 30px var(--color-bg1);
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+}
+
+.buttonD:hover {
+    box-shadow: -5px -5px 30px var(--color-light),
+        5px 5px 30px var(--color-shadow),
+        inset -5px -5px 20px var(--color-shadow),
+        inset 5px 5px 20px var(--color-light);
+    /* background-color: var(--secundary-100); */
+    color: var(--primary);
+    background-color: var(--primary-200);
+}
+
+.buttonD:active {
+    box-shadow: -10px -10px 30px var(--color-light), 10px 10px 30px var(--color-shadow), inset -5px -5px 20px var(--color-shadow), inset 5px 5px 20px var(--color-light);
+    background-color: var(--primary-200);
+    color: var(--color-fontbase);
+}
 
 .btn-secondary {
     box-sizing: border-box;
@@ -571,9 +696,8 @@ button:active {
     width: 100px;
     justify-content: center;
     color: var(--color-fontbase-dark)
+        /* min-width: 100px; */
 
-    /* min-width: 100px; */
-    
 }
 
 .btn-secondary:hover {
@@ -596,20 +720,20 @@ button:active {
 }
 
 .tab-button {
-        text-align: center;
-        background-color: var(--background-200);
-        outline: 1px solid var(--background-200);
-        width: 125px;
-        justify-content: center;
-        border-radius: 20px 20px 0 0;
-        padding: 30px;
-        font-size: var(--font-lg);
+    text-align: center;
+    background-color: var(--background-200);
+    outline: 1px solid var(--background-200);
+    width: 125px;
+    justify-content: center;
+    border-radius: 20px 20px 0 0;
+    padding: 30px;
+    font-size: var(--font-lg);
 
 }
 
 
 .trash-drop-btn {
-    all:unset;
+    all: unset;
     width: 200px;
     height: 50px;
     background-color: inherit;
@@ -634,32 +758,34 @@ button:active {
     }
 
     & svg {
-            box-shadow: none;
-            background-color: inherit;
-            
-        }
+        box-shadow: none;
+        background-color: inherit;
+
+    }
+
     & svg:hover {
         box-shadow: none;
         color: inherit;
-        cursor:auto ;
+        cursor: auto;
 
     }
+
     & svg:active {
         box-shadow: none;
         color: inherit;
         cursor: move;
         background-color: var(--primary-200);
-        border-radius: 100%;        
+        border-radius: 100%;
     }
 }
 
 
 
-.scrollbar-manage {    
+.scrollbar-manage {
     scrollbar-width: none;
     /* scrollbar-color: transparent; */
 
-    
+
     overflow-y: auto;
     background-color: transparent;
     scrollbar-gutter: stable;
@@ -738,11 +864,11 @@ button:active {
 .page {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 100vh;
 }
 
 
-/* sidebar styles */ 
+/* sidebar styles */
 
 #sidebar {
     height: 100%;
@@ -751,25 +877,25 @@ button:active {
     display: flex;
     flex-direction: column;
     row-gap: 40px;
-    z-index: 800; 
+    z-index: 800;
 }
 
 .sidebar-organization {
-    height:100%;
+    height: 100%;
     width: 100%;
     display: flex;
     box-sizing: border-box;
-    padding: 25px 25px 0 25px ;  
+    padding: 25px 25px 0 25px;
     flex-direction: column;
     row-gap: 10dvh;
     background: var(--color-bg);
     border-radius: 0 35px 35px 0;
     overflow: visible;
     box-shadow: .8rem .0rem 1.4rem var(--color-shadow),
-            -.2rem -.2rem 1.8rem var(--color-light),
-            inset 5px 5px 20px var(--background);
-            
-    border: var(--color-shadow) solid 6px; 
+        -.2rem -.2rem 1.8rem var(--color-light),
+        inset 5px 5px 20px var(--background);
+
+    border: var(--color-shadow) solid 6px;
     border-width: 3px 3px 0 0;
     position: relative;
 }
@@ -778,8 +904,10 @@ button:active {
     display: flex;
     flex-direction: column;
     row-gap: 15px;
-    margin-right:-25px;
-    & a {  /* Because of the React Router.link style*/
+    margin-right: -25px;
+
+    & a {
+        /* Because of the React Router.link style*/
         color: var(--color-fontbase);
         text-decoration: none;
     }
@@ -789,13 +917,13 @@ button:active {
     list-style: none;
     cursor: pointer;
     width: 100%;
-    box-sizing: border-box;    
+    box-sizing: border-box;
     background: linear-gradient(to left, var(--color-shadow), var(--color-light));
     border-radius: 10px 0px 0px 10px;
     box-shadow: .8rem .8rem 1.4rem var(--color-shadow),
-            -.2rem -.2rem 1.8rem var(--color-light),
-            /* inset -5px -5px 20px var(--color-shadow), */
-            inset 5px 5px 20px var(--background);
+        -.2rem -.2rem 1.8rem var(--color-light),
+        /* inset -5px -5px 20px var(--color-shadow), */
+        inset 5px 5px 20px var(--background);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -803,21 +931,78 @@ button:active {
     justify-content: start;
     padding-left: 30px;
     user-select: none;
+    padding: 10px 15px;
+    transition: color 0.2s ease-in-out, box-shadow 0.2s ease-in-out
 }
 
-.nav-button:hover, svg {
+.nav-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+
+.nav-button svg {
+    fill: currentColor;    
+    background-color: transparent;    
+    box-shadow: none;    
+    transition: fill 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+
+.nav-button:hover {
     /* background-color: var(--primary-400); */
-    
+
     box-shadow: -2px -2px 5px var(--color-light), 2px 2px 5px var(--color-shadow);
 
     color: var(--primary);
 
 }
+
+.nav-button:hover svg{
+    fill: var(--primary);        
+        background-color: transparent !important;        
+        box-shadow: none !important;        
+        color: inherit;        
+        transition: fill 0.2s ease-in-out;
+
+}
+
 .nav-button:active {
     background: linear-gradient(to left, var(--color-shadow), var(--primary));
     color: var(--color-fontbase-dark);
 }
-#sidebar-active {
+
+.nav-button:active svg {
+    fill: var(--color-fontbase-dark);    
+    background-color: transparent !important;    
+    box-shadow: none !important;    
+}
+
+/* Estilos para NavLink activo */
+.nav-link-active {
+    /* Vacío: Los estilos se aplican al li hijo */
+}
+
+.nav-link-active .nav-button {
+    background: linear-gradient(to left, var(--color-shadow), var(--primary));
+    color: white;
+    font-weight: 600;
+    box-shadow: -2px -2px 5px var(--color-light), 2px 2px 5px var(--color-shadow);
+}
+
+.nav-link-active .nav-button svg {
+    fill: white;
+    color: white;
+    transition: fill 0.2s ease-in-out;
+}
+
+.nav-link-active .nav-button span {
+    color: white;
+}
+
+
+#sidebar-checkbox-switch {
     display: none;
 }
 
@@ -830,7 +1015,8 @@ button:active {
     /* Styles for the last child element */
 }
 
-.open-sidebar-btn, .close-sidebar-btn {
+.open-sidebar-btn,
+.close-sidebar-btn {
     position: absolute;
     top: 0;
     right: 0;
@@ -847,54 +1033,62 @@ button:active {
         -1px -1px 5px 1px var(--color-light);
 }
 
-.open-sidebar-btn:hover > svg, .close-sidebar-btn:hover > svg {
+.open-sidebar-btn:hover>svg,
+.close-sidebar-btn:hover>svg {
     fill: var(--primary);
 }
-.open-sidebar-btn:active  , .close-sidebar-btn:active {  
+
+.open-sidebar-btn:active,
+.close-sidebar-btn:active {
     box-shadow: -10px -10px 30px var(--color-light), 10px 10px 30px var(--color-shadow), inset -5px -5px 20px var(--color-shadow), inset 5px 5px 20px var(--color-light);
     background-color: var(--primary);
     fill: var(--color-fontbase);
 }
-.open-sidebar-btn:active >svg, .close-sidebar-btn:active > svg {
+
+.open-sidebar-btn:active>svg,
+.close-sidebar-btn:active>svg {
     fill: var(--color-fontbase);
 }
 
-#app:has(#sidebar-active:checked) {
-    grid-template-columns: 130px 1fr;
-    
+#app:has(#sidebar-checkbox-switch:checked) {
+    grid-template-columns: 105px 1fr;
+
 }
 
-#app:has(#sidebar-active:checked) #navigation-bar li span.material-icons-round {
-            /* No changes in the icon style */
-}
-#app:has(#sidebar-active:checked) .close-sidebar-btn > svg{
-    display: none;
-    /* No changes in the icon style */
-}
-#app:not(:has(#sidebar-active:checked)) .open-sidebar-btn > svg{
-    display: none;
+#app:has(#sidebar-checkbox-switch:checked) #navigation-bar li span.material-icons-round {
     /* No changes in the icon style */
 }
 
+#app:has(#sidebar-checkbox-switch:checked) .close-sidebar-btn>svg {
+    display: none;
+    /* No changes in the icon style */
+}
 
-#app:has(#sidebar-active:checked) #navigation-bar li {
+#app:not(:has(#sidebar-checkbox-switch:checked)) .open-sidebar-btn>svg {
+    display: none;
+    /* No changes in the icon style */
+}
+
+
+#app:has(#sidebar-checkbox-switch:checked) #navigation-bar li {
     font-size: 0;
     column-gap: 0px;
-    
+
     /* padding-inline-start: 0px; */
 }
 
-#app:has(#sidebar-active:checked) #navigation-bar li::before {
+#app:has(#sidebar-checkbox-switch:checked) #navigation-bar li::before {
     content: attr(data-text);
     font-size: var(--font-base);
-    
+
 }
 
 
 #navigation-bar li .material-icons-round {
     font-size: var(--font-icon-m);
-    
+
 }
+
 #navigation-bar li span {
     padding: 15px 10px;
 }
@@ -902,6 +1096,7 @@ button:active {
 #navigation-bar li:hover {
     background-color: var(--primary-400);
 }
+
 /*  Header style */
 
 /* Content styles */
@@ -915,20 +1110,21 @@ header {
 #project-list {
     margin: 0 30px 35px 35px;
     background-color: var(--color-bg);
-    
+
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    justify-content: center; 
+    justify-content: center;
     padding: 35px 40px;
-    gap: 30px; 
+    gap: 30px;
     border-radius: 20px;
     border: 4px solid var(--color-bg);
-    
+
     box-shadow: 5px 5px 20px var(--color-shadow) inset,
-            -10px -10px 30px var(--color-light) inset;
+        -10px -10px 30px var(--color-light) inset;
     user-select: none;
 
-    & a { /* Because of the React Router.link style */
+    & a {
+        /* Because of the React Router.link style */
         text-decoration: none;
         color: var(--color-fontbase)
     }
@@ -938,22 +1134,24 @@ header {
     background-color: var(--color-bg1);
     background: linear-gradient(to left, var(--color-bg), var(--background));
     box-shadow: 5px 5px 15px var(--color-shadow),
-                -5px -5px 15px var(--color-light);
+        -5px -5px 15px var(--color-light);
 
     border-radius: 8px;
-    
+
     border: 4px solid var(--color-light);
     cursor: pointer;
     transition: all 0.1s ease-in-out;
 }
 
 .project-card:hover {
-outline: 2px solid var(--primary);
-box-shadow: transparent
+    outline: 2px solid var(--primary);
+    box-shadow: transparent
 }
 
 #project-list .project-card:active {
-    box-shadow: /*-5px -5px 10px var(--color-light), 05px 5px 10px var(--color-shadow),*/ inset -15px -15px 100px var(--color-shadow), inset 15px 15px 70px var(--color-light);
+    box-shadow:
+        /*-5px -5px 10px var(--color-light), 05px 5px 10px var(--color-shadow),*/
+        inset -15px -15px 100px var(--color-shadow), inset 15px 15px 70px var(--color-light);
     background: var(--primary-200);
     color: var(--color-fontbase);
     outline: none;
@@ -961,48 +1159,55 @@ box-shadow: transparent
 
 
 .card-header {
-display: flex;
-column-gap: 20px;
-padding: 15px 20px;
-align-items: center;
-justify-content:start;
-border-bottom: 2px solid #3b3c3f;
-height: 60px;
-overflow: auto;
-scrollbar-width: none;
+    display: flex;
+    column-gap: 20px;
+    padding: 15px 20px;
+    align-items: center;
+    justify-content: start;
+    border-bottom: 2px solid #3b3c3f;
+    height: 60px;
+    overflow: auto;
+    scrollbar-width: none;
 }
 
 .card-content {
-padding: 30px 20px;
-display: flex;
-flex-direction: column;
-row-gap: 20px;
-align-items: start;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+    align-items: start;
 }
 
 .card-property {
-display: flex;
-align-items: center;
-justify-content: space-between;
-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
+
 /* Dialog Styles */
 
 dialog {
-    display: flex;
+    /* display: flex;
     align-items: center;
-    height: 100%;
+    height: 100%; */
+
+    /* Estado cerrado - respeta display: none nativo */
 
     background-color: transparent;
     border: none;
     margin: auto;
-    transition: scale 0.15s ease;
-      /* display 0.2s ease allow-discrete; */
+    transition: scale 0.15s ease,
+                opacity 0.15s ease;
+    /* display 0.2s ease allow-discrete; */
+    
     scale: 1;
     overflow-x: hidden;
     z-index: 2;
+    height:100%
+    
 
-    &[open] {
+    /* &[open] {
         scale: 1;
         transition: scale 0.15s ease-in-out;
         overflow-x: hidden;
@@ -1011,9 +1216,30 @@ dialog {
             scale: 0;
             overflow-x: hidden;
         }
-    }
+    } */
 }
 
+/* Estado abierto - solo cuando el dialog está activo */
+dialog:modal {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    scale: 1;
+    opacity: 1;
+
+
+    @starting-style {
+        scale: 0;
+        opacity: 0;
+        overflow-x: hidden;
+    }
+
+
+
+}
+
+
+/* Backdrop nativo */
 dialog::backdrop {
     /* background-color: rgba(0,0,0,0.5);
     backdrop-filter: blur(3px); */
@@ -1023,17 +1249,20 @@ dialog::backdrop {
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(2.5px);
     -webkit-backdrop-filter: blur(2.5px);
+
+
+    position: fixed;
 }
 
 /* Cascading dialog styles */
-dialog[open]:not(:first-of-type) {
+/* dialog[open]:not(:first-of-type) { */
     /* Target all open dialogs except the first one */
-    position: relative;
+    /* position: relative; */
     /* Allow positioning relative to its normal position */
-    top: 150px;
-    left: 100px;
+    /* top: 0px; */
+    /* left: 0px; */
     /* Shift each subsequent dialog down by 150px/100px */
-}
+/* } */
 
 .dialog-container {
     position: fixed;
@@ -1050,7 +1279,7 @@ dialog[open]:not(:first-of-type) {
 }
 
 .custom-backdrop {
-    position: relative;
+    position: fixedrelative;
     /* to cover dialog-container */
     top: 0;
     left: 0;
@@ -1063,6 +1292,7 @@ dialog[open]:not(:first-of-type) {
     -webkit-backdrop-filter: blur(2.5px);
     z-index: 1;
     /* below dialog */
+    overflow: visible !important; /* Prevents clipping by parent*/
 }
 
 
@@ -1079,11 +1309,11 @@ form {
     background-color: var(--color-bg1);
     color: var(--color-fontbase);
     padding: 10px;
-    box-sizing: border-box; 
-       
+    box-sizing: border-box;
+
 }
 
-form h2{
+form h2 {
     padding: 20px;
     border-bottom: 3px solid var(--background);
     margin-bottom: 20px;
@@ -1093,7 +1323,7 @@ form .input-list {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    row-gap: 25px;    
+    row-gap: 25px;
 }
 
 .todo-form {
@@ -1102,7 +1332,7 @@ form .input-list {
     min-width: 450px;
     max-width: 900px;
 
-    & #todo-title  {
+    & #todo-title {
         position: relative;
         width: 100%;
 
@@ -1157,8 +1387,9 @@ form .input-list {
 }
 
 .user-form {
-    width: fit-content ;
+    width: fit-content;
     min-width: 800px;
+    
 
     & .user-input-list {
 
@@ -1169,28 +1400,41 @@ form .input-list {
         padding: 20px;
         gap: 10px;
         align-items: start;
+        width: 100%;
+        /* margin-bottom: 25px; */
 
         & input {
             width: 90%;
         }
 
-    
+
         & .data-mandatory {
             display: grid;
             grid-area: mandatory;
             grid-column-start: 1;
             grid-column-end: 2;
         }
-        
+
         & .data-optional {
             display: grid;
-            grid-area: mandatory;
+            grid-area: optional;
             grid-column-start: 2;
             grid-column-end: 3;
             grid-row-gap: 20px;
+            margin-right: 40px;
+            height: 100%
+        }
+
+        & select {
+            width: 90%;
+        }
+        
+        &select option[value=""] {
+            color: var(--color-fontbase-dark);
         }
     }
 }
+
 .fake-upload-button {
     padding: 8px 15px;
     cursor: pointer;
@@ -1207,6 +1451,7 @@ form .input-list {
     align-items: center;
     color: var(--color-fontbase);
 }
+
 .fake-upload-button input[type=file] {
     display: none;
 }
@@ -1220,13 +1465,14 @@ form .form-field-container {
     display: flex;
     flex-direction: column;
     width: 100%;
-    
 
 
-    & > input {
-        width: 100%;        
+
+    &>input {
+        width: 100%;
     }
-    & > textarea {
+
+    &>textarea {
         width: 100%;
     }
 
@@ -1245,6 +1491,7 @@ details {
     display: flex;
     align-content: center;
 }
+
 /* From Styles Flecha en contenido colapsado */
 .form-field-container details summary::marker {
     content: "⮞";
@@ -1268,36 +1515,80 @@ label {
     margin: 10px;
 }
 
-input[type="text"], textarea, select, input[type="date"], input[type="search"], input[type="number"]{
-    color: var(--color-fontbase) ;
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="password"],
+textarea,
+select,
+input[type="date"],
+input[type="search"],
+input[type="number"] {
+    color: var(--color-fontbase);
     background-color: var(--color-bg1);
     padding: 15px;
     border-radius: var(--br-5xs);
     border: none;
     font-size: var(--font-base);
-    
+
     box-shadow: inset 2px 2px 5px var(--color-shadow), inset -5px -5px 10px var(--color-light);
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    #appearance: none;
-        -webkit-#appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
-input[type="text"]:focus, textarea:focus, select:focus, input[type="date"]:focus, input[type="search"], input[type="number"]:focus {
-    outline:none;
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus,
+input[type="date"]:focus,
+input[type="search"],
+input[type="number"]:focus {
+    outline: none;
     /* outline: 2px solid var(--primary); */
     box-shadow: inset 1px 1px 2px var(--color-shadow), inset -1px -1px 2px var(--color-white);
     box-shadow: inset 5px 5px 8px 1px var(--color-shadow),
-            inset -5px -5px 8px 0px var(--color-light),
-            inset -1px -2px 2px 0px var(--color-light),
-            5px 5px 10px 2.5px var(--color-shadow),
-            -5px -5px 10px 2.5px var(--color-light),
-            -1px -1px 4px 2px var(--color-light);
+        inset -5px -5px 8px 0px var(--color-light),
+        inset -1px -2px 2px 0px var(--color-light),
+        5px 5px 10px 2.5px var(--color-shadow),
+        -5px -5px 10px 2.5px var(--color-light),
+        -1px -1px 4px 2px var(--color-light);
 }
 
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {
-    -webkit-#appearance: none;
+/* Estilos para autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--color-fontbase) !important;
+    -webkit-box-shadow: 0 0 0 30px var(--color-bg1) inset !important;
+    box-shadow: inset 2px 2px 5px var(--color-shadow),
+        inset -5px -5px 10px var(--color-light) !important;
+    transition: background-color 5000s ease-in-out 0s;
+    background-color: var(--color-bg1) !important;
+    caret-color: var(--color-fontbase);
+}
+
+/* Firefox */
+input:autofill {
+    -webkit-text-fill-color: var(--color-fontbase);
+    box-shadow: inset 2px 2px 5px var(--color-shadow),
+        inset -5px -5px 10px var(--color-light);
+    background-color: var(--color-bg1);
+    color: var(--color-fontbase);
+}
+
+
+
+
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
     margin: 0;
 }
 
@@ -1311,7 +1602,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 
 #todo-tags-list,
 #todo-assignedUsers-list {
-    position: absolute; 
+    position: absolute;
     top: 100%;
     left: 0;
     width: 100%;
@@ -1326,7 +1617,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     scrollbar-color: transparent;
 
     flex-grow: 1;
-    overflow-y: auto; /*scroll;*/
+    overflow-y: auto;
+    /*scroll;*/
     background-color: transparent;
     scrollbar-gutter: stable;
     scroll-snap-type: mandatory;
@@ -1384,19 +1676,18 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     &::-webkit-scrollbar-track {
         background: var(--primary-200);
         border-radius: 10px;
-        }
+    }
 }
 
 
 #todo-tags-list:hover,
-#todo-assignedUsers-list:hover
- {
+#todo-assignedUsers-list:hover {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
 
     &::-webkit-scrollbar-button {
-            display: none;
-        }
+        display: none;
+    }
 }
 
 
@@ -1407,7 +1698,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 #todo-tags-list li,
 #todo-tags-list span,
 #todo-assignedUsers-list li,
-#todo-assignedUsers-list span{
+#todo-assignedUsers-list span {
     /* scroll-snap-align: start; */
     display: inline-block;
     margin: 5px;
@@ -1483,7 +1774,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 
 
 #todo-tags-list-details-page,
-#todo-assignedUsers-list-details-page {
+#todo-assignedUsers-list-details-page,
+.todo-array-list-details-page {
     position: absolute;
     top: 100%;
     left: 0;
@@ -1560,8 +1852,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 
-#todo-tags-list-details-page:hover
-#todo-assignedUsers-list-details-page:hover {
+#todo-tags-list-details-page:hover, #todo-assignedUsers-list-details-page:hover,
+.todo-array-list-details-page:hover {
     scrollbar-color: var(--primary-200) transparent;
     scrollbar-width: thin;
 
@@ -1573,7 +1865,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 #todo-tags-list-details-page li,
 #todo-tags-list-details-page span,
 #todo-assignedUsers-list-details-page li,
-#todo-assignedUsers-list-details-page span {
+#todo-assignedUsers-list-details-page span,
+.todo-array-list-details-page li,
+.todo-array-list-details-page span {
     /* scroll-snap-align: start; */
     display: inline-block;
     margin: 5px;
@@ -1584,7 +1878,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 #todo-tags-list-details-page li:hover,
 #todo-tags-list-details-page span:hover,
 #todo-assignedUsers-list-details-page li:hover,
-#todo-assignedUsers-list-details-page span:hover {
+#todo-assignedUsers-list-details-page span:hover,
+.todo-array-list-details-page li:hover,
+.todo-array-list-details-page span:hover {
     background-color: var(--primary-200);
 }
 
@@ -1614,14 +1910,15 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     font-size: var(--font-3xl);
     user-select: none;
     /* transform:translate(-10px); */
-        
+
 }
+
 .radio input[type="checkbox"] {
     opacity: 0;
     /*    width: 0;
         height: 0; */
-    
-    }
+
+}
 
 /*This is the checkmark cover  */
 .checkmark {
@@ -1638,39 +1935,48 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     font-size: var(--font-base);
     box-shadow: inset 3px 3px 10px 1px var(--color-shadow),
         /* inset -5px -5px 8px 0px var(--color-light), */
-        inset -0.5px -0.5px 1px 0px var(--color-light), 
+        inset -0.5px -0.5px 1px 0px var(--color-light),
         5px 5px 15px 2.5px var(--color-shadow),
         -5px -5px 10px 2.5px var(--color-light),
         -1px -1px 4px 2px var(--color-light);
-    
+
     transition: all 0.3s ease-in-out;
-    user-select:none;
-    #appearance: none;
-        -webkit-#appearance: none;
+    user-select: none;
+    appearance: none;
+    -webkit-appearance: none;
 
 }
-.radio .checkmark:after {
-        content: "";
-        position: absolute;
-        left: 8px; 
-        top: 4px;
-        width: 5px;
-        height: 10px;
-        border: solid var(--primary);
-        border-width: 0 3px 3px 0;
-        transform: rotate(45deg);
-        opacity: 0;
-        transition:  0.3s ;
-    }
 
-.radio input[type="checkbox"]:checked + .checkmark {
+/* Style for the checkmark symbol (::after pseudo-element), hidden by default */
+.radio .checkmark::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    width: 5px;
+    height: 10px;
+    border: solid var(--primary);
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: 0.3s;
+
+    display: none;
+}
+
+/* When the hidden input is checked, change the background of our custom checkmark */
+.radio input[type="checkbox"]:checked+ .checkmark {
     background-color: linear-gradient(145deg, var(--background), var(--color-bg1));
     box-shadow: 5px 5px 15px 2.5px var(--color-shadow),
         -5px -5px 10px 2.5px var(--color-light),
         -1px -1px 4px 2px var(--color-light);
 
 }
-.radio input[type="checkbox"]:checked + .checkmark:after {
+
+/* When the hidden input is checked, display the checkmark symbol */
+.radio input[type="checkbox"]:checked+ .checkmark::after {
+    display:block;
+    
     opacity: 1;
     z-index: 1;
 }
@@ -1682,8 +1988,8 @@ fieldset {
     color: var(--color-fontbase-dark);
     font-size: var(--color-fontbase);
     border: none;
-    border-right: 1.5px dashed var(--color-fontbase-dark) ;
-    height:87%;
+    border-right: 1.5px dashed var(--color-fontbase-dark);
+    height: 87%;
 
     &.todo-fieldset {
         border: 1.5px dotted var(--color-fontbase-dark);
@@ -1703,11 +2009,11 @@ fieldset:after {
 .dashboard-card {
     background-color: var(--background-l00);
     border-radius: 8px;
-    
+
     display: flex;
     flex-basis: content;
     flex-direction: column;
-    
+
 
     background-color: var(--color-bg1);
     background: linear-gradient(to left, var(--color-bg), var(--background));
@@ -1719,16 +2025,18 @@ fieldset:after {
     cursor: pointer;
 
     & p {
-        font-size: var(--font-base); 
+        font-size: var(--font-base);
         text-overflow: ellipsis;
         /* white-space: nowrap; */
         overflow: hidden;
-        
-    };
+
+    }
+
+    ;
 
 }
 
-    
+
 .dashboard-card:hover {
     /* outline: 2px solid var(--primary); */
 }
@@ -1746,17 +2054,17 @@ fieldset:after {
     border: none;
     font-size: var(--font-base);
 
-    box-shadow: inset 5px 5px 20px var(--color-shadow), 
+    box-shadow: inset 5px 5px 20px var(--color-shadow),
         inset -7px -10px 20px var(--color-light);
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    #appearance: none;
-    -webkit-#appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 
-#project-details > .main-page-content {
+#project-details>.main-page-content {
     display: grid;
     padding: 20px 40px;
     gap: 70px;
@@ -1767,7 +2075,7 @@ fieldset:after {
 progress {
     width: 100%;
     height: var(--font-sm);
-    border : none;
+    border: none;
     border-radius: var(--br-9xs);
     background-color: #ccc;
     padding: 0;
@@ -1782,6 +2090,7 @@ progress::-webkit-progress-bar {
     background-color: #ccc;
     border-radius: var(--br-9xs);
 }
+
 progress::-webkit-progress-value {
     background-color: #009688;
     border-radius: var(--br-9xs);
@@ -1789,37 +2098,122 @@ progress::-webkit-progress-value {
 
 progress::-moz-progress-bar {
     background-color: #009688;
-        border-radius: var(--br-9xs);
+    border-radius: var(--br-9xs);
 }
 
 /* To-do list page */
 
-.todo-item {    
-    
+.todo-item {
+
     cursor: pointer;
-    user-select: none;    
+    user-select: none;
     background-color: var(--background);
     box-shadow: 4px 4px 15px var(--color-shadow),
         -6px -6px 20px var(--color-light);
 
-    
-    border: 2px solid var(--color-light);    
+
+    border: 2px solid var(--color-light);
     font-size: var(--font-base);
     display: grid;
     grid-template-columns: 10px 1fr;
     grid-template-areas: "color content";
     border-radius: 10px;
     min-width: 250px;
-    scroll-snap-align: start;
+
+    scroll-snap-align: end;
+    /* break-inside: avoid; */
+    scroll-margin: 8px;
+
+    position: relative; /* Asegura que el posicionamiento absoluto del ::before funcione */
+    /* overflow: hidden; Evita que el ::before se salga si hay border-radius */
 
 }
 
+
+.todo-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Cubre todo el elemento padre */
+    background-color: var(--color-primary-300,rgba(1, 124, 179, 0.80));
+    /* background-color: var(--color-primary-light, rgba(0, 123, 255, 0.3)); */
+    /* Color de relleno (ajusta variable/color) */
+    transform: scaleX(0);
+    /* Empieza sin ancho */
+    transform-origin: left;
+    /* La animación empieza desde la izquierda */
+    transition: transform 0s;
+    /* Sin transición por defecto */
+    z-index: 10;
+    /* Detrás del contenido principal (asegúrate que el contenido tenga z-index > 0 si es necesario) */
+    pointer-events: none;
+    /* No interfiere con clics */
+}
+
+.todo-item.todo-item--dragging::before {
+    transform: scaleX(1);
+    /* Rellena completamente */
+    /* La duración DEBE coincidir con el 'delay' del PointerSensor */
+    transition: transform 400ms linear;
+    /* Usa 'linear' para un relleno constante */
+}
+
+/* Estilos para el contenido de la tarjeta para que esté sobre el ::before */
+.todo-item>.todo-color-column,
+.todo-item>.todo-card {
+    position: relative;
+    
+    z-index: 0;
+    background-color: inherit;
+    
+}
+
+
+/* Ajustes opcionales para el cursor del handle */
+.handler-move {
+    cursor: auto;
+    /* Por defecto */
+}
+
+.todo-item[style*="cursor: pointer"] .handler-move:not([disabled]) {
+    /* Si el item es sorteable */
+    cursor: grab;
+}
+
+.todo-item[style*="cursor: grabbing"] .handler-move:not([disabled]) {
+    /* Si se está arrastrando */
+    cursor: grabbing;
+}
+
+/* O simplificado si 'isSortable' controla el disabled del botón */
+.handler-move:not([disabled]) {
+    cursor: grab;
+}
+
+.handler-move:not([disabled]):active {
+    /* Mientras se presiona */
+    cursor: grabbing;
+}
+
+/* EXPLICACION DE LA JUSTIFICACION DE LOS ESTILOS SUPERIORES PARA ANUMAR EL TODOCARD 
+Cuando presionas (onPointerDown) el botón del handle,
+isActivating se pone a true. Esto añade la clase todo-item--dragging al div principal. El CSS detecta esta clase y anima la propiedad transform: scaleX(1) del pseudo-elemento ::before durante el tiempo especificado (¡asegúrate que coincida con tu delay de 250ms !). Si sueltas el botón (onPointerUp) antes de que termine el delay,
+isActivating se pone a false,
+la clase se quita y la animación se interrumpe (o revierte si transform: scaleX(0) tiene transición). Si mantienes presionado y el delay (y tolerance) se cumplen,
+dnd-kit internamente hará que isDragging se vuelva true. El useEffect detecta isDragging como true,
+pone isActivating a false,
+quitando la clase todo-item--dragging y deteniendo/revirtiendo la animación del ::before. El elemento ahora se está arrastrando con los estilos de isDragging. 
+*/
+
+
+
+
 .todo-button {
-    padding: 0px;        
+    padding: 0px;
     height: fit-content;
     background-color: inherit;
     color: var(--color-fontbase);
-    
+
     display: flex;
     align-items: center;
     justify-items: center;
@@ -1835,6 +2229,7 @@ progress::-moz-progress-bar {
     }
 
 }
+
 .todo-task-move {
     padding: 0px;
     height: fit-content;
@@ -1863,37 +2258,39 @@ progress::-moz-progress-bar {
         box-shadow: none;
         background-color: inherit;
     }
+
     & svg:hover {
         box-shadow: none;
         color: inherit;
         cursor: grab;
     }
+
     & svg:active {
         box-shadow: none;
         color: inherit;
         cursor: grabbing;
         background-color: var(--primary-200);
         border-radius: 100%;
-        aspect-ratio: 1;        
+        aspect-ratio: 1;
     }
 }
 
 .todo-item:hover {
-    
+
     border: 3px dashed var(--primary);
-    
+
 }
 
 .todo-item:active {
     background-color: var(--primary-200);
     border: 3px dashed var(--primary);
-    
+
 }
 
 .todo-color-column {
     grid-area: color;
-    
-    border-radius: 10px 0px 0px 10px ;
+
+    border-radius: 10px 0px 0px 10px;
 
 }
 
@@ -1901,12 +2298,12 @@ progress::-moz-progress-bar {
     grid-area: content;
     display: flex;
     flex-direction: column;
-    padding: 10px 15px 5px 5px;    
+    padding: 10px 0px 5px 5px;
     row-gap: 15px;
     overflow: hidden;
-    text-overflow:ellipsis;
+    text-overflow: ellipsis;
     overflow-wrap: break-word;
-    width: 90%;
+    width: 95%;
     white-space: normal;
 
 }
@@ -1927,10 +2324,11 @@ progress::-moz-progress-bar {
     flex-basis: 100%;
 }
 
-.todo-tags-list >* {
+.todo-tags-list>* {
     min-width: fit-content;
     /* flex:1; */
 }
+
 .todo-tags {
     font-size: var(--font-base);
     color: var(--color-fontbase);
@@ -1942,17 +2340,18 @@ progress::-moz-progress-bar {
     padding: 2px 13px;
     border-radius: 50px;
     box-sizing: border-box;
-    width:fit-content;
-    
-    
+    width: fit-content;
+
+
 }
 
 .todo-stats {
     display: flex;
     flex-direction: row;
-    justify-items:flex-start ;
+    justify-items: flex-start;
     column-gap: var(--gap-s);
     flex-wrap: wrap;
+    align-items: center;
 
     & span {
         color: var(--color-fontbase-dark);
@@ -1961,32 +2360,35 @@ progress::-moz-progress-bar {
 }
 
 #todo-page {
-    
+
     background-color: var(--color-bg1);
 
-    display: grid;
-    grid-template-rows: auto 1fr; /* full height of parent element */
-    grid-template-areas: 
-        "head "
+    /*display: grid;*/
+    /*grid-template-rows: auto 1fr;*/
+    /* full height of parent element */
+    grid-template-areas:
+        "head"
         "content";
-    justify-content: center;    
-    max-width:100%;
-    
-}
-#todo-page, header {
-        grid-area: head;
-    }
+    /*justify-content: center;*/
+    max-width: 100%;
 
-#todo-content {    
+}
+
+/* #todo-page,
+header {
+    grid-area: head;
+} */
+
+#todo-content {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     width: calc(100%-50px);
-    padding:0  clamp(75px, 100px, 100px);
+    padding: 0 clamp(75px, 100px, 100px);
     column-gap: 20px;
-    
-    border-radius: 20px;   
-    
+
+    border-radius: 20px;
+
     user-select: none;
 
     margin: 0 30px 35px 35px;
@@ -1996,55 +2398,61 @@ progress::-moz-progress-bar {
     box-shadow: 5px 5px 20px var(--color-shadow) inset,
         -25px -25px 50px var(--color-light) inset;
     box-sizing: border-box;
+
+    
 }
 
 .todo-column {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;    
+    justify-content: flex-start;
     color: var(--color-fontbase);
     min-width: 300px;
-    max-width: 450px; 
-    flex-wrap: nowrap;   
+    max-width: 450px;
+    flex-wrap: nowrap;
+    min-height: 25vh;
 
     & .todo-column-head {
         display: flex;
         justify-content: flex-start;
-        padding:1rem 0px;
+        padding: 1rem 0px;
         position: sticky;
         top: 0px;
         padding-left: 15px;
-        
+
         z-index: 100;
         backdrop-filter: blur(8px) saturate(200%);
         -webkit-backdrop-filter: blur(12px) saturate(200%);
-        /* background-color: rgba(50, 50, 50, 0.55);
-        background: var(--color-bg1);      */
-            /* pweor */
+
     }
 
     & .todo-column-list {
         border: 1px solid var(--color-bg1);
-        /* box-shadow: 3px 5px 12px var(--color-shadow),
-                -9px -9px 20px var(--color-light); */
+
         padding: 25px;
         border-radius: 10px;
-        min-height: 5%;
-        
+        min-height: 25vh;
+
         display: flex;
         flex-direction: column;
         row-gap: 25px;
-        
-        /*pattern*/
 
         background-image: radial-gradient(var(--line-color) 2px, transparent 2px), radial-gradient(var(--line-color) 2px, transparent 2px);
         background-size: 10px 10px;
         background-position: 0 0, 5px 5px;
         background-color: var(--color-bg1);
+
+
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: auto;
+        /* max-height: calc(96vh - 150px); */
+
+            
     }
 
     & #todo-column-backlog {
-        --line-color: var(--color-backlog);            
+        --line-color: var(--color-backlog);
     }
 
     & #todo-column-wip {
@@ -2058,11 +2466,27 @@ progress::-moz-progress-bar {
     & #todo-column-completed {
         --line-color: var(--color-completed);
     }
+
     & #todo-column-notassigned {
         --line-color: var(--color-notassigned);
     }
-    
+
 }
+
+.todo-column[data-is-empty="true"] {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.todo-column.column-is-over {
+    border-color: var(--color-primary);
+    background-color: rgba(0, 120, 255, 0.1);
+}
+
+.todo-column[data-is-empty="true"].column-is-over {
+    background-color: rgba(0, 120, 255, 0.15);
+}
+
+
 
 
 .todo-column-list .todo-issue-card {
@@ -2096,7 +2520,7 @@ progress::-moz-progress-bar {
 
 
 .todo-item.selected {
-    border: 4px dashed var(--color-success) !important ;
+    border: 4px dashed var(--color-success) !important;
     background-color: var(--color-selected, rgba(0, 123, 255, 0.1));
     /* border-radius: 4px; */
 }
@@ -2110,18 +2534,22 @@ progress::-moz-progress-bar {
 
 
 #details-page-todo-list {
-    background-color:var(--color-bg) ;
+    background-color: var(--color-bg);
     margin-left: 10px;
     margin-top: 20px;
 
     & a {
         text-decoration: none;
         color: var(--color-fontbase);
-    }   
-    
+    }
+
 }
 
-#details-page-todo-maincontainer {
+#todo-board-column-backlog, 
+#todo-board-column-wip,
+#todo-board-column-qa,
+#todo-board-column-completed,
+#todo-board-column-notassigned {
     flex-grow: 1;
     overflow-y: auto;
     max-height: 100%;
@@ -2131,60 +2559,264 @@ progress::-moz-progress-bar {
     overscroll-behavior: contain;
     /* scrollbar-width: 2px; */
     scroll-snap-type: mandatory;
-    
+
 
     &::-webkit-scrollbar {
         width: 10px;
         background-color: inherit;
     }
+
     &::-moz-scrollbar {
         width: 10px;
         background-color: inherit;
 
     }
+
     &::-ms-scrollbar {
         width: 10px;
         background-color: inherit;
 
     }
+
     &:hover::-webkit-scrollbar-thumb {
         scrollbar-color: transparent;
-        background-color:var(--primary-200);
+        background-color: var(--primary-200);
         border-radius: 10px;
         scrollbar-width: 4px;
     }
 
-    &:hover::-moz-scrollbar-thumb {        background-color: var(--primary-200);
-    border-radius: 10px;
-    scrollbar-width: 4px;
+    &:hover::-moz-scrollbar-thumb {
+        background-color: var(--primary-200);
+        border-radius: 10px;
+        scrollbar-width: 4px;
 
     }
+
     &:hover::-ms-scrollbar-thumb {
-        background-color:var(--primary-200);
+        background-color: var(--primary-200);
         border-radius: 10px;
         scrollbar-width: 4px;
     }
+
     &::-webkit-scrollbar-track {
         background: transparent;
         border-radius: 10px;
-}
+    }
 
 }
+
+#todo-board-column-backlog:hover,
+#todo-board-column-wip:hover,
+#todo-board-column-qa:hover,
+#todo-board-column-completed:hover,
+#todo-board-column-notassigned:hover {
+    
+    scrollbar-color: var(--primary-200) transparent;
+    scrollbar-width: thin;
+
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}
+
+#details-page-todo-maincontainer {
+    overflow-y: overlay;
+    scrollbar-width: none;
+}
+
 #details-page-todo-maincontainer:hover {
     scrollbar-color: var(--primary-200) transparent;
-    scrollbar-width:thin;
+    scrollbar-width: thin;
+} 
+
+
+
+
+
+
+#details-page-todo-secondcontainer-backlog,
+#details-page-todo-secondcontainer-wip,
+#details-page-todo-secondcontainer-qa,
+#details-page-todo-secondcontainer-completed,
+#details-page-todo-secondcontainer-notassigned {
+    background-color: transparent;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
 }
 
-#details-page-todo-secondcontainer {
-    background-color: transparent;
-    height: 80%;
+#details-page-todo-secondcontainer-backlog:hover,
+#details-page-todo-secondcontainer-wip:hover,
+#details-page-todo-secondcontainer-qa:hover,
+#details-page-todo-secondcontainer-completed:hover,
+#details-page-todo-secondcontainer-notassigned:hover {
+    scrollbar-color: var(--primary-200) transparent;
+    scrollbar-width: thin;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
 }
+
+
+
+
+
+
+/* INSIDE DETAILS TODO HALF-WINDOW */
+
+.todo-status-tag {
+    padding: 4px 8px;
+    border-radius: var(--br-sm);
+    font-weight: 500;
+}
+
+.status-backlog {
+    background: var(--color-backlog);
+    color: #ccc;
+}
+
+.status-wip {
+    background: var(--color-wip);
+    color: #343537;
+}
+
+.status-qa {
+    background: var(--color-qa);
+    color: #343537;
+}
+
+.status-completed {
+    background: var(--color-completed);
+    color: var(--color-status-completed-text);
+}
+
+.todo-status-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.todo-field-select {
+    position: relative;
+    min-width: 150px;
+}
+
+.todo-field-text {
+    /* ... existing styles ... */
+    position: relative;
+    /* Ensure z-index works */
+}
+
+.todo-field-text.editing {
+    z-index: 999;
+    /* Above the overlay */
+}
+
+.todo-field-text input:focus {
+    outline: 2px solid var(--color-primary);
+    /* Visual feedback for focus */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);    
+}
+
+@keyframes slideInBackdrop {
+    from {
+        transform: translateX(-100%);
+        backdrop-filter: blur(0px);
+    }
+
+    to {
+        transform: translateX(0);
+        backdrop-filter: blur(5px);
+    }
+}
+
+/* INSIDE DETAILS TODO HALF-WINDOW FOR TAGS AND ASSIGNEDUSERS*/
+
+.todo-field-list {
+    width: 100%;
+    position: relative;
+}
+
+.todo-tags-tag,
+.todo-assignedUsers-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: var(--br-sm);
+    background: var(--color-bg2);
+    color: var(--color-fontbase);
+    font-size: var(--font-sm);
+}
+
+.todo-tags-tag.editable,
+.todo-assignedUsers-tag.editable {
+    gap: 4px;
+    background: var(--color-bg1);
+    border: 1px solid var(--color-border);
+}
+
+.todo-empty-message {
+    color: var(--color-fontbase-dark);
+    font-style: italic;
+}
+
+.selected-items-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.remove-item-btn {
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    cursor: pointer;
+    padding: 0 4px;
+    font-size: var(--font-lg);
+    line-height: 1;
+}
+
+.add-item-container {
+    display: flex;
+    gap: 8px;
+}
+
+.add-item-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--br-sm);
+    background: var(--color-bg1);
+    color: var(--color-fontbase);
+    font-size: var(--font-base);
+}
+
+.add-item-btn {
+    padding: 8px 16px;
+    border-radius: var(--br-sm);
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.add-item-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+
+
+
+
 
 /* To-do details page */
 
 #todo-details {
     transition: transform 0.8s ease-in-out
-
     /* & .open-panel {
         position: fixed;
         top: 0;
@@ -2200,11 +2832,11 @@ progress::-moz-progress-bar {
     position: absolute;
     top: 0;
     left: 0;
-    width: 675px;        
+    width: 675px;
     height: 100%;
     max-height: 100vh;
     box-sizing: border-box;
-    padding: 25px 25px 25px;
+    padding: 25px 25px 25px ;
     border-radius: 0 35px 35px 0;
     background: var(--color-tododetails-bg);
     backdrop-filter: blur(10px);
@@ -2214,15 +2846,15 @@ progress::-moz-progress-bar {
     transition: transform 0.8s ease-in-out;
     /* Transición suave */
     box-shadow: .2rem .0rem 2.4rem var(--color-shadow),
-            -.2rem -.2rem 1.8rem var(--color-light),
-            inset 5px 5px 20px var(--background);
+        -.2rem -.2rem 1.8rem var(--color-light),
+        inset 5px 5px 20px var(--background);
     z-index: 900;
 }
 
 .open-panel {
     transform: translateX(0);
     transition: transform 0.8s ease-in-out;
-    
+
 }
 
 .todo-detail-datafiled-title {
@@ -2264,7 +2896,9 @@ progress::-moz-progress-bar {
         /* margin-left: 18px; */
     }
 
-    & input, textarea, select{
+    & input,
+    textarea,
+    select {
 
         position: absolute;
         /* top: 50%; */
@@ -2273,14 +2907,17 @@ progress::-moz-progress-bar {
         /* font-size: var(--font-3xl); */
         min-width: 80%;
 
-        width: fit-content ;
+        width: fit-content;
         /* height: 10px; */
     }
+
     & textarea {
         transform: translatey(-16px);
     }
 
-    & h2, p, pre {
+    & h2,
+    p,
+    pre {
         padding-left: 20px;
         overflow: hidden;
         word-break: break-all;
@@ -2289,42 +2926,37 @@ progress::-moz-progress-bar {
 
     & .todo-detail-withlogo {
         column-gap: 15px;
-        justify-content:center;
-        align-items:center;
+        justify-content: center;
+        align-items: center;
     }
 
 
 
 }
-.todo-icon-edit {    
+
+.todo-icon-edit {
     /* box-shadow: none; */
     height: fit-content;
-    background-color: inherit;    
+    background-color: inherit;
     z-index: 1;
     color: var(--color-fontbase-dark);
     border: 2px solid transparent;
-    transition: all 0.1s ease-in-out;
-    user-select: none;
 
     display: flex;
     align-items: center;
     justify-items: center;
     column-gap: 0px;
+    box-shadow: none;
 
-    transition: all 0.2s ease-in-out;
+    /* transition: all 0.02s ease-in-out; */
     user-select: none;
     overflow: hidden;
-
-    & :hover {
-        
-    }
-        
 
     & svg {
         box-shadow: none;
         background-color: inherit;
         color: var(--color-fontbase-dark);
-        fill: var(--primary);
+        fill: var(--color-fontbase);
     }
 
     & svg:hover {
@@ -2335,9 +2967,10 @@ progress::-moz-progress-bar {
     &svg:active {
         color: none;
         box-shadow: none;
-        background-color: var(--primary-200);        
+        background-color: var(--primary-200);
         border-radius: 100%;
         aspect-ratio: 1;
+        fill: var(--primary-200)
     }
 
     &:active {
@@ -2346,6 +2979,7 @@ progress::-moz-progress-bar {
         border-radius: 100px;
     }
 }
+
 .todo-icon-plain {
     /* box-shadow: none; */
     height: fit-content;
@@ -2368,8 +3002,7 @@ progress::-moz-progress-bar {
     justify-items: center;
     column-gap: 0px;
 
-    transition: all 0.2s ease-in-out;
-    user-select: none;
+    transition: all 0.2s ease-in-out;    
     overflow: hidden;
 
     & :hover {
@@ -2409,13 +3042,443 @@ progress::-moz-progress-bar {
 }
 
 
+
+/* INSIDE TODO BOARD PAGE. KANBAN*/
+
+
+.delete-zone {
+    position: relative;
+    overflow: hidden;
+
+    top: 0;
+    /* left: 50%; */
+    /* transform: translateX(-50%); */
+    width: 200px;
+    height: 100%;
+    background-color: var(--bg-secondary);
+    border: 2px dashed var(--color-error);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+
+.delete-zone.can-drop {
+    animation: pulse 1.5s infinite;
+    background-color: var(--color-error-light);
+    border-style: solid;
+}
+.delete-zone .text-error {
+    color: var(--color-error);
+}
+
+.delete-zone-text {
+    transition: color 0.2s ease;
+}
+
+.delete-confirmation-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 0, 0, 0.1);
+    pointer-events: none;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+
+
+
+
+
+
+/*  TODO Banner for ToDoCards. KANBAN + ToDoDetailList  */
+
+/* Contenedor principal */
+.todo-card-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 8px;
+    height: auto;
+}
+
+/* Añadir en el contenedor padre */
+.todo-item-container {
+    position: relative;
+    margin-bottom: 20px;
+    /* Espacio para el banner */
+}
+
+/* Estilos para el banner */
+.todo-hover-banner {
+    position: fixed;
+    background: var(--color-tododetails-bg);
+    border-style: solid;
+    border-width: 3px;
+    border-color: inherit;
+    border-radius: var(--br-base);
+    padding: 12px;
+    min-width: 500px;
+    max-width: 700px;
+
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+
+    /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); */
+    box-shadow: 8px 8px 40px var(--color-shadow),
+            -8px -8px 40px var(--color-light),
+            8px -8px 40px var(--color-shadow),
+            -8px 8px 40px var(--color-light);
+
+    z-index: 1500;
+    /* animation: fadeIn 0.2s ease;
+    transition-delay: 0.1s;
+    transition: opacity 0.2s ease, transform 0.2s ease; */
+
+    /* Por defecto, el banner estará oculto. JavaScript controlará su aparición. */
+    visibility: hidden;
+    opacity: 0;
+    /* La transición de opacidad es útil para la desaparición controlada por JS al quitar las clases .top/.bottom */
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+
+    &.top,
+    &.bottom {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 16px;
+        border: 16px solid transparent;
+        transition: transform 0.2s ease;
+    }
+
+    &.top::before {
+        bottom: -32px;
+        border-top-color: var(--color-fontbase-dark);
+        transform-origin: center top;
+    }
+
+    &.bottom::before {
+        top: -32px;
+        border-bottom-color: var(--color-fontbase-dark);
+        transform-origin: center bottom;
+    }
+
+}
+
+
+/* Flecha indicadora */
+/* .todo-hover-banner::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: -14px;
+    border-style: solid;
+    border-width: 0px 14px 14px 14px;
+    border-color: transparent transparent var(--color-fontbase-dark) transparent;
+}
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+        backdrop-filter: blur(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        backdrop-filter: blur(8px);
+        box-shadow: 4px 4px 40px var(--color-shadow),
+                -4px -4px 40px var(--color-light),
+                4px -4px 40px var(--color-shadow),
+                -4px 4px 40px var(--color-light);
+    }
+} */
+
+
+
+
+
+
+@keyframes fadeInTop {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInBottom {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+.banner-section {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-backlog);
+    margin-bottom: 1rem;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+}
+
+.banner-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.banner-label {
+    display: block;
+    font-size: var(--font-base);
+    color: var(--color-fontbase-dark);
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.banner-value {
+    font-size: var(--font-lg);
+    color: var(--color-fontbase);
+    font-weight: 500;
+}
+
+.banner-users {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.user-separator {
+    color: var(--color-fontbase);
+    margin: 0 2px;
+}
+
+.user-tag {
+    background: var(--color-background-light);
+    padding: 2px 8px;
+    border-radius: var(--br-sm);
+    font-size: var(--font-lg);
+    color: var(--color-fontbase);
+}
+
+.banner-description {
+    font-size: var(--font-lg);
+    line-height: 1.4;
+    color: var(--color-fontbase);
+    margin-top: 4px;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+
+/* Ajustes para Quill en modo lectura */
+.banner-description .quill {
+    border: none;
+    background: transparent;
+}
+
+.banner-description .ql-container {
+    border: none;
+}
+
+.banner-description .ql-editor {
+    padding: 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* Asegurarse que el banner esté por encima de otros elementos */
+.board-column {
+    position: relative;
+    overflow: visible !important;
+}
+
+
+#todo-content {
+    overflow: visible !important;
+}
+
+.todo-hover-banner {
+    z-index: 1500;
+}
+
+/* Contenedor del tablero también necesita overflow visible */
+.board-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+    height: calc(100vh - 100px);
+    overflow: visible !important;
+    position: relative;
+
+}
+
+/* 
+/* Prevenir que el banner sea cortado */
+.todo-card-container:hover .todo-hover-banner {
+    clip-path: none;
+    overflow: visible;
+} */
+
+
+
+
+
+
+
+
+
+
+
+/* Custom cursor styles NO IMPLEMENTADO Retirado por afectar DND*/
+.custom-cursor {
+    position: fixed;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    z-index: 9999;
+    will-change: transform;
+}
+
+.custom-cursor.hover {
+    background: var(--primary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: var(--font-xs);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-cursor.follow {
+    background: var(--bg-secondary);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: var(--font-sm);
+}
+
+.cursor-content {
+    white-space: nowrap;
+    font-size: var(--font-sm);
+}
+
+/* Animaciones de hold-to-drag */
+.todo-item--dragging::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--primary);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 250ms linear;
+}
+
+.todo-item--dragging.activated::before {
+    transform: scaleX(1);
+    opacity: 0.2;
+}
+
+/* Hold to drag progress indicator */
+.hold-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+    transform-origin: left;
+}
+
+/* Animation states */
+.todo-item {
+    transition: background-color 0.2s ease;
+}
+
+.todo-item--dragging {
+    background-color: var(--bg-hover);
+}
+
+.todo-item--dragging {
+    cursor: grabbing;
+}
+
+/* Column transition animations */
+.todo-column-list {
+    transition: min-height 0.2s ease;
+}
+
+.todo-column-list.is-over {
+    background-color: var(--bg-hover);
+}
+
+/* Drop preview animation */
+.drop-preview {
+    border: 2px dashed var(--primary);
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: 8px;
+    margin: 0.5rem 0;
+    height: 80px;
+    transition: all 0.2s ease;
+}
+
+
+
+
+
+
+
+
+
 /* User page management */
 
 .users-page {
     position: relative;
     align-items: center;
     padding: 30px 30px;
-    
+
 }
 
 .header-users {
@@ -2424,46 +3487,115 @@ progress::-moz-progress-bar {
     flex-direction: row;
     align-content: space-between;
     overflow: hidden;
-    align-items: flex-start
+    align-items: flex-start;
+    
 }
 
 /* Slidding switch buttons */
 
-#users-sliding-nav1 {
+#users-sliding-nav {
     position: relative;
     border: none;
     border-radius: 10em;
     display: flex;
     list-style: none;
-    background: var(--color--bg);
-    box-shadow: 20px 40px 40px #00000033;
+    /* Se elimina el background para que no tape al pseudo-elemento ::after */
+    /* background: var(--color-bg1); */
+    /* box-shadow: 20px 40px 40px #00000033; */
     padding: 10px;
     /* text-shadow: 1px 1px 0 var(--color-light); */
-    box-shadow: -7px -7px 15px var(--color-light), 7px 7px 15px var(--color-shadow);
+    /* box-shadow: -7px -7px 15px var(--color-light), 7px 7px 15px var(--color-shadow); */
+    box-shadow: inset 0 0 0 100px var(--color-bg1), -7px -7px 15px var(--color-light), 7px 7px 15px var(--color-shadow);
     height: 35px;
-    
+
 }
 
-#users-sliding-nav1 li {
+/* El indicador deslizante, creado con un pseudo-elemento */
+#users-sliding-nav::after {
+    content: '';
+    position: absolute;
+
+    /* top: 10px; */
+    /* Ajusta para que quede centrado verticalmente con el padding */
+
+    /* Se posiciona en la parte superior del contenedor ul */
+    /* top: 0; */
+
+    left: var(--_indicator-left, 10px);
+    /* Posición controlada por JS, con un valor por defecto */
+    width: var(--_indicator-width, 20px);
+    /* Ancho controlado por JS */
+    /* height: calc(100% - 20px); */
+    /* Altura basada en el padding del contenedor */
+
+    /* Ocupa el 100% de la altura del contenedor ul */
+    height: 80%;
+    border-radius: 10em;
+    background-color: var(--primary-200);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1.05);
+    z-index: 1;
+
+    box-shadow: inset 3px 3px 10px 1px var(--color-shadow), inset -0.5px -0.5px 1px 0px var(--color-light), 5px 5px 15px 2.5px var(--color-shadow), -5px -5px 10px 2.5px var(--color-light), -1px -1px 4px 2px var(--color-light);
+}
+
+
+#users-sliding-nav li {
     margin: 0px;
+    z-index: 2;
 }
 
-#users-sliding-nav1 a {
+
+
+#users-sliding-nav a {
+
     position: relative;
     padding: 0.6em 2em;
     font-size: var(--font-lg);
     border: none;
     outline: none;
     color: var(--color-fontbase);
-    
+
     display: flex;
     align-items: center;
-    /* display: inline-block; */
     text-decoration: none;
-    z-index: 3;
-    
+    /* z-index: 3; */
+    transition: color 0.3s ease;
+    white-space: nowrap;
 }
 
+
+
+/* --- INICIO: Animación de Hover para el indicador --- */
+
+/* Cuando el ratón está sobre el contenedor Y sobre el primer item (Users) */
+/* #users-sliding-nav:has(.nav-item-users:hover)::after { */
+    /* left: 10px; */
+    /* Coincide con el padding inicial del ul */
+    /* width: 115px; */
+    /* Ancho aproximado del primer botón. Ajusta si es necesario. */
+/* } */
+
+/* Cuando el ratón está sobre el contenedor Y sobre el segundo item (Users by Projects) */
+/* #users-sliding-nav:has(.nav-item-teams:hover)::after { */
+    /* left: 150px; */
+    /* Posición aproximada del segundo botón. Ajusta si es necesario. */
+    /* width: 175px; */
+    /* Ancho del segundo botón. */
+/* } */
+/* Cuando el ratón está sobre un item, usamos las variables de hover */
+#users-sliding-nav.is-hovering::after {
+    left: var(--_hover-left);
+    width: var(--_hover-width);
+}
+
+
+
+/* --- FIN: Animación de Hover para el indicador --- */
+
+
+
+
+/* 
 .users-slide1,
 .users-slide2 {
     position: absolute;
@@ -2486,7 +3618,22 @@ progress::-moz-progress-bar {
 
 .squeeze {
     transform: scale(0.9);
+} */
+
+/* Estilo para el enlace activo */
+#users-sliding-nav a.active {
+    color: white;
+    /* O el color que prefieras para el texto sobre el fondo azul */
+    font-weight: 600;
 }
+
+/* Efecto hover para los enlaces que no están activos */
+#users-sliding-nav a:not(.active):hover {
+    color: var(--color-fontbase);
+}
+
+
+
 
 
 /* Users page configuration */
@@ -2506,7 +3653,7 @@ progress::-moz-progress-bar {
     outline: 4px solid var(--color-bg);
     /* border: var(--color-bg1) solid 4px; */
     box-shadow: 5px 5px 15px var(--color-shadow) inset,
-    -20px -20px 30px var(--color-light) inset ;
+        -20px -20px 30px var(--color-light) inset;
     box-sizing: border-box;
 }
 
@@ -2530,98 +3677,171 @@ progress::-moz-progress-bar {
 
     scrollbar-width: thin;
     scroll-snap-type: y proximity;
-    
+
     overflow-y: auto;
     scroll-behavior: smooth;
     /* scrollbar-width: none;*/
-}    
+}
 
 
 .user-container-header {
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 50px repeat(4, minmax(175px, 500px))100px 100px;
-    grid-template-areas: 
-    "checkbox name email phone company status edit" "details details details details details details details";
+    grid-template-columns: 50px repeat(4, minmax(150px, 500px)) 125px 100px 100px;
+    grid-template-columns: 50px repeat(4, minmax(150px, 1fr)) 125px 100px 100px;
+    /* grid-template-areas: 
+        "checkbox name email phone company projects status edit" "details details details details details details details details"; */
     column-gap: 20xp;
-    align-items: center;
+    column-gap: 20px;
+    align-items: end;
     height: 75px;
     border-radius: var(--br-5xs);
+    border-radius: var(--br-2xs);
     border-bottom: 1px solid var(--background-l00);
     font-size: var(--font-lg);
     background-color: var(--background-300);
     margin-bottom: var(--gap-xs);
 }
 
-.user-container {
+.projectteam-container-header {
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 50px repeat(4, minmax(175px, 500px))100px 100px;
-    grid-template-rows: 75px 200px;
-    grid-template-areas: "checkbox name email phone company status edit" ". details details details details details details";
-    column-gap: 20xp;
-    align-items: center;
+    grid-template-columns: 50px repeat(3, minmax(75px, 1fr)) 450px 100px 100px 100px;
+    grid-template-areas:
+        "checkbox nickname organization role permisions status edit";
+    column-gap: 20px;
+    align-items: end;
     height: 75px;
     border-radius: var(--br-5xs);
+    border-radius: var(--br-2xs);
     border-bottom: 1px solid var(--background-l00);
     font-size: var(--font-lg);
     background-color: var(--background-300);
     margin-bottom: var(--gap-xs);
+}
 
-    transition: 0.3s ease-in-out;
+.projectteam-title-active {
+    padding: 10px 25px;
+    border-radius: 10em;
+    background-color: var(--primary-200);
+    color: 'var(--color-fontbase)';
+    font-size: var(--font-3xl) ;
+    font-weight: 500 !important;
+    white-space: nowrap;
+    box-shadow: inset 3px 3px 10px 1px var(--color-shadow),
+        inset -0.5px -0.5px 1px 0px var(--color-light),
+        5px 5px 15px 2.5px var(--color-shadow),
+        -5px -5px 10px 2.5px var(--color-light);
+    display: flex;
+    align-items: center;
+}
+
+
+/* ==================================================================== */
+/* USER CARD STYLE                                                      */
+/* ==================================================================== */
+
+/*
+ * Contenedor principal para cada tarjeta de usuario.
+ * Gestiona el layout de columna (fila + detalles) y los estilos base como fondo y borde.
+ */
+
+.user-card-wrapper {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background-200);
+    border-radius: var(--br-5xs);
+    margin-bottom: var(--gap-xs);
+    border-bottom: 1px solid var(--background-l00);
+    /* Clave para que la animación de max-height funcione correctamente */
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+.user-card-wrapper:hover {
+    background-color: var(--background-300);
+}
+
+.user-container {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 50px repeat(4, minmax(150px, 500px)) 125px 100px 100px;
+    grid-template-columns: 50px repeat(4, minmax(150px, 1fr)) 125px 100px 100px;
+    grid-template-rows: 75px 200px;
+    grid-template-areas: "checkbox name email phone company projects status edit" ". details details details details details details details";    
+    column-gap: 20px;
+    align-items: center;
+    height: 75px;
+    border-radius: var(--br-5xs);
+    border-bottom: 1px solid var(--background-l00);
+    font-size: var(--font-xl);
+    background-color: var(--background-300);
+    margin-bottom: var(--gap-xs);
+
+    /* transition: height 0.5s ease-out; */
 
     scroll-snap-align: start;
     scroll-margin: 15px;
 
-    &:hover {
-        background-color: var(--background-200);
-        height: 275px;
-    }
 
+    position: relative;
+    /* overflow: hidden; */
+    transition: max-height 0.3s ease-in-out;
 
-    & .user-details1  {
-        display: grid;
-        grid-area: details ;
-        grid-row-start: 2;
-        grid-column: 2 / 4;
-        opacity: 0;
-        transition: 0.3s ease-in-out;
-        grid-template-columns: 1fr;
-        grid-row-gap: var(--gap-xs);
-        padding: 30px;
+}
+
+/*
+ * Nuevo contenedor para los detalles.
+ * Este elemento se anima para mostrar/ocultar el contenido.
+ */
+.user-details-wrapper {
+    /* Oculto por defecto usando max-height y opacity */
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
+
+    display: grid;
+    grid-template-columns: 50px repeat(4, minmax(150px, 500px)) 125px 100px 100px;
+        /* grid-template-rows: 75px 200px; */
+    grid-template-areas: "details details1 details1 details2 details2 details2 details2 details2";
+    column-gap: 20px;
+    align-items: center;
+
+        & .user-details1 {
+            display: grid;
+            grid-area: details1;
+            /* grid-column: 2 / 4; */
+            opacity: 1;
+            transition: 0.3s ease-in-out;
+            grid-template-columns: 1fr;
+            /* grid-row-gap: var(--gap-xs); */
+            padding: 30px;
+            width: 100%;
+            row-gap: var(--gap-xs);
+            transition: all 0.3s ease-in-out;
+            transform: translateY(-20px);
     
-    }
-
-    & .user-details2 {
-        display: grid;
-        grid-area: details;
-        grid-row-start: 2;
-        grid-column: 4 / 8;
-        opacity: 0;
-        transition: 0.3s ease-in-out;
-        grid-template-columns: 1fr;
-        grid-row-gap: var(--gap-xl);
-        padding: 30px;
-
-    }
-
-
-    &:hover .user-details1 {
-        opacity: 1;
-        margin-top: 0px;
-        transition-delay: 0.2s; 
-    }
-
-    &:hover .user-details2 {
-        opacity: 1;
-        margin-top: 0px;
-        transition-delay: 0.2s;
-    }
+    
+        }
+    
+        & .user-details2 {
+            display: grid;
+            grid-area: details2;
+            /* grid-column: 4 / 8; */
+            opacity: 1;
+            transition: 0.3s ease-in-out;
+            grid-template-columns: 1fr;
+            padding: 30px;
+            row-gap: var(--gap-xs);
+            transition: all 0.3s ease-in-out;
+            transform: translateY(-20px);
+        }
 
     & .user-details-column {
         display: flex;
         flex-direction: column;
     }
+
     & .user-data {
         display: flex;
         flex-direction: row;
@@ -2630,44 +3850,99 @@ progress::-moz-progress-bar {
         align-items: baseline;
         justify-content: space-between;
         width: 100%;
-        
 
-        & > :first-child {
-            font-size: var(--font-sm);
+
+        &> :first-child {
+
             color: var(--color-grey);
-            font-size: var(--font-sm);
+            font-size: var(--font-base);
         }
-        &  > :nth-child(2) {
+
+        &> :nth-child(2) {
             margin-right: 75px;
+            font-size: var(--font-xl);
         }
     }
 }
 
+/*
+ * Clase que se añade desde React cuando isExpanded es true.
+ * Expande el contenedor a una altura suficiente para mostrar todo el contenido.
+ */
+.user-details-wrapper.expanded {
+    max-height: 500px;
+    /* Un valor suficientemente grande para que quepa cualquier contenido */
+    opacity: 1;
+    padding-top: 10px;
+
+}
+
+
+.users-list.is-open .user-container {
+    max-height: 100%;
+}
+
+
+
 .user-team-container {
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 50px repeat(4, minmax(175px, 500px))100px 100px;
-    grid-template-areas: "checkbox name data . permissions . edit "; 
-    column-gap: 20xp;
+    grid-template-columns: 50px repeat(3, minmax(175px, 1fr)) 450px 100px 100px 100px;
+    grid-template-areas: "checkbox nickname organization role permisions joindate status edit";
+    column-gap: 20px;
     align-items: center;
-    height: auto;
+    height: 75px;
     border-radius: var(--br-5xs);
     border-bottom: 1px solid var(--background-l00);
     font-size: var(--font-lg);
     background-color: var(--background-300);
     margin-bottom: var(--gap-xs);
 
-    & .team-data {
-            display: grid;
-            grid-row-start: 1;
-            grid-column: 3 / 5;
-            grid-template-columns: 1fr;
-            grid-row-gap: var(--gap-xs);
-            padding: 30px 0;
-            margin-top: -10px;
-            
+    scroll-snap-align: start;
+    scroll-margin: 15px;
+    position: relative;
+
+    & .users-name {
+            grid-area: nickname;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            column-gap: 10px;
+            height: 75px;
         }
     
+    & .users-photo {
+        display: flex;
+        align-items: center;
+        align-content: center;
+        width: 75px;
+        height: 75px;
+        position: relative;
+        border-radius: var(--br-circle);
+        overflow: hidden;
+
+        object-fit: cover;
+        border: solid 12px var(--color-bg1);
+
+        & img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    /* & .team-data {
+        display: grid;
+        grid-row-start: 1;
+        grid-column: 3 / 5;
+        grid-template-columns: 1fr;
+        grid-row-gap: var(--gap-xs);
+        padding: 30px 0;
+        margin-top: -10px;
+
+    } */
+
     & .team-permissions {
         display: grid;
         grid-row-start: 1;
@@ -2708,7 +3983,7 @@ progress::-moz-progress-bar {
     & span:hover {
         color: var(--secundary-200);
     }
-}
+} 
 
 .users-checkbox {
     display: flex;
@@ -2737,7 +4012,7 @@ progress::-moz-progress-bar {
     overflow: hidden;
 
     object-fit: cover;
-    border: solid 12px var(--background-200);
+    border: solid 12px var(--color-bg1);
 
     & img {
         width: 100%;
@@ -2755,21 +4030,26 @@ progress::-moz-progress-bar {
     box-sizing: border-box;
     grid-area: edit;
     display: flex;
-    
+
 
     justify-content: center;
     margin: 2px;
     padding: 2px;
 
-    & >.btn-secondary {
+    &>.btn-secondary {
         outline: none;
         width: auto;
         border-color: var(--background-200);
-        
+
     }
 }
 
+
+
+
 /* Notification Pop Up */
+
+
 
 .popup-success,
 .popup-warning,
@@ -2786,16 +4066,49 @@ progress::-moz-progress-bar {
     height: fit-content;
 }
 
-.message-popup, 
+.message-popup {
+    /* position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001; */
+}
+
+
+.message-popup-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(2px) brightness(1.1);
+    -webkit-backdrop-filter: blur(2.5px) brightness(0.8);
+    
+    z-index: 1000;
+    /* display: block; */
+    
+}
+
+/* Deshabilitar scroll del body cuando el popup está abierto */
+body.popup-open {
+    overflow: hidden;
+}
+
+/* 
+.message-popup,
 .message-content {
     display: flex;
     flex-direction: row;
-    /* width: 100%; */
-    /* height: auto */
-    }
+} 
+*/
 
 .message-popup,
 .message-content {
+    display: flex;
+        flex-direction: row;
     align-items: center;
     justify-content: space-between;
     column-gap: var(--gap-lg);
@@ -2804,20 +4117,21 @@ progress::-moz-progress-bar {
 .message-popup {
     border-radius: 0.75em;
     height: auto;
-    overflow: hidden;
+    overflow: auto;
     width: 100%;
     cursor: default;
-    z-index: 1000;
-    }
+
+    z-index: 1010;
+}
 
 .message-content {
     width: 100%;
     height: 200px;
-    min-height:150px;
+    min-height: 150px;
 }
 
 .message-icon {
-    flex-shrink: 0; 
+    flex-shrink: 0;
     /* margin: auto; */
     display: flex;
     align-items: stretch;
@@ -2838,6 +4152,7 @@ progress::-moz-progress-bar {
     color: var(--color-fontbase);
     margin-left: 18px;
 }
+
 .message-icon-svgDark {
     height: 55px;
     width: 55px;
@@ -2863,13 +4178,13 @@ progress::-moz-progress-bar {
     padding-top: var(--padding-base);
     width: 100%;
     height: fit-content;
-    padding:10xp 0;  
+    padding: 10xp 0;
 
 }
 
 .message-text-title {
     line-height: 1.3;
-    font-size: 1.40em;
+    font-size: 1.25em;
     font-weight: bold;
 }
 
@@ -2878,19 +4193,20 @@ progress::-moz-progress-bar {
     font-size: 1em;
     opacity: 0.75;
 }
+
 .message-btns {
-    display: flex;    
+    display: flex;
     flex-direction: column;
     min-width: 4em;
     height: 100%;
     flex-shrink: 0;
     z-index: 1;
-    cursor:pointer;
+    cursor: pointer;
 }
 
 .message-btn {
     background-color: transparent;
-    height:100%;
+    height: 100%;
     box-sizing: content-box;
     box-shadow: none;
     border: var(--brd) 0.15rem solid;
@@ -2908,6 +4224,7 @@ progress::-moz-progress-bar {
     color: var(--clr);
     box-shadow: none;
 }
+
 .message-btn:active {
     background-color: var(--bg);
     box-shadow: none;
@@ -2928,6 +4245,7 @@ progress::-moz-progress-bar {
 .message-btn:last-of-type {
     border-radius: 0 0 0.75rem 0;
 }
+
 .message-btn:not(:first-child):not(:last-child) {
     border-radius: 0;
 }
@@ -2946,31 +4264,43 @@ progress::-moz-progress-bar {
     outline: transparent;
 }
 
+.popup {
+    border-radius: 15px;
+    position: fixed;
+    top: 50%;
+    left: 50%;    
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    backdrop-filter: blur(2.5px) brightness(0.8);
+    -webkit-backdrop-filter: blur(2.5px) brightness(0.8);
+    overflow: auto;
 
-.popup-success {
+}
+
+/* .popup-success {
     background-color: var(--popup-success);
-    border-radius: 15px;
 }
+
 .popup-warning {
-    background-color: var(--popup-warning) ;
-    border-radius: 15px;
+    background-color: var(--popup-warning);
+    
 }
+
 .popup-error {
-    background-color: var(--popup-error) ;
-    border-radius: 15px;
+    background-color: var(--popup-error);
 }
+
 .popup-update {
-    background-color: var(--popup-update) ;
-    border-radius: 15px;
+    background-color: var(--popup-update);
 }
+
 .popup-info {
-    background-color: var(--popup-info) ;
-    border-radius: 15px;
+    background-color: var(--popup-info);
     color: black;
-}
+} */
+
 .popup-default {
     background-color: var(--background-200);
-    border-radius: 15px;
 }
 
 .btn-popup {
@@ -2986,7 +4316,7 @@ progress::-moz-progress-bar {
     font-size: var(--font-lg);
     transition: 0.15s;
     background-color: inherit;
-    box-shadow:none;
+    box-shadow: none;
 }
 
 
@@ -3020,7 +4350,7 @@ progress::-moz-progress-bar {
     transform: scaleY(1);
     z-index: 2;
 }
-    
+
 
 .btn-popup:hover::before {
     animation: moveClipPath 0.15s ease-out forwards;
@@ -3035,6 +4365,7 @@ progress::-moz-progress-bar {
         clip-path: polygon(100% 0, 100% 100%, 100% 100%, 100% 0);
     }
 }
+
 .btn-popup:hover::after {
     width: 100%;
     transform: scaleY(0);
@@ -3054,7 +4385,7 @@ progress::-moz-progress-bar {
     z-index: 3;
 }
 
-button  .btn-popup{
+button .btn-popup {
     text-decoration: none;
     border: none;
     background-color: transparent;
@@ -3087,7 +4418,8 @@ button  .btn-popup{
     width: 80%;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;row-gap: 30px;
+    align-items: flex-start;
+    row-gap: 30px;
 
 }
 
@@ -3102,11 +4434,12 @@ button  .btn-popup{
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-    overflow: visible; /*sw#apping by padding if problems with text overflow: visible*/
+    overflow: visible;
+    /*sw#apping by padding if problems with text overflow: visible*/
     row-gap: 30px;
-    column-gap: var(--gap-lg); 
+    column-gap: var(--gap-lg);
     user-select: none;
-    
+
 }
 
 .disabled-checkbox {
@@ -3126,10 +4459,11 @@ button  .btn-popup{
 
 #todo-page .todo-item {
     cursor: pointer;
-    user-select:none;
+    user-select: none;
     position: relative;
     transition: all 0.3s ease, opacity 0.2s ease;
 }
+
 .handler-move {
     cursor: grab;
 }
@@ -3156,9 +4490,9 @@ button  .btn-popup{
     opacity: .8;
     pointer-events: none;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        transform-origin: center center;
-        transition: transform 0.1s ease;
-        
+    transform-origin: center center;
+    transition: transform 0.1s ease;
+
 }
 
 .gu-hide {
@@ -3175,8 +4509,9 @@ button  .btn-popup{
 .gu-transit {
     opacity: .2;
     transform: scale(0.95);
-    transition: opacity 0.2s ease;    
+    transition: opacity 0.2s ease;
 }
+
 /* Style for drop zones */
 .dropzone {
     border: 2px dashed #ccc;
@@ -3211,8 +4546,9 @@ button  .btn-popup{
     border-color: var(--color-error-light);
     height: 50px;
 }
+
 .drag-over {
-    
+
     background-color: var(--color-error-darker) !important;
     box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
     border: 2px dashed var(--color-error-light) !important;
@@ -3227,11 +4563,10 @@ button  .btn-popup{
     flex: 1;
     width: 100%;
     height: 100%;
-    min-height: 0; 
-    min-width:0 ;
+    min-height: 0;
+    min-width: 0;
     /* Importante para flexbox */
-    overflow:hidden
-    
+    overflow: hidden
 }
 
 #viewer-container {
@@ -3241,10 +4576,10 @@ button  .btn-popup{
     height: 100%;
     /* max-height: 100%; */
     min-height: 0;
-    min-width:0; 
+    min-width: 0;
     overflow: hidden;
-    
-    
+
+
 }
 
 /* #viewer-container canvas {
@@ -3267,8 +4602,8 @@ button  .btn-popup{
     box-sizing: border-box;
     transition: all 0.2s ease-in-out;
     text-shadow: 1px 1px 0 var(--color-light);
-    #appearance: none;
-    -webkit-#appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .lil-gui {
@@ -3283,15 +4618,835 @@ button  .btn-popup{
     &.root>.title {
         background-color: var(--background);
         color: var(--color-fontbase);
-       
 
-    }    
+
+    }
+
     & .title {
         background-color: var(--background);
         color: var(--color-fontbase);
     }
-    & .grandparent{
+
+    & .grandparent {
         margin: 50px;
     }
 
 }
+
+/* --- Estilos Específicos para QuillEditor --- */
+
+/* Contenedor principal del editor (opcional, si necesitas estilos para él) */
+.quill-container {
+    /* Estilos si necesitas algo para el contenedor general */
+    /* border: 1px solid #d1d1d1; */
+    /* Ejemplo: borde diferente al global */
+    /* border-radius: 5px; */
+    border: none;
+    overflow: hidden;
+    /* Para contener los bordes redondeados */
+}
+
+/* Estilo base para la barra de herramientas DENTRO de .quill-container */
+.quill-container .ql-toolbar {
+    background-color: var(--color-grey-light);
+    text-shadow: none;
+    /* Fondo específico para la toolbar */
+    border: none;
+    /* Quitar borde global si existe */
+    border-bottom: 1px solid #d1d1d1;
+    /* Borde inferior específico */
+    padding: 8px;
+    border-radius: 5px 5px 0 0;
+    /* Redondear esquinas superiores */
+    box-sizing: border-box;
+    /* Asegurar que padding/border no afecten el tamaño total */
+
+
+}
+
+
+/* Estilos para los botones DENTRO de la toolbar específica */
+.quill-container .ql-toolbar button {
+    background-color: var(--background-300);
+    /* Fondo blanco para botones */
+    border: 1px solid #ced4da;
+    /* Borde específico */
+    color:red !important;
+    /* Color de texto específico */
+    /* padding: 4px 6px!important; */
+    /* Padding específico */
+    margin: 2px!important;
+    /* Margen específico */
+    border-radius: 3px!important;
+    /* Bordes redondeados específicos */
+    cursor: pointer;
+    /* transition: background-color 0.2s ease, border-color 0.2s ease!important; */
+    float: none!important;
+    /* Asegurar que no floten si hay estilos globales */
+    width: auto!important;
+    /* Resetear ancho si hay estilos globales */
+    height: auto!important;
+    /* Resetear altura si hay estilos globales */
+    /* font-size: 1rem; */
+    /* Tamaño de fuente específico si es necesario */
+    line-height: 1!important;
+    /* Altura de línea específica */
+    box-shadow: none;
+        background-color: inherit;
+        color: var(--color-fontbase-dark)!important;
+        fill: var(--color-fontbase)!important;
+        
+}
+
+.quill-container svg {
+    box-shadow: none;
+    background-color: var(--color-grey-light);
+}
+
+.quill-contain scrollbar {
+    background-color: transparent;
+            scrollbar-gutter: stable;
+            scroll-snap-type: mandatory;
+            scrollbar-width: thin;
+}
+
+/* Estilos para los iconos SVG dentro de los botones */
+.quill-container .ql-toolbar button svg {
+    width: 18px;
+    /* Tamaño específico del icono */
+    height: 18px;
+    stroke: white !important;
+    /* Color específico del trazo del icono */
+    vertical-align: middle;
+    /* Alinear icono verticalmente */
+    box-shadow: none;
+        background-color: inherit;
+        color: var(--color-fontbase) !important;
+        fill: var(--color-fontbase) !important;
+}
+
+.quill-container .ql-toolbar button:hover svg {
+    stroke: #0056b3;
+    /* Color del icono al pasar el ratón */
+}
+
+.quill-container .ql-toolbar button.ql-active svg {
+    stroke: #0056b3;
+    /* Color del icono cuando está activo */
+}
+
+
+/* Hover state para botones */
+.quill-container .ql-toolbar button:hover {
+    background-color: #e9ecef;
+    /* Color de fondo al pasar el ratón */
+    border-color: #adb5bd;
+}
+
+/* Estado activo para botones (cuando una opción está seleccionada) */
+.quill-container .ql-toolbar button.ql-active {
+    background-color: #cfe2ff;
+    /* Fondo azul claro para botón activo */
+    border-color: #9ec5fe;
+    color: #0056b3;
+    /* Color de texto azul */
+}
+
+/* Estilos para los desplegables (pickers) */
+.quill-container .ql-toolbar .ql-picker {
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    color: #495057;
+    height: auto;
+    /* Resetear altura */
+    font-size: 0.9rem;
+    /* Tamaño de fuente específico */
+    margin: 2px;
+    padding: 0;
+    /* Resetear padding */
+}
+
+.quill-container .ql-toolbar .ql-picker-label {
+    padding: 4px 6px;
+    /* Padding interno del label del desplegable */
+}
+
+/* Estilos para las opciones dentro de los desplegables */
+.quill-container .ql-toolbar .ql-picker-options {
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 5px 0;
+}
+
+.quill-container .ql-toolbar .ql-picker-item {
+    color: #495057;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+}
+
+.quill-container .ql-toolbar .ql-picker-item:hover {
+    background-color: #e9ecef;
+}
+
+.quill-container .ql-toolbar .ql-picker-item.ql-selected {
+    background-color: #cfe2ff;
+    color: #0056b3;
+}
+
+/* Estilos para el área de edición (opcional, si también necesitas aislarla) */
+.quill-container .ql-container {
+    
+
+    border: none;
+    /* Quitar borde si la toolbar ya lo tiene */
+    border-radius: 0 0 5px 5px;
+    /* Redondear esquinas inferiores */
+}
+
+.quill-container .ql-editor {
+    background-color: var(--color-bg);
+    text-shadow:none;
+    min-height: 200px;
+    /* Asegurar altura mínima */
+    height: 100%;
+    /* Permitir que crezca */
+    font-size: var(--font-base);
+    /* Tamaño de fuente base para el editor */
+    /* line-height: 1.6; */
+    /* padding: 12px 15px; */
+    /* background-color: #ffffff; */
+    /* Fondo específico para el área de edición */
+    color: var(--color-fontbase);
+    /* Color de texto específico */
+    border: none;
+}
+
+.quill-container .ql-editor.ql-blank::before {
+    color: #6c757d;
+    /* Color específico para el placeholder */
+    font-style: normal;
+    /* Estilo normal para el placeholder */
+    left: 15px;
+    /* Ajustar posición si es necesario */
+    right: 15px;
+}
+
+[data-readonly="true"] .ql-toolbar {
+    display: none !important;
+}
+
+.ql-toolbar:not(:first-child) {
+    display: none !important;
+}
+
+/* Eliminar bordes en modo lectura */
+[data-readonly="true"] .ql-container {
+    border: none !important;
+}
+
+
+/* --- Fin de Estilos Específicos para QuillEditor --- */
+
+
+
+
+
+
+
+
+/* --- Inicio de Estilos Específicos para login,logout, signup, etc --- */
+/* Estilos para el Portal y el Overlay */
+
+
+
+.auth-portal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(2px) brightness(1.1);
+        -webkit-backdrop-filter: blur(2.5px) brightness(0.8);
+    background-color: var(--color-bg);
+    /* background-color: rgba(0, 0, 0, 0.5); */
+    /* Fondo semi-transparente */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    /* Asegura que esté por encima de otros contenidos */
+    padding: 1rem;
+    /* Espacio por si el card es muy grande en pantallas pequeñas */
+}
+
+/* Estilo del Card Principal */
+.auth-card {
+    background-color: var(--background);
+    padding: 3rem;
+    border-radius: var(--br-base);
+    box-shadow: -7px -7px 15px var(--color-light),
+        7px 7px 15px var(--color-shadow);
+    width: fit-content;
+
+    box-sizing: border-box;
+    border: 1px solid var(--background-300);
+}
+
+/* Cabecera del Card */
+.auth-card-header {
+    margin-bottom: 3.5rem;
+    text-align: center;
+}
+
+.auth-card-title {
+    font-size: var(--font-5xl);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color:var(--color-fontbase)
+}
+
+.auth-card-description {
+    font-size: var(--font-lg);
+    color: var(--color-fontbase-dark);
+}
+
+/* Contenido del Card (donde va el formulario) */
+.auth-card-content {
+    background-color: var(--background);
+
+    & form {
+        background-color: var(--background);
+    }
+}
+
+
+/* Mensaje de Error */
+.auth-error-message {
+    color: #ef4444;
+    /* text-red-500 */
+    background-color: #fee2e2;
+    /* bg-red-50 */
+    border: 1px solid #fca5a5;
+    /* border-red-300 */
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Contenedor de los campos del formulario */
+.auth-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    /* Espacio entre grupos de input */
+}
+
+/* Grupo de Input (label + input) */
+.auth-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.auth-label-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.auth-input-group label {
+    font-size: var(--font-lg);
+    font-weight: 600;
+    color: var(--color-fontbase);
+}
+
+.auth-input-group input[type="text"],
+.auth-input-group input[type="email"],
+.auth-input-group input[type="password"] {
+    padding: 0.75rem;
+    border-radius: var(--br-xs);
+    font-size: var(--font-xl);
+    width: 100%;
+    box-sizing: border-box;
+    /* color: var(--color-fontbase-dark); */
+}
+/* 
+.auth-input-group input[type="text"]:focus,
+.auth-input-group input[type="email"]:focus,
+.auth-input-group input[type="password"]:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 2px #bfdbfe;
+} */
+
+
+.auth-forgot-password-link {
+    font-size: var(--font-lg);
+    color: var(--color-fontbase);
+    font-weight:6500;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.auth-forgot-password-link:hover {
+    color: #1d4ed8;
+    /* hover:text-blue-700 */
+}
+
+/* Contenedor de los botones de acción */
+.auth-action-buttons {
+    margin-top: 1.5rem;
+    /* shadcn usa space-y-3 o similar */
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Botón Primario (Login/Create Account) */
+/* .auth-button-primary {
+    background-color: #1f2937;
+
+    color: white;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s;
+} */
+
+/* .auth-button-primary:hover {
+    background-color: #374151;
+}
+
+.auth-button-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+} */
+
+/* Divisor "OR CONTINUE WITH" */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1rem 0;
+    /* Ajusta según sea necesario */
+    color: #6b7280;
+    /* text-gray-500 */
+    font-size: 0.75rem;
+    /* text-xs */
+    text-transform: uppercase;
+}
+
+.auth-divider-line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: #e5e7eb;
+    /* border-gray-200 */
+}
+
+.auth-divider-text {
+    font-size: var(--font-base);
+    color: var(--color-fontbase-dark);
+    padding: 0 1rem;
+    /* Ajusta el espaciado alrededor del texto */
+}
+
+
+/* Botón Secundario/Outline (Social Login) */
+.auth-button-outline {
+    background-color: transparent;
+    color: #374151;
+    /* text-gray-700 */
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    /* border-gray-300 */
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.auth-button-outline:hover {
+    background-color: #f3f4f6;
+    /* hover:bg-gray-50 */
+    border-color: #9ca3af;
+    /* hover:border-gray-400 */
+}
+
+.auth-button-outline:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.auth-button-outline .social-icon {
+    /* margin-right: 0.5rem; si no usas gap */
+}
+
+/* Sección para cambiar entre Login/Sign Up */
+.auth-toggle-mode {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: var(--font-lg);
+    color: var(--color-fontbase-dark);
+    display: flex;
+    justify-content: center;
+    column-gap: 20px;
+    /* align-items: ; */
+
+}
+
+.auth-link-button {
+
+    color: var(--color-fontbase);
+    text-decoration: underline;
+    text-underline-offset: 5px;
+
+    height: fit-content;
+        width: fit-content;
+        background-color: inherit;
+
+    border: none;
+    cursor: pointer;
+    font-size: inherit;
+    padding: 0;
+    border: 2px solid transparent;
+    
+
+    box-shadow: none;
+    user-select: none;
+    transition: all 0.1s ease-in-out;
+}
+
+.auth-link-button:hover {
+    box-shadow: none;
+    color: var(--primary);
+    background-color: inherit;
+    /* hover:text-blue-700 */
+}
+
+.auth-link-button:active {
+    background-color: var(--primary-200);
+    color: var(--primary);
+    /* hover:text-blue-700 */
+}
+
+.auth-link-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Estilos para los iconos sociales si es necesario */
+.social-icon {
+    /* Tus estilos aquí si los necesitas, por ejemplo, vertical-align */ }
+
+
+
+/* Estilos para el nuevo UserProfileNavButton y su portal */
+.nav-button.user-profile-nav-button {
+    padding: 10px 15px;
+    /* Ajusta el padding según tus otros nav-buttons */
+    /* Otros estilos para que coincida con .nav-button */
+}
+
+.nav-button-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    opacity: 0.7;
+}
+
+/* .portal-dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.85rem 1.1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: var(--font-lg);
+    color: var(--color-fontbase);
+    gap: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.portal-dropdown-item:hover {
+    background-color: var(--color-background-hover);
+}
+
+.portal-dropdown-item-danger {
+    color: var(--color-error2);
+}
+
+.portal-dropdown-item-danger:hover {
+    color: var(--color-fontbase-light);
+    background-color: var(--color-error-hover);
+} */
+
+/* Animación para el portal */
+@keyframes fadeInDropdown {
+    from { opacity: 0; transform: translateY(-5px) translateX(5px); }
+    to { opacity: 1; transform: translateY(0) translateX(0); }    
+}
+
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--primary-300);
+    color: var(--color-fontbase);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-size: var(--font-4xl);
+    font-weight: bold;
+    
+}
+
+.user-avatar-nav-info {
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-right: 5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    row-gap: 10px;
+}
+
+
+.profile-dropdown-portal {
+    background: linear-gradient(to left, var(--color-bg), var(--background));
+    box-shadow: 5px 5px 15px var(--color-shadow),
+        -5px -5px 15px var(--color-light);
+    border-radius: var(--br-5xs);
+    border: 4px solid var(--color-light);
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    padding: 15px;
+    animation: fadeInDropdown 0.2s ease-out;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+} 
+
+
+/* Estilos para el portal de cambiar el password */
+
+.change-password-modal-portal {
+    z-index: 2000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.auth-form-container {
+    position: fixed;
+    max-width: 450px;
+    margin: auto;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-content: center;
+
+}
+
+.auth-form-basecard {
+    position: relative;
+    background-color: var(--color-bg1);
+    padding: 2rem;
+    border-radius: var(--br-base);
+    box-shadow: -7px -7px 15px var(--color-light),
+        7px 7px 15px var(--color-shadow);
+    width: fit-content;
+    box-sizing: border-box;
+    border: 1px solid var(--background-300);
+    color: var(--color-fontbase)
+}
+ 
+
+
+/* --- Fin de Estilos Específicos para login,logout, signup, etc --- */
+
+
+/* --- Inicio de Estilos para User menu accion --- */
+
+.user-actions-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: var(--color-tododetails-bg);
+    border: 3px solid var(--color-bg1);
+    border-radius: var(--br-base);
+    box-shadow: 4px 4px 20px var(--color-shadow),
+            -4px -4px 20px var(--color-light),
+            4px -4px 20px var(--color-shadow),
+            -4px 4px 20px var(--color-light);
+    z-index: 1500;
+    padding: 12px;
+    min-width: fit-content;
+
+}
+
+
+.menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.action-button {
+    /* display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    width: 100%;
+    text-align: left;
+    background: none; */
+    border: var(--color-bg1) solid 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: fit-content;
+}
+
+.action-button:hover {
+    background-color: var(--color-background-light);
+}
+
+.action-button.delete {
+    color: var(--color-warning); 
+}
+
+/* --- Fin de Estilos para User menu accion --- */
+
+
+/* --- Inicio de Estilos para Formulario User  --- */
+.status-display {
+    padding: 8px 12px;
+    background-color: inherit;
+    border-radius: var(--br-base);
+    font-size: var(--font-base);
+}
+
+.user-status-badge {
+    padding: 4px 8px;
+    border-radius: var(--br-5xs);
+    font-size: var(--font-lg);
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: inherit;
+    color: var(--color-warning2);
+}
+
+.status-active {
+    background-color: inherit;
+    color: var(--color-success2);
+}
+
+.status-disabled {
+    background-color: inherit;
+    color: var(--color-error2);
+}
+
+
+
+/* --- Fin de Estilos para User menu accion --- */
+
+
+
+/* --- Inicio de Estilos para SortBy Users menu --- */
+
+
+.header-sort-button {
+    color: inherit;
+    cursor: pointer;
+    color: none;
+    border: none;
+    font-size: var(--font-lg);
+    font-weight: 600;
+    padding: 0;
+    text-shadow: none;
+    box-shadow: none;
+    user-select: none;
+    margin: 0;
+    display: flex;
+    align-items: flex-end;
+}
+
+.header-sort-button:hover { 
+    box-shadow: none;
+    background-color: inherit;
+    color: inherit;
+}
+
+.header-sort-button:active {
+    box-shadow: none;
+    background-color: inherit;
+    color: var(--primary);
+}
+
+/* --- Fin de Estilos para SortBy Users menu --- */
+
+
+/* --- Inicio de Estilos para UserProjectAssignmentModal--- */
+
+/* Estilo para la fila de un proyecto ya asignado y bloqueado */
+.project-assignment-row.disabled-checkbox {
+    color: var(--color-font-disabled);
+    background-color: var(--color-bg-disabled);
+    opacity: 0.7;
+}
+
+.project-assignment-row.disabled-checkbox input[type="checkbox"] {
+    cursor: not-allowed;
+}
+
+
+/* Estilo para la fila de un proyecto que se va a sobrescribir/modificar */
+.project-assignment-row.overwrite-checkbox {
+    background-color: var(--color-warning-light);
+    /* Un color amarillo/naranja suave */
+}
+
+/* Estilo general para una fila seleccionada (nueva o modificada) */
+.project-assignment-row.selected {
+    background-color: var(--color-primary-light);
+    /* Un color azul/verde suave */
+}
+
+.project-assignment-row .question-mark {
+    color: orange;
+    font-weight: bold;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+.project-assignment-row.disabled-checkbox span {
+    color: orange;
+    font-weight: 500;
+}
+
+/* --- Fin de Estilos para UserProjectAssignmentModal--- */

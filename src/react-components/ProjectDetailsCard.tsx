@@ -9,32 +9,60 @@ import { Project } from '../classes/Project';
 
 interface Props {   
     project: Project,
+    onCreatedProject: (createdProject: Project) => void
     onUpdatedProject: (updatedProject: Project) => void
+    projectsManager: ProjectsManager
 }
 
-export function ProjectDetailsCard({ project, onUpdatedProject }:Props) {
+export function ProjectDetailsCard({ project, onCreatedProject, onUpdatedProject, projectsManager }:Props) {
 
-    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)   
+    const [isNewProjectFormOpen, setIsNewProjectFormOpen] = React.useState(false)
 
-    const handleCloseForm = () => {
-        // Cierra el formulario
-        setIsNewProjectFormOpen(false);
+    const isValidDate = (date: any): boolean => {
+        if (!date) return false;
+        const d = new Date(date);
+        return !isNaN(d.getTime());
     };
 
-
+    const handleCloseForm = () => {        
+        setIsNewProjectFormOpen(false);
+    }
 
     const onEditProjectDetailsClick = () => {
         setIsNewProjectFormOpen(true)
     }
 
-
+    const handleCreatedProject = (createdProject: Project) => {
+        onCreatedProject(createdProject)
+    }
+    
     const handleUpdatedProject = (updatedProject: Project) => {
-            onUpdatedProject(updatedProject)
-        }
+        onUpdatedProject(updatedProject)
+    }
 
-    const updateProjectDetailsForm = isNewProjectFormOpen ? (
-        <NewProjectForm onClose={handleCloseForm} updateProject={project} onUpdatedProject={handleUpdatedProject } />
-    ) : null
+    const formatDate = (date: Date | string | null): string => {
+        if (!date) return 'No date set';
+
+        try {
+            const d = new Date(date);
+            if (!isValidDate(d)) return 'Invalid date';
+            return d.toISOString().split('T')[0];
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid date';
+        }
+    };
+
+
+    const updateProjectDetailsForm = isNewProjectFormOpen
+        ? (
+        <NewProjectForm
+            onClose={handleCloseForm}
+            updateProject={project}
+            onCreatedProject={handleCreatedProject}
+            onUpdatedProject={handleUpdatedProject}
+            projectsManager={projectsManager} />
+        ) : null
 
 
     return (
@@ -154,9 +182,10 @@ export function ProjectDetailsCard({ project, onUpdatedProject }:Props) {
                     flexBasis: "auto"
                 }}
                 >
-                Finish Date
+                    Finish Date
                 </p>
-                <p data-project-info="finishDate">{project.finishDate.toISOString().split('T')[0]}</p>
+                    {/*<p data-project-info="finishDate">{formatDate(project.finishDate)}</p> */}
+                <p data-project-info="finishDate">{project.finishDate.toISOString().split('T')[0]}</p> 
             </div>
             </div>
             <div>

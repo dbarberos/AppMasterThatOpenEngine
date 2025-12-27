@@ -1,14 +1,20 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import * as Router from 'react-router-dom';
-import { Sidebar, ProjectsPage, ProjectDetailsPage } from './react-components';
+
+import { Sidebar, ProjectsPage, ProjectDetailsPage, ToDoBoardPage, UsersBoardPage, UsersBoardList, UserBoardProjectsTeamsPage, UserUnverifiedPage, UserFinishSignUpPage } from './react-components';
+import { ProjectsManagerProvider, useProjectsManager } from './react-components/ProjectsManagerContext';
+import { UsersManagerProvider, useUsersManager } from './react-components/UsersManagerContext.tsx';
+
 //import { ProjectsManagerProvider, } from './react-components/ProjectsManagerContext';
-
-
+import { CheckCircleIcon, NotificationsActiveIcon, WarningIcon, ReportIcon, UpdateIcon } from './react-components/icons.tsx'
 import { IProject, ProjectStatus, UserRole, BusinessUnit, Project } from "./classes/Project.ts";
-import { IToDoIssue, ToDoIssue } from "./classes/ToDoIssue.ts"
+import { ToDoIssue } from "./classes/ToDoIssue.ts"
+import type { IToDoIssue, IUser } from './types.d.ts';
 import { ProjectsManager } from "./classes/ProjectsManager.ts";
-import { showModal, closeModal, toggleModal, changePageContent, PageChangeEvent, PageShowEvent, PageHideEvent } from "./classes/UiManager.ts";
+import { User as AppUserClass } from './classes/User'; // Renombrado para evitar conflicto
+import { UsersManager } from "./classes/UsersManager.ts";
+import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager.ts";
 //import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
 import "./classes/LightMode.ts";
 import { MessagePopUp } from "./classes/MessagePopUp.ts"
@@ -16,50 +22,368 @@ import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueD
 
 import { setUpToDoBoard, setupTodoPageSearch, } from "./classes/DragAndDropManager.ts";
 import "./classes/DragAndDropManager.ts";
-import { setUpUserPage } from "./classes/UsersManager.ts";
+//import { setUpUserPage } from "./classes/UsersManager.ts";
+import { ErrorBoundary } from 'react-error-boundary';
+import { toast, Toaster } from 'sonner'
 //import "./classes/VisorModelManager.ts";
+import { AuthProvider, useAuth } from './Auth/react-components/AuthContext.tsx'; // Usar el AuthContext que creamos
+import { AuthForm } from './Auth/react-components/AuthForm.tsx';
+import { NewUserForm } from './react-components/NewUserForm.tsx'; // Tu NewUserForm adaptado
+import { ChangePasswordForm } from './Auth/react-components/ChangePasswordForm.tsx';
+import { LoadingIcon } from './react-components/icons.tsx';
+import { deleteToDoWithSubcollections } from './services/firebase';
+import { signOut } from './services/firebase/firebaseAuth.ts'; // Para el logout
+import { auth } from './services/firebase/index.ts'
+import { UserRoleInAppKey } from './types.ts';
+import { UserEmailVerificationSuccess } from './Auth/react-components/UserEmailVerificationSuccess.tsx'
+import { ProtectedRoute } from './Auth/react-components/ProtectedRoute.tsx';
 
-const projectsManager = new ProjectsManager();
 
 const App = () => {
+    const projectsManager = useProjectsManager();
+    const usersManager = useUsersManager();
     const [projects, setProjects] = React.useState(projectsManager.list);
 
+    function handleNewProject(newProject: Project) {
+        projectsManager.updateReactProjects(newProject);
+        setProjects([...projectsManager.list])
+    }
 
-    const handleProjectUpdate = (updatedProject) => {
-        projectsManager.updateReactProjects(updatedProject); // Update the project in projectsManager
-        // setProjects((prevProjects) =>
-        //     prevProjects.map((proj) =>
-        //         proj.id === updatedProject.id ? updatedProject : proj
-        //     )
-        // ); // Update the state to trigger re-render
-    
+    const handleProjectCreate = (createProject) => {
+        projectsManager.updateReactProjects(createProject); // Update the project in projectsManager
+
         setProjects([...projectsManager.list]);
-        
+
+    };
+    const handleProjectUpdate = (updatedProject) => {
+        console.log("index.tsx: handleProjectUpdate called", { updatedProject })
+        projectsManager.updateProject(updatedProject.id, updatedProject); // Update the project in projectsManager
+
+        setProjects([...projectsManager.list]);
+
     };
 
-    return (
-        //<ProjectsManagerProvider>        
-        <>
-            <Router.BrowserRouter>
-                <Sidebar />
-                <Router.Routes>
-                    <Router.Route path="/" element={<ProjectsPage  projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
-                    <Router.Route path="/project/:id" element={<ProjectDetailsPage projectsManager={projectsManager} onProjectUpdate={handleProjectUpdate}/>} />
-                </Router.Routes>
-                
-            </Router.BrowserRouter>
+    let callCounter = 0
+
+    const handleToDoIssueCreated = (todoIssueCreated) => {
+        callCounter++
+        console.log(`handleToDoIssueCreated - CALL #${callCounter} at ${Date.now()}: Calling updateProjectToDoList for todo ID ${todoIssueCreated.id}`);
+
+        try {
+
+            projectsManager.updateProjectToDoList(todoIssueCreated.todoProject, todoIssueCreated)
+            console.log(`handleToDoIssueCreated - CALL #${callCounter}: updateProjectToDoList finished.`);
+        
+            setProjects([...projectsManager.list]);
+        } catch (error) {
+            console.error(`handleToDoIssueCreated - CALL #${callCounter}: Error calling updateProjectToDoList`, error);
+        }
+    }
+
+    
+    // const handleToDoIssueUpdated = (todoIssueUpdated) => {
+    // const handleToDoIssueUpdated = async (todoId: string, updates: Partial<IToDoIssue>) => {
+    //     console.log("index.tsx: handleToDoIssueUpdated (centralized) called", { todoId, updates })
+    const handleToDoIssueUpdated = async (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => {
+        console.log("index.tsx: handleToDoIssueUpdated (centralized) called", { projectId, todoId, updates })
+
+        
+        // projectsManager.updateToDoIssue(todoIssueUpdated.todoProject, todoIssueUpdated.id, todoIssueUpdated)
+        // console.log("index.tsx: handleToDoIssueUpdated called", { todoIssueUpdated })
+        // setProjects([...projectsManager.list]);
+
+
+        // // 1. Encontrar el proyecto al que pertenece el ToDo.
+        // const project = projectsManager.getProjectByToDoIssueId(todoId);
+
+        if (!projectId) {
+            const errorMsg = `index.tsx: No se pudo encontrar el proyecto para el ToDo con ID: ${todoId}`;
+            console.error(errorMsg);
+            toast.error("Could not update the ToDo item because the project ID was missing.");
+            throw new Error(errorMsg);
+        }
+        
+        try {
+            // 2. Llamar al método del manager que se encarga de la escritura en Firebase.
+            // await projectsManager.updateToDoIssue(project.id, todoId, updates);
+            await projectsManager.updateToDoIssue(projectId, todoId, updates );
+
+            // La UI se actualizará automáticamente gracias al listener onSnapshot de ProjectsManager.
+            const updatedFields = Object.keys(updates).join(', ');
+            toast.success(`ToDo field(s) '${updatedFields}' updated successfully.`);
             
-        </>
-    //</ProjectsManagerProvider>
+            // 3. Notificar a React que el estado en projectsManager ha cambiado para que vuelva a renderizar la UI.
+            setProjects([...projectsManager.list]);
+
+            console.log(`index.tsx: ToDo ${todoId} actualizado correctamente.`);
+        } catch (error) {
+            console.error(`index.tsx: Error al actualizar el ToDo ${todoId}:`, error);
+            toast.error("Failed to update the ToDo item.");
+            //o
+            // throw error; // Relanzar para que el componente que originó lo sepa.
+        }
+        
+    }
+
+
+    const handleToDoIssueDeleted = async (projectId: string, todoId: string) => {
+        console.log("index.tsx: handleToDoIssueDeleted (centralized) called", { projectId, todoId });
+
+        if (!projectId || !todoId) {
+            const errorMsg = "Project ID or ToDo ID is missing for deletion.";
+            console.error(errorMsg);
+            toast.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+
+        try {
+
+             // Call the service function that handles the deletion logic in Firebase.
+            await deleteToDoWithSubcollections(projectId, todoId);
+             // The UI will update automatically thanks to the onSnapshot listener in ProjectsManager,
+            // which will detect the change in the database and update the application state.
+            
+            // 2. Borra en ProjectsManager y actualiza localStorage
+
+            projectsManager.deleteToDoIssue(projectId, todoId); //Esto actualiza la lista interna del manager
+            // 3. Notificar a React que el estado ha cambiado para forzar el re-renderizado.
+            setProjects([...projectsManager.list]);
+
+
+        } catch (error) {
+            console.error(`index.tsx: Error deleting ToDo ${todoId}:`, error);
+            toast.error("Failed to delete the ToDo item.");
+        }
+    };
+
+
+
+
+
+    function handleUserCreate(newUserCreate: AppUserClass): void {
+        // Lógica para manejar la creación de un usuario si es necesario a nivel de App
+        console.log("App: User created", newUserCreate);
+        usersManager.newUser(newUserCreate, newUserCreate.id!); // Actualizar UsersManager
+    }
+
+    function handleUserUpdate(updatedUser: AppUserClass): void {
+        // Lógica para manejar la actualización de un usuario si es necesario a nivel de App
+        console.log("App: User updated", updatedUser);
+        usersManager.updateUser(updatedUser.id!, updatedUser); // Actualizar UsersManager
+    }
+
+    return ( 
+        <Router.BrowserRouter>
+            <Sidebar
+                projectsManager={projectsManager}
+                usersManager={usersManager}
+            />
+            <MainLayout
+                projectsManager={projectsManager}
+                usersManager={usersManager}
+                onNewProject={handleNewProject}
+                onProjectCreate={handleProjectCreate}
+                onProjectUpdate={handleProjectUpdate}
+                onToDoIssueCreated={handleToDoIssueCreated}
+                onToDoIssueUpdated={handleToDoIssueUpdated}
+                onToDoIssueDeleted={handleToDoIssueDeleted}
+                onUserCreate={handleUserCreate}
+                onUserUpdate={handleUserUpdate}
+            />
+        </Router.BrowserRouter>
+    )
+}
+
+interface MainLayoutProps {
+    projectsManager: ProjectsManager;
+    usersManager: UsersManager;
+    onNewProject: (newProject: Project) => void;
+    onProjectCreate: (createProject: Project) => void;
+    onProjectUpdate: (updatedProject: Project) => void;
+    onToDoIssueCreated: (todoIssueCreated: ToDoIssue) => void;
+    //onToDoIssueUpdated: (updatedTodo: ToDoIssue) => void;
+    // onToDoIssueUpdated: (todoId: string, updates: Partial<IToDoIssue>) => Promise<void>;
+    onToDoIssueUpdated: (projectId: string, todoId: string, updates: Partial<IToDoIssue>) => Promise<void>;
+    onToDoIssueDeleted: (projectId: string, todoId: string) => Promise<void>;
+    onUserCreate: (newUserCreate: AppUserClass) => void;
+    onUserUpdate: (updatedUser: AppUserClass) => void;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = (props) => {
+    const { currentUser, userProfile, loading } = useAuth();
+    const navigate = Router.useNavigate();
+
+    // Redirigir si no autenticado
+    React.useEffect(() => {
+        // Solo redirigir si la autenticación ha terminado de cargar Y no hay usuario autenticado
+        if (!loading && !currentUser && location.pathname !== '/auth' && location.pathname !== '/change-password') { // Añadir /change-password para permitir acceso si se llega por reset de password (aunque no implementado aún)
+        navigate('/auth');
+        }
+    }, [currentUser, loading, location.pathname])
+
+
+    // const handleSidebarNavigation = (path: 'profile' | 'signin' | 'change-password') => {
+    //     if (path === 'profile') {
+    //         navigate('/profile');
+    //     } else if (path === 'signin') {
+    //         if (currentUser) { // "Cambiar Cuenta"
+    //             signOut().then(() => {
+    //                 navigate('/auth');
+    //             }).catch(console.error);
+    //         } else { // Botón inicial "Sign Up / Sign In"
+    //             navigate('/auth');
+    //         }
+    //     } else if (path === 'change-password') {
+    //         navigate('/change-password');
+    //     }
+    // };
+
+        // Si la autenticación está cargando, muestra el icono de carga global
+    // Esto se muestra ANTES de renderizar el grid, ocupando toda la pantalla.
+    // Una vez que loading es false, el grid se renderiza.
+    if (loading) {
+        return <LoadingIcon />;
+    }
+
+
+    console.log("🔄 Current path:", location.pathname, 
+        "| Authenticated:", !!currentUser,
+        "| Loading:", loading);
+
+
+    return (        
+        <main style={{ flexGrow: 1, padding: '1rem' }}>
+            <Router.Routes>
+                <Router.Route path="/auth" element={
+                    currentUser ? <Router.Navigate to="/" /> : <AuthForm onUserAuthenticated={() => navigate('/')} initialMode="signUp" />
+                } />
+
+
+                {/* Esta ruta debe estar fuera de la protección para que el usuario pueda llegar a ella */}
+                <Router.Route path="/auth-successfull" element={
+                    <UserEmailVerificationSuccess />
+                } />
+
+                {/* Ruta para finalizar el registro a través del enlace de correo */}
+                <Router.Route path="/finish-signup" element={
+                    <UserFinishSignUpPage onSignUpSuccess={() => navigate('/')} />
+                } />
+
+
+
+                {/* --- INICIO DE RUTAS PROTEGIDAS --- */}
+                <Router.Route element={<ProtectedRoute />}>
+                    {/* Si el usuario está verificado, Outlet renderizará una de estas rutas hijas */}
+
+                    <Router.Route path="/" element={
+                        <ProjectsPage
+                            projectsManager={props.projectsManager}
+                            usersManager={props.usersManager}
+                            onNewProjectCreated={props.onNewProject}
+                            onProjectUpdate={props.onProjectUpdate}
+                            />
+                    } />
+
+                    <Router.Route path="/project/:id" element={
+                        <ProjectDetailsPage
+                                projectsManager={props.projectsManager}
+                                onProjectCreate={props.onProjectCreate}
+                                onProjectUpdate={props.onProjectUpdate}
+                                onToDoIssueCreated={props.onToDoIssueCreated}
+                                onToDoIssueUpdated={props.onToDoIssueUpdated}
+                                onToDoIssueDeleted={props.onToDoIssueDeleted}
+                            />
+                            
+                    } />
+
+                    <Router.Route path="/project/todoBoard/:id" element={
+                        
+                            <ToDoBoardPage
+                                projectsManager={props.projectsManager}
+                                onProjectCreate={props.onProjectCreate}
+                                onProjectUpdate={props.onProjectUpdate}
+                                onToDoIssueCreated={props.onToDoIssueCreated}
+                                onToDoIssueUpdated={props.onToDoIssueUpdated}
+                                onToDoIssueDeleted={props.onToDoIssueDeleted}
+                            />
+                            
+                    } />
+
+                    <Router.Route path="/usersBoard" element={
+                        <UsersBoardPage
+                                usersManager={props.usersManager}
+                                projectsManager={props.projectsManager}
+                                onUserCreate={props.onUserCreate}
+                                onUserUpdate={props.onUserUpdate}
+                            />
+                        } >
+                            <Router.Route index element={<UsersBoardList />} />
+                            <Router.Route path="teams/:projectId?" element={<UserBoardProjectsTeamsPage />} />
+                        </Router.Route>
+                    
+                    </Router.Route>
+                    
+                {/* --- FIN DE RUTAS PROTEGIDAS --- */}
+
+                <Router.Route path="/change-password" element={
+                    currentUser
+                        ? <ChangePasswordForm
+                            onPasswordChanged={() => navigate('/profile')}
+                            onCancel={() => navigate('/profile')}
+                        />
+                        : <Router.Navigate to="/auth" />
+                } />
+
+                <Router.Route path="*"
+                    element={
+                        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+                            <h2>Error 404 - Page Not Found</h2>
+                            <p>The page you are looking for does not exist.</p>
+                            <Router.Link to="/">Go to Homepage</Router.Link>
+                        </div>} />
+            </Router.Routes>
+        </main>
         
     )
 }
 
 const rootElement = document.getElementById('app') as HTMLElement;
 const appRoot = ReactDOM.createRoot(rootElement)
-appRoot.render( <App /> )
-
-
+appRoot.render(
+    <AuthProvider>
+        <ProjectsManagerProvider>
+            <UsersManagerProvider>
+                <App />
+            </UsersManagerProvider>
+        </ProjectsManagerProvider>
+        {/* Toaster puede ir fuera de los providers si no necesita contexto */}
+        <Toaster
+            className="custom-sonner"
+                expand={true}
+                //visibleToasts={9}
+                duration={6500}
+                icons={{
+                    success: <CheckCircleIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    info: <NotificationsActiveIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    warning: <WarningIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    error: <ReportIcon size={30} className="todo-task-move" color="var(--color-fontbase)" />,
+                    loading: <UpdateIcon size = { 30 } className = "todo-icon" color = "var(--color-fontbase)" />,
+                }}
+                toastOptions={{
+                    classNames: {
+                        toast: 'custom-toast',
+                        description: 'custom-description'
+                    },
+                    style: {
+                        //opacity: '75%',
+                        background: 'var(--background-200)',
+                        color: 'var(--fontbase)',
+                        //fontSize: 'var(--font-lg)',
+                    },
+                }}
+            richColors />
+    </AuthProvider>
+)
 
 
 
@@ -583,6 +907,8 @@ if (btnEditProjectDetails) {
 }
 */
 
+/*DELETE PROJECT BUTTON 
+
 function handleTitleClick(event: Event) {
         //Event Delegation: The handleModalClick function now handles clicks on the modal.It uses targetElement.closest('#delete-project-btn-svg') to check if the click originated from the "Delete Project" button or any of its parent elements.
         //Efficiency: With event delegation, you only have one event listener attached to the modal, even if you dynamically add or remove multiple "Delete Project" buttons.
@@ -702,7 +1028,7 @@ function handleDeleteProjectButtonClick(e: Event) {
         console.error("Delete project button was not found")
     }
 } 
-
+*/
 
 //Delete a ToDoISsue when click the trash delete botton in the todo-detail page
 const btnToDoIssueDelete = document.querySelector("#delete-todoIssue-btn")
@@ -712,7 +1038,7 @@ if (btnToDoIssueDelete) {
         svg.addEventListener("click", handleDeleteToDoIssueButtonClick)
     }
 }
-    
+
 
 function handleDeleteToDoIssueButtonClick(e: Event) {
     e.preventDefault()
@@ -722,7 +1048,7 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
     const deleteToDoIssueBtn = (e.target as HTMLElement).closest("#delete-todoIssue-btn")
 
     if (deleteToDoIssueBtn) {
-        
+
         //Get the projectID
         const todoIssueIdToDelete = (deleteToDoIssueBtn as HTMLElement)?.dataset.toDoIssueId
         console.log("todoIssueId:", todoIssueIdToDelete)
@@ -737,7 +1063,7 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
                     document.body,
                     "warning",
                     "Confirm Project Deletion",
-                    `Are you sure you want to delete the To-Do Issue: "${projectWithToDoIssueToDelete.todoList.find((todoIssue) =>todoIssue.id === todoIssueIdToDelete)?.title}" This action cannot be undone.`,
+                    `Are you sure you want to delete the To-Do Issue: "${projectWithToDoIssueToDelete.todoList.find((todoIssue) => todoIssue.id === todoIssueIdToDelete)?.title}" This action cannot be undone.`,
                     ["Yes,go on", "Cancel"],
                 )
 
@@ -752,8 +1078,8 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
                         projectWithToDoIssueToDelete.todoList = newToDoList ?? [];
                         console.log("projectWithToDoIssueToDelete:", projectWithToDoIssueToDelete)
 
-                        
-                        
+
+
                         // Update the ToDo board if we're on that page or the Page-details
                         const currentPage = localStorage.getItem("pageWIP");
                         if (currentPage === "todo-page") {
@@ -766,7 +1092,7 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
                         // Close the Modal and the Todo-Detail page
                         popupDeleteToDoIssueConfirmation.closeMessageModal();
                         closeToDoIssueDetailPage()
-                        
+
                     },
                     "Cancel": () => {
                         // User cancelled, do nothing or provide feedback
@@ -781,63 +1107,70 @@ function handleDeleteToDoIssueButtonClick(e: Event) {
 }
 
 
-//Main button of Project Details(aside) open the Project Details
-const btnProjectDetailsAside = document.querySelector("#asideBtnProjectDetails")
-btnProjectDetailsAside?.addEventListener("click", (e) => {
-    e.preventDefault()
-    changePageContent("project-details", "flex")
-    // Set the localStorage value for pageWIP to "todo-page"
-    localStorage.setItem("pageWIP", "project-details")
-    updateAsideButtonsState()
-
-    //Set the funcionality of search between todoIssues
-    setupProjectDetailsSearch()
+// /* *** ELIMINADO POR ESTAR EN DESUSO UPDATEASIDEBUTTONSSTATE ******* */
 
 
-    const storedProjectId = localStorage.getItem("selectedProjectId");
-    const projectManager = ProjectsManager.getInstance()
-    const projectsList = projectManager.list
-    const selectedProject = projectsList.find(project => project.id === storedProjectId)
+// //Main button of Project Details(aside) open the Project Details
+// const btnProjectDetailsAside = document.querySelector("#asideBtnProjectDetails")
+// btnProjectDetailsAside?.addEventListener("click", (e) => {
+//     e.preventDefault()
+//     changePageContent("project-details", "flex")
+//     // Set the localStorage value for pageWIP to "todo-page"
+//     localStorage.setItem("pageWIP", "project-details")
+//     updateAsideButtonsState()
+
+//     //Set the funcionality of search between todoIssues
+//     setupProjectDetailsSearch()
 
 
-    if (storedProjectId && selectedProject) {
-        ProjectsManager.setDetailsPage(selectedProject)
-    }
+//     const storedProjectId = localStorage.getItem("selectedProjectId");
+//     const projectManager = ProjectsManager.getInstance()
+//     const projectsList = projectManager.list
+//     const selectedProject = projectsList.find(project => project.id === storedProjectId)
+
+
+//     if (storedProjectId && selectedProject) {
+//         ProjectsManager.setDetailsPage(selectedProject)
+//     }
+
+// })
 
 
 
-})
+
+// /* *** ELIMINADO POR ESTAR EN DESUSO UPDATEASIDEBUTTONSSTATE ******* */
+
+// // Call the update function updateAsideButtonsState when the page loads
+// document.addEventListener('DOMContentLoaded', () => {
+//     updateAsideButtonsState();
+// })
 
 
-// Call the update function updateAsideButtonsState when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    updateAsideButtonsState();
-})
+// /* *** ELIMINADO POR ESTAR EN DESUSO UPDATEASIDEBUTTONSSTATE ******* */
 
+// //Main button of To-Do Board(aside) open the To-Do Board
+// const btnToDoIssueBoard = document.querySelector("#asideBtnToDoBoards")
+// if (btnToDoIssueBoard) {
+//     btnToDoIssueBoard?.addEventListener("click", async (e) => {
+//         e.preventDefault()
+//         const selectedProjectId = localStorage.getItem("selectedProjectId")
+//         const counterElement = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement
 
-//Main button of To-Do Board(aside) open the To-Do Board
-const btnToDoIssueBoard = document.querySelector("#asideBtnToDoBoards")
-if (btnToDoIssueBoard) {
-    btnToDoIssueBoard?.addEventListener("click", async (e) => {
-        e.preventDefault()
-        const selectedProjectId = localStorage.getItem("selectedProjectId")
-        const counterElement = document.getElementById('todolist-search-counter-ToDoPage') as HTMLElement
+//         if (selectedProjectId) {
+//             changePageContent("todo-page", "block");
+//             // Set the localStorage value for pageWIP to "todo-page"
+//             localStorage.setItem("pageWIP", "todo-page");
+//             updateAsideButtonsState()
 
-        if (selectedProjectId) {
-            changePageContent("todo-page", "block");
-            // Set the localStorage value for pageWIP to "todo-page"
-            localStorage.setItem("pageWIP", "todo-page");
-            updateAsideButtonsState()
+//             await setUpToDoBoard(selectedProjectId);
+//             resetSearchState(counterElement)
 
-            await setUpToDoBoard(selectedProjectId);
-            resetSearchState(counterElement)
-            
-        } else {
-            await setUpToDoBoard()
-            resetSearchState(counterElement)
-        }
-    })
-}
+//         } else {
+//             await setUpToDoBoard()
+//             resetSearchState(counterElement)
+//         }
+//     })
+// }
 
 
 /* Diferents Buttons inside the To-Do Board for create a new ToDoIssue
@@ -1120,38 +1453,42 @@ if (toDoIssueForm && toDoIssueForm instanceof HTMLFormElement) {
 }
 */
 
-//Main button of Users(aside) open the Users board
-const btnUsersBoard = document.querySelector("#asideBtnUsers")
-if (btnUsersBoard) {
-    btnUsersBoard?.addEventListener("click", async (e) => {
-        e.preventDefault()
-        const selectedProjectId = localStorage.getItem("selectedProjectId")
-        console.log("Btn Users clicked")
-    
-        changePageContent("users-page", "flex");
 
-        //Show the default content of href = "#/users"(users - index)
-        const defaultUsersIndex = document.querySelector("#users-index") as HTMLElement | null;
-        const teamsPage = document.querySelector("#teams-page") as HTMLElement | null;
+// /* *** ELIMINADO POR ESTAR EN DESUSO UPDATEASIDEBUTTONSSTATE ******* */
 
-        if (defaultUsersIndex) {
-            defaultUsersIndex.style.display = "flex";
 
-            if (teamsPage) {
-                teamsPage.style.display = "none";
-            }
+// //Main button of Users(aside) open the Users board
+// const btnUsersBoard = document.querySelector("#asideBtnUsers")
+// if (btnUsersBoard) {
+//     btnUsersBoard?.addEventListener("click", async (e) => {
+//         e.preventDefault()
+//         const selectedProjectId = localStorage.getItem("selectedProjectId")
+//         console.log("Btn Users clicked")
 
-            console.log("Upload Users page")
-            // Set the localStorage value for pageWIP to "todo-page"
-            localStorage.setItem("pageWIP", "users-page");
-            updateAsideButtonsState()
-        }
-    
-        //Set up the select project Element inside the header
-        if (selectedProjectId) {
-            await setUpUserPage(selectedProjectId)
-        } else {
-            await setUpUserPage()
-        }
-    })
-}
+//         changePageContent("users-page", "flex");
+
+//         //Show the default content of href = "#/users"(users - index)
+//         const defaultUsersIndex = document.querySelector("#users-index") as HTMLElement | null;
+//         const teamsPage = document.querySelector("#teams-page") as HTMLElement | null;
+
+//         if (defaultUsersIndex) {
+//             defaultUsersIndex.style.display = "flex";
+
+//             if (teamsPage) {
+//                 teamsPage.style.display = "none";
+//             }
+
+//             console.log("Upload Users page")
+//             // Set the localStorage value for pageWIP to "todo-page"
+//             localStorage.setItem("pageWIP", "users-page");
+//             updateAsideButtonsState()
+//         }
+
+//         //Set up the select project Element inside the header
+//         if (selectedProjectId) {
+//             await setUpUserPage(selectedProjectId)
+//         } else {
+//             await setUpUserPage()
+//         }
+//     })
+// }

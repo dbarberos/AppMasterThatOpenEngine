@@ -51,24 +51,50 @@ export function toggleModal(id: string) {
 }
 
 export function closeModalProject(id: string, projectsManager: ProjectsManager) {
+    console.log(`Intentando cerrar modal: ${id}`);
+
+
+    
+
+    const confirmBtn = document.getElementById("confirm-json-list")
+    const cancelProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
+
+    if (confirmBtn && projectsManager.confirmBtnClickListener) {
+        confirmBtn.removeEventListener("click", projectsManager.confirmBtnClickListener)
+        console.log("Listener de confirmación removido");
+    }
+
+    
+    if (cancelProjectBtn) {
+        if (projectsManager.cancelExportProjectBtnClickListener) {
+            cancelProjectBtn.removeEventListener("click", projectsManager.cancelExportProjectBtnClickListener)
+            console.log("Listener de cancelar exportación removido");
+        }
+        if ( projectsManager.cancelImportProjectBtnClickListener) {
+            cancelProjectBtn.removeEventListener("click", projectsManager.cancelImportProjectBtnClickListener)
+            console.log("Listener de cancelar importació removido");
+        }
+    }
+
+    // const cancelExportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
+    // if (cancelExportProjectBtn && projectsManager.cancelExportProjectBtnClickListener) {
+    //     cancelExportProjectBtn.removeEventListener("click", projectsManager.cancelExportProjectBtnClickListener)
+    // }
+    // const cancelImportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
+    // if (cancelImportProjectBtn && projectsManager.cancelImportProjectBtnClickListener) {
+    //     cancelImportProjectBtn.removeEventListener("click", projectsManager.cancelImportProjectBtnClickListener)
+    // }
+
+
     const modal = document.getElementById(id)
     if (modal && modal instanceof HTMLDialogElement) {
+        console.log('Cerrando modal:', id);
         modal.close()
+
     } else {
         console.warn("No modal found related with the provided ID", id)
     }
-    const confirmBtn = document.getElementById("confirm-json-list")
-    if (confirmBtn && projectsManager.confirmBtnClickListener) {
-        confirmBtn.removeEventListener("click", projectsManager.confirmBtnClickListener)
-    }
-    const cancelExportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
-    if (cancelExportProjectBtn && projectsManager.cancelExportProjectBtnClickListener) {
-        cancelExportProjectBtn.removeEventListener("click", projectsManager.cancelExportProjectBtnClickListener)
-    }
-    const cancelImportProjectBtn: Element | null = document.getElementById("cancel-json-list-btn")
-    if (cancelImportProjectBtn && projectsManager.cancelImportProjectBtnClickListener) {
-        cancelImportProjectBtn.removeEventListener("click", projectsManager.cancelImportProjectBtnClickListener)
-    }
+    
 }
 
 export function changePageContent(pageToShow: string, modeDisplay: string) {
