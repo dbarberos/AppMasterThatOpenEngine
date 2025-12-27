@@ -28,6 +28,7 @@ interface UserBoardContextType {
     onAssignProjects: (user: AppUserClass) => void;
     onEditUser: (user: AppUserClass | null) => void;
     onDeleteUser: (userId: string) => void;
+    onUserUpdate: (updatedUser: AppUserClass) => void; // Añadimos esta función al contexto
     // onSort: (sortKey: UserSortKey) => void;  //Manejamos los sortBy según donde rendericemos el compoenente
     onSortUsers: (sortKey: UserSortKey) => void; // Específico para la lista de usuarios
     onSortTeams: (sortKey: UserSortKey) => void; // Específico para la lista de equipos
@@ -541,6 +542,7 @@ export function UsersBoardPage({
         onAssignProjects: handleOpenAssignmentModal,
         onEditUser: handleOpenNewUserModal,
         onDeleteUser: handleDeleteUser,
+        onUserUpdate: onUserUpdate, // Pasamos la función que viene de las props al contexto
         // onSort: handleSort,
         onSortUsers: handleUserSort,
         onSortTeams: handleTeamsSort,

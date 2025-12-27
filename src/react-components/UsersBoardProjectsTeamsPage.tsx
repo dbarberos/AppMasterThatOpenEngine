@@ -5,8 +5,9 @@ import * as Router from 'react-router-dom';
 import { IProject, Project, } from '../classes/Project';
 import { User as AppUserClass} from '../classes/User';
 import { useUserBoardContext} from './UsersBoardPage';
-import { ProjectSelector, UserCardRow, UsersSortMenu, UserProjectTeamCardRow, type SortOption } from '../react-components'; 
+import { ProjectSelector, UserCardRow, UsersSortMenu, UserProjectTeamCardRow, type SortOption, UserTeamProjectAssignmentUsersModal } from '../react-components'; 
 import { AddIcon, EditIcon, TrashIcon } from './icons'
+import type { IProjectAssignment } from '../types';
 
 /**
  * Agrupa los usuarios por el ID del proyecto.
@@ -41,6 +42,7 @@ export function UserBoardProjectsTeamsPage() {
         users,
         onProjectSelect,
         onAssignProjects,
+        onUserUpdate, // Obtenemos la función de actualización del contexto
         onSortTeams: onSort, // Renombramos la prop del contexto para claridad
         onInviteUser,
         onEditUser,
@@ -53,6 +55,7 @@ export function UserBoardProjectsTeamsPage() {
     // Estados y ref para el menú de ordenación
     const [isSortMenuOpen, setIsSortMenuOpen] = React.useState(false);
     const sortButtonRef = React.useRef<HTMLButtonElement>(null);
+    const [isManageTeamModalOpen, setIsManageTeamModalOpen] = React.useState(false);
 
     const toggleSortMenu = React.useCallback(() => {
         setIsSortMenuOpen(prev => !prev);
@@ -124,6 +127,76 @@ export function UserBoardProjectsTeamsPage() {
     const canManageUsers = userProfile?.roleInApp === 'admin' || userProfile?.roleInApp === 'superadmin';
 
 
+    const handleManageTeamClick = () => {
+        if (!currentProject || !currentProject.id) {
+            console.warn("Cannot manage team: No project selected.");
+            return;
+        }
+        console.log("Opening Manage Team Modal for project:", currentProject.name);
+        setIsManageTeamModalOpen(true);
+    };
+
+    const handleSaveTeamAssignments = async (updatedAssignments: { [userId: string]: IProjectAssignment }) => {
+        console.log("Saving team assignments...", updatedAssignments);
+        
+        // Iteramos sobre todos los usuarios para ver quién necesita actualización.
+        // Comparamos el estado 'nuevo' (updatedAssignments) con el estado 'actual' (user.projectsAssigned).
+        
+        const updates: Promise<void>[] = [];
+
+        for (const user of users) {
+            const newAssignment = updatedAssignments[user.id];
+            const currentAssignment = user.projectsAssigned?.find(p => p.projectId === currentProject.id);
+
+            let needsUpdate = false;
+            // Clonamos la lista actual de proyectos del usuario para no mutar el estado directamente
+            let newProjectList: IProjectAssignment[] = [...(user.projectsAssigned || [])];
+
+            if (newAssignment) {
+                // El usuario DEBE estar en el proyecto (Añadir o Actualizar)
+                if (!currentAssignment) {
+                    // AÑADIR: No estaba, lo agregamos.
+                    newProjectList.push(newAssignment);
+                    needsUpdate = true;
+                } else {
+                    // ACTUALIZAR: Ya estaba, comprobamos si cambiaron roles o permisos.
+                    const roleChanged = currentAssignment.roleInProject !== newAssignment.roleInProject;
+                    const permsChanged = JSON.stringify(currentAssignment.permissions?.sort()) !== JSON.stringify(newAssignment.permissions?.sort());
+                    
+                    if (roleChanged || permsChanged) {
+                        // Reemplazamos la asignación antigua con la nueva
+                        newProjectList = newProjectList.map(p => p.projectId === currentProject.id ? newAssignment : p);
+                        needsUpdate = true;
+                    }
+                }
+            } else {
+                // El usuario NO debe estar en el proyecto (Eliminar o Ignorar)
+                if (currentAssignment) {
+                    // ELIMINAR: Estaba asignado, lo quitamos.
+                    newProjectList = newProjectList.filter(p => p.projectId !== currentProject.id);
+                    needsUpdate = true;
+                }
+            }
+
+            if (needsUpdate) {
+                console.log(`Updating user ${user.name} (${user.id}) assignments.`);
+                
+                // Creamos una nueva instancia del usuario con la lista de proyectos actualizada
+                const updatedUser = new AppUserClass({
+                    ...user,
+                    projectsAssigned: newProjectList
+                }, user.id);
+
+                // Llamamos a onUserUpdate en lugar de onAssignProjects
+                updates.push(Promise.resolve(onUserUpdate(updatedUser)));
+            }
+        }
+
+        await Promise.all(updates);
+        console.log("All team updates processed.");
+    };
+
+
     return (
         <>
             {/* --- HEADER SECUNDARIO --- */}
@@ -158,6 +231,7 @@ export function UserBoardProjectsTeamsPage() {
                     {canManageUsers && (
                         <button
                             // onClick={() => onInviteUser()} // La lógica se definirá después
+                            onClick={handleManageTeamClick}
                             id="new-user-btn"
                             style={{ whiteSpace: 'nowrap' }}
                             title="Invite a User to this Team"
@@ -261,6 +335,18 @@ export function UserBoardProjectsTeamsPage() {
                     ] as SortOption[]}
                 />
             )}
+
+
+            {isManageTeamModalOpen && currentProject && (
+                <UserTeamProjectAssignmentUsersModal
+                    isOpen={isManageTeamModalOpen}
+                    onClose={() => setIsManageTeamModalOpen(false)}
+                    targetProject={currentProject}
+                    allUsers={users}
+                    onSave={handleSaveTeamAssignments}
+                />
+            )}
+
         </>
     )
 }

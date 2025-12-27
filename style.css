@@ -3887,7 +3887,7 @@ header {
 .user-team-container {
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 50px repeat(3, minmax(75px, 1fr)) 450px 100px 100px 100px;
+    grid-template-columns: 50px repeat(3, minmax(175px, 1fr)) 450px 100px 100px 100px;
     grid-template-areas: "checkbox nickname organization role permisions joindate status edit";
     column-gap: 20px;
     align-items: center;

@@ -56,3 +56,6 @@ export * from './UserProjectAssignmentRow'
 export * from './UserProjectAssignmentHoverInformation'
 export * from "./UsersBoardProjectsTeamsPage"
 export * from './UserProjectTeamCardRow'
+export * from './UserTeamProjectAssignmentRow'
+export * from './UserTeamProjectAssignmentUsersModal'
+
