@@ -50,10 +50,10 @@ Para facilitar la navegación por la ingeniería del sistema, hemos dividido la 
 
 | Módulo                                                       | Icono | Descripción                                                                      |
 | ------------------------------------------------------------ | ----- | -------------------------------------------------------------------------------- |
-| **Frontend Architecture** | ⚛️ | Jerarquía de componentes, Providers, Rutas Protegidas y Sistema de Diseño (CSS). |
-| **Backend Architecture** | ☁️ | Servicios Firebase, Esquema de Datos NoSQL y Seguridad con Cloud Functions. |
-| **Data Flow & State** | 🔄 | Patrón Singleton, Flujo Unidireccional y Gestión de Estado Híbrida. |
-| **Real-time Sync** | ⚡ | Estrategia Offline-First, Listeners `onSnapshot` y Caché Local. |                 |
+| **[Frontend Architecture](./src/docs/FRONTEND_ARCHITECTURE.md)** | ⚛️ | Jerarquía de componentes, Providers, Rutas Protegidas y Sistema de Diseño (CSS). |
+| **[Backend Architecture](./src/docs/BACKEND_ARCHITECTURE.md)** | ☁️ | Servicios Firebase, Esquema de Datos NoSQL y Seguridad con Cloud Functions. |
+| **[Data Flow & State](./src/docs/DATA_FLOW_AND_STATE.md)** | 🔄 | Patrón Singleton, Flujo Unidireccional y Gestión de Estado Híbrida. |
+| **[Real-time Sync](./src/docs/REALTIME_SYNC.md)** | ⚡ | Estrategia Offline-First, Listeners `onSnapshot` y Caché Local. |                 |
 
 ---
 
