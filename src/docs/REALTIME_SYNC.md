@@ -1,4 +1,4 @@
-[← Volver a la Documentación Principal](../README.md)
+[← Volver a la Documentación Principal](../../README.md)
 
 # ⚡ Real-time Synchronization & Offline Strategy
 
