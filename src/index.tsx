@@ -31,7 +31,7 @@ import { AuthForm } from './Auth/react-components/AuthForm.tsx';
 import { NewUserForm } from './react-components/NewUserForm.tsx'; // NewUserForm adaptado
 import { ChangePasswordForm } from './Auth/react-components/ChangePasswordForm.tsx';
 import { LoadingIcon } from './react-components/icons.tsx';
-import { deleteToDoWithSubcollections } from './services/firebase';
+import { deleteToDoWithSubcollections } from './services/firebase/index.ts';
 import { signOut } from './services/firebase/firebaseAuth.ts'; // Para el logout
 import { auth } from './services/firebase/index.ts'
 import { UserRoleInAppKey } from './types.ts';

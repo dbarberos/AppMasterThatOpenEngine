@@ -9,7 +9,7 @@ import { ProjectsManager } from '../classes/ProjectsManager'
 
 
 import { useAuth, UserProfile } from '../Auth/react-components/AuthContext.tsx'; // Ajusta la ruta
-import { signOut } from '../services/firebase/firebaseAuth'; // Usamos nuestra función signOut centralizada
+import { signOut } from '../services/firebase/firebaseAuth.ts'; // Usamos nuestra función signOut centralizada
 import { UserIcon, ChevronDownIcon, ProfileIcon, LoginIcon, LogoutIcon } from './icons';
 import { NewUserForm } from './NewUserForm';
 import { UserProfileNavButton } from './UserProfileNavButton';
