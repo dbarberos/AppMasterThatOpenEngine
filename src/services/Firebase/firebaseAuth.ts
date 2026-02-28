@@ -1,5 +1,5 @@
 import * as Firestore from "firebase/firestore"
-import { firestoreDB, auth, getCollection } from '../firebase/index'; 
+import { firestoreDB, auth, getCollection } from './index'; 
 import {
     //Auth,
     createUserWithEmailAndPassword,
@@ -31,7 +31,7 @@ import {
 import { User as AppUser } from '../../classes/User'
 import { UsersManager } from '../../classes/UsersManager'
 import { UserProfile } from '../../Auth/react-components/AuthContext'; // Import UserProfile for type safety
-import { updateDocument } from '../firebase/index'
+import { updateDocument } from './index'
 
 import { toast } from 'sonner'
 
