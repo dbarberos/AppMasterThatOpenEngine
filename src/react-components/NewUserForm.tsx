@@ -14,7 +14,7 @@ import { UsersManager } from '../classes/UsersManager'
 //import { usePrepareUserForm } from '../hooks';
 //import { UsersManager } from '../classes/UsersManager';
 //import { usePrepareUserForm } from '../hooks';
-import {parseDate} from '../utils/DateUtils'
+import {parseDate} from '../utils/dateUtils'
 
 
 // Hook useUsersCache no existe en el contexto, lo comentamos por ahora.

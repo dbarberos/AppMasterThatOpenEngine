@@ -4,7 +4,7 @@ import { createDocument, updateDocument, deleteDocument } from '../services/Fire
 
 import { DeleteProjectBtn, RenameElementMessage, DiffContentMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
 import { usePrepareProjectForm, useProjectsCache } from '../hooks';
-import {parseDate} from '../utils/DateUtils';
+import {parseDate} from '../utils/dateUtils.ts';
 
 import { BusinessUnit, IProject, Project, ProjectStatus, UserRole } from '../classes/Project';
 import { ProjectsManager } from '../classes/ProjectsManager';
