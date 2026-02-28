@@ -16,7 +16,7 @@ import { User as AppUserClass } from './classes/User'; // Renombrado para evitar
 import { UsersManager } from "./classes/UsersManager.ts";
 import { showModal, closeModal, toggleModal, changePageContent } from "./classes/UiManager.ts";
 //import { updateAsideButtonsState } from './classes/HTMLUtilities.ts';
-import "./classes/LightMode.ts";
+//import "./classes/LightMode.ts";  //cambiado a Zustand
 import { MessagePopUp } from "./classes/MessagePopUp.ts"
 import { newToDoIssue, getProjectByToDoIssueId, deleteToDoIssue, closeToDoIssueDetailPage, renderToDoIssueList, searchTodoIssues, navigateSearchResults, selectCurrentSearchResult, setupProjectDetailsSearch, resetSearchState } from "./classes/ToDoManager.ts"
 
@@ -28,7 +28,7 @@ import { toast, Toaster } from 'sonner'
 //import "./classes/VisorModelManager.ts";
 import { AuthProvider, useAuth } from './Auth/react-components/AuthContext.tsx'; // Usar el AuthContext que creamos
 import { AuthForm } from './Auth/react-components/AuthForm.tsx';
-import { NewUserForm } from './react-components/NewUserForm.tsx'; // Tu NewUserForm adaptado
+import { NewUserForm } from './react-components/NewUserForm.tsx'; // NewUserForm adaptado
 import { ChangePasswordForm } from './Auth/react-components/ChangePasswordForm.tsx';
 import { LoadingIcon } from './react-components/icons.tsx';
 import { deleteToDoWithSubcollections } from './services/firebase';
@@ -37,12 +37,27 @@ import { auth } from './services/firebase/index.ts'
 import { UserRoleInAppKey } from './types.ts';
 import { UserEmailVerificationSuccess } from './Auth/react-components/UserEmailVerificationSuccess.tsx'
 import { ProtectedRoute } from './Auth/react-components/ProtectedRoute.tsx';
+import { useThemeStore } from './stores/useThemeStore.ts';
 
 
 const App = () => {
     const projectsManager = useProjectsManager();
     const usersManager = useUsersManager();
     const [projects, setProjects] = React.useState(projectsManager.list);
+    const isLightMode = useThemeStore((state) => state.isLightMode);
+
+    // Efecto para sincronizar el estado de React con el DOM (body class)
+    React.useEffect(() => {
+        if (isLightMode) {
+            document.body.classList.add('light-mode');
+        } else {
+            document.body.classList.remove('light-mode');
+        }
+    }, [isLightMode]);
+
+
+
+
 
     function handleNewProject(newProject: Project) {
         projectsManager.updateReactProjects(newProject);

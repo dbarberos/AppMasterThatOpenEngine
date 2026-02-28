@@ -414,52 +414,115 @@
 
 
     /* backgroun colors */
-    --background: #ebf0f7;
+    /* --background: #ebf0f7;
     --background-l00: #F5F7FA;
     --background-200: #E4E8EF;
-    --background-300: #D0D8E4;
+    --background-300: #D0D8E4; */
+    /* Background colors - Autodesk Construction Cloud style */
+    --background: #FFFFFF;
+    --background-l00: #F4F5F7;      /* Sidebar */
+    --background-200: #EBECF0;
+    --background-300: #DFE
 
     /* Popup colors */
-    --popup-success: #43A047;
+    /* --popup-success: #43A047;
     --popup-error: #E53935;
     --popup-warning: #FFA000;
     --popup-update: #039BE5;
-    --popup-info: #445668;
+    --popup-info: #445668; */
+    --popup-success: #36B37E;
+    --popup-error: #FF5630;
+    --popup-warning: #FFAB00;
+    --popup-update: #0065FF;
+    --popup-info: #42526E;
 
+
+
+
+
+ 
     /* Text and utility colors */
-    --color-fontbase: #4f5a66;
+    /* --color-fontbase: #4f5a66; */
     /*#394b5e*/
-    --color-fontbase-dark: #a4a7aa;
+    /* --color-fontbase-dark: #a4a7aa; */
     /*#8e9092*/
-    --color-grey-light: #D0D8E4;
-    --color-grey: #607D8B;
+    /* --color-grey-light: #D0D8E4; */
+    /* --color-grey: #607D8B; */
 
     /* background and shadows colors */
-    --color-bg: #E4E8EF;
+    /* --color-bg: #E4E8EF;
     --color-bg1: #D0D8E4;
     --color-bg2: #B0BEC5;
     --color-shadow: #e0e1e4;
-    --color-light: #b4bccc;
+    --color-light: #b4bccc; */
+--color-fontbase: #172B4D;
+    /* Dark blue-grey text (ACC standard) */
+    --color-fontbase-dark: #6B778C;
+    /* Secondary text */
+    --color-grey-light: #EBECF0;
+    --color-grey: #5E6C84;
+    
+    /* Background and shadows colors */
+    --color-bg: #FFFFFF;
+    --color-bg1: #FFFFFF;
+    --color-bg2: #F4F5F7;
+    
+    /* Flatten shadows for light mode (disable neumorphism) */
+    --color-shadow: transparent;
+    --color-light: transparent;
+
+
+
+
+
+
+
+
 
     /* Specific variables for light mode */
-    --color-border: #CFD8DC;
+    /* --color-border: #CFD8DC;
     --color-hover: #EEF2F6;
     --color-active: #E4E8EF;
     --input-background: #F5F7FA;
     --input-border: #B0BEC5;
-    --input-shadow: rgba(44, 62, 80, 0.05);
+    --input-shadow: rgba(44, 62, 80, 0.05); */
+--color-border: #DFE1E6;
+    --color-hover: #F4F5F7;
+    --color-active: #DEEBFF;
+    --input-background: #FAFBFC;
+    --input-border: #DFE1E6;
+    --input-shadow: transparent;
+
+
+
+
+
 
     /* ToDo Issue colors */
 
-    --color-backlog: #a155e9;
+    /* --color-backlog: #a155e9;
     --color-wip: #fba63c;
     --color-qa: #e677a1;
     --color-completed: #66d8e7;
-    --color-notassigned: #ccc;
+    --color-notassigned: #ccc; */
+--color-backlog: #6554C0;
+    --color-wip: #0065FF;
+    --color-qa: #00B8D9;
+    --color-completed: #36B37E;
+    --color-notassigned: #6B778C
+
+
+
+
+
+
+
+
 
     /* ToDo Details Panel */
 
-    --color-tododetails-bg: rgba(231, 230, 230, 0.65);
+    /* --color-tododetails-bg: rgba(231, 230, 230, 0.65); */
+    --color-tododetails-bg: rgba(255, 255, 255, 0.98);
 }
 
 
@@ -5450,3 +5513,89 @@ button .btn-popup {
 }
 
 /* --- Fin de Estilos para UserProjectAssignmentModal--- */
+
+
+
+
+
+/* ==================================================================== */
+
+/* LIGHT MODE OVERRIDES (FLAT DESIGN / ACC STYLE)                       */
+
+
+/* ==================================================================== */
+.light-mode button,
+.light-mode .buttonB,
+.light-mode .buttonC,
+.light-mode .buttonD,
+.light-mode .project-card,
+.light-mode .dashboard-card,
+.light-mode .todo-item,
+.light-mode .user-card-wrapper,
+.light-mode .user-container,
+.light-mode .user-team-container {
+    box-shadow: 0 1px 2px rgba(9, 30, 66, 0.08), 0 0 1px rgba(9, 30, 66, 0.31);
+    border: 1px solid var(--color-border);
+    
+}
+
+.light-mode .nav-button {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 4px;
+    margin: 4px 8px;
+    border: 1px solid transparent;
+    
+}
+
+.light-mode .nav-button:hover {
+    background-color: var(--background-200);
+    color: var(--color-fontbase);
+    box-shadow: none;
+    
+}
+
+.light-mode .nav-link-active .nav-button {
+    background-color: #E6F0FF;
+    /* Light blue background for active */
+    color: var(--primary);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 4px 4px 0;
+    box-shadow: none;
+    
+}
+
+.light-mode .nav-link-active .nav-button svg {
+    fill: var(--primary);
+    
+}
+
+.light-mode input,
+.light-mode select,
+.light-mode textarea {
+    background-color: var(--input-background);
+    border: 1px solid var(--input-border);
+    box-shadow: none;
+    
+}
+
+.light-mode input:focus,
+.light-mode select:focus,
+.light-mode textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(2, 154, 224, 0.2);
+    
+}
+
+.light-mode #sidebar {
+    background: var(--background-l00);
+    border-right: 1px solid var(--color-border);
+    
+}
+
+.light-mode .sidebar-organization {
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    
+}
