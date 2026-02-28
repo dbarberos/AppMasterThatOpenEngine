@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { createDocument, updateDocument, deleteDocument } from '../services/firebase'
+import { createDocument, updateDocument, deleteDocument } from '../services/Firebase'
 
 import { MessagePopUp, MessagePopUpProps, RenameElementMessage } from '../react-components';
 import { usePrepareToDoForm } from '../hooks';

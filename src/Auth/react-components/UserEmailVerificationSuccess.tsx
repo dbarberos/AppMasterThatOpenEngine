@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-router-dom';
 import * as Firestore from 'firebase/firestore';
 
 import { useAuth } from './AuthContext';
-import { firestoreDB } from '../../services/firebase';
+import { firestoreDB } from '../../services/Firebase';
 import { toast } from 'sonner';
 
 export function UserEmailVerificationSuccess() {

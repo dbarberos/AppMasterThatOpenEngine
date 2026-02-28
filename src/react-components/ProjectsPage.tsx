@@ -9,8 +9,8 @@ import { useProjectsCache, useProjectSearch, useStickyState, useDebounce,  useUs
 import { STORAGE_KEY, CACHE_TIMESTAMP_KEY, SYNC_INTERVAL } from '../const';
 
 import { useProjectsManager, NewProjectForm } from './index.tsx';
-import { getProjectsFromDB, getUsersFromDB } from '../services/firebase/index.ts'
-import { getCollection } from '../services/firebase/index.ts'
+import { getProjectsFromDB, getUsersFromDB } from '../services/Firebase/index.ts'
+import { getCollection } from '../services/Firebase/index.ts'
 
 import { useAuth } from '../Auth/react-components/AuthContext.tsx'; 
 

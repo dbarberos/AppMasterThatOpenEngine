@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 import { ProjectDetailsCard, ProjectDetailsToDoList, ThreeJSViewer, ProjectSelector } from '../react-components';
-import { updateDocument} from '../services/firebase';
+import { updateDocument} from '../services/Firebase';
 
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { type ToDoIssue } from '../classes/ToDoIssue';

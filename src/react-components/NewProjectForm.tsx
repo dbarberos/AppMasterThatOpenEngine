@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import * as Router from 'react-router-dom';
-import { createDocument, updateDocument, deleteDocument } from '../services/firebase';
+import { createDocument, updateDocument, deleteDocument } from '../services/Firebase';
 
 import { DeleteProjectBtn, RenameElementMessage, DiffContentMessage, MessagePopUp, MessagePopUpProps } from '../react-components';
 import { usePrepareProjectForm, useProjectsCache } from '../hooks';

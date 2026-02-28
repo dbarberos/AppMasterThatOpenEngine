@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { getAuth, createUserWithEmailAndPassword, updatePassword, updateProfile  } from 'firebase/auth';
 import { toast } from 'sonner';
-import { firestoreDB } from '../../services/firebase';
+import { firestoreDB } from '../../services/Firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import * as Router from 'react-router-dom';
 import { User } from '../../classes/User';

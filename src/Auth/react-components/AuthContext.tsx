@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as Firestore from "firebase/firestore"
-import { getDocumentById } from '../../services/firebase' // Importa tu instancia de auth
+import { getDocumentById } from '../../services/Firebase' // Importa tu instancia de auth
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { User as AppUser } from '../../classes/User'; // Tu clase User
 import { IProjectAssignment, IUser, UserRoleInAppKey, UserRoleInAppValue, UserStatusKey, UserStatusValue } from '../../types'
 import { UsersManager } from '../../classes/UsersManager'; // Asumiendo que tienes un UsersManager
-import { firestoreDB, auth, getCollection } from '../../services/firebase/index'; 
+import { firestoreDB, auth, getCollection } from '../../services/Firebase/index'; 
 
 export interface UserProfile extends Firestore.DocumentData {
     uid: string;

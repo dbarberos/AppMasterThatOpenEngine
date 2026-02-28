@@ -8,7 +8,7 @@ import { IUser } from '../types';
 
 import { USERS_CACHE_KEY, USERS_CACHE_TIMESTAMP_KEY } from "../const.ts";
 
-import { createDocument, deleteToDoWithSubcollections, updateDocument, deleteAllTodosInProject, firestoreDB, getProjectsFromDB, replaceSubcollectionItems } from '../services/firebase/index.ts'
+import { createDocument, deleteToDoWithSubcollections, updateDocument, deleteAllTodosInProject, firestoreDB, getProjectsFromDB, replaceSubcollectionItems } from '../services/Firebase/index.ts'
 import * as Firestore from 'firebase/firestore'
 
 

@@ -6,7 +6,7 @@ import { ToDoIssue } from '../classes/ToDoIssue';
 
 import { EditIcon, Report2Icon, ReportIcon, TrashIcon } from './icons';
 import { ToDoEditableField } from './ToDoEditableField';
-import { updateDocument, UpdateDocumentOptions } from '../services/firebase';
+import { updateDocument, UpdateDocumentOptions } from '../services/Firebase';
 import { useSidebarState } from '../hooks';
 import { IToDoIssue } from '../types';
 

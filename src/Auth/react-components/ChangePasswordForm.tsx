@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { User as FirebaseUser, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
-import { auth } from '../../services/firebase/index'; 
+import { auth } from '../../services/Firebase/index'; 
 import { useAuth } from '../../Auth/react-components/AuthContext'; 
 import { toast } from 'sonner';
 import { LoadingIcon } from '../../react-components/icons';

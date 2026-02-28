@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import * as Firestore from 'firebase/firestore';
 
-import {  updateDocument } from '../services/firebase'
+import {  updateDocument } from '../services/Firebase'
 
 import { IUser, IProjectAssignment, UserStatusKey, UserRoleInAppKey,UserStatusValue, UserRoleInProjectKey} from '../types'; 
 import {  USER_ROLES_IN_PROJECT , USER_STATUS, USER_ROL_IN_APP   } from '../const'
@@ -21,7 +21,7 @@ import {parseDate} from '../utils/DateUtils'
 // import { useUsersCache } from '../hooks';
 
 import { useAuth, UserProfile } from '../Auth/react-components/AuthContext' 
-import { firestoreDB as db } from '../services/firebase/index'; 
+import { firestoreDB as db } from '../services/Firebase/index'; 
 import { toast } from 'sonner'
 import { ChangePasswordForm } from '../Auth/react-components/ChangePasswordForm';
 import { DiffContentMessage, MessagePopUp, MessagePopUpProps } from '../react-components';

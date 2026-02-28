@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as Router from 'react-router-dom';
 //import { db } from '../firebase-config'; // Asegúrate que esta ruta sea correcta
-import { firestoreDB as db, getUsersFromDB } from '../services/firebase'; 
+import { firestoreDB as db, getUsersFromDB } from '../services/Firebase'; 
 import { collection, getDocs, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 

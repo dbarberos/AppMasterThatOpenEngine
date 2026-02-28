@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useAuth } from '../Auth/react-components/AuthContext';
-import { resendVerificationEmail } from '../services/firebase/firebaseAuth';
+import { resendVerificationEmail } from '../services/Firebase/firebaseAuth';
 import { toast } from 'sonner';
 import { NotificationsActiveIcon } from './icons';
 

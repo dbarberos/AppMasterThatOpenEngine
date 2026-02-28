@@ -12,7 +12,7 @@ import {
     signInWithEmail,
     signInWithGoogle,
     signInWithGitHub
-} from '../../services/firebase/firebaseAuth'; 
+} from '../../services/Firebase/firebaseAuth'; 
 
 import { toast } from 'sonner';
 import { GoogleIcon, GithubIcon } from '../../react-components';

@@ -5,7 +5,7 @@ import * as Router from 'react-router-dom';
 import { TrashIcon } from './icons';
 import { MessagePopUp, type MessagePopUpProps } from '../react-components'
 
-import { deleteDocument, deleteProjectWithSubcollections } from '../services/firebase';
+import { deleteDocument, deleteProjectWithSubcollections } from '../services/Firebase';
 
 import { ProjectsManager } from '../classes/ProjectsManager'
 import { IProject, Project } from '../classes/Project';

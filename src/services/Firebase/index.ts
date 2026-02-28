@@ -7,9 +7,9 @@ import { Auth, getAuth } from "firebase/auth"; // Import Auth and getAuth
 import { IProject, Project } from "../../classes/Project";
 import { ToDoIssue } from "../../classes/ToDoIssue";
 import { ProjectsManager } from "../../classes/ProjectsManager";
-import { IAssignedUsers, IProjectAssignment, ITag, IToDoIssue } from '../../types'
+import { IAssignedUsers, IProjectAssignment, ITag, IToDoIssue, IUser } from '../../types'
 import { toast } from 'sonner'
-import { IUser, User } from "../../classes/User";
+import { User } from "../../classes/User";
 
 type SubcollectionType = 'todoList' | 'tags' | 'assignedUsers';
 

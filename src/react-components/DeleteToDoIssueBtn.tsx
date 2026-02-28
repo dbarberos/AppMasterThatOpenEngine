@@ -4,7 +4,7 @@ import * as Router from 'react-router-dom';
 import { TrashIcon } from './icons';
 import { MessagePopUp, type MessagePopUpProps } from '../react-components'
 
-import { deleteDocument, deleteToDoWithSubcollections } from '../services/firebase';
+import { deleteDocument, deleteToDoWithSubcollections } from '../services/Firebase';
 
 import { ToDoIssue } from '../classes/ToDoIssue'
 import { ProjectsManager } from '../classes/ProjectsManager'
