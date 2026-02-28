@@ -72,6 +72,15 @@ Para facilitar la navegación por la ingeniería del sistema, hemos dividido la 
 
 ## 📦 Instalación y Configuración
 
+### 0. Requisitos previos
+
+Para poder ejecutar este proyecto correctamente en tu ordenador local, es necesario contar con:
+
+- [Node.js](https://nodejs.org/es/) (Se recomienda la versión 18 o superior).
+- [pnpm](https://pnpm.io/es/installation) (Gestor de paquetes utilizado y recomendado para este proyecto). 
+
+*Nota: Aunque la arquitectura original está construida para ejecutarse con `pnpm`, también existe compatibilidad para instalarse usando `npm`.*
+
 Sigue estos pasos para desplegar el entorno de desarrollo local:
 
 ### 1. Clonar y Dependencias
@@ -79,9 +88,13 @@ Sigue estos pasos para desplegar el entorno de desarrollo local:
 ```bash
 git clone [https://github.com/dbarberos/AppMasterThatOpenEngine.git](https://github.com/dbarberos/AppMasterThatOpenEngine.git)
 cd AppMasterThatOpenEngine
-npm install
+pnpm install
 
 ```
+
+Se recomienda usar pnpm para respetar el árbol de dependencias estricto del proyecto.
+(Si no dispones de pnpm, puedes utilizar npm install o npm i).
+
 
 ### 2. Variables de Entorno
 
@@ -98,9 +111,22 @@ VITE_FIREBASE_PROJECT_ID=tu_project_id
 ### 3. Ejecución
 
 ```bash
+pnpm dev
+
+```
+
+(Si instalaste con npm, utiliza npm run dev).
+
+```bash
 npm run dev
 
 ```
+
+### 4. Visualizar la aplicación:
+
+Abre tu navegador web y dirígete a la dirección que te proporcione la terminal (por defecto suele ser http://localhost:5173).
+
+
 
 ---
 
