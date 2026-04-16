@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { ProjectsManager } from '../classes/ProjectsManager';
 import { Project, BusinessUnit } from '../classes/Project';
-
+import { appIcons } from '../global.ts';
 
 import { showModal,closeModal, toggleModal, } from "../classes/UiManager.ts"
 
@@ -40,29 +40,30 @@ export function ProjectCard(props: Props) {
                 }}
                 >
                     <h5>{props.project.name}</h5>
-                    <p style={{ color: "var(--color-fontbase-dark)" }}>Project Description</p>
+                    <bim-label style={{ color: "var(--color-fontbase-dark)" }}>Project Description</bim-label>
+                    <bim-label>{props.project.description}</bim-label>
                 </div>
             </div>
             <div className="card-content">
                 <div className="card-property">
-                <p style={{ color: "#969696" }}>Business Unit</p>
-                <p>{props.project.businessUnit}</p>
+                <bim-label icon={appIcons.BUSINESS} style={{ color: "#969696" }}>Business Unit</bim-label>
+                <bim-label>{props.project.businessUnit}</bim-label>
                 </div>
                 <div className="card-property">
-                <p style={{ color: "#969696" }}>Status</p>
-                <p>{props.project.status}</p>
+                <bim-label icon={appIcons.STATUS} style={{ color: "#969696" }}>Status</bim-label>
+                <bim-label>{props.project.status}</bim-label>
                 </div>
                 <div className="card-property">
-                <p style={{ color: "#969696" }}>User Role</p>
-                <p>{props.project.userRole}</p>
+                <bim-label icon={appIcons.USERROLE} style={{ color: "#969696" }}>User Role</bim-label>
+                <bim-label>{props.project.userRole}</bim-label>
                 </div>
                 <div className="card-property">
-                <p style={{ color: "#969696" }}>Cost</p>
-                <p>{props.project.cost}</p>
+                <bim-label icon={appIcons.COST} style={{ color: "#969696" }}>Cost</bim-label>
+                <bim-label>{props.project.cost}</bim-label>
                 </div>
                 <div className="card-property">
-                <p style={{ color: "#969696" }}>Progress</p>
-                <p>{props.project.progress * 100 } %</p>
+                <bim-label icon= {appIcons.PROGRESS} style={{ color: "#969696" }}>Progress</bim-label>
+                <bim-label>{props.project.progress * 100 } %</bim-label>
                 </div>
             </div>
         </div>
