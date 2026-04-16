@@ -28,7 +28,7 @@ dist-ssr1
 
 # IDE
 
-
+node_modules/
 vite-env.d.ts
 env.d.ts
 node_modules/.vite/deps/_metadata.json
@@ -36,3 +36,5 @@ node_modules/.vite/deps/_metadata.json
 #AI
 
 AGENTS.md
+SKILLS.md
+
