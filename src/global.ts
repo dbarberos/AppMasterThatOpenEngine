@@ -4,4 +4,8 @@ export const appIcons = {
     COST: "tdesign:money",
     BUSINESS: "maki:construction",
     PROGRESS: "carbon:progress-bar",
+    ADD: "material-symbols:add-rounded",
+    DOWNLOAD: "material-symbols:download-rounded",
+    UPLOAD: "material-symbols:upload-rounded",
+
 }

@@ -159,6 +159,11 @@
     --input-background: var(--color-bg1);
     --input-border: var(--background-200);
     --input-shadow: rgba(0, 0, 0, 0.2);
+
+    /* Para los webcomponents de TOE */
+    --bim-ui_main-base: var(--primary);
+    --bim-ui_accent-base: var(--primanry);
+
 }
 
 @media (prefers-reduced-motion: no-preference) {

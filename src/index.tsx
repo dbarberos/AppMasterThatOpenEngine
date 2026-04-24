@@ -47,9 +47,13 @@ BUI.Manager.init();
 declare global {
     namespace JSX {
         interface IntrinsicElements {
-            'bim-label': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-
+            // 'bim-label': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+            'bim-label': any;
+            'bim-button': any;
+            'bim-text-input': any;
+        }
     }
+}
 
 const App = () => {
     const projectsManager = useProjectsManager();
