@@ -342,7 +342,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
             data-page=""
             style={{ display: "" }}
             >
-            {/* <header
+            <header
                 style={{
                 display: "flex",
                 alignItems: "center",
@@ -392,12 +392,14 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                         onUpdatedToDoIssue={handleUpdatedToDo}
                         onTodoListReordered={handleTodoListReordered}
                     />
-                </div>
-
-            </div> */}
-
-            <bim-grid className="viewer-grid" ref={viewerGrid} style={{ width: "100%", height: "100%" }}>
+                    </div>
+                    
+                    <bim-grid className="viewer-grid" ref={viewerGrid} style={{ width: "100%", height: "100%" }}>
                 </bim-grid>
+
+            </div>
+
+
             </section>
         </ErrorBoundary>
     );

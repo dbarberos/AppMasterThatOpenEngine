@@ -20,23 +20,22 @@ export const viewportContainerTemplate = (state?: { viewport?: BUI.Viewport }) =
     const { viewport } = state || {};
 
     const onCreated = (container: HTMLDivElement) => {
-        if (!container || !viewport) {
-            container = BUI.Component.create(() => BUI.html`
-            <bim-label>No viewer has been defined.</bim-label>
-            `,)
-            return;
-        }
-
+        if (!container) return
+        
         // Limpiar hijos previos
         container.innerHTML = '';
 
-        // Aplicar estilos al viewport para que ocupe el espacio disponible
-        if (viewport) {
-            viewport.style.width = '100%';
-            viewport.style.height = '100%';
-            viewport.style.display = 'flex';
-            viewport.style.overflow = 'hidden';
+        if (!viewport) {
+            container.innerHTML = `<bim-label > No viewer has been defined.</bim-label>`;
+            return;
         }
+
+        // Aplicar estilos al viewport para que ocupe el espacio disponible
+        viewport.style.width = '100%';
+        viewport.style.height = '100%';
+        viewport.style.display = 'flex';
+        viewport.style.overflow = 'hidden';
+
 
         // Inyectar el viewport en el contenedor
         container.appendChild(viewport);
