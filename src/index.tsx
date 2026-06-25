@@ -43,6 +43,7 @@ import { useThemeStore } from './stores/useThemeStore.ts';
 import * as BUI from "@thatopen/ui";
 
 BUI.Manager.init();
+console.log("That Open UI Manager has been initialized successfully.");
 
 declare global {
     namespace JSX {
@@ -51,6 +52,7 @@ declare global {
             'bim-label': any;
             'bim-button': any;
             'bim-text-input': any;
+            'bim-grid': any;
         }
     }
 }

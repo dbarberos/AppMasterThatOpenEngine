@@ -1,0 +1,10 @@
+import * as BUI from "@thatopen/ui";
+
+type Viewport = {
+    name: "viewport";
+    state: {}
+}
+type ComponentsGridElements = [Viewport];
+type ComponentsGridLayouts = ["Models"];
+
+export type ComponentsGrid = BUI.Grid<ComponentsGridLayouts, ComponentsGridElements>;

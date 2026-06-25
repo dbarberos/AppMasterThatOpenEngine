@@ -302,7 +302,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
             componentsGrid: {
                 template: TEMPLATES.componentsGridtemplate,
                 initialState: {
-                    viewport
+                    // viewport
                 }
             }
 
@@ -342,7 +342,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
             data-page=""
             style={{ display: "" }}
             >
-            {/* <header
+            <header
                 style={{
                 display: "flex",
                 alignItems: "center",
@@ -369,12 +369,25 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                             projectsList={projectsManager.list}
                             onProjectSelect={handleProjectSelectionInDetails}
                         />
-
+                        {/* <select
+                        id="projectSelectedProjectDetailPage"
+                        style={{
+                            padding: 10,
+                            borderRadius: 5,
+                            fontSize: "var(--font-lg)",
+                            lineHeight: 1,
+                            letterSpacing: "normal",
+                            textTransform: "none",
+                            display: "inline-block",
+                            whiteSpace: "nowrap",
+                            wordWrap: "normal"
+                        }}
+                        ></select> */}
                     </div>
                 </div>
                 <div>
                     <h2 data-project-info="name">{currentProject.name}</h2>
-
+                {/* <p style="color: var(--color-grey)"> Community hospital location city</p> */}
                 </div>
             </header>
             <div className="main-page-content">
@@ -394,10 +407,11 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                     />
                 </div>
 
-            </div> */}
-
-            <bim-grid className="viewer-grid" ref={viewerGrid} style={{ width: "100%", height: "100%" }}>
+                <bim-grid className="viewer-grid" ref={viewerGrid} style={{ width: "100%", height: "100%" }}>
                 </bim-grid>
+
+                    {/*<ThreeJSViewer />*/}
+            </div>
             </section>
         </ErrorBoundary>
     );

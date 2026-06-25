@@ -59,3 +59,6 @@ export * from './UserProjectTeamCardRow'
 export * from './UserTeamProjectAssignmentRow'
 export * from './UserTeamProjectAssignmentUsersModal'
 
+export * from './ToeBimGrid'
+
+
