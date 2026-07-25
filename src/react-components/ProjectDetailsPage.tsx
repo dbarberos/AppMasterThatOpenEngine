@@ -288,7 +288,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
         if (!grid) return;
 
         //setupComponents es donde se produce toda la configuración de los componentes, antes hay que importarla claro.
-        const { viewport } = await setupComponents()
+        const { components, viewport } = await setupComponents()
 
         grid.elements = {
             header: {
@@ -302,6 +302,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
             componentsGrid: {
                 template: TEMPLATES.componentsGridtemplate,
                 initialState: {
+                    components,
                     viewport
                 }
             }
@@ -393,7 +394,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
                         onTodoListReordered={handleTodoListReordered}
                     />
                     </div>
-                    
+
                     <bim-grid className="viewer-grid" ref={viewerGrid} style={{ width: "100%", height: "100%" }}>
                 </bim-grid>
 

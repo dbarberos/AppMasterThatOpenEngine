@@ -1,0 +1,339 @@
+﻿diff --git a/package.json b/package.json
+index 7b325a5..2b9da84 100644
+--- a/package.json
++++ b/package.json
+@@ -8,8 +8,10 @@
+         "@dnd-kit/sortable": "10.0.0",
+         "@dnd-kit/utilities": "3.2.2",
+         "@thatopen/components": "^3.4.6",
++        "@thatopen/components-front": "~3.4.3",
+         "@thatopen/fragments": "^3.4.6",
+         "@thatopen/ui": "^3.4.6",
++        "@thatopen/ui-obc": "~3.4.2",
+         "@types/quill": "2.0.14",
+         "camera-controls": "^3.1.2",
+         "dragula": "3.7.3",
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 87e4cb6..87d539e 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -23,12 +23,18 @@ importers:
+       '@thatopen/components':
+         specifier: ^3.4.6
+         version: 3.4.6(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77)
++      '@thatopen/components-front':
++        specifier: ~3.4.3
++        version: 3.4.3(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77)
+       '@thatopen/fragments':
+         specifier: ^3.4.6
+         version: 3.4.6(three@0.182.0)(web-ifc@0.0.77)
+       '@thatopen/ui':
+         specifier: ^3.4.6
+         version: 3.4.9
++      '@thatopen/ui-obc':
++        specifier: ~3.4.2
++        version: 3.4.2(@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(three@0.182.0)(web-ifc@0.0.77)
+       '@types/quill':
+         specifier: 2.0.14
+         version: 2.0.14
+@@ -763,8 +769,8 @@ packages:
+   '@kurkle/color@0.3.4':
+     resolution: {integrity: sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==}
+ 
+-  '@lit-labs/ssr-dom-shim@1.5.1':
+-    resolution: {integrity: sha512-Aou5UdlSpr5whQe8AA/bZG0jMj96CoJIWbGfZ91qieWu5AWUMKw8VR/pAkQkJYvBNhmCcWnZlyyk5oze8JIqYA==}
++  '@lit-labs/ssr-dom-shim@1.6.0':
++    resolution: {integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==}
+ 
+   '@lit/reactive-element@2.1.2':
+     resolution: {integrity: sha512-pbCDiVMnne1lYUIaYNN5wrwQXDtHaYtg7YEFPeW+hws6U47WeFvISGUWekPGKWOP1ygrs0ef0o1VJMk1exos5A==}
+@@ -902,6 +908,13 @@ packages:
+     cpu: [x64]
+     os: [win32]
+ 
++  '@thatopen/components-front@3.4.3':
++    resolution: {integrity: sha512-R/70QQPPtqZcMXOL72ZzI+Tj4IIJV4ehPvyHVTd0yZLFdW0zSKCQqSa7PpUqTVPDnmzFMkkXTnZFKwk6tMdCHQ==}
++    peerDependencies:
++      '@thatopen/fragments': ~3.4.0
++      three: '>=0.182.0'
++      web-ifc: '>=0.0.77'
++
+   '@thatopen/components@3.4.6':
+     resolution: {integrity: sha512-CZjJWnmldZnw/RaoSeEkFpkgJBSBuzofqd7xh6jGQtS2vALbQkoKaRvQIPXdGuikmc/X89MxELo+OKw1S9QZ5Q==}
+     peerDependencies:
+@@ -916,6 +929,15 @@ packages:
+       three: '>=0.182.0'
+       web-ifc: '>=0.0.77'
+ 
++  '@thatopen/ui-obc@3.4.2':
++    resolution: {integrity: sha512-aOycnjQUhjjwWP7fAtm947kpQr3YpyoLKa3kJU89aDlXF2NhpmEYDxTDb6o+IMcIlHjnvs/zxM2B5i6qZjq98A==}
++    peerDependencies:
++      '@thatopen/components': ~3.4.0
++      '@thatopen/components-front': ~3.4.0
++      '@thatopen/fragments': ~3.4.0
++      three: '>=0.182.0'
++      web-ifc: '>=0.0.77'
++
+   '@thatopen/ui@3.4.9':
+     resolution: {integrity: sha512-jxHS3sQtRKRcsRwasqDcdwQZFLOZoud2PC09k78E+0DVJ+fmLD2jBxnKx90zqMkkIDg0C+zy21ISNHObWizubw==}
+ 
+@@ -1056,6 +1078,9 @@ packages:
+   earcut@3.0.2:
+     resolution: {integrity: sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ==}
+ 
++  earcut@3.2.3:
++    resolution: {integrity: sha512-vnS4AVwp1KHAF13i1vp1/2D5evWy3k5u/iW/B81QVsUZtV8cv2tU0b2VNFlqvh4kYwrFMDdjPCfAmfyJW9y14Q==}
++
+   electron-to-chromium@1.5.266:
+     resolution: {integrity: sha512-kgWEglXvkEfMH7rxP5OSZZwnaDWT7J9EoZCujhnpLbfi0bbNtRkgdX2E3gt0Uer11c61qCYktB3hwkAS325sJg==}
+ 
+@@ -1173,8 +1198,8 @@ packages:
+   lit-element@4.2.2:
+     resolution: {integrity: sha512-aFKhNToWxoyhkNDmWZwEva2SlQia+jfG0fjIWV//YeTaWrVnOxD89dPKfigCUspXFmjzOEUQpOkejH5Ly6sG0w==}
+ 
+-  lit-html@3.3.2:
+-    resolution: {integrity: sha512-Qy9hU88zcmaxBXcc10ZpdK7cOLXvXpRoBxERdtqV9QOrfpMZZ6pSYP91LhpPtap3sFMUiL7Tw2RImbe0Al2/kw==}
++  lit-html@3.3.3:
++    resolution: {integrity: sha512-el8M6jK2o3RXBnrSHX3ZKrsN8zEV63pSExTO1wYJz7QndGYZ8353e2a5PPX+qHe2aGayfnchQmkAojaWAREOIA==}
+ 
+   lit@3.3.1:
+     resolution: {integrity: sha512-Ksr/8L3PTapbdXJCk+EJVB78jDodUMaP54gD24W186zGRARvwrsPfS60wae/SSCTCNZVPd1chXqio1qHQmu4NA==}
+@@ -2158,11 +2183,11 @@ snapshots:
+ 
+   '@kurkle/color@0.3.4': {}
+ 
+-  '@lit-labs/ssr-dom-shim@1.5.1': {}
++  '@lit-labs/ssr-dom-shim@1.6.0': {}
+ 
+   '@lit/reactive-element@2.1.2':
+     dependencies:
+-      '@lit-labs/ssr-dom-shim': 1.5.1
++      '@lit-labs/ssr-dom-shim': 1.6.0
+ 
+   '@nodable/entities@2.2.0': {}
+ 
+@@ -2249,6 +2274,16 @@ snapshots:
+   '@rollup/rollup-win32-x64-msvc@4.45.1':
+     optional: true
+ 
++  '@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77)':
++    dependencies:
++      '@thatopen/components': 3.4.6(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77)
++      '@thatopen/fragments': 3.4.6(three@0.182.0)(web-ifc@0.0.77)
++      earcut: 3.2.3
++      three: 0.182.0
++      web-ifc: 0.0.77
++    transitivePeerDependencies:
++      - camera-controls
++
+   '@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77)':
+     dependencies:
+       '@thatopen/fragments': 3.4.6(three@0.182.0)(web-ifc@0.0.77)
+@@ -2268,6 +2303,16 @@ snapshots:
+       three: 0.182.0
+       web-ifc: 0.0.77
+ 
++  '@thatopen/ui-obc@3.4.2(@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(three@0.182.0)(web-ifc@0.0.77)':
++    dependencies:
++      '@thatopen/components': 3.4.6(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77)
++      '@thatopen/components-front': 3.4.3(@thatopen/fragments@3.4.6(three@0.182.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.182.0))(three@0.182.0)(web-ifc@0.0.77)
++      '@thatopen/fragments': 3.4.6(three@0.182.0)(web-ifc@0.0.77)
++      '@thatopen/ui': 3.4.9
++      lit: 3.3.1
++      three: 0.182.0
++      web-ifc: 0.0.77
++
+   '@thatopen/ui@3.4.9':
+     dependencies:
+       '@floating-ui/dom': 1.6.3
+@@ -2409,6 +2454,8 @@ snapshots:
+ 
+   earcut@3.0.2: {}
+ 
++  earcut@3.2.3: {}
++
+   electron-to-chromium@1.5.266: {}
+ 
+   emoji-regex@8.0.0: {}
+@@ -2577,11 +2624,11 @@ snapshots:
+ 
+   lit-element@4.2.2:
+     dependencies:
+-      '@lit-labs/ssr-dom-shim': 1.5.1
++      '@lit-labs/ssr-dom-shim': 1.6.0
+       '@lit/reactive-element': 2.1.2
+-      lit-html: 3.3.2
++      lit-html: 3.3.3
+ 
+-  lit-html@3.3.2:
++  lit-html@3.3.3:
+     dependencies:
+       '@types/trusted-types': 2.0.7
+ 
+@@ -2589,7 +2636,7 @@ snapshots:
+     dependencies:
+       '@lit/reactive-element': 2.1.2
+       lit-element: 4.2.2
+-      lit-html: 3.3.2
++      lit-html: 3.3.3
+ 
+   lodash-es@4.17.21: {}
+ 
+diff --git a/src/bim-components/setup/index.ts b/src/bim-components/setup/index.ts
+index 34ebea3..1f9ccc5 100644
+--- a/src/bim-components/setup/index.ts
++++ b/src/bim-components/setup/index.ts
+@@ -1,8 +1,9 @@
+ import * as OBC from "@thatopen/components";
+ import * as BUI from "@thatopen/ui";
+-import { createWorld, setupIfcLoader, setupFragmentManager } from "./src";
++import { createWorld, setupIfcLoader, setupFragmentManager, setupHighlighter } from "./src";
+ import { createLoadIfcHandler, loadModelBtnTemplate } from "../../ui-templates";
+ 
++
+ export const setupComponents = async () => {
+     // Inicializa el gestor de UI de forma global al arrancar los componentes.
+     // Esto asegura que todos los componentes de @thatopen/ui funcionar├ín correctamente.
+@@ -14,6 +15,7 @@ export const setupComponents = async () => {
+     // Configurar el IfcLoader ANTES de inicializar componentes
+     setupIfcLoader(components);
+     setupFragmentManager(components, world);
++    setupHighlighter(components, world);
+ 
+     // Inicializar componentes DESPU├ëS
+     await components.init();
+diff --git a/src/bim-components/setup/src/index.ts b/src/bim-components/setup/src/index.ts
+index e2b8b1b..cd91a29 100644
+--- a/src/bim-components/setup/src/index.ts
++++ b/src/bim-components/setup/src/index.ts
+@@ -1,4 +1,5 @@
+ export * from "./create-world";
+ export * from "./ifc-loader";
+ export * from "./fragments-manager";
++export * from "./highlighter";
+ 
+diff --git a/src/index.tsx b/src/index.tsx
+index 1767677..2d1dec7 100644
+--- a/src/index.tsx
++++ b/src/index.tsx
+@@ -53,6 +53,7 @@ declare global {
+             'bim-button': any;
+             'bim-text-input': any;
+             'bim-grid': any;
++            'bim-panel-section': any;
+         }
+     }
+ }
+diff --git a/src/react-components/ProjectDetailsPage.tsx b/src/react-components/ProjectDetailsPage.tsx
+index 908ad08..37fe35a 100644
+--- a/src/react-components/ProjectDetailsPage.tsx
++++ b/src/react-components/ProjectDetailsPage.tsx
+@@ -288,7 +288,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
+         if (!grid) return;
+ 
+         //setupComponents es donde se produce toda la configuraci├│n de los componentes, antes hay que importarla claro.
+-        const { viewport } = await setupComponents()
++        const { components, viewport } = await setupComponents()
+ 
+         grid.elements = {
+             header: {
+@@ -302,6 +302,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
+             componentsGrid: {
+                 template: TEMPLATES.componentsGridtemplate,
+                 initialState: {
++                    components,
+                     viewport
+                 }
+             }
+@@ -393,7 +394,7 @@ export function ProjectDetailsPage({ projectsManager, onProjectCreate, onProject
+                         onTodoListReordered={handleTodoListReordered}
+                     />
+                     </div>
+-                    
++
+                     <bim-grid className="viewer-grid" ref={viewerGrid} style={{ width: "100%", height: "100%" }}>
+                 </bim-grid>
+ 
+diff --git a/src/ui-templates/grids/components/index.ts b/src/ui-templates/grids/components/index.ts
+index a8ad7af..755fc5f 100644
+--- a/src/ui-templates/grids/components/index.ts
++++ b/src/ui-templates/grids/components/index.ts
+@@ -1,10 +1,14 @@
+ import * as BUI from "@thatopen/ui";
+ import { ComponentsGrid } from "./src";
+ import { viewportContainerTemplate } from "../../containers";
++import { itemsDataPanelTemplate } from "../../sections";
++import * as OBC from "@thatopen/components";
+ 
+ 
+ interface ComponentsGridState {
++    components: OBC.Components;
+     viewport?: BUI.Viewport
++
+ }
+ 
+ 
+@@ -12,12 +16,13 @@ interface ComponentsGridState {
+ export const componentsGridtemplate: BUI.StatefullComponent<ComponentsGridState> = (state) => {
+ 
+     console.log("componentsGridtemplate: Ejecutando template. Estado recibido:", state);
+-    const { viewport } = state
+-
++    const { components, viewport } = state;
+     console.log("componentsGridtemplate: Viewport extra├¡do del estado:", viewport);
++
++
+     const onCreated = (e?: Element) => {
+         console.log("componentsGridtemplate: Callback onCreated disparado. Elemento:", e);
+-        
++
+         if (!e) return;
+         const grid = e as ComponentsGrid;
+         // Usamos la aserci├│n de tipo a la clase base BUI.Grid para tener flexibilidad.
+@@ -28,14 +33,18 @@ export const componentsGridtemplate: BUI.StatefullComponent<ComponentsGridState>
+                 template: viewportContainerTemplate,
+                 initialState: { viewport }, // Pasando el viewport (que puede ser undefined) al siguiente template
+             },
++            itemsData: {
++                template: itemsDataPanelTemplate,
++                initialState: { components }, // Pasando los componentes al panel de datos
++            }
+         };
+ 
+         grid.layouts = {
+             Models: {
+                 template: `
+-                    "viewport" 1fr
+-                    /1fr
+-                `
++                    "viewport itemsData" 1fr
++                    /1fr 22rem
++                `,
+             },
+         };
+           // WORKAROUND: En grids anidados, el uso combinado de `grid.layouts` y `grid.layout`
+diff --git a/src/ui-templates/grids/components/src/types.ts b/src/ui-templates/grids/components/src/types.ts
+index 1935a93..8014095 100644
+--- a/src/ui-templates/grids/components/src/types.ts
++++ b/src/ui-templates/grids/components/src/types.ts
+@@ -1,10 +1,19 @@
+ import * as BUI from "@thatopen/ui";
++import { ItemsDataPanelState } from "../../../sections";
+ 
+ type Viewport = {
+     name: "viewport";
+     state: {}
+ }
+-type ComponentsGridElements = [Viewport];
++
++export type ItemsData = {
++    name: "itemsData";
++    state: ItemsDataPanelState;
++}
++
++
++
++type ComponentsGridElements = [Viewport, ItemsData];
+ type ComponentsGridLayouts = ["Models"];
+ 
+ export type ComponentsGrid = BUI.Grid<ComponentsGridLayouts, ComponentsGridElements>;

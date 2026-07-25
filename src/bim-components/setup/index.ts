@@ -1,7 +1,8 @@
 import * as OBC from "@thatopen/components";
 import * as BUI from "@thatopen/ui";
-import { createWorld, setupIfcLoader, setupFragmentManager } from "./src";
+import { createWorld, setupIfcLoader, setupFragmentManager, setupHighlighter } from "./src";
 import { createLoadIfcHandler, loadModelBtnTemplate } from "../../ui-templates";
+
 
 export const setupComponents = async () => {
     // Inicializa el gestor de UI de forma global al arrancar los componentes.
@@ -14,6 +15,7 @@ export const setupComponents = async () => {
     // Configurar el IfcLoader ANTES de inicializar componentes
     setupIfcLoader(components);
     setupFragmentManager(components, world);
+    setupHighlighter(components, world);
 
     // Inicializar componentes DESPUÉS
     await components.init();

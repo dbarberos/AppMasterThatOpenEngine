@@ -53,6 +53,7 @@ declare global {
             'bim-button': any;
             'bim-text-input': any;
             'bim-grid': any;
+            'bim-panel-section': any;
         }
     }
 }

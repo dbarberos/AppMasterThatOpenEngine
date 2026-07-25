@@ -1,10 +1,14 @@
 import * as BUI from "@thatopen/ui";
 import { ComponentsGrid } from "./src";
 import { viewportContainerTemplate } from "../../containers";
+import { itemsDataPanelTemplate } from "../../sections";
+import * as OBC from "@thatopen/components";
 
 
 interface ComponentsGridState {
+    components: OBC.Components;
     viewport?: BUI.Viewport
+
 }
 
 
@@ -12,12 +16,13 @@ interface ComponentsGridState {
 export const componentsGridtemplate: BUI.StatefullComponent<ComponentsGridState> = (state) => {
 
     console.log("componentsGridtemplate: Ejecutando template. Estado recibido:", state);
-    const { viewport } = state
-
+    const { components, viewport } = state;
     console.log("componentsGridtemplate: Viewport extraído del estado:", viewport);
+
+
     const onCreated = (e?: Element) => {
         console.log("componentsGridtemplate: Callback onCreated disparado. Elemento:", e);
-        
+
         if (!e) return;
         const grid = e as ComponentsGrid;
         // Usamos la aserción de tipo a la clase base BUI.Grid para tener flexibilidad.
@@ -28,14 +33,18 @@ export const componentsGridtemplate: BUI.StatefullComponent<ComponentsGridState>
                 template: viewportContainerTemplate,
                 initialState: { viewport }, // Pasando el viewport (que puede ser undefined) al siguiente template
             },
+            itemsData: {
+                template: itemsDataPanelTemplate,
+                initialState: { components }, // Pasando los componentes al panel de datos
+            }
         };
 
         grid.layouts = {
             Models: {
                 template: `
-                    "viewport" 1fr
-                    /1fr
-                `
+                    "viewport itemsData" 1fr
+                    /1fr 22rem
+                `,
             },
         };
           // WORKAROUND: En grids anidados, el uso combinado de `grid.layouts` y `grid.layout`
