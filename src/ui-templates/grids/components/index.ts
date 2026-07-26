@@ -1,14 +1,13 @@
 import * as BUI from "@thatopen/ui";
 import { ComponentsGrid } from "./src";
 import { viewportContainerTemplate } from "../../containers";
-import { itemsDataPanelTemplate } from "../../sections";
+import { itemsDataPanelTemplate, modelsPanelTemplate } from "../../sections";
 import * as OBC from "@thatopen/components";
 
 
 interface ComponentsGridState {
     components: OBC.Components;
     viewport?: BUI.Viewport
-
 }
 
 
@@ -36,14 +35,20 @@ export const componentsGridtemplate: BUI.StatefullComponent<ComponentsGridState>
             itemsData: {
                 template: itemsDataPanelTemplate,
                 initialState: { components }, // Pasando los componentes al panel de datos
+            },
+            models: {
+                template: modelsPanelTemplate,
+                initialState: { components }, // Pasando los componentes al panel de modelos
             }
+
+
         };
 
         grid.layouts = {
             Models: {
                 template: `
-                    "viewport itemsData" 1fr
-                    /1fr 22rem
+                    "models viewport itemsData" 1fr
+                    /22rem 1fr 22rem
                 `,
             },
         };

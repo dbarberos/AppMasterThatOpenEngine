@@ -20,6 +20,7 @@ export const itemsDataPanelTemplate: BUI.StatefullComponent<ItemsDataPanelState>
     });
 
 
+
     highlighter.events.select.onHighlight.add((modelIdMap) => {
         updatePropsTable({ modelIdMap })
     })
@@ -28,9 +29,14 @@ export const itemsDataPanelTemplate: BUI.StatefullComponent<ItemsDataPanelState>
         updatePropsTable({ modelIdMap: {} })
     })
 
-
+    const onSearch = (e: Event) => {
+        const input = e.target as BUI.TextInput;
+        propsTable.queryString = input.value;
+    };
 
     return BUI.html`<bim-panel-section fixed label="Selection Data">
+    <bim-text-input @input=${onSearch} placeholder="Search data..." debounce="200">
+            </bim-text-input>
     ${propsTable}
     </bim-panel-section>`;
 
