@@ -54,6 +54,7 @@ declare global {
             'bim-text-input': any;
             'bim-grid': any;
             'bim-panel-section': any;
+            'bim-contex-menu': any;
         }
     }
 }
