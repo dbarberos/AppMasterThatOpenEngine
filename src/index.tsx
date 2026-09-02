@@ -55,6 +55,7 @@ declare global {
             'bim-grid': any;
             'bim-panel-section': any;
             'bim-contex-menu': any;
+            'bim-toolbar': any;
         }
     }
 }
