@@ -13,11 +13,8 @@ export const appIcons = {
     COLORIZE2: "gg:color-bucket",
     APPLY: "ri:magic-fill",
     CLEAR: "mingcute:broom-fill",
-
-
-
-
-
-
-
+    HIDE: "material-symbols:visibility-off-rounded",
+    ISOLATE: "mingcute:circle-dash-line",
+    SHOW: "material-symbols:visibility-rounded",
+    
 }

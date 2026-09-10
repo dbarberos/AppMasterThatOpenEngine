@@ -56,10 +56,44 @@ export const viewerToolbarTemplate: BUI.StatefullComponent<ViewerToolbarState> =
         target.loading = false;
     }
 
+
+    const onHide = async ({ target }: { target: BUI.Button }) => {
+        const highlighter = components.get(OBF.Highlighter);
+        const selection = highlighter.selection.select;
+        if (OBC.ModelIdMapUtils.isEmpty(selection)) return;
+        target.loading = true;
+        const hider = components.get(OBC.Hider);
+        const promises = [hider.set(false, selection), highlighter.clear("select")];
+        await Promise.all(promises);
+        target.loading = false;
+    }
+
+    const onIsolate = async ({ target }: { target: BUI.Button }) => {
+        const highlighter = components.get(OBF.Highlighter);
+        const selection = highlighter.selection.select;
+        if (OBC.ModelIdMapUtils.isEmpty(selection)) return;
+        target.loading = true;
+        const hider = components.get(OBC.Hider);
+        await hider.isolate(selection);
+        target.loading = false;
+    }
+    const OnShowAll = async ({ target }: { target: BUI.Button }) => {
+        target.loading = true;
+        const hider = components.get(OBC.Hider);
+        await hider.set(true);
+        target.loading = false;
+    }
+
+
     return BUI.html`
         <div style="display: flex; justify-content: center; width: 100%; padding: 0.5rem; ;">
             <bim-toolbar style="display: flex; flex-direction: row; gap: 0.5rem; padding: 0.5rem; background: rgba(0, 0, 0, 0.8); border-radius: var(--bim-panel-section--bdrs, 0.75rem);; width: fit-content;">
+                <bim-toolbar-section label="Visibility" icon=${appIcons.SHOW}>
+                    <bim-button icon=${appIcons.SHOW} label="Show All" @click=${OnShowAll}></bim-button>
+                </bim-toolbar-section>
                 <bim-toolbar-section label="Selection" icon=${appIcons.SELECT}>
+                    <bim-button icon=${appIcons.HIDE} label="Hide" @click=${onHide}></bim-button>
+                    <bim-button icon=${appIcons.ISOLATE} label="Isolate" @click=${onIsolate}></bim-button>
                     <bim-button icon=${appIcons.COLORIZE} label="Colorize">
                         <bim-context-menu>
                             <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.5rem;">
