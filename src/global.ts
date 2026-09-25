@@ -16,5 +16,6 @@ export const appIcons = {
     HIDE: "material-symbols:visibility-off-rounded",
     ISOLATE: "mingcute:circle-dash-line",
     SHOW: "material-symbols:visibility-rounded",
-    
+    TRANSPARENT: "material-symbols:opacity-rounded",
+
 }
