@@ -1,6 +1,6 @@
 import * as OBC from "@thatopen/components";
 import * as BUI from "@thatopen/ui";
-import { createWorld, setupIfcLoader, setupFragmentManager, setupHighlighter } from "./src";
+import { createWorld, setupIfcLoader, setupFragmentManager, setupHighlighter, setupItemsFinder } from "./src";
 import { createLoadIfcHandler, loadModelBtnTemplate } from "../../ui-templates";
 
 
@@ -16,6 +16,7 @@ export const setupComponents = async () => {
     setupIfcLoader(components);
     setupFragmentManager(components, world);
     setupHighlighter(components, world);
+    setupItemsFinder(components);
 
     // Inicializar componentes DESPUÉS
     await components.init();
